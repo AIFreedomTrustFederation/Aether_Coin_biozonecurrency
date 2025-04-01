@@ -8,7 +8,8 @@ import {
   Image, 
   Shield, 
   Settings,
-  FileText
+  FileText,
+  GitMerge
 } from 'lucide-react';
 import FractalNavigation from './FractalNavigation';
 
@@ -22,6 +23,7 @@ const Sidebar = () => {
     { icon: BarChart2, label: 'DeFi', path: '/defi' },
     { icon: Image, label: 'NFTs', path: '/nfts' },
     { icon: Shield, label: 'Smart Contracts', path: '/contracts' },
+    { icon: GitMerge, label: 'Fractal Explorer', path: '/fractal-explorer' },
     { icon: FileText, label: 'White Paper', path: '/whitepaper' },
     { icon: Settings, label: 'Settings', path: '/settings' },
   ];

@@ -7,6 +7,7 @@ import Assets from "@/pages/Assets";
 import Transactions from "@/pages/Transactions";
 import Contracts from "@/pages/Contracts";
 import WhitePaper from "@/pages/WhitePaper";
+import FractalExplorer from "@/pages/FractalExplorer";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -17,6 +18,7 @@ function Router() {
       <Route path="/transactions" component={Transactions} />
       <Route path="/contracts" component={Contracts} />
       <Route path="/whitepaper" component={WhitePaper} />
+      <Route path="/fractal-explorer" component={FractalExplorer} />
       {/* Add more routes as needed */}
       {/* <Route path="/defi" component={DeFi} /> */}
       {/* <Route path="/nfts" component={NFTs} /> */}
