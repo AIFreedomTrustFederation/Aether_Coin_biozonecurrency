@@ -12,30 +12,4 @@
   }
 }
 
-@layer components {
-  .dev-tools-toggle {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    z-index: 9999;
-    background: rgba(0, 0, 0, 0.8);
-    color: white;
-    padding: 8px 12px;
-    border-radius: 8px;
-    font-size: 12px;
-    cursor: pointer;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  
-  .dev-tools-toggle svg {
-    width: 16px;
-    height: 16px;
-  }
-  
-  .dev-tools-hidden {
-    display: none !important;
-  }
-}
+/* Styles are injected directly by the DevToolsToggle component */
