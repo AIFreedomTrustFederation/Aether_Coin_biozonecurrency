@@ -1,51 +1,54 @@
 import { useState, useEffect } from 'react';
 import { Code, Eye, EyeOff } from 'lucide-react';
 
-// CSS to inject
+// CSS to inject with higher specificity
 const cssToInject = `
-  .toggle-dev-console {
+  .aetherion-toggle-dev-console {
     position: fixed;
     bottom: 20px;
     right: 20px;
-    background: rgba(0, 0, 0, 0.8);
+    background: rgba(124, 58, 237, 0.9);
     color: white;
-    padding: 8px 12px;
-    border-radius: 8px;
-    font-size: 12px;
+    padding: 10px 16px;
+    border-radius: 12px;
+    font-size: 14px;
     cursor: pointer;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 20px rgba(124, 58, 237, 0.4);
     display: flex;
     align-items: center;
-    gap: 8px;
-    z-index: 99999;
+    gap: 10px;
+    z-index: 10000000;
     font-family: sans-serif;
     border: none;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(4px);
   }
   
-  .toggle-dev-console svg {
-    width: 16px;
-    height: 16px;
+  .aetherion-toggle-dev-console:hover {
+    background: rgba(124, 58, 237, 1);
+    transform: translateY(-2px);
   }
   
-  .dev-tools-hidden {
-    display: none !important;
+  .aetherion-toggle-dev-console svg {
+    width: 18px;
+    height: 18px;
   }
   
-  /* Make sure the MobileMenu appears above any developer tools */
-  [class*="mobile-menu"],
-  [class*="mobileMenu"] {
-    z-index: 999999 !important;
+  /* Fix pointer events for all navigation elements */
+  html body a, 
+  html body button,
+  html body .nav-item,
+  html body [role="link"],
+  html body [role="button"] {
+    pointer-events: auto !important;
   }
   
-  /* Ensure header is visible */
-  header {
-    z-index: 999998 !important;
-  }
-  
-  /* Fix pointer events for both menus */
-  nav a, 
-  button,
-  .nav-item {
+  /* Ensure clicks work on all important elements */
+  html body header *, 
+  html body nav *, 
+  html body aside *,
+  html body .mobile-menu *, 
+  html body [class*="sidebar"] * {
     pointer-events: auto !important;
   }
 `;
@@ -60,74 +63,84 @@ const DevToolsToggle = () => {
     style.textContent = cssToInject;
     document.head.appendChild(style);
     
-    // Create button element
+    // Create button element with unique class name
     const button = document.createElement('button');
-    button.className = 'toggle-dev-console';
+    button.className = 'aetherion-toggle-dev-console';
     button.innerHTML = `
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <polyline points="16 18 22 12 16 6"></polyline>
-        <polyline points="8 6 2 12 8 18"></polyline>
+        <path d="M18 16l4-4-4-4"></path>
+        <path d="M6 8l-4 4 4 4"></path>
+        <path d="M14.5 4l-5 16"></path>
       </svg>
       <span>Toggle Dev Console</span>
     `;
     
     // Add click event
     button.addEventListener('click', () => {
-      // Try to find the console using common DOM locators in development environments
+      // Try to find the console using Replit-specific and common DOM locators
       const consoleSelectors = [
-        // Common browser dev console selectors
-        'div[role="tabpanel"]', '.devtools', '.console-view', 
-        
         // Replit specific
-        '.jsx-3184167669', '.wrap-container', '.console-container',
+        '.jsx-3184167669', '.jsx-230647805', '.jsx-1307940033', '.jsx-2818342538',
+        '.wrap-container', '.console-container', '.output-container', '.terminal-container',
         
-        // Generic tab identifiers that could be consoles
+        // Common browser dev console selectors
+        'div[role="tabpanel"]', '.devtools', '.console-view', '.split-view',
+        
+        // Generic tab and identifiers that could be consoles
         'div[id*="console"]', 'div[id*="terminal"]', 'div[class*="console"]', 
         'div[class*="terminal"]', '[data-cy*="console"]', '[data-testid*="console"]',
         
         // Mobile Chrome Developer Tools elements
-        '.mobile-panel', '#mobile-panel',
+        '.mobile-panel', '#mobile-panel', '.mobile-toolbar',
         
-        // Specific Chrome Developer Tools elements
-        '.developer-tools-panel', '.developer-tools-view'
+        // Additional Replit-specific elements
+        'div[class*="replitTop"]', 'div[class*="replitRight"]', 'div[class*="replitBottom"]'
       ];
       
-      // Create a combined selector string
-      const combinedSelector = consoleSelectors.join(', ');
-      
       // Get all potential console elements
-      const devTools = document.querySelectorAll(combinedSelector);
+      let devTools = [];
       
-      setDevToolsVisible(!devToolsVisible);
+      // Try all selectors individually to maximize chances of finding console elements
+      consoleSelectors.forEach(selector => {
+        const elements = document.querySelectorAll(selector);
+        if (elements.length > 0) {
+          devTools = [...devTools, ...elements];
+        }
+      });
       
-      if (devTools.length === 0) {
-        // If no console elements were found, try getting higher-level containers
-        // and modifying their position to push them down
-        const contentContainers = document.querySelectorAll('body > div');
-        contentContainers.forEach((container, index) => {
-          if (index > 0) { // skip the first div which is likely our app
-            if (devToolsVisible) {
-              container.style.display = 'none';
-            } else {
-              container.style.display = '';
-            }
+      // Toggle state
+      const newState = !devToolsVisible;
+      setDevToolsVisible(newState);
+      
+      // Apply visibility change to all found elements
+      if (devTools.length > 0) {
+        devTools.forEach(element => {
+          if (element) {
+            element.style.display = newState ? '' : 'none';
           }
         });
       } else {
-        // Toggle visibility of found console elements
-        devTools.forEach(element => {
-          if (element) {
-            if (devToolsVisible) {
-              element.style.display = 'none';
-            } else {
-              element.style.display = '';
-            }
-          }
+        // Fallback: If no specific console elements found, try higher-level containers
+        // This is a more aggressive approach that might affect other UI elements
+        const contentContainers = document.querySelectorAll('body > div:not(:first-child)');
+        contentContainers.forEach(container => {
+          container.style.display = newState ? '' : 'none';
         });
       }
       
-      // Update button text
-      button.querySelector('span').textContent = devToolsVisible ? 'Show Dev Console' : 'Hide Dev Console';
+      // Update button text and icon
+      const iconSvg = newState ? 
+        `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 16l4-4-4-4"></path>
+          <path d="M6 8l-4 4 4 4"></path>
+          <path d="M14.5 4l-5 16"></path>
+        </svg>` : 
+        `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M2 9l10 3 10-3"></path>
+          <path d="M2 15l10 3 10-3"></path>
+        </svg>`;
+      
+      button.innerHTML = `${iconSvg}<span>${newState ? 'Hide Dev Console' : 'Show Dev Console'}</span>`;
       
       console.log('DevTools toggle clicked, elements affected:', devTools.length);
     });
@@ -140,7 +153,7 @@ const DevToolsToggle = () => {
       button.remove();
       style.remove();
     };
-  }, []);
+  }, [devToolsVisible]); // Add dependency to react to state changes
   
   // Empty render as we're injecting the button directly
   return null;
