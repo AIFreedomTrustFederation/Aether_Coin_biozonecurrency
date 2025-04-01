@@ -30,7 +30,7 @@ const MobileMenu = ({ isOpen, onClose }: MobileMenuProps) => {
 
   return (
     <div 
-      className={`fixed inset-0 bg-background z-50 transform transition-transform duration-300 ease-in-out lg:hidden ${
+      className={`fixed inset-0 bg-background above-dev-tools transform transition-transform duration-300 ease-in-out lg:hidden ${
         isOpen ? 'translate-x-0' : '-translate-x-full'
       }`}
     >

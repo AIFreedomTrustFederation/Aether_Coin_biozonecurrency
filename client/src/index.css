@@ -11,3 +11,15 @@
     @apply font-sans antialiased bg-background text-foreground;
   }
 }
+
+@layer components {
+  .above-dev-tools {
+    @apply z-[9999];
+  }
+}
+
+@layer utilities {
+  .z-above-dev-tools {
+    z-index: 9999 !important;
+  }
+}
