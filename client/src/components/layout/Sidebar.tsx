@@ -7,7 +7,8 @@ import {
   BarChart2, 
   Image, 
   Shield, 
-  Settings 
+  Settings,
+  FileText
 } from 'lucide-react';
 import FractalNavigation from './FractalNavigation';
 
@@ -21,6 +22,7 @@ const Sidebar = () => {
     { icon: BarChart2, label: 'DeFi', path: '/defi' },
     { icon: Image, label: 'NFTs', path: '/nfts' },
     { icon: Shield, label: 'Smart Contracts', path: '/contracts' },
+    { icon: FileText, label: 'White Paper', path: '/whitepaper' },
     { icon: Settings, label: 'Settings', path: '/settings' },
   ];
 

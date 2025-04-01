@@ -6,6 +6,7 @@ import Dashboard from "@/pages/Dashboard";
 import Assets from "@/pages/Assets";
 import Transactions from "@/pages/Transactions";
 import Contracts from "@/pages/Contracts";
+import WhitePaper from "@/pages/WhitePaper";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -15,6 +16,7 @@ function Router() {
       <Route path="/assets" component={Assets} />
       <Route path="/transactions" component={Transactions} />
       <Route path="/contracts" component={Contracts} />
+      <Route path="/whitepaper" component={WhitePaper} />
       {/* Add more routes as needed */}
       {/* <Route path="/defi" component={DeFi} /> */}
       {/* <Route path="/nfts" component={NFTs} /> */}
