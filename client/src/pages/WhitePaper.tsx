@@ -28,7 +28,7 @@ const WhitePaper = () => {
   return (
     <div className="flex h-full min-h-screen bg-background">
       <Sidebar />
-      <div className="flex-1 p-8 overflow-auto">
+      <div className="flex-1 p-4 md:p-8 overflow-auto">
         <motion.div
           className="space-y-6 max-w-6xl mx-auto"
           variants={containerVariants}
@@ -48,7 +48,7 @@ const WhitePaper = () => {
 
           <motion.div variants={itemVariants}>
             <Tabs defaultValue="vision" value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid grid-cols-6 mb-6">
+              <TabsList className="grid grid-cols-3 md:grid-cols-6 gap-1 mb-6 overflow-x-auto w-full">
                 <TabsTrigger value="vision">Vision</TabsTrigger>
                 <TabsTrigger value="technology">Technology</TabsTrigger>
                 <TabsTrigger value="ai-singularity">AI Singularity</TabsTrigger>

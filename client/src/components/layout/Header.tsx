@@ -12,9 +12,10 @@ const Header = ({ toggleMobileMenu }: HeaderProps) => {
     <header className="bg-card border-b border-border flex items-center justify-between p-4 relative" style={{ zIndex: 9999999 }}>
       <div className="flex items-center lg:hidden">
         <button 
-          className="text-foreground mr-3"
+          className="text-primary hover:text-primary/80 mr-3 p-2 rounded-full bg-primary/10 hover:bg-primary/20 transition-colors"
           onClick={toggleMobileMenu}
           aria-label="Toggle mobile menu"
+          style={{ position: 'relative', zIndex: 9999999 }}
         >
           <Menu className="w-6 h-6" />
         </button>
