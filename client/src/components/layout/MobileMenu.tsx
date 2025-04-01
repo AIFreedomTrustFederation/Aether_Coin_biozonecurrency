@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'wouter';
-import { X, Home, Coins, ArrowRightLeft, BarChart2, Image, Shield, Settings } from 'lucide-react';
+import { X, Home, Coins, ArrowRightLeft, BarChart2, Image, Shield, Settings, FileText, GitMerge } from 'lucide-react';
 import FractalNavigation from './FractalNavigation';
 
 interface MobileMenuProps {
@@ -17,6 +17,8 @@ const MobileMenu = ({ isOpen, onClose }: MobileMenuProps) => {
     { icon: BarChart2, label: 'DeFi', path: '/defi' },
     { icon: Image, label: 'NFTs', path: '/nfts' },
     { icon: Shield, label: 'Smart Contracts', path: '/contracts' },
+    { icon: GitMerge, label: 'Fractal Explorer', path: '/fractal-explorer' },
+    { icon: FileText, label: 'White Paper', path: '/whitepaper' },
     { icon: Settings, label: 'Settings', path: '/settings' },
   ];
 
@@ -48,19 +50,21 @@ const MobileMenu = ({ isOpen, onClose }: MobileMenuProps) => {
         
         <nav className="flex-1 overflow-y-auto py-2">
           {navItems.map((item) => (
-            <Link key={item.path} href={item.path}>
-              <a 
-                className={`nav-item flex items-center px-4 py-3 transition-all duration-200 hover:bg-primary/10 hover:border-l-3 hover:border-primary ${
-                  isActive(item.path) 
-                    ? 'active text-foreground bg-primary/20 border-l-3 border-primary' 
-                    : 'text-muted-foreground hover:text-foreground border-l-3 border-transparent'
-                }`}
-                onClick={onClose}
-              >
-                <item.icon className="w-5 h-5 mr-3" />
-                {item.label}
-              </a>
-            </Link>
+            <div key={item.path}>
+              <Link href={item.path}>
+                <div 
+                  className={`nav-item cursor-pointer flex items-center px-4 py-3 transition-all duration-200 hover:bg-primary/10 hover:border-l-3 hover:border-primary ${
+                    isActive(item.path) 
+                      ? 'active text-foreground bg-primary/20 border-l-3 border-primary' 
+                      : 'text-muted-foreground hover:text-foreground border-l-3 border-transparent'
+                  }`}
+                  onClick={onClose}
+                >
+                  <item.icon className="w-5 h-5 mr-3" />
+                  {item.label}
+                </div>
+              </Link>
+            </div>
           ))}
         </nav>
         
