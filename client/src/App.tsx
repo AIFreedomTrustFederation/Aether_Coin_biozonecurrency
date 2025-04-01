@@ -2,6 +2,7 @@ import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
+import DevToolsToggle from "@/components/layout/DevToolsToggle";
 import Dashboard from "@/pages/Dashboard";
 import Assets from "@/pages/Assets";
 import Transactions from "@/pages/Transactions";
@@ -31,12 +32,9 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="app-container relative">
-        <Router />
-        <Toaster />
-      </div>
-      {/* This div will push any developer tools below the app content */}
-      <div className="dev-tools-spacer h-[100vh]"></div>
+      <Router />
+      <Toaster />
+      <DevToolsToggle />
     </QueryClientProvider>
   );
 }
