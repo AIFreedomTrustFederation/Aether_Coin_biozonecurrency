@@ -1,162 +1,130 @@
 import { useState, useEffect } from 'react';
-import { Code, Eye, EyeOff } from 'lucide-react';
 
-// CSS to inject with higher specificity
-const cssToInject = `
-  .aetherion-toggle-dev-console {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background: rgba(124, 58, 237, 0.9);
-    color: white;
-    padding: 10px 16px;
-    border-radius: 12px;
-    font-size: 14px;
-    cursor: pointer;
-    box-shadow: 0 4px 20px rgba(124, 58, 237, 0.4);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    z-index: 10000000;
-    font-family: sans-serif;
-    border: none;
-    transition: all 0.2s ease;
-    backdrop-filter: blur(4px);
-  }
-  
-  .aetherion-toggle-dev-console:hover {
-    background: rgba(124, 58, 237, 1);
-    transform: translateY(-2px);
-  }
-  
-  .aetherion-toggle-dev-console svg {
-    width: 18px;
-    height: 18px;
-  }
-  
-  /* Fix pointer events for all navigation elements */
-  html body a, 
-  html body button,
-  html body .nav-item,
-  html body [role="link"],
-  html body [role="button"] {
-    pointer-events: auto !important;
-  }
-  
-  /* Ensure clicks work on all important elements */
-  html body header *, 
-  html body nav *, 
-  html body aside *,
-  html body .mobile-menu *, 
-  html body [class*="sidebar"] * {
-    pointer-events: auto !important;
-  }
-`;
-
+// A simple component that adds a button to toggle dev tools
 const DevToolsToggle = () => {
-  const [devToolsVisible, setDevToolsVisible] = useState(true);
+  // Use component state to track visibility
+  const [isVisible, setIsVisible] = useState(true);
   
-  // Inject button directly into body to ensure it's outside of React components
   useEffect(() => {
-    // Inject CSS
+    // Create the style element for our custom CSS
     const style = document.createElement('style');
-    style.textContent = cssToInject;
+    style.textContent = `
+      /* The button styling */
+      #aetherion-dev-toggle {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: rgba(124, 58, 237, 0.9);
+        color: white;
+        padding: 10px 16px;
+        border-radius: 12px;
+        font-size: 14px;
+        font-family: system-ui, sans-serif;
+        cursor: pointer;
+        z-index: 99999999;
+        border: none;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        transition: transform 0.2s ease;
+      }
+      
+      #aetherion-dev-toggle:hover {
+        transform: translateY(-2px);
+      }
+      
+      /* Styles for when dev tools are hidden */
+      .hide-dev-tools iframe,
+      .hide-dev-tools [class*="jsx-"],
+      .hide-dev-tools [class*="replit"],
+      .hide-dev-tools [id*="replit"],
+      .hide-dev-tools [class*="console"],
+      .hide-dev-tools [class*="terminal"],
+      .hide-dev-tools .split-view,
+      .hide-dev-tools [role="tabpanel"] {
+        display: none !important;
+      }
+      
+      /* Ensure our app components are always clickable */
+      #root {
+        z-index: 1;
+      }
+      
+      /* Make sure navigation elements are always on top */
+      header, 
+      .mobile-menu,
+      .sidebar,
+      nav {
+        z-index: 999999 !important;
+      }
+    `;
     document.head.appendChild(style);
     
-    // Create button element with unique class name
+    // Create the toggle button
     const button = document.createElement('button');
-    button.className = 'aetherion-toggle-dev-console';
+    button.id = 'aetherion-dev-toggle';
     button.innerHTML = `
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M18 16l4-4-4-4"></path>
-        <path d="M6 8l-4 4 4 4"></path>
-        <path d="M14.5 4l-5 16"></path>
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="16 18 22 12 16 6"></polyline>
+        <polyline points="8 6 2 12 8 18"></polyline>
       </svg>
       <span>Toggle Dev Console</span>
     `;
     
-    // Add click event
+    // Add the click handler for the button
     button.addEventListener('click', () => {
-      // Try to find the console using Replit-specific and common DOM locators
-      const consoleSelectors = [
-        // Replit specific
-        '.jsx-3184167669', '.jsx-230647805', '.jsx-1307940033', '.jsx-2818342538',
-        '.wrap-container', '.console-container', '.output-container', '.terminal-container',
-        
-        // Common browser dev console selectors
-        'div[role="tabpanel"]', '.devtools', '.console-view', '.split-view',
-        
-        // Generic tab and identifiers that could be consoles
-        'div[id*="console"]', 'div[id*="terminal"]', 'div[class*="console"]', 
-        'div[class*="terminal"]', '[data-cy*="console"]', '[data-testid*="console"]',
-        
-        // Mobile Chrome Developer Tools elements
-        '.mobile-panel', '#mobile-panel', '.mobile-toolbar',
-        
-        // Additional Replit-specific elements
-        'div[class*="replitTop"]', 'div[class*="replitRight"]', 'div[class*="replitBottom"]'
-      ];
+      setIsVisible(!isVisible);
       
-      // Get all potential console elements
-      let devTools = [];
-      
-      // Try all selectors individually to maximize chances of finding console elements
-      consoleSelectors.forEach(selector => {
-        const elements = document.querySelectorAll(selector);
-        if (elements.length > 0) {
-          devTools = [...devTools, ...elements];
-        }
-      });
-      
-      // Toggle state
-      const newState = !devToolsVisible;
-      setDevToolsVisible(newState);
-      
-      // Apply visibility change to all found elements
-      if (devTools.length > 0) {
-        devTools.forEach(element => {
-          if (element) {
-            element.style.display = newState ? '' : 'none';
-          }
-        });
+      // Toggle the class on the body
+      if (isVisible) {
+        document.body.classList.add('hide-dev-tools');
+        button.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="16 18 22 12 16 6"></polyline>
+            <polyline points="8 6 2 12 8 18"></polyline>
+          </svg>
+          <span>Show Dev Console</span>
+        `;
       } else {
-        // Fallback: If no specific console elements found, try higher-level containers
-        // This is a more aggressive approach that might affect other UI elements
-        const contentContainers = document.querySelectorAll('body > div:not(:first-child)');
-        contentContainers.forEach(container => {
-          container.style.display = newState ? '' : 'none';
-        });
+        document.body.classList.remove('hide-dev-tools');
+        button.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="16 18 22 12 16 6"></polyline>
+            <polyline points="8 6 2 12 8 18"></polyline>
+          </svg>
+          <span>Hide Dev Console</span>
+        `;
       }
       
-      // Update button text and icon
-      const iconSvg = newState ? 
-        `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M18 16l4-4-4-4"></path>
-          <path d="M6 8l-4 4 4 4"></path>
-          <path d="M14.5 4l-5 16"></path>
-        </svg>` : 
-        `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M2 9l10 3 10-3"></path>
-          <path d="M2 15l10 3 10-3"></path>
-        </svg>`;
-      
-      button.innerHTML = `${iconSvg}<span>${newState ? 'Hide Dev Console' : 'Show Dev Console'}</span>`;
-      
-      console.log('DevTools toggle clicked, elements affected:', devTools.length);
+      console.log('Developer console visibility toggled', { isVisible: !isVisible });
     });
     
-    // Append to body
+    // Add the button to the document
     document.body.appendChild(button);
     
-    // Cleanup on unmount
+    // Fix potential z-index issues with absolute elements
+    const fixZIndex = () => {
+      const header = document.querySelector('header');
+      if (header) header.style.zIndex = '999999';
+      
+      const mobileMenu = document.querySelector('[class*="mobile-menu"]');
+      if (mobileMenu) mobileMenu.style.zIndex = '999999';
+    };
+    
+    // Run the fix initially and after the DOM might have changed
+    fixZIndex();
+    setTimeout(fixZIndex, 1000);
+    
+    // Cleanup when component unmounts
     return () => {
       button.remove();
       style.remove();
+      document.body.classList.remove('hide-dev-tools');
     };
-  }, [devToolsVisible]); // Add dependency to react to state changes
+  }, [isVisible]); // Re-run the effect when visibility changes
   
-  // Empty render as we're injecting the button directly
-  return null;
+  return null; // This component doesn't render anything
 };
 
 export default DevToolsToggle;
