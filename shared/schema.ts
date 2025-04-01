@@ -1,15 +1,23 @@
-import { pgTable, text, serial, integer, boolean, timestamp, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, jsonb, decimal } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+import { relations } from "drizzle-orm";
 
 // User schema
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
-  password: text("password").notNull(),
-  walletSeed: text("wallet_seed"),
+  email: text("email").notNull().unique(),
+  passwordHash: text("password_hash").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
+
+export const usersRelations = relations(users, ({ many }) => ({
+  wallets: many(wallets),
+  smartContracts: many(smartContracts),
+  aiMonitoringLogs: many(aiMonitoringLogs),
+  cidEntries: many(cidEntries),
+}));
 
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -21,12 +29,23 @@ export const wallets = pgTable("wallets", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id),
   chain: text("chain").notNull(), // e.g., 'ethereum', 'bitcoin', 'solana'
+  name: text("name").notNull(),
   address: text("address").notNull(),
-  balance: text("balance").notNull().default("0"),
-  name: text("name"),
-  type: text("type"), // e.g., 'hot', 'cold', 'hardware'
+  balance: text("balance").notNull(),
+  type: text("type").notNull(), // e.g., 'native', 'token', 'nft'
+  symbol: text("symbol").notNull(),
+  dollarValue: decimal("dollar_value").notNull(),
+  percentChange: decimal("percent_change").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
+
+export const walletsRelations = relations(wallets, ({ one, many }) => ({
+  user: one(users, {
+    fields: [wallets.userId],
+    references: [users.id],
+  }),
+  transactions: many(transactions),
+}));
 
 export const insertWalletSchema = createInsertSchema(wallets).omit({
   id: true,
@@ -50,6 +69,13 @@ export const transactions = pgTable("transactions", {
   aiVerified: boolean("ai_verified").default(false),
 });
 
+export const transactionsRelations = relations(transactions, ({ one }) => ({
+  wallet: one(wallets, {
+    fields: [transactions.walletId],
+    references: [wallets.id],
+  }),
+}));
+
 export const insertTransactionSchema = createInsertSchema(transactions).omit({
   id: true,
   timestamp: true,
@@ -62,11 +88,17 @@ export const smartContracts = pgTable("smart_contracts", {
   name: text("name").notNull(),
   address: text("address").notNull(),
   chain: text("chain").notNull(),
-  abi: jsonb("abi"),
   status: text("status").notNull(), // 'active', 'pending', 'inactive'
   lastInteraction: timestamp("last_interaction"),
   createdAt: timestamp("created_at").defaultNow(),
 });
+
+export const smartContractsRelations = relations(smartContracts, ({ one }) => ({
+  user: one(users, {
+    fields: [smartContracts.userId],
+    references: [users.id],
+  }),
+}));
 
 export const insertSmartContractSchema = createInsertSchema(smartContracts).omit({
   id: true,
@@ -86,6 +118,13 @@ export const aiMonitoringLogs = pgTable("ai_monitoring_logs", {
   relatedEntityType: text("related_entity_type"), // 'transaction', 'contract', etc.
 });
 
+export const aiMonitoringLogsRelations = relations(aiMonitoringLogs, ({ one }) => ({
+  user: one(users, {
+    fields: [aiMonitoringLogs.userId],
+    references: [users.id],
+  }),
+}));
+
 export const insertAiMonitoringLogSchema = createInsertSchema(aiMonitoringLogs).omit({
   id: true,
   timestamp: true,
@@ -98,7 +137,6 @@ export const cidEntries = pgTable("cid_entries", {
   cid: text("cid").notNull(),
   type: text("type").notNull(), // 'wallet_backup', 'smart_contract', 'transaction_log'
   status: text("status").notNull(), // 'active', 'syncing', 'inactive'
-  data: jsonb("data"), // Additional data related to the CID
   createdAt: timestamp("created_at").defaultNow(),
 });
 
