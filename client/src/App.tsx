@@ -31,8 +31,12 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <Router />
-      <Toaster />
+      <div className="app-container relative">
+        <Router />
+        <Toaster />
+      </div>
+      {/* This div will push any developer tools below the app content */}
+      <div className="dev-tools-spacer h-[100vh]"></div>
     </QueryClientProvider>
   );
 }

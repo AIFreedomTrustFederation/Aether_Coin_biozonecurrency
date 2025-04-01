@@ -330,7 +330,7 @@ const FractalExplorer = () => {
   }, [generateFractal]); // Only depend on the generateFractal function
   
   return (
-    <div className="flex h-full min-h-screen bg-background">
+    <div className="flex h-full w-full bg-background">
       <Sidebar />
       <div className="flex-1 p-6 overflow-auto">
         <motion.div

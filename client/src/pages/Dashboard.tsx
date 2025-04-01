@@ -17,7 +17,7 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="flex h-screen w-full overflow-hidden">
+    <div className="flex h-full w-full overflow-hidden">
       {/* Sidebar */}
       <Sidebar />
       
