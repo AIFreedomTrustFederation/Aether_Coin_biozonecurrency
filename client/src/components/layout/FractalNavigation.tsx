@@ -14,13 +14,14 @@ const FractalNavigation = ({ className }: FractalNavigationProps) => {
   const [animateTraverse, setAnimateTraverse] = useState(false);
 
   const fractalNodes: FractalNode[] = [
-    { id: 'dashboard', name: 'Dashboard', path: '/', x: 50, y: 10, connections: ['assets', 'transactions'] },
-    { id: 'assets', name: 'Assets', path: '/assets', x: 25, y: 30, connections: ['defi', 'nfts'] },
-    { id: 'transactions', name: 'Transactions', path: '/transactions', x: 75, y: 30, connections: ['staking', 'contracts'] },
+    { id: 'dashboard', name: 'Dashboard', path: '/', x: 50, y: 10, connections: ['assets', 'transactions', 'whitepaper'] },
+    { id: 'assets', name: 'Assets', path: '/assets', x: 25, y: 30, connections: ['defi', 'nfts', 'whitepaper'] },
+    { id: 'transactions', name: 'Transactions', path: '/transactions', x: 75, y: 30, connections: ['staking', 'contracts', 'whitepaper'] },
     { id: 'defi', name: 'DeFi', path: '/defi', x: 15, y: 60, connections: ['settings'] },
     { id: 'nfts', name: 'NFTs', path: '/nfts', x: 40, y: 60, connections: [] },
     { id: 'staking', name: 'Staking', path: '/staking', x: 65, y: 60, connections: [] },
     { id: 'contracts', name: 'Contracts', path: '/contracts', x: 85, y: 60, connections: ['security'] },
+    { id: 'whitepaper', name: 'White Paper', path: '/whitepaper', x: 50, y: 40, connections: ['contracts', 'assets'] },
     { id: 'settings', name: 'Settings', path: '/settings', x: 30, y: 80, connections: [] },
     { id: 'security', name: 'Security', path: '/security', x: 70, y: 80, connections: [] },
   ];
