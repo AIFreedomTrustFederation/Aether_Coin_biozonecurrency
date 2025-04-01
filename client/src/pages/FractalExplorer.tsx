@@ -149,70 +149,90 @@ const FractalExplorer = () => {
   };
   
   // Generate fractal image
-  const generateFractal = () => {
+  const generateFractal = React.useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     
     setIsGenerating(true);
     
     const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    if (!ctx) {
+      setIsGenerating(false);
+      return;
+    }
     
     const width = canvas.width;
     const height = canvas.height;
     
+    if (width <= 0 || height <= 0) {
+      setIsGenerating(false);
+      return;
+    }
+    
     // Clear canvas
     ctx.clearRect(0, 0, width, height);
     
-    // Create image data
-    const imageData = ctx.createImageData(width, height);
-    const data = imageData.data;
-    
-    // Scale factor based on zoom level (smaller value means more zoom)
-    const scale = 4 / zoomLevel;
-    
-    // For each pixel in the canvas
-    for (let x = 0; x < width; x++) {
-      for (let y = 0; y < height; y++) {
-        // Map pixel coordinates to complex plane
-        const x0 = centerX + (x - width / 2) * scale / width;
-        const y0 = centerY + (y - height / 2) * scale / height;
-        
-        // Calculate iterations using the appropriate fractal function
-        let iterationCount;
-        switch (fractalType) {
-          case "julia":
-            iterationCount = juliaFunction(x0, y0, iterations);
-            break;
-          case "burningShip":
-            iterationCount = burningShipFunction(x0, y0, iterations);
-            break;
-          case "mandelbrot":
-          default:
-            iterationCount = mandelbrotFunction(x0, y0, iterations);
+    try {
+      // Create image data
+      const imageData = ctx.createImageData(width, height);
+      const data = imageData.data;
+      
+      // Scale factor based on zoom level (smaller value means more zoom)
+      const scale = 4 / zoomLevel;
+      
+      // For each pixel in the canvas
+      for (let x = 0; x < width; x++) {
+        for (let y = 0; y < height; y++) {
+          // Map pixel coordinates to complex plane
+          const x0 = centerX + (x - width / 2) * scale / width;
+          const y0 = centerY + (y - height / 2) * scale / height;
+          
+          // Calculate iterations using the appropriate fractal function
+          let iterationCount;
+          switch (fractalType) {
+            case "julia":
+              iterationCount = juliaFunction(x0, y0, iterations);
+              break;
+            case "burningShip":
+              iterationCount = burningShipFunction(x0, y0, iterations);
+              break;
+            case "mandelbrot":
+            default:
+              iterationCount = mandelbrotFunction(x0, y0, iterations);
+          }
+          
+          // Calculate color based on iteration count
+          const color = getColor(iterationCount, iterations, colorScheme);
+          
+          // Set pixel color
+          const pixelIndex = (y * width + x) * 4;
+          data[pixelIndex] = color[0];     // R
+          data[pixelIndex + 1] = color[1]; // G
+          data[pixelIndex + 2] = color[2]; // B
+          data[pixelIndex + 3] = 255;      // A (fully opaque)
         }
-        
-        // Calculate color based on iteration count
-        const color = getColor(iterationCount, iterations, colorScheme);
-        
-        // Set pixel color
-        const pixelIndex = (y * width + x) * 4;
-        data[pixelIndex] = color[0];     // R
-        data[pixelIndex + 1] = color[1]; // G
-        data[pixelIndex + 2] = color[2]; // B
-        data[pixelIndex + 3] = 255;      // A (fully opaque)
       }
+      
+      // Draw the image data to the canvas
+      ctx.putImageData(imageData, 0, 0);
+    } catch (error) {
+      console.error("Error generating fractal:", error);
+    } finally {
+      setIsGenerating(false);
     }
-    
-    // Draw the image data to the canvas
-    ctx.putImageData(imageData, 0, 0);
-    setIsGenerating(false);
-  };
+  }, [zoomLevel, centerX, centerY, fractalType, iterations, colorScheme, juliaConstant]);
   
   // Initial generation and regeneration on parameter change
   useEffect(() => {
-    generateFractal();
-  }, [fractalType, iterations, zoomLevel, centerX, centerY, colorScheme, juliaConstant]);
+    // Only generate when component is fully mounted
+    if (canvasRef.current) {
+      const canvas = canvasRef.current;
+      // Make sure canvas has dimensions before generating
+      if (canvas.width > 0 && canvas.height > 0) {
+        generateFractal();
+      }
+    }
+  }, [generateFractal]);
   
   // Handle canvas click for zooming in at specific point
   const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -273,27 +293,41 @@ const FractalExplorer = () => {
     document.body.removeChild(link);
   };
   
-  // Resize handler for responsive canvas
+  // Resize handler for responsive canvas and initial setup
   useEffect(() => {
     const handleResize = () => {
       const canvas = canvasRef.current;
       if (canvas) {
         const container = canvas.parentElement;
         if (container) {
-          canvas.width = container.clientWidth;
-          canvas.height = container.clientHeight;
-          generateFractal();
+          const width = container.clientWidth;
+          const height = container.clientHeight;
+          
+          // Set canvas dimensions
+          canvas.width = width;
+          canvas.height = height;
+          
+          // Redraw fractal after resize
+          if (width > 0 && height > 0) {
+            setTimeout(() => {
+              generateFractal();
+            }, 100); // Small delay to ensure canvas is ready
+          }
         }
       }
     };
     
+    // Set up initial dimensions when component mounts
+    setTimeout(() => {
+      handleResize();
+    }, 200);
+    
     window.addEventListener('resize', handleResize);
-    handleResize(); // Initial setup
     
     return () => {
       window.removeEventListener('resize', handleResize);
     };
-  }, []);
+  }, [generateFractal]); // Only depend on the generateFractal function
   
   return (
     <div className="flex h-full min-h-screen bg-background">

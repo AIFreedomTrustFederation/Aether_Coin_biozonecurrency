@@ -50,16 +50,19 @@ const Sidebar = () => {
       
       <nav className="flex-1 overflow-y-auto py-2">
         {navItems.map((item) => (
-          <Link key={item.path} href={item.path}>
-            <a className={`nav-item flex items-center px-4 py-3 transition-all duration-200 hover:bg-sidebar-primary/10 hover:border-l-3 hover:border-sidebar-primary ${
-              isActive(item.path) 
-                ? 'active text-sidebar-foreground bg-sidebar-primary/20 border-l-3 border-sidebar-primary' 
-                : 'text-sidebar-foreground/60 hover:text-sidebar-foreground border-l-3 border-transparent'
-            }`}>
-              <item.icon className="w-5 h-5 mr-3" />
-              {item.label}
-            </a>
-          </Link>
+          // Use div instead of <a> inside <Link> to prevent DOM nesting issues
+          <div key={item.path}>
+            <Link href={item.path}>
+              <div className={`nav-item cursor-pointer flex items-center px-4 py-3 transition-all duration-200 hover:bg-sidebar-primary/10 hover:border-l-3 hover:border-sidebar-primary ${
+                isActive(item.path) 
+                  ? 'active text-sidebar-foreground bg-sidebar-primary/20 border-l-3 border-sidebar-primary' 
+                  : 'text-sidebar-foreground/60 hover:text-sidebar-foreground border-l-3 border-transparent'
+              }`}>
+                <item.icon className="w-5 h-5 mr-3" />
+                {item.label}
+              </div>
+            </Link>
+          </div>
         ))}
       </nav>
       
