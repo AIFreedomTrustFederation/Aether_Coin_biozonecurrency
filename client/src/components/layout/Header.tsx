@@ -9,7 +9,7 @@ interface HeaderProps {
 
 const Header = ({ toggleMobileMenu }: HeaderProps) => {
   return (
-    <header className="bg-card border-b border-border flex items-center justify-between p-4 relative" style={{ zIndex: 9999998 }}>
+    <header className="bg-card border-b border-border flex items-center justify-between p-4 relative" style={{ zIndex: 9999999 }}>
       <div className="flex items-center lg:hidden">
         <button 
           className="text-foreground mr-3"

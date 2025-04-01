@@ -33,7 +33,7 @@ const MobileMenu = ({ isOpen, onClose }: MobileMenuProps) => {
       className={`fixed inset-0 bg-background transform transition-transform duration-300 ease-in-out lg:hidden ${
         isOpen ? 'translate-x-0' : '-translate-x-full'
       }`}
-      style={{ zIndex: 9999999 }}
+      style={{ zIndex: 2147483647 }}
     >
       <div className="flex flex-col h-full">
         <div className="p-4 border-b border-border flex items-center justify-between">
