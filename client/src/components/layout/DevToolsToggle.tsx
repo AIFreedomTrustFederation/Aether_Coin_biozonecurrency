@@ -45,19 +45,54 @@ const DevToolsToggle = () => {
           transform: scale(0.9) translateZ(0);
         }
         
-        /* CSS to fix the UI elements */
+        /* Strong CSS selectors to hide Replit dev tools when the hide-dev-tools class is active */
+        .hide-dev-tools iframe,
+        .hide-dev-tools [class*="jsx-"],
+        .hide-dev-tools [class*="replit"],
+        .hide-dev-tools [id*="replit"],
+        .hide-dev-tools [class*="console"],
+        .hide-dev-tools [class*="terminal"],
+        .hide-dev-tools [role="tabpanel"],
+        .hide-dev-tools div[class*="View"],
+        .hide-dev-tools div[class*="panel"],
+        .hide-dev-tools div[class*="tabs"],
+        .hide-dev-tools div[id*="tab"],
+        .hide-dev-tools div[class*="inspector"],
+        .hide-dev-tools div[class*="debugger"],
+        .hide-dev-tools div[class*="monitor"] {
+          display: none !important;
+          opacity: 0 !important;
+          visibility: hidden !important;
+          pointer-events: none !important;
+          max-height: 0 !important;
+          max-width: 0 !important;
+          overflow: hidden !important;
+        }
+        
+        /* Ensure our app UI elements are visible and interactive */
         header {
           position: relative !important;
-          z-index: 9999999 !important;
+          z-index: 2147483647 !important;
         }
         
         .mobile-menu {
           position: fixed !important;
-          z-index: 9999999 !important;
+          z-index: 2147483647 !important;
         }
         
-        button, a, .nav-item {
+        /* Make all interactive elements actually interactive */
+        #root button, 
+        #root a, 
+        header *, 
+        .mobile-menu *, 
+        .nav-item, 
+        [role="button"], 
+        [role="link"],
+        [role="tab"],
+        [role="menuitem"] {
           pointer-events: auto !important;
+          position: relative !important;
+          z-index: 500 !important;
         }
       `;
       
@@ -75,15 +110,81 @@ const DevToolsToggle = () => {
       button.innerHTML = '🚀';
       document.body.appendChild(button);
       
-      // Click handler that toggles the mobile menu by finding and clicking the hamburger button
+      // Click handler that toggles between app mode and dev mode
       button.onclick = () => {
-        // Find the hamburger button in the header and click it
-        const hamburgerBtn = document.querySelector('header button[aria-label="Toggle mobile menu"]');
-        if (hamburgerBtn) {
-          (hamburgerBtn as HTMLElement).click();
+        const isInDevMode = !document.body.classList.contains('hide-dev-tools');
+        
+        // Toggle between app mode and dev mode
+        if (isInDevMode) {
+          // We're in dev mode, switch to app mode
+          
+          // Hide all Replit dev tools
+          const hideDevTools = () => {
+            // Add our hide-dev-tools class to the body to hide all developer interface elements
+            document.body.classList.add('hide-dev-tools');
+            
+            // Update button to show we're in app mode
+            button.innerHTML = '🚀';
+            button.setAttribute('title', 'App Mode: Click to switch to Dev Mode');
+            
+            // Hide all divs that might be part of the dev console
+            document.querySelectorAll('body > div').forEach(div => {
+              // Skip the first div which likely contains our app
+              if (div.id !== 'root' && !div.contains(document.getElementById('root'))) {
+                (div as HTMLElement).style.display = 'none';
+              }
+            });
+            
+            // Set pointer-events to none for all iframes
+            document.querySelectorAll('iframe').forEach(iframe => {
+              (iframe as HTMLElement).style.pointerEvents = 'none';
+            });
+          };
+          
+          // Hide all dev tools
+          hideDevTools();
+          
+          // Then open the mobile menu
+          setTimeout(() => {
+            const hamburgerBtn = document.querySelector('header button[aria-label="Toggle mobile menu"]');
+            if (hamburgerBtn) {
+              (hamburgerBtn as HTMLElement).click();
+            }
+          }, 100);
         } else {
-          // Fallback to home page if button not found
-          window.location.href = '/';
+          // We're in app mode, switch to dev mode
+          
+          // Show all Replit dev tools
+          const showDevTools = () => {
+            // Remove our hide-dev-tools class from the body
+            document.body.classList.remove('hide-dev-tools');
+            
+            // Update button to show we're in dev mode
+            button.innerHTML = '⚙️';
+            button.setAttribute('title', 'Dev Mode: Click to switch to App Mode');
+            
+            // Show all divs
+            document.querySelectorAll('body > div').forEach(div => {
+              (div as HTMLElement).style.display = '';
+            });
+            
+            // Restore pointer-events for all iframes
+            document.querySelectorAll('iframe').forEach(iframe => {
+              (iframe as HTMLElement).style.pointerEvents = 'auto';
+            });
+            
+            // Close the mobile menu if it's open
+            const mobileMenu = document.querySelector('.mobile-menu');
+            if (mobileMenu && window.getComputedStyle(mobileMenu).display !== 'none') {
+              const closeBtn = mobileMenu.querySelector('button[aria-label="Close"]');
+              if (closeBtn) {
+                (closeBtn as HTMLElement).click();
+              }
+            }
+          };
+          
+          // Show all dev tools
+          showDevTools();
         }
       };
       
