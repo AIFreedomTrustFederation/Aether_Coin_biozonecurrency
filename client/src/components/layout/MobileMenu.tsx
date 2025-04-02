@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'wouter';
-import { X, Home, Coins, ArrowRightLeft, BarChart2, Image, Shield, Settings, FileText, GitMerge } from 'lucide-react';
+import { X, Home, Coins, ArrowRightLeft, BarChart2, Image, Shield, Settings, FileText, GitMerge, CreditCard } from 'lucide-react';
 import FractalNavigation from './FractalNavigation';
 
 interface MobileMenuProps {
@@ -14,6 +14,7 @@ const MobileMenu = ({ isOpen, onClose }: MobileMenuProps) => {
     { icon: Home, label: 'Dashboard', path: '/' },
     { icon: Coins, label: 'Assets', path: '/assets' },
     { icon: ArrowRightLeft, label: 'Transactions', path: '/transactions' },
+    { icon: CreditCard, label: 'Payments', path: '/payments' },
     { icon: BarChart2, label: 'DeFi', path: '/defi' },
     { icon: Image, label: 'NFTs', path: '/nfts' },
     { icon: Shield, label: 'Smart Contracts', path: '/contracts' },

@@ -293,12 +293,42 @@ export const getPaymentStatus = async (id: number): Promise<Payment> => {
 };
 
 // Stripe specific APIs
-export const createPaymentIntent = async (amount: number, currency: string, walletId?: number): Promise<{ clientSecret: string }> => {
-  const response = await apiRequest('POST', '/api/stripe/payment-intent', { 
+export const createPaymentIntent = async (amount: number, currency: string, metadata?: Record<string, any>): Promise<{ clientSecret: string, id: string }> => {
+  const response = await apiRequest('POST', '/api/payments/intent', { 
     amount, 
     currency,
-    walletId
+    metadata
   });
   
   return await response.json();
+};
+
+export const saveStripePaymentMethod = async (stripePaymentMethodId: string, isDefault: boolean = false): Promise<PaymentMethod> => {
+  const response = await apiRequest('POST', '/api/payment-methods', {
+    stripePaymentMethodId,
+    isDefault
+  });
+  
+  const newPaymentMethod = await response.json();
+  return {
+    ...newPaymentMethod,
+    createdAt: new Date(newPaymentMethod.createdAt)
+  };
+};
+
+export const processPayment = async (paymentMethodId: number, amount: number, currency: string, description: string, walletId?: number): Promise<Payment> => {
+  const response = await apiRequest('POST', '/api/payments/process', {
+    paymentMethodId,
+    amount,
+    currency,
+    description,
+    walletId
+  });
+  
+  const payment = await response.json();
+  return {
+    ...payment,
+    createdAt: new Date(payment.createdAt),
+    processedAt: payment.processedAt ? new Date(payment.processedAt) : undefined
+  };
 };

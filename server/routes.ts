@@ -1,8 +1,23 @@
-import type { Express } from "express";
+import type { Express, Request } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertWalletSchema, insertTransactionSchema, insertSmartContractSchema, insertAiMonitoringLogSchema, insertCidEntrySchema } from "@shared/schema";
+import { 
+  insertWalletSchema, 
+  insertTransactionSchema, 
+  insertSmartContractSchema, 
+  insertAiMonitoringLogSchema, 
+  insertCidEntrySchema,
+  insertPaymentMethodSchema,
+  insertPaymentSchema 
+} from "@shared/schema";
+import { stripeService } from "./services/stripe";
 import { z } from "zod";
+import Stripe from "stripe";
+
+// Initialize Stripe with the secret key from environment variables
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: '2023-10-16' as any, // Use the latest stable version
+});
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // API routes
@@ -185,6 +200,206 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(updatedEntry);
     } catch (error) {
       res.status(500).json({ message: "Failed to update CID entry status" });
+    }
+  });
+
+  // Payment routes
+  
+  // Get payment methods for a user
+  app.get("/api/payment-methods", async (req, res) => {
+    try {
+      const userId = 1; // For demo purposes
+      const paymentMethods = await storage.getPaymentMethodsByUserId(userId);
+      res.json(paymentMethods);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch payment methods" });
+    }
+  });
+  
+  // Create a new payment method
+  app.post("/api/payment-methods", async (req, res) => {
+    try {
+      const { stripePaymentMethodId, isDefault } = req.body;
+      
+      if (!stripePaymentMethodId || typeof stripePaymentMethodId !== 'string') {
+        return res.status(400).json({ message: "Invalid payment method ID" });
+      }
+      
+      const userId = 1; // For demo purposes
+      const paymentMethod = await stripeService.savePaymentMethod(
+        userId, 
+        stripePaymentMethodId, 
+        isDefault === true
+      );
+      
+      res.status(201).json(paymentMethod);
+    } catch (error) {
+      res.status(500).json({ 
+        message: "Failed to create payment method",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
+  // Update a payment method (set as default)
+  app.patch("/api/payment-methods/:id/default", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { isDefault } = req.body;
+      
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid payment method ID" });
+      }
+      
+      if (typeof isDefault !== 'boolean') {
+        return res.status(400).json({ message: "isDefault must be a boolean" });
+      }
+      
+      const updatedMethod = await storage.updatePaymentMethodDefault(id, isDefault);
+      
+      if (!updatedMethod) {
+        return res.status(404).json({ message: "Payment method not found" });
+      }
+      
+      res.json(updatedMethod);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update payment method" });
+    }
+  });
+  
+  // Delete a payment method
+  app.delete("/api/payment-methods/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid payment method ID" });
+      }
+      
+      const success = await storage.deletePaymentMethod(id);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Payment method not found" });
+      }
+      
+      res.status(204).end();
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete payment method" });
+    }
+  });
+  
+  // Get payments for a user
+  app.get("/api/payments", async (req, res) => {
+    try {
+      const userId = 1; // For demo purposes
+      const payments = await storage.getPaymentsByUserId(userId);
+      res.json(payments);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch payments" });
+    }
+  });
+  
+  // Create a payment intent
+  app.post("/api/payments/intent", async (req, res) => {
+    try {
+      const { amount, currency, metadata } = req.body;
+      
+      if (!amount || isNaN(parseInt(amount))) {
+        return res.status(400).json({ message: "Invalid amount" });
+      }
+      
+      if (!currency || typeof currency !== 'string') {
+        return res.status(400).json({ message: "Invalid currency" });
+      }
+      
+      const paymentIntent = await stripeService.createPaymentIntent(
+        parseInt(amount), 
+        currency,
+        metadata || {}
+      );
+      
+      res.json({
+        clientSecret: paymentIntent.client_secret,
+        id: paymentIntent.id
+      });
+    } catch (error) {
+      res.status(500).json({ 
+        message: "Failed to create payment intent",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
+  // Process a payment
+  app.post("/api/payments/process", async (req, res) => {
+    try {
+      const { paymentMethodId, amount, currency, description, walletId } = req.body;
+      
+      if (!paymentMethodId || isNaN(parseInt(paymentMethodId))) {
+        return res.status(400).json({ message: "Invalid payment method ID" });
+      }
+      
+      if (!amount || isNaN(parseInt(amount))) {
+        return res.status(400).json({ message: "Invalid amount" });
+      }
+      
+      if (!currency || typeof currency !== 'string') {
+        return res.status(400).json({ message: "Invalid currency" });
+      }
+      
+      if (!description || typeof description !== 'string') {
+        return res.status(400).json({ message: "Invalid description" });
+      }
+      
+      const userId = 1; // For demo purposes
+      
+      const payment = await stripeService.processPayment(
+        userId,
+        parseInt(paymentMethodId),
+        parseInt(amount),
+        currency,
+        description,
+        walletId ? parseInt(walletId) : undefined
+      );
+      
+      res.status(201).json(payment);
+    } catch (error) {
+      res.status(500).json({ 
+        message: "Failed to process payment",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
+  // Handle Stripe webhook events
+  app.post("/api/webhooks/stripe", async (req, res) => {
+    const signature = req.headers['stripe-signature'] as string;
+    
+    if (!signature) {
+      return res.status(400).json({ message: "Missing Stripe signature" });
+    }
+    
+    try {
+      // Raw body needed for webhook signature verification
+      const rawBody = (req as any).rawBody;
+      
+      if (!rawBody) {
+        return res.status(400).json({ message: "Missing request body" });
+      }
+      
+      const event = stripe.webhooks.constructEvent(
+        rawBody,
+        signature,
+        process.env.STRIPE_WEBHOOK_SECRET || ''
+      );
+      
+      await stripeService.handleWebhookEvent(event);
+      res.json({ received: true });
+    } catch (error) {
+      res.status(400).json({ 
+        message: "Webhook error",
+        error: error instanceof Error ? error.message : String(error)
+      });
     }
   });
 

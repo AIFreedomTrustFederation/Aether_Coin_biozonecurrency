@@ -9,7 +9,8 @@ import {
   Shield, 
   Settings,
   FileText,
-  GitMerge
+  GitMerge,
+  CreditCard
 } from 'lucide-react';
 import FractalNavigation from './FractalNavigation';
 
@@ -20,6 +21,7 @@ const Sidebar = () => {
     { icon: Home, label: 'Dashboard', path: '/' },
     { icon: Coins, label: 'Assets', path: '/assets' },
     { icon: ArrowRightLeft, label: 'Transactions', path: '/transactions' },
+    { icon: CreditCard, label: 'Payments', path: '/payments' },
     { icon: BarChart2, label: 'DeFi', path: '/defi' },
     { icon: Image, label: 'NFTs', path: '/nfts' },
     { icon: Shield, label: 'Smart Contracts', path: '/contracts' },
