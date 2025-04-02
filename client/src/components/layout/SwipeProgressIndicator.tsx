@@ -51,7 +51,7 @@ const SwipeProgressIndicator: React.FC<SwipeProgressIndicatorProps> = ({
         initial={{ width: 0 }}
         animate={{ 
           width: `${progress * 100}%`,
-          x: [0, 2, -2, 0], // Subtle wiggle to indicate activity
+          x: [0, 2, -2, 0] as any, // Subtle wiggle to indicate activity
         }}
         transition={{ 
           width: { duration: 0.1 },
@@ -63,7 +63,8 @@ const SwipeProgressIndicator: React.FC<SwipeProgressIndicatorProps> = ({
       {/* Shine effect - only shown for larger swipes */}
       {progress > 0.3 && (
         <motion.div
-          className="absolute top-0 h-full w-10 bg-white/30 skew-x-20"
+          className="absolute top-0 h-full w-10 bg-white/30"
+          style={{ transform: "skewX(20deg)" }}
           initial={{ left: "-100%" }}
           animate={{ left: "100%" }}
           transition={{ 
@@ -79,7 +80,7 @@ const SwipeProgressIndicator: React.FC<SwipeProgressIndicatorProps> = ({
         <motion.div
           className="absolute top-0 h-full w-full bg-primary/25"
           initial={{ opacity: 0 }}
-          animate={{ opacity: [0, 0.5, 0] }}
+          animate={{ opacity: [0, 0.5, 0] as any }}
           transition={{ 
             repeat: Infinity, 
             duration: 1,
