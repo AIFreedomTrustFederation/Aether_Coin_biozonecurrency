@@ -1,23 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useLocation, Route, Switch } from 'wouter';
+import { useLocation, Route } from 'wouter';
 import { cn } from '@/lib/utils';
-
-// Define animation variants
-const pageAnimations = {
-  initial: {
-    opacity: 0,
-    x: '100%',
-  },
-  in: {
-    opacity: 1,
-    x: 0,
-  },
-  out: {
-    opacity: 0,
-    x: '-100%',
-  },
-};
 
 interface AnimatedRouteProps {
   path: string;
@@ -132,16 +116,45 @@ export const AnimatedRoutes: React.FC<AnimatedRoutesProps> = ({
   return (
     <div className={cn("animated-routes-container relative w-full h-full overflow-hidden", className)}>
       <AnimatePresence mode="wait">
-        <Switch key={location}>
-          {routes.map((route, index) => (
-            <AnimatedRoute
-              key={route.path}
-              path={route.path}
-              component={route.component}
-              animationDirection={transitionDirection}
-            />
-          ))}
-        </Switch>
+        {routes.map((route) => (
+          <Route key={route.path} path={route.path}>
+            {(params) => {
+              const isMatch = location === route.path || 
+                (!route.exact && location.startsWith(route.path));
+              
+              if (!isMatch) return null;
+              
+              return (
+                <motion.div
+                  className="w-full h-full"
+                  initial="initial"
+                  animate="in"
+                  exit="out"
+                  variants={
+                    transitionDirection === 'right' 
+                      ? {
+                          initial: { opacity: 0, x: '100%' },
+                          in: { opacity: 1, x: 0 },
+                          out: { opacity: 0, x: '-100%' },
+                        }
+                      : {
+                          initial: { opacity: 0, x: '-100%' },
+                          in: { opacity: 1, x: 0 },
+                          out: { opacity: 0, x: '100%' },
+                        }
+                  }
+                  transition={{
+                    type: 'spring',
+                    stiffness: 260,
+                    damping: 20,
+                  }}
+                >
+                  <route.component {...params} />
+                </motion.div>
+              );
+            }}
+          </Route>
+        ))}
       </AnimatePresence>
     </div>
   );
