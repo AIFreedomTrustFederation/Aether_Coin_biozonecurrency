@@ -1,8 +1,38 @@
 import { useEffect } from 'react';
 
-// Simple button component that injects a CSS-only solution
+// Component that injects a button to toggle between app and developer mode
 const DevToolsToggle = () => {
   useEffect(() => {
+    // Auto-hide developer tools on initial load after a short delay
+    const autoHideDevTools = () => {
+      setTimeout(() => {
+        document.body.classList.add('hide-dev-tools');
+        
+        // Hide all divs that might be part of the dev console
+        document.querySelectorAll('body > div').forEach(div => {
+          // Skip the first div which likely contains our app
+          if (div.id !== 'root' && !div.contains(document.getElementById('root'))) {
+            (div as HTMLElement).style.display = 'none';
+          }
+        });
+        
+        // Set pointer-events to none for all iframes
+        document.querySelectorAll('iframe').forEach(iframe => {
+          (iframe as HTMLElement).style.pointerEvents = 'none';
+        });
+        
+        // Update button icon if it exists
+        const rocketButton = document.getElementById('rocket-toggle');
+        if (rocketButton) {
+          rocketButton.innerHTML = '🚀';
+          rocketButton.setAttribute('title', 'App Mode: Click to switch to Dev Mode');
+        }
+      }, 500);
+    };
+    
+    // Run auto-hide on startup
+    autoHideDevTools();
+    
     // Inject CSS that handles both the button and fixes for our app
     const injectCSS = () => {
       const css = `
