@@ -1,4 +1,4 @@
-import { Switch, Route } from "wouter";
+import { Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -10,31 +10,70 @@ import Contracts from "@/pages/Contracts";
 import WhitePaper from "@/pages/WhitePaper";
 import FractalExplorer from "@/pages/FractalExplorer";
 import NotFound from "@/pages/not-found";
+import { AnimatedRoutes } from "@/components/layout/AnimatedRoute";
+import { GestureProvider } from "@/contexts/gesture-context";
+import MainLayout from "@/components/layout/MainLayout";
+
+// Define routes for the application
+const routes = [
+  {
+    path: "/",
+    component: Dashboard,
+    exact: true,
+  },
+  {
+    path: "/assets",
+    component: Assets,
+    exact: true,
+  },
+  {
+    path: "/transactions",
+    component: Transactions,
+    exact: true,
+  },
+  {
+    path: "/contracts",
+    component: Contracts,
+    exact: true,
+  },
+  {
+    path: "/whitepaper",
+    component: WhitePaper,
+    exact: true,
+  },
+  {
+    path: "/fractal-explorer",
+    component: FractalExplorer,
+    exact: true,
+  },
+  // Not found route must be last
+  {
+    path: "/:rest*",
+    component: NotFound,
+    exact: false,
+  },
+];
 
 function Router() {
   return (
-    <Switch>
-      <Route path="/" component={Dashboard} />
-      <Route path="/assets" component={Assets} />
-      <Route path="/transactions" component={Transactions} />
-      <Route path="/contracts" component={Contracts} />
-      <Route path="/whitepaper" component={WhitePaper} />
-      <Route path="/fractal-explorer" component={FractalExplorer} />
-      {/* Add more routes as needed */}
-      {/* <Route path="/defi" component={DeFi} /> */}
-      {/* <Route path="/nfts" component={NFTs} /> */}
-      {/* <Route path="/settings" component={Settings} /> */}
-      <Route component={NotFound} />
-    </Switch>
+    <div className="relative w-full h-full overflow-hidden">
+      <MainLayout>
+        <AnimatedRoutes routes={routes} />
+      </MainLayout>
+    </div>
   );
 }
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <Router />
-      <Toaster />
-      <DevToolsToggle />
+      <GestureProvider>
+        <div className="app-container w-full h-full">
+          <Router />
+          <Toaster />
+          <DevToolsToggle />
+        </div>
+      </GestureProvider>
     </QueryClientProvider>
   );
 }

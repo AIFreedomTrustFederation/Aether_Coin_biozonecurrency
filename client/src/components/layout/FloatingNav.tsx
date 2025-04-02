@@ -1,0 +1,178 @@
+import React, { useState } from 'react';
+import { useLocation } from 'wouter';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Touchable } from '@/components/ui/touchable';
+import { cn } from '@/lib/utils';
+import { 
+  ChevronLeft, 
+  ChevronRight, 
+  Menu, 
+  X,
+  Home,
+  Wallet,
+  BarChart3,
+  Scroll,
+  FileCode2,
+  FolderKanban,
+} from 'lucide-react';
+
+interface FloatingNavProps {
+  routes: {
+    path: string;
+    label: string;
+  }[];
+  className?: string;
+}
+
+const FloatingNav: React.FC<FloatingNavProps> = ({ routes, className }) => {
+  const [location, navigate] = useLocation();
+  const [isOpen, setIsOpen] = useState(false);
+  
+  // Find current route index
+  const currentIndex = routes.findIndex(route => route.path === location);
+  
+  const toggleMenu = () => {
+    setIsOpen(prev => !prev);
+  };
+
+  const navigateTo = (path: string) => {
+    navigate(path);
+    setIsOpen(false);
+  };
+
+  const navigatePrev = () => {
+    if (currentIndex > 0) {
+      navigate(routes[currentIndex - 1].path);
+    }
+  };
+
+  const navigateNext = () => {
+    if (currentIndex < routes.length - 1) {
+      navigate(routes[currentIndex + 1].path);
+    }
+  };
+
+  // Get icon for route
+  const getRouteIcon = (path: string) => {
+    switch (path) {
+      case '/':
+        return <Home className="w-5 h-5" />;
+      case '/assets':
+        return <Wallet className="w-5 h-5" />;
+      case '/transactions':
+        return <BarChart3 className="w-5 h-5" />;
+      case '/contracts':
+        return <FileCode2 className="w-5 h-5" />;
+      case '/fractal-explorer':
+        return <FolderKanban className="w-5 h-5" />;
+      case '/whitepaper':
+        return <Scroll className="w-5 h-5" />;
+      default:
+        return <Home className="w-5 h-5" />;
+    }
+  };
+
+  return (
+    <>
+      {/* Main floating button */}
+      <Touchable
+        className={cn(
+          "fixed bottom-6 right-6 w-14 h-14 rounded-full flex items-center justify-center z-50 shadow-lg",
+          "bg-primary text-primary-foreground",
+          className
+        )}
+        onClick={toggleMenu}
+        scale={0.9}
+      >
+        {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+      </Touchable>
+
+      {/* Navigation buttons */}
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.5 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 z-40"
+              onClick={() => setIsOpen(false)}
+            />
+
+            {/* Previous/Next buttons */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              transition={{ delay: 0.1 }}
+              className="fixed bottom-6 right-24 z-50 flex space-x-3"
+            >
+              <Touchable
+                className={cn(
+                  "w-12 h-12 rounded-full flex items-center justify-center shadow-lg",
+                  currentIndex > 0 
+                    ? "bg-primary/90 text-primary-foreground" 
+                    : "bg-muted text-muted-foreground"
+                )}
+                onClick={navigatePrev}
+                disabled={currentIndex <= 0}
+                scale={0.9}
+              >
+                <ChevronLeft className="w-6 h-6" />
+              </Touchable>
+              
+              <Touchable
+                className={cn(
+                  "w-12 h-12 rounded-full flex items-center justify-center shadow-lg",
+                  currentIndex < routes.length - 1 
+                    ? "bg-primary/90 text-primary-foreground" 
+                    : "bg-muted text-muted-foreground"
+                )}
+                onClick={navigateNext}
+                disabled={currentIndex >= routes.length - 1}
+                scale={0.9}
+              >
+                <ChevronRight className="w-6 h-6" />
+              </Touchable>
+            </motion.div>
+
+            {/* Route buttons */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              className="fixed bottom-24 right-6 z-50 flex flex-col-reverse space-y-reverse space-y-3"
+            >
+              {routes.map((route, index) => (
+                <motion.div
+                  key={route.path}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  transition={{ delay: 0.05 * index }}
+                >
+                  <Touchable
+                    className={cn(
+                      "flex items-center space-x-2 px-4 py-3 rounded-lg shadow-md",
+                      location === route.path
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-background text-foreground"
+                    )}
+                    onClick={() => navigateTo(route.path)}
+                    scale={0.95}
+                  >
+                    {getRouteIcon(route.path)}
+                    <span className="font-medium">{route.label}</span>
+                  </Touchable>
+                </motion.div>
+              ))}
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </>
+  );
+};
+
+export default FloatingNav;

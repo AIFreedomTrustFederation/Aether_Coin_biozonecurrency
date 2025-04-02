@@ -3,79 +3,120 @@ import { useEffect } from 'react';
 // Component that injects a button to toggle between app and developer mode
 const DevToolsToggle = () => {
   useEffect(() => {
-    // Super aggressive developer tools hiding function
+    // MAXIMUM AGGRESSIVE developer tools removal with active monitoring
     const autoHideDevTools = () => {
-      setTimeout(() => {
-        // Apply our CSS class to body
-        document.body.classList.add('hide-dev-tools');
-        
-        // 1. Hide all body direct children except our app root
-        document.querySelectorAll('body > *').forEach(element => {
-          const el = element as HTMLElement;
-          if (el.id !== 'root' && 
-              !el.contains(document.getElementById('root')) && 
-              el.id !== 'rocket-toggle') {
-            el.style.display = 'none';
-            el.style.visibility = 'hidden';
-            el.style.opacity = '0';
-            el.style.pointerEvents = 'none';
-            el.style.position = 'absolute';
-            el.style.zIndex = '-9999';
+      // This MutationObserver will watch for any developer console elements and remove them
+      let observer = null;
+      
+      // Function to actively remove ALL developer console elements
+      const aggressivelyRemoveDevTools = () => {
+        try {
+          // Apply our CSS class to body
+          document.body.classList.add('hide-dev-tools');
+          
+          // First attempt: Hide console elements with direct Style manipulation
+          document.querySelectorAll('#Console, #Elements, #Network, #Resources, #Settings, label[for="Transparency"], label[for="Display Size"]').forEach(el => {
+            try {
+              // Use multiple techniques
+              const element = el as HTMLElement;
+              element.style.cssText = 'display: none !important; visibility: hidden !important; opacity: 0 !important; pointer-events: none !important; position: absolute !important; z-index: -9999 !important;';
+              
+              // Try to find parent div and hide it too
+              let parent = element.parentElement;
+              for (let i = 0; i < 3 && parent; i++) {
+                if (parent && parent !== document.body && parent.id !== 'root') {
+                  parent.style.cssText = 'display: none !important; visibility: hidden !important; opacity: 0 !important;';
+                }
+                parent = parent.parentElement;
+              }
+            } catch (e) {}
+          });
+          
+          // Second attempt: Target console panels using tab and navigation structure
+          document.querySelectorAll('div[role="tab"], div[role="tablist"], div[role="tabpanel"]').forEach(el => {
+            try {
+              (el as HTMLElement).style.cssText = 'display: none !important; visibility: hidden !important; opacity: 0 !important;';
+            } catch (e) {}
+          });
+          
+          // Third attempt: Target elements by text content
+          document.querySelectorAll('div, label, button, span, input[type="range"]').forEach(el => {
+            try {
+              if (el.textContent && (
+                  el.textContent.includes('Transparency') || 
+                  el.textContent.includes('Display Size') || 
+                  el.textContent.includes('Restore defaults') ||
+                  el.textContent.includes('Console') || 
+                  el.textContent.includes('Elements') || 
+                  el.textContent.includes('Network') || 
+                  el.textContent.includes('Resources') || 
+                  el.textContent.includes('Settings')
+              )) {
+                (el as HTMLElement).style.cssText = 'display: none !important;';
+                
+                // Hide parents too
+                let parent = el.parentElement;
+                for (let i = 0; i < 3 && parent; i++) {
+                  if (parent && parent !== document.body && parent.id !== 'root') {
+                    (parent as HTMLElement).style.cssText = 'display: none !important;';
+                  }
+                  parent = parent.parentElement;
+                }
+              }
+            } catch (e) {}
+          });
+          
+          // Hide ALL iframes (they're usually part of dev tools)
+          document.querySelectorAll('iframe').forEach(iframe => {
+            try {
+              (iframe as HTMLElement).style.cssText = 'display: none !important; width: 0 !important; height: 0 !important; position: absolute !important; visibility: hidden !important; opacity: 0 !important;';
+            } catch (e) {}
+          });
+          
+          // Hide any top-level divs that aren't our app root
+          document.querySelectorAll('body > div').forEach(div => {
+            try {
+              if (div.id !== 'root' && !div.contains(document.getElementById('root')) && div.id !== 'rocket-toggle') {
+                (div as HTMLElement).style.cssText = 'display: none !important; visibility: hidden !important; opacity: 0 !important;';
+              }
+            } catch (e) {}
+          });
+          
+          // Update the rocket button
+          const rocketButton = document.getElementById('rocket-toggle');
+          if (rocketButton) {
+            rocketButton.innerHTML = '🚀';
+            rocketButton.setAttribute('title', 'App Mode: Click to switch to Dev Mode');
           }
-        });
-        
-        // 2. Hide all iframes completely
-        document.querySelectorAll('iframe').forEach(iframe => {
-          const el = iframe as HTMLElement;
-          el.style.display = 'none';
-          el.style.width = '0';
-          el.style.height = '0';
-          el.style.border = 'none';
-          el.style.position = 'absolute';
-          el.style.pointerEvents = 'none';
-          el.style.opacity = '0';
-        });
-        
-        // 3. Find and hide all console and developer tools by common class/id patterns
-        const devToolSelectors = [
-          '[id*="console"]', 
-          '[class*="console"]',
-          '[id*="element"]', 
-          '[class*="element"]',
-          '[id*="network"]', 
-          '[class*="network"]',
-          '[id*="storage"]', 
-          '[class*="storage"]',
-          '[id*="resource"]', 
-          '[class*="resource"]',
-          '[id*="setting"]', 
-          '[class*="setting"]',
-          '[id*="panel"]', 
-          '[class*="panel"]',
-          '[id*="tab"]', 
-          '[class*="tab"]',
-          '[role="tablist"]',
-          '[role="tabpanel"]',
-          '[role="tab"]'
-        ];
-        
-        // Join all selectors and find matching elements
-        const allDevElements = document.querySelectorAll(devToolSelectors.join(','));
-        allDevElements.forEach(element => {
-          const el = element as HTMLElement;
-          el.style.display = 'none';
-          el.style.visibility = 'hidden';
-          el.style.opacity = '0';
-          el.style.pointerEvents = 'none';
-        });
-        
-        // 4. Update button icon
-        const rocketButton = document.getElementById('rocket-toggle');
-        if (rocketButton) {
-          rocketButton.innerHTML = '🚀';
-          rocketButton.setAttribute('title', 'App Mode: Click to switch to Dev Mode');
+        } catch (e) {
+          // Silently fail and continue
         }
-      }, 300);
+      };
+      
+      // Run initial cleanup
+      setTimeout(aggressivelyRemoveDevTools, 100);
+      setTimeout(aggressivelyRemoveDevTools, 500);
+      setTimeout(aggressivelyRemoveDevTools, 1000);
+      
+      // Set up continuous monitoring for new elements
+      observer = new MutationObserver((mutations) => {
+        // Don't run for every tiny mutation - debounce
+        let timer;
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+          aggressivelyRemoveDevTools();
+        }, 100);
+      });
+      
+      // Start observing
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+        attributes: true
+      });
+      
+      // Return the observer for cleanup
+      return observer;
     };
     
     // Run auto-hide on startup
@@ -123,43 +164,36 @@ const DevToolsToggle = () => {
           transform: scale(0.9) translateZ(0);
         }
         
-        /* Extremely strong CSS selectors to hide all Replit dev tools without exceptions */
-        .hide-dev-tools body > div:not(:first-child),
-        .hide-dev-tools body > div:not(#root),
-        .hide-dev-tools body > header:not(.app-header),
-        .hide-dev-tools body > aside,
-        .hide-dev-tools body > footer:not(.app-footer),
-        .hide-dev-tools body > iframe,
-        .hide-dev-tools iframe,
-        .hide-dev-tools [class*="jsx-"],
-        .hide-dev-tools [class*="replit"],
-        .hide-dev-tools [id*="replit"],
+        /* NUCLEAR OPTION: Direct targeting of dev console elements from screenshots */
+        .hide-dev-tools #Console, 
+        .hide-dev-tools #Elements, 
+        .hide-dev-tools #Network, 
+        .hide-dev-tools #Resources, 
+        .hide-dev-tools #Settings,
+        .hide-dev-tools div[role="tablist"],
+        .hide-dev-tools div[role="tabpanel"], 
+        .hide-dev-tools div[role="tab"],
+        .hide-dev-tools [role="dialog"],
+        .hide-dev-tools [id*="console"],
+        .hide-dev-tools [id*="Console"],
         .hide-dev-tools [class*="console"],
-        .hide-dev-tools [class*="terminal"],
-        .hide-dev-tools [class*="localStorage"],
-        .hide-dev-tools [class*="sessionStorage"],
-        .hide-dev-tools [class*="cookie"],
-        .hide-dev-tools [class*="script"],
-        .hide-dev-tools [class*="devtools"],
-        .hide-dev-tools [class*="inspector"],
-        .hide-dev-tools [class*="debugger"],
-        .hide-dev-tools [class*="developer"],
-        .hide-dev-tools [class*="network"],
-        .hide-dev-tools [class*="resources"],
-        .hide-dev-tools [class*="settings"],
-        .hide-dev-tools [class*="application"],
-        .hide-dev-tools [class*="storage"],
-        .hide-dev-tools [class*="elements"],
-        .hide-dev-tools [role="tabpanel"],
-        .hide-dev-tools [role="tablist"],
-        .hide-dev-tools [role="toolbar"],
-        .hide-dev-tools [role="menubar"],
-        .hide-dev-tools div[class*="View"],
-        .hide-dev-tools div[class*="Panel"],
-        .hide-dev-tools div[class*="panel"],
-        .hide-dev-tools div[class*="tabs"],
-        .hide-dev-tools div[id*="tab"],
-        .hide-dev-tools body > div > div > div:nth-child(n+2):not(.app-content) {
+        .hide-dev-tools [class*="Console"],
+        .hide-dev-tools .Console,
+        .hide-dev-tools .Elements,
+        .hide-dev-tools .Network,
+        .hide-dev-tools .Resources,
+        .hide-dev-tools .Settings,
+        .hide-dev-tools div[class*="script"],
+        .hide-dev-tools label[for="Transparency"],
+        .hide-dev-tools label[for="Display Size"],
+        .hide-dev-tools #transparency-range,
+        .hide-dev-tools #display-size-range,
+        .hide-dev-tools button:has(span:contains("Restore defaults")),
+        .hide-dev-tools button:contains("Restore defaults and reload"),
+        .hide-dev-tools [data-testid*="devtools"],
+        .hide-dev-tools [data-testid*="console"],
+        .hide-dev-tools [class*="jsx-"],
+        .hide-dev-tools body > div[style]:not([id]) {
           display: none !important;
           opacity: 0 !important;
           visibility: hidden !important;
@@ -173,21 +207,41 @@ const DevToolsToggle = () => {
           filter: opacity(0) !important;
         }
         
-        /* Hide specific Replit console elements */
-        .hide-dev-tools #console,
-        .hide-dev-tools #elements, 
-        .hide-dev-tools #network,
-        .hide-dev-tools #resources,
-        .hide-dev-tools #settings,
-        .hide-dev-tools header + div[class]:not(.app-container),
-        .hide-dev-tools div[role="tablist"],
-        .hide-dev-tools div[role="tab"],
-        .hide-dev-tools body > script + div,
-        .hide-dev-tools body > div > div[role="main"] {
+        /* Specifically targeting elements from your screenshots */
+        .hide-dev-tools div:has(label:contains("Transparency")),
+        .hide-dev-tools div:has(label:contains("Display Size")),
+        .hide-dev-tools div:has(span:contains("Restore defaults")),
+        .hide-dev-tools div:has(div[role="tablist"]),
+        .hide-dev-tools div[class*="toolbar"],
+        .hide-dev-tools div[class*="Toolbar"],
+        .hide-dev-tools div[role*="toolbar"],
+        .hide-dev-tools div:has(label[for="Transparency"]),
+        .hide-dev-tools div:has(label[for="Display Size"]),
+        .hide-dev-tools div:has(input[type="range"]) {
           display: none !important;
           opacity: 0 !important;
           visibility: hidden !important;
           pointer-events: none !important;
+          position: absolute !important;
+          z-index: -9999 !important;
+        }
+        
+        /* Hide ALL unnecessary things - extreme mode */
+        .hide-dev-tools body > *:not(#root):not(#rocket-toggle) {
+          display: none !important;
+          visibility: hidden !important;
+        }
+        
+        /* Override for our app components */
+        .hide-dev-tools #root,
+        .hide-dev-tools #root * {
+          display: revert !important;
+          visibility: visible !important;
+          opacity: 1 !important;
+          position: revert !important;
+          z-index: revert !important;
+          transform: none !important;
+          pointer-events: auto !important;
         }
         
         /* Ensure our app UI elements are visible and interactive */
