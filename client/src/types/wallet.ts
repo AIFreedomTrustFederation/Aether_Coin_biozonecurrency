@@ -65,3 +65,32 @@ export interface FractalNode {
   y: number;
   connections: string[];
 }
+
+export interface PaymentMethod {
+  id: number;
+  userId: number;
+  type: 'card' | 'bank_account';
+  provider: 'stripe' | 'paypal';
+  providerPaymentId: string;
+  last4?: string;
+  expiryMonth?: number;
+  expiryYear?: number;
+  isDefault: boolean;
+  status: 'active' | 'expired' | 'invalid';
+  createdAt: Date;
+}
+
+export interface Payment {
+  id: number;
+  userId: number;
+  paymentMethodId?: number;
+  walletId?: number;
+  amount: number;
+  currency: string;
+  status: 'pending' | 'completed' | 'failed' | 'refunded';
+  providerPaymentId?: string;
+  description?: string;
+  metadata?: Record<string, any>;
+  createdAt: Date;
+  processedAt?: Date;
+}

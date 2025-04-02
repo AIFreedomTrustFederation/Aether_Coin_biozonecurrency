@@ -6,7 +6,10 @@ import {
   SmartContract, InsertSmartContract,
   AiMonitoringLog, InsertAiMonitoringLog,
   CidEntry, InsertCidEntry,
-  users, wallets, transactions, smartContracts, aiMonitoringLogs, cidEntries
+  PaymentMethod, InsertPaymentMethod,
+  Payment, InsertPayment,
+  users, wallets, transactions, smartContracts, aiMonitoringLogs, cidEntries,
+  paymentMethods, payments
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql } from "drizzle-orm";
@@ -176,6 +179,108 @@ export class PgStorage implements IStorage {
       .update(cidEntries)
       .set({ status })
       .where(eq(cidEntries.id, id))
+      .returning();
+    
+    return result.length ? result[0] : undefined;
+  }
+
+  // Payment Methods methods
+  async getPaymentMethod(id: number): Promise<PaymentMethod | undefined> {
+    const result = await db.select().from(paymentMethods).where(eq(paymentMethods.id, id)).limit(1);
+    return result.length ? result[0] : undefined;
+  }
+
+  async getPaymentMethodsByUserId(userId: number): Promise<PaymentMethod[]> {
+    const result = await db
+      .select()
+      .from(paymentMethods)
+      .where(eq(paymentMethods.userId, userId))
+      .orderBy(desc(paymentMethods.createdAt));
+    
+    return result;
+  }
+
+  async createPaymentMethod(method: InsertPaymentMethod): Promise<PaymentMethod> {
+    // If this is set as the default payment method, unset any existing default methods for this user
+    if (method.isDefault) {
+      await db
+        .update(paymentMethods)
+        .set({ isDefault: false })
+        .where(and(
+          eq(paymentMethods.userId, method.userId),
+          eq(paymentMethods.isDefault, true)
+        ));
+    }
+
+    const result = await db.insert(paymentMethods).values(method).returning();
+    return result[0];
+  }
+
+  async updatePaymentMethodDefault(id: number, isDefault: boolean): Promise<PaymentMethod | undefined> {
+    // Get the payment method first to get the userId
+    const paymentMethod = await this.getPaymentMethod(id);
+    if (!paymentMethod) return undefined;
+
+    // If setting as default, unset any existing default methods for this user
+    if (isDefault) {
+      await db
+        .update(paymentMethods)
+        .set({ isDefault: false })
+        .where(and(
+          eq(paymentMethods.userId, paymentMethod.userId),
+          eq(paymentMethods.isDefault, true)
+        ));
+    }
+
+    const result = await db
+      .update(paymentMethods)
+      .set({ isDefault })
+      .where(eq(paymentMethods.id, id))
+      .returning();
+    
+    return result.length ? result[0] : undefined;
+  }
+
+  async deletePaymentMethod(id: number): Promise<boolean> {
+    const result = await db
+      .delete(paymentMethods)
+      .where(eq(paymentMethods.id, id))
+      .returning({ id: paymentMethods.id });
+    
+    return result.length > 0;
+  }
+
+  // Payments methods
+  async getPayment(id: number): Promise<Payment | undefined> {
+    const result = await db.select().from(payments).where(eq(payments.id, id)).limit(1);
+    return result.length ? result[0] : undefined;
+  }
+
+  async getPaymentsByUserId(userId: number): Promise<Payment[]> {
+    const result = await db
+      .select()
+      .from(payments)
+      .where(eq(payments.userId, userId))
+      .orderBy(desc(payments.createdAt));
+    
+    return result;
+  }
+
+  async createPayment(payment: InsertPayment): Promise<Payment> {
+    const result = await db.insert(payments).values(payment).returning();
+    return result[0];
+  }
+
+  async updatePaymentStatus(id: number, status: string, processedAt?: Date): Promise<Payment | undefined> {
+    const updates: Partial<Payment> = { status };
+    if (processedAt) {
+      updates.processedAt = processedAt;
+    }
+
+    const result = await db
+      .update(payments)
+      .set(updates)
+      .where(eq(payments.id, id))
       .returning();
     
     return result.length ? result[0] : undefined;

@@ -1,4 +1,4 @@
-import { WalletBalance, Transaction, SmartContract, AiMonitoringLog, CidEntry } from '../types/wallet';
+import { WalletBalance, Transaction, SmartContract, AiMonitoringLog, CidEntry, PaymentMethod, Payment } from '../types/wallet';
 import { apiRequest } from './queryClient';
 
 // Wallet API
@@ -198,4 +198,107 @@ export const updateCidEntryStatus = async (id: number, status: 'active' | 'synci
     ...updatedEntry,
     createdAt: new Date(updatedEntry.createdAt),
   };
+};
+
+// Payment Methods API
+export const fetchPaymentMethods = async (): Promise<PaymentMethod[]> => {
+  const response = await fetch('/api/payment-methods', {
+    credentials: 'include',
+  });
+  
+  if (!response.ok) {
+    throw new Error('Failed to fetch payment methods');
+  }
+  
+  const paymentMethods = await response.json();
+  
+  // Convert date strings to Date objects
+  return paymentMethods.map((method: any) => ({
+    ...method,
+    createdAt: new Date(method.createdAt),
+  }));
+};
+
+export const createPaymentMethod = async (paymentMethod: Omit<PaymentMethod, 'id' | 'createdAt'>): Promise<PaymentMethod> => {
+  const response = await apiRequest('POST', '/api/payment-methods', paymentMethod);
+  const newPaymentMethod = await response.json();
+  
+  return {
+    ...newPaymentMethod,
+    createdAt: new Date(newPaymentMethod.createdAt),
+  };
+};
+
+export const updatePaymentMethodDefault = async (id: number, isDefault: boolean): Promise<PaymentMethod> => {
+  const response = await apiRequest('PATCH', `/api/payment-methods/${id}/default`, { isDefault });
+  const updatedPaymentMethod = await response.json();
+  
+  return {
+    ...updatedPaymentMethod,
+    createdAt: new Date(updatedPaymentMethod.createdAt),
+  };
+};
+
+export const deletePaymentMethod = async (id: number): Promise<void> => {
+  await apiRequest('DELETE', `/api/payment-methods/${id}`);
+};
+
+// Payments API
+export const fetchPayments = async (): Promise<Payment[]> => {
+  const response = await fetch('/api/payments', {
+    credentials: 'include',
+  });
+  
+  if (!response.ok) {
+    throw new Error('Failed to fetch payments');
+  }
+  
+  const payments = await response.json();
+  
+  // Convert date strings to Date objects
+  return payments.map((payment: any) => ({
+    ...payment,
+    createdAt: new Date(payment.createdAt),
+    processedAt: payment.processedAt ? new Date(payment.processedAt) : undefined,
+  }));
+};
+
+export const createPayment = async (payment: Omit<Payment, 'id' | 'createdAt' | 'processedAt'>): Promise<Payment> => {
+  const response = await apiRequest('POST', '/api/payments', payment);
+  const newPayment = await response.json();
+  
+  return {
+    ...newPayment,
+    createdAt: new Date(newPayment.createdAt),
+    processedAt: newPayment.processedAt ? new Date(newPayment.processedAt) : undefined,
+  };
+};
+
+export const getPaymentStatus = async (id: number): Promise<Payment> => {
+  const response = await fetch(`/api/payments/${id}`, {
+    credentials: 'include',
+  });
+  
+  if (!response.ok) {
+    throw new Error(`Failed to fetch payment status for payment ${id}`);
+  }
+  
+  const payment = await response.json();
+  
+  return {
+    ...payment,
+    createdAt: new Date(payment.createdAt),
+    processedAt: payment.processedAt ? new Date(payment.processedAt) : undefined,
+  };
+};
+
+// Stripe specific APIs
+export const createPaymentIntent = async (amount: number, currency: string, walletId?: number): Promise<{ clientSecret: string }> => {
+  const response = await apiRequest('POST', '/api/stripe/payment-intent', { 
+    amount, 
+    currency,
+    walletId
+  });
+  
+  return await response.json();
 };

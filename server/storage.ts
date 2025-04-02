@@ -4,7 +4,9 @@ import {
   transactions, type Transaction, type InsertTransaction,
   smartContracts, type SmartContract, type InsertSmartContract,
   aiMonitoringLogs, type AiMonitoringLog, type InsertAiMonitoringLog,
-  cidEntries, type CidEntry, type InsertCidEntry
+  cidEntries, type CidEntry, type InsertCidEntry,
+  paymentMethods, type PaymentMethod, type InsertPaymentMethod,
+  payments, type Payment, type InsertPayment
 } from "@shared/schema";
 
 // Storage interface definition
@@ -41,6 +43,19 @@ export interface IStorage {
   getCidEntriesByUserId(userId: number): Promise<CidEntry[]>;
   createCidEntry(entry: InsertCidEntry): Promise<CidEntry>;
   updateCidEntryStatus(id: number, status: string): Promise<CidEntry | undefined>;
+  
+  // Payment Methods methods
+  getPaymentMethod(id: number): Promise<PaymentMethod | undefined>;
+  getPaymentMethodsByUserId(userId: number): Promise<PaymentMethod[]>;
+  createPaymentMethod(method: InsertPaymentMethod): Promise<PaymentMethod>;
+  updatePaymentMethodDefault(id: number, isDefault: boolean): Promise<PaymentMethod | undefined>;
+  deletePaymentMethod(id: number): Promise<boolean>;
+  
+  // Payments methods
+  getPayment(id: number): Promise<Payment | undefined>;
+  getPaymentsByUserId(userId: number): Promise<Payment[]>;
+  createPayment(payment: InsertPayment): Promise<Payment>;
+  updatePaymentStatus(id: number, status: string, processedAt?: Date): Promise<Payment | undefined>;
 }
 
 // In-memory storage implementation
@@ -51,6 +66,8 @@ export class MemStorage implements IStorage {
   private smartContracts: Map<number, SmartContract>;
   private aiMonitoringLogs: Map<number, AiMonitoringLog>;
   private cidEntries: Map<number, CidEntry>;
+  private paymentMethods: Map<number, PaymentMethod>;
+  private payments: Map<number, Payment>;
   
   private currentUserId: number;
   private currentWalletId: number;
@@ -58,6 +75,8 @@ export class MemStorage implements IStorage {
   private currentSmartContractId: number;
   private currentAiMonitoringLogId: number;
   private currentCidEntryId: number;
+  private currentPaymentMethodId: number;
+  private currentPaymentId: number;
 
   constructor() {
     this.users = new Map();
@@ -66,6 +85,8 @@ export class MemStorage implements IStorage {
     this.smartContracts = new Map();
     this.aiMonitoringLogs = new Map();
     this.cidEntries = new Map();
+    this.paymentMethods = new Map();
+    this.payments = new Map();
     
     this.currentUserId = 1;
     this.currentWalletId = 1;
@@ -73,6 +94,8 @@ export class MemStorage implements IStorage {
     this.currentSmartContractId = 1;
     this.currentAiMonitoringLogId = 1;
     this.currentCidEntryId = 1;
+    this.currentPaymentMethodId = 1;
+    this.currentPaymentId = 1;
     
     // Initialize with some demo data for development
     this.initializeDemoData();
@@ -233,6 +256,98 @@ export class MemStorage implements IStorage {
     const updatedEntry = { ...entry, status };
     this.cidEntries.set(id, updatedEntry);
     return updatedEntry;
+  }
+  
+  // Payment Methods methods
+  async getPaymentMethod(id: number): Promise<PaymentMethod | undefined> {
+    return this.paymentMethods.get(id);
+  }
+
+  async getPaymentMethodsByUserId(userId: number): Promise<PaymentMethod[]> {
+    return Array.from(this.paymentMethods.values())
+      .filter(method => method.userId === userId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+
+  async createPaymentMethod(insertMethod: InsertPaymentMethod): Promise<PaymentMethod> {
+    const id = this.currentPaymentMethodId++;
+    const createdAt = new Date();
+    
+    // If this is set as the default, unset any existing default methods for this user
+    if (insertMethod.isDefault) {
+      const existingDefaultMethods = await this.getPaymentMethodsByUserId(insertMethod.userId);
+      existingDefaultMethods
+        .filter(method => method.isDefault)
+        .forEach(method => {
+          const updated = { ...method, isDefault: false };
+          this.paymentMethods.set(method.id, updated);
+        });
+    }
+    
+    const paymentMethod: PaymentMethod = { ...insertMethod, id, createdAt };
+    this.paymentMethods.set(id, paymentMethod);
+    return paymentMethod;
+  }
+
+  async updatePaymentMethodDefault(id: number, isDefault: boolean): Promise<PaymentMethod | undefined> {
+    const paymentMethod = this.paymentMethods.get(id);
+    if (!paymentMethod) return undefined;
+    
+    // If setting as default, unset any existing default methods for this user
+    if (isDefault) {
+      const existingDefaultMethods = await this.getPaymentMethodsByUserId(paymentMethod.userId);
+      existingDefaultMethods
+        .filter(method => method.isDefault && method.id !== id)
+        .forEach(method => {
+          const updated = { ...method, isDefault: false };
+          this.paymentMethods.set(method.id, updated);
+        });
+    }
+    
+    const updatedPaymentMethod = { ...paymentMethod, isDefault };
+    this.paymentMethods.set(id, updatedPaymentMethod);
+    return updatedPaymentMethod;
+  }
+  
+  async deletePaymentMethod(id: number): Promise<boolean> {
+    const exists = this.paymentMethods.has(id);
+    if (exists) {
+      this.paymentMethods.delete(id);
+    }
+    return exists;
+  }
+  
+  // Payments methods
+  async getPayment(id: number): Promise<Payment | undefined> {
+    return this.payments.get(id);
+  }
+  
+  async getPaymentsByUserId(userId: number): Promise<Payment[]> {
+    return Array.from(this.payments.values())
+      .filter(payment => payment.userId === userId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+  
+  async createPayment(insertPayment: InsertPayment): Promise<Payment> {
+    const id = this.currentPaymentId++;
+    const createdAt = new Date();
+    const payment: Payment = { ...insertPayment, id, createdAt, processedAt: undefined };
+    this.payments.set(id, payment);
+    return payment;
+  }
+  
+  async updatePaymentStatus(id: number, status: string, processedAt?: Date): Promise<Payment | undefined> {
+    const payment = this.payments.get(id);
+    if (!payment) return undefined;
+    
+    const updates: Partial<Payment> = { status };
+    if (processedAt) {
+      updates.processedAt = processedAt;
+    }
+    
+    const updatedPayment = { ...payment, ...updates };
+    this.payments.set(id, updatedPayment);
+    return updatedPayment;
   }
   
   // Initialize demo data

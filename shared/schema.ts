@@ -17,6 +17,8 @@ export const usersRelations = relations(users, ({ many }) => ({
   smartContracts: many(smartContracts),
   aiMonitoringLogs: many(aiMonitoringLogs),
   cidEntries: many(cidEntries),
+  paymentMethods: many(paymentMethods),
+  payments: many(payments),
 }));
 
 export const insertUserSchema = createInsertSchema(users).omit({
@@ -161,5 +163,75 @@ export type InsertSmartContract = z.infer<typeof insertSmartContractSchema>;
 export type AiMonitoringLog = typeof aiMonitoringLogs.$inferSelect;
 export type InsertAiMonitoringLog = z.infer<typeof insertAiMonitoringLogSchema>;
 
+// Payment Methods schema
+export const paymentMethods = pgTable("payment_methods", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  type: text("type").notNull(), // 'card', 'bank_account', etc.
+  provider: text("provider").notNull(), // 'stripe', 'paypal', etc.
+  providerPaymentId: text("provider_payment_id").notNull(), // Stripe payment method ID, etc.
+  last4: text("last4"), // Last 4 digits of the card or account
+  expiryMonth: integer("expiry_month"), // Card expiry month
+  expiryYear: integer("expiry_year"), // Card expiry year
+  isDefault: boolean("is_default").default(false),
+  status: text("status").notNull(), // 'active', 'expired', 'invalid'
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const paymentMethodsRelations = relations(paymentMethods, ({ one }) => ({
+  user: one(users, {
+    fields: [paymentMethods.userId],
+    references: [users.id],
+  }),
+}));
+
+export const insertPaymentMethodSchema = createInsertSchema(paymentMethods).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Payments schema
+export const payments = pgTable("payments", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  paymentMethodId: integer("payment_method_id").references(() => paymentMethods.id),
+  walletId: integer("wallet_id").references(() => wallets.id),
+  amount: decimal("amount").notNull(),
+  currency: text("currency").notNull(),
+  status: text("status").notNull(), // 'pending', 'completed', 'failed', 'refunded'
+  providerPaymentId: text("provider_payment_id"), // Stripe payment intent ID
+  description: text("description"),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow(),
+  processedAt: timestamp("processed_at"),
+});
+
+export const paymentsRelations = relations(payments, ({ one }) => ({
+  user: one(users, {
+    fields: [payments.userId],
+    references: [users.id],
+  }),
+  paymentMethod: one(paymentMethods, {
+    fields: [payments.paymentMethodId],
+    references: [paymentMethods.id],
+  }),
+  wallet: one(wallets, {
+    fields: [payments.walletId],
+    references: [wallets.id],
+  }),
+}));
+
+export const insertPaymentSchema = createInsertSchema(payments).omit({
+  id: true,
+  createdAt: true,
+  processedAt: true,
+});
+
 export type CidEntry = typeof cidEntries.$inferSelect;
 export type InsertCidEntry = z.infer<typeof insertCidEntrySchema>;
+
+export type PaymentMethod = typeof paymentMethods.$inferSelect;
+export type InsertPaymentMethod = z.infer<typeof insertPaymentMethodSchema>;
+
+export type Payment = typeof payments.$inferSelect;
+export type InsertPayment = z.infer<typeof insertPaymentSchema>;
