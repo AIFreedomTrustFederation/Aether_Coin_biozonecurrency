@@ -88,7 +88,7 @@ const FloatingNav: React.FC<FloatingNavProps> = ({ routes, className }) => {
       </Touchable>
 
       {/* Navigation buttons */}
-      <AnimatePresence>
+      <AnimatePresence mode="sync">
         {isOpen && (
           <>
             {/* Backdrop */}

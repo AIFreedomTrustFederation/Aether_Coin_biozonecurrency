@@ -115,7 +115,7 @@ export const AnimatedRoutes: React.FC<AnimatedRoutesProps> = ({
 
   return (
     <div className={cn("animated-routes-container relative w-full h-full overflow-hidden", className)}>
-      <AnimatePresence mode="wait">
+      <AnimatePresence mode="sync">
         {routes.map((route) => (
           <Route key={route.path} path={route.path}>
             {(params) => {

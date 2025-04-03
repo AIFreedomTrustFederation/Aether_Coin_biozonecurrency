@@ -162,7 +162,7 @@ const GestureNavigation: React.FC<GestureNavigationProps> = ({
       )}
 
       {/* Page content with animations */}
-      <AnimatePresence initial={false} mode="wait">
+      <AnimatePresence initial={false} mode="sync">
         <motion.div
           key={location}
           className="w-full h-full"
