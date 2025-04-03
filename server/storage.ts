@@ -6,7 +6,14 @@ import {
   aiMonitoringLogs, type AiMonitoringLog, type InsertAiMonitoringLog,
   cidEntries, type CidEntry, type InsertCidEntry,
   paymentMethods, type PaymentMethod, type InsertPaymentMethod,
-  payments, type Payment, type InsertPayment
+  payments, type Payment, type InsertPayment,
+  stakingPositions, type StakingPosition, type InsertStakingPosition,
+  proposals, type Proposal, type InsertProposal,
+  proposalOptions, type ProposalOption, type InsertProposalOption,
+  votes, type Vote, type InsertVote,
+  governanceRewards, type GovernanceReward, type InsertGovernanceReward,
+  walletHealthScores, type WalletHealthScore, type InsertWalletHealthScore,
+  walletHealthIssues, type WalletHealthIssue, type InsertWalletHealthIssue
 } from "@shared/schema";
 
 // Storage interface definition
@@ -56,6 +63,51 @@ export interface IStorage {
   getPaymentsByUserId(userId: number): Promise<Payment[]>;
   createPayment(payment: InsertPayment): Promise<Payment>;
   updatePaymentStatus(id: number, status: string, processedAt?: Date): Promise<Payment | undefined>;
+  
+  // Staking methods
+  getStakingPosition(id: number): Promise<StakingPosition | undefined>;
+  getStakingPositionsByUserId(userId: number): Promise<StakingPosition[]>;
+  getStakingPositionsByWalletId(walletId: number): Promise<StakingPosition[]>;
+  createStakingPosition(position: InsertStakingPosition): Promise<StakingPosition>;
+  updateStakingPosition(id: number, updates: Partial<StakingPosition>): Promise<StakingPosition | undefined>;
+  
+  // Proposal methods
+  getProposal(id: number): Promise<Proposal | undefined>;
+  getProposalsByChain(chain: string, status?: string): Promise<Proposal[]>;
+  getProposalsByCreator(userId: number): Promise<Proposal[]>;
+  createProposal(proposal: InsertProposal): Promise<Proposal>;
+  updateProposalStatus(id: number, status: string): Promise<Proposal | undefined>;
+  
+  // Proposal Options methods
+  getProposalOption(id: number): Promise<ProposalOption | undefined>;
+  getProposalOptionsByProposalId(proposalId: number): Promise<ProposalOption[]>;
+  createProposalOption(option: InsertProposalOption): Promise<ProposalOption>;
+  
+  // Voting methods
+  getVote(id: number): Promise<Vote | undefined>;
+  getVotesByProposalId(proposalId: number): Promise<Vote[]>;
+  getVotesByUserId(userId: number): Promise<Vote[]>;
+  getVotesByProposalAndUser(proposalId: number, userId: number): Promise<Vote[]>;
+  createVote(vote: InsertVote): Promise<Vote>;
+  
+  // Governance Rewards methods
+  getGovernanceReward(id: number): Promise<GovernanceReward | undefined>;
+  getGovernanceRewardsByUserId(userId: number): Promise<GovernanceReward[]>;
+  createGovernanceReward(reward: InsertGovernanceReward): Promise<GovernanceReward>;
+  updateGovernanceRewardStatus(id: number, status: string): Promise<GovernanceReward | undefined>;
+  
+  // Wallet Health Score methods
+  getWalletHealthScore(id: number): Promise<WalletHealthScore | undefined>;
+  getWalletHealthScoreByWalletId(walletId: number): Promise<WalletHealthScore | undefined>;
+  getWalletHealthScoresByUserId(userId: number): Promise<WalletHealthScore[]>;
+  createWalletHealthScore(score: InsertWalletHealthScore): Promise<WalletHealthScore>;
+  updateWalletHealthScore(id: number, updates: Partial<WalletHealthScore>): Promise<WalletHealthScore | undefined>;
+  
+  // Wallet Health Issues methods
+  getWalletHealthIssue(id: number): Promise<WalletHealthIssue | undefined>;
+  getWalletHealthIssuesByScoreId(healthScoreId: number): Promise<WalletHealthIssue[]>;
+  createWalletHealthIssue(issue: InsertWalletHealthIssue): Promise<WalletHealthIssue>;
+  updateWalletHealthIssueResolved(id: number, resolved: boolean): Promise<WalletHealthIssue | undefined>;
 }
 
 // In-memory storage implementation
@@ -68,6 +120,13 @@ export class MemStorage implements IStorage {
   private cidEntries: Map<number, CidEntry>;
   private paymentMethods: Map<number, PaymentMethod>;
   private payments: Map<number, Payment>;
+  private stakingPositions: Map<number, StakingPosition>;
+  private proposals: Map<number, Proposal>;
+  private proposalOptions: Map<number, ProposalOption>;
+  private votes: Map<number, Vote>;
+  private governanceRewards: Map<number, GovernanceReward>;
+  private walletHealthScores: Map<number, WalletHealthScore>;
+  private walletHealthIssues: Map<number, WalletHealthIssue>;
   
   private currentUserId: number;
   private currentWalletId: number;
@@ -77,6 +136,13 @@ export class MemStorage implements IStorage {
   private currentCidEntryId: number;
   private currentPaymentMethodId: number;
   private currentPaymentId: number;
+  private currentStakingPositionId: number;
+  private currentProposalId: number;
+  private currentProposalOptionId: number;
+  private currentVoteId: number;
+  private currentGovernanceRewardId: number;
+  private currentWalletHealthScoreId: number;
+  private currentWalletHealthIssueId: number;
 
   constructor() {
     this.users = new Map();
@@ -87,6 +153,13 @@ export class MemStorage implements IStorage {
     this.cidEntries = new Map();
     this.paymentMethods = new Map();
     this.payments = new Map();
+    this.stakingPositions = new Map();
+    this.proposals = new Map();
+    this.proposalOptions = new Map();
+    this.votes = new Map();
+    this.governanceRewards = new Map();
+    this.walletHealthScores = new Map();
+    this.walletHealthIssues = new Map();
     
     this.currentUserId = 1;
     this.currentWalletId = 1;
@@ -96,6 +169,13 @@ export class MemStorage implements IStorage {
     this.currentCidEntryId = 1;
     this.currentPaymentMethodId = 1;
     this.currentPaymentId = 1;
+    this.currentStakingPositionId = 1;
+    this.currentProposalId = 1;
+    this.currentProposalOptionId = 1;
+    this.currentVoteId = 1;
+    this.currentGovernanceRewardId = 1;
+    this.currentWalletHealthScoreId = 1;
+    this.currentWalletHealthIssueId = 1;
     
     // Initialize with some demo data for development
     this.initializeDemoData();
@@ -350,6 +430,265 @@ export class MemStorage implements IStorage {
     return updatedPayment;
   }
   
+  // Staking methods
+  async getStakingPosition(id: number): Promise<StakingPosition | undefined> {
+    return this.stakingPositions.get(id);
+  }
+  
+  async getStakingPositionsByUserId(userId: number): Promise<StakingPosition[]> {
+    return Array.from(this.stakingPositions.values())
+      .filter(position => position.userId === userId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+  
+  async getStakingPositionsByWalletId(walletId: number): Promise<StakingPosition[]> {
+    return Array.from(this.stakingPositions.values())
+      .filter(position => position.walletId === walletId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+  
+  async createStakingPosition(insertPosition: InsertStakingPosition): Promise<StakingPosition> {
+    const id = this.currentStakingPositionId++;
+    const createdAt = new Date();
+    const position: StakingPosition = { ...insertPosition, id, createdAt };
+    this.stakingPositions.set(id, position);
+    return position;
+  }
+  
+  async updateStakingPosition(id: number, updates: Partial<StakingPosition>): Promise<StakingPosition | undefined> {
+    const position = this.stakingPositions.get(id);
+    if (!position) return undefined;
+    
+    const updatedPosition = { ...position, ...updates };
+    this.stakingPositions.set(id, updatedPosition);
+    return updatedPosition;
+  }
+  
+  // Proposal methods
+  async getProposal(id: number): Promise<Proposal | undefined> {
+    return this.proposals.get(id);
+  }
+  
+  async getProposalsByChain(chain: string, status?: string): Promise<Proposal[]> {
+    let filteredProposals = Array.from(this.proposals.values())
+      .filter(proposal => proposal.chain === chain);
+      
+    if (status) {
+      filteredProposals = filteredProposals.filter(proposal => proposal.status === status);
+    }
+    
+    return filteredProposals.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+  
+  async getProposalsByCreator(userId: number): Promise<Proposal[]> {
+    return Array.from(this.proposals.values())
+      .filter(proposal => proposal.creatorId === userId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+  
+  async createProposal(insertProposal: InsertProposal): Promise<Proposal> {
+    const id = this.currentProposalId++;
+    const createdAt = new Date();
+    const proposal: Proposal = { ...insertProposal, id, createdAt };
+    this.proposals.set(id, proposal);
+    return proposal;
+  }
+  
+  async updateProposalStatus(id: number, status: string): Promise<Proposal | undefined> {
+    const proposal = this.proposals.get(id);
+    if (!proposal) return undefined;
+    
+    const updatedProposal = { ...proposal, status };
+    this.proposals.set(id, updatedProposal);
+    return updatedProposal;
+  }
+  
+  // Proposal Options methods
+  async getProposalOption(id: number): Promise<ProposalOption | undefined> {
+    return this.proposalOptions.get(id);
+  }
+  
+  async getProposalOptionsByProposalId(proposalId: number): Promise<ProposalOption[]> {
+    return Array.from(this.proposalOptions.values())
+      .filter(option => option.proposalId === proposalId);
+  }
+  
+  async createProposalOption(insertOption: InsertProposalOption): Promise<ProposalOption> {
+    const id = this.currentProposalOptionId++;
+    const createdAt = new Date();
+    const option: ProposalOption = { 
+      ...insertOption, 
+      id, 
+      createdAt,
+      // Map the expected fields based on schema
+      optionText: insertOption.text,
+      metadata: insertOption.description as unknown
+    };
+    this.proposalOptions.set(id, option);
+    return option;
+  }
+  
+  // Voting methods
+  async getVote(id: number): Promise<Vote | undefined> {
+    return this.votes.get(id);
+  }
+  
+  async getVotesByProposalId(proposalId: number): Promise<Vote[]> {
+    return Array.from(this.votes.values())
+      .filter(vote => vote.proposalId === proposalId)
+      .sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0));
+  }
+  
+  async getVotesByUserId(userId: number): Promise<Vote[]> {
+    return Array.from(this.votes.values())
+      .filter(vote => vote.userId === userId)
+      .sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0));
+  }
+  
+  async getVotesByProposalAndUser(proposalId: number, userId: number): Promise<Vote[]> {
+    return Array.from(this.votes.values())
+      .filter(vote => vote.proposalId === proposalId && vote.userId === userId)
+      .sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0));
+  }
+  
+  async createVote(insertVote: InsertVote): Promise<Vote> {
+    const id = this.currentVoteId++;
+    const createdAt = new Date();
+    // Map to the expected schema fields
+    const vote: Vote = { 
+      ...insertVote, 
+      id, 
+      createdAt,
+      votePower: insertVote.power, // Map power to votePower based on schema
+      transactionHash: null
+    };
+    this.votes.set(id, vote);
+    return vote;
+  }
+  
+  // Governance Rewards methods
+  async getGovernanceReward(id: number): Promise<GovernanceReward | undefined> {
+    return this.governanceRewards.get(id);
+  }
+  
+  async getGovernanceRewardsByUserId(userId: number): Promise<GovernanceReward[]> {
+    return Array.from(this.governanceRewards.values())
+      .filter(reward => reward.userId === userId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+  
+  async createGovernanceReward(insertReward: InsertGovernanceReward): Promise<GovernanceReward> {
+    const id = this.currentGovernanceRewardId++;
+    const createdAt = new Date();
+    const reward: GovernanceReward = { ...insertReward, id, createdAt };
+    this.governanceRewards.set(id, reward);
+    return reward;
+  }
+  
+  async updateGovernanceRewardStatus(id: number, status: string): Promise<GovernanceReward | undefined> {
+    const reward = this.governanceRewards.get(id);
+    if (!reward) return undefined;
+    
+    const updatedReward = { ...reward, status };
+    this.governanceRewards.set(id, updatedReward);
+    return updatedReward;
+  }
+  
+  // Wallet Health Score methods
+  async getWalletHealthScore(id: number): Promise<WalletHealthScore | undefined> {
+    return this.walletHealthScores.get(id);
+  }
+  
+  async getWalletHealthScoreByWalletId(walletId: number): Promise<WalletHealthScore | undefined> {
+    return Array.from(this.walletHealthScores.values())
+      .find(score => score.walletId === walletId);
+  }
+  
+  async getWalletHealthScoresByUserId(userId: number): Promise<WalletHealthScore[]> {
+    const userWallets = await this.getWalletsByUserId(userId);
+    const walletIds = userWallets.map(wallet => wallet.id);
+    
+    return Array.from(this.walletHealthScores.values())
+      .filter(score => walletIds.includes(score.walletId))
+      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+  }
+  
+  async createWalletHealthScore(insertScore: InsertWalletHealthScore): Promise<WalletHealthScore> {
+    const id = this.currentWalletHealthScoreId++;
+    const timestamp = new Date();
+    const score: WalletHealthScore = { 
+      ...insertScore, 
+      id, 
+      timestamp,
+      // Ensure all required fields have values
+      securityScore: insertScore.securityScore || 0,
+      performanceScore: insertScore.performanceScore || 0,
+      overallScore: insertScore.overallScore || 0,
+      status: insertScore.status || 'active',
+      lastScanId: insertScore.lastScanId || null
+    };
+    this.walletHealthScores.set(id, score);
+    return score;
+  }
+  
+  async updateWalletHealthScore(id: number, updates: Partial<WalletHealthScore>): Promise<WalletHealthScore | undefined> {
+    const score = this.walletHealthScores.get(id);
+    if (!score) return undefined;
+    
+    const updatedScore = { ...score, ...updates };
+    this.walletHealthScores.set(id, updatedScore);
+    return updatedScore;
+  }
+  
+  // Wallet Health Issues methods
+  async getWalletHealthIssue(id: number): Promise<WalletHealthIssue | undefined> {
+    return this.walletHealthIssues.get(id);
+  }
+  
+  async getWalletHealthIssuesByScoreId(healthScoreId: number): Promise<WalletHealthIssue[]> {
+    return Array.from(this.walletHealthIssues.values())
+      .filter(issue => issue.healthScoreId === healthScoreId)
+      .sort((a, b) => {
+        // Sort by severity (critical, high, medium, low)
+        const severityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
+        const severityDiff = severityOrder[a.severity] - severityOrder[b.severity];
+        if (severityDiff !== 0) return severityDiff;
+        
+        // If same severity, sort by timestamp (most recent first)
+        return b.detectedAt.getTime() - a.detectedAt.getTime();
+      });
+  }
+  
+  async createWalletHealthIssue(insertIssue: InsertWalletHealthIssue): Promise<WalletHealthIssue> {
+    const id = this.currentWalletHealthIssueId++;
+    const detectedAt = new Date();
+    const issue: WalletHealthIssue = {
+      ...insertIssue,
+      id,
+      detectedAt,
+      resolvedAt: null,
+      resolved: false
+    };
+    this.walletHealthIssues.set(id, issue);
+    return issue;
+  }
+  
+  async updateWalletHealthIssueResolved(id: number, resolved: boolean): Promise<WalletHealthIssue | undefined> {
+    const issue = this.walletHealthIssues.get(id);
+    if (!issue) return undefined;
+    
+    const updates: Partial<WalletHealthIssue> = { resolved };
+    if (resolved && !issue.resolved) {
+      updates.resolvedAt = new Date();
+    } else if (!resolved) {
+      updates.resolvedAt = null;
+    }
+    
+    const updatedIssue = { ...issue, ...updates };
+    this.walletHealthIssues.set(id, updatedIssue);
+    return updatedIssue;
+  }
+  
   // Initialize demo data
   private initializeDemoData() {
     // Create a demo user
@@ -524,6 +863,221 @@ export class MemStorage implements IStorage {
         ];
         
         cidEntries.forEach(entry => this.createCidEntry(entry));
+        
+        // Create demo staking positions
+        if (wallets.length > 0) {
+          const stakingPositions: InsertStakingPosition[] = [
+            {
+              userId: user.id,
+              walletId: wallets[1].id,
+              amount: "2.5",
+              reward: "0.125",
+              chain: "ethereum",
+              tokenSymbol: "ETH",
+              lockupPeriod: 30, // days
+              status: "active",
+              apy: "5.2",
+            },
+            {
+              userId: user.id,
+              walletId: wallets[2].id,
+              amount: "20",
+              reward: "0.8",
+              chain: "solana",
+              tokenSymbol: "SOL",
+              lockupPeriod: 90, // days
+              status: "active",
+              apy: "4.0",
+            }
+          ];
+          
+          stakingPositions.forEach(position => this.createStakingPosition(position));
+          
+          // Create governance proposals
+          const proposals: InsertProposal[] = [
+            {
+              creatorId: user.id,
+              title: "Implement Quantum-Resistant Signature Scheme",
+              description: "Migrate from current signature scheme to quantum-resistant algorithms to protect against future quantum computing attacks.",
+              chain: "ethereum",
+              status: "active",
+              startTime: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7 days ago
+              endTime: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
+              quorum: "1000",
+              snapshot: null
+            },
+            {
+              creatorId: user.id,
+              title: "Protocol Fee Adjustment",
+              description: "Reduce protocol fees from 0.3% to 0.25% to remain competitive with other DeFi platforms.",
+              chain: "ethereum",
+              status: "active",
+              startTime: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
+              endTime: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000), // 4 days from now
+              quorum: "500",
+              snapshot: null
+            },
+            {
+              creatorId: user.id,
+              title: "Aetherion Ecosystem Fund Allocation",
+              description: "Allocate 5% of treasury funds for grants to developers building on the Aetherion ecosystem.",
+              chain: "solana",
+              status: "active",
+              startTime: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
+              endTime: new Date(Date.now() + 12 * 24 * 60 * 60 * 1000), // 12 days from now
+              quorum: "2000",
+              snapshot: null
+            }
+          ];
+          
+          Promise.all(proposals.map(p => this.createProposal(p))).then(createdProposals => {
+            // Create proposal options
+            const proposalOptions: InsertProposalOption[] = [
+              {
+                proposalId: createdProposals[0].id,
+                text: "Implement CRYSTALS-Dilithium algorithm",
+                description: "NIST approved post-quantum cryptographic signature scheme"
+              },
+              {
+                proposalId: createdProposals[0].id,
+                text: "Implement SPHINCS+ algorithm",
+                description: "Hash-based stateless signature scheme resistant to quantum attacks"
+              },
+              {
+                proposalId: createdProposals[0].id,
+                text: "Maintain current algorithm with extended key length",
+                description: "Increase key size to provide temporary resistance"
+              },
+              {
+                proposalId: createdProposals[1].id,
+                text: "Approve fee reduction to 0.25%",
+                description: "Decrease protocol fee from 0.3% to 0.25%"
+              },
+              {
+                proposalId: createdProposals[1].id,
+                text: "Maintain current fee structure",
+                description: "Keep the protocol fee at 0.3%"
+              },
+              {
+                proposalId: createdProposals[2].id,
+                text: "Approve 5% allocation",
+                description: "Allocate 5% of treasury to ecosystem development grants"
+              },
+              {
+                proposalId: createdProposals[2].id,
+                text: "Allocate 3% instead",
+                description: "More conservative allocation of 3% of treasury"
+              },
+              {
+                proposalId: createdProposals[2].id,
+                text: "Do not allocate funds at this time",
+                description: "Delay decision on ecosystem fund until market conditions improve"
+              }
+            ];
+            
+            Promise.all(proposalOptions.map(option => this.createProposalOption(option))).then(createdOptions => {
+              // Create some votes
+              const votes: InsertVote[] = [
+                {
+                  userId: user.id,
+                  proposalId: createdProposals[0].id,
+                  optionId: createdOptions[0].id,
+                  power: "10.5",
+                  walletId: wallets[1].id
+                },
+                {
+                  userId: user.id,
+                  proposalId: createdProposals[1].id,
+                  optionId: createdOptions[3].id,
+                  power: "15.3",
+                  walletId: wallets[1].id
+                }
+              ];
+              
+              votes.forEach(vote => this.createVote(vote));
+              
+              // Create governance rewards
+              const rewards: InsertGovernanceReward[] = [
+                {
+                  userId: user.id,
+                  amount: "0.05",
+                  tokenSymbol: "ETH",
+                  reason: "Voting participation",
+                  proposalId: createdProposals[0].id,
+                  status: "pending",
+                  walletId: wallets[1].id
+                },
+                {
+                  userId: user.id,
+                  amount: "0.08",
+                  tokenSymbol: "ETH",
+                  reason: "Voting participation",
+                  proposalId: createdProposals[1].id,
+                  status: "claimed",
+                  walletId: wallets[1].id
+                }
+              ];
+              
+              rewards.forEach(reward => this.createGovernanceReward(reward));
+                
+                // Create wallet health scores for each wallet
+                for (let i = 0; i < wallets.length; i++) {
+                  const wallet = wallets[i];
+                  
+                  // Create wallet health score
+                  const healthScore: InsertWalletHealthScore = {
+                    userId: wallet.userId,
+                    walletId: wallet.id,
+                    overallScore: 82 + Math.floor(Math.random() * 12),
+                    securityScore: 85 + Math.floor(Math.random() * 10),
+                    diversificationScore: 75 + Math.floor(Math.random() * 15),
+                    activityScore: 80 + Math.floor(Math.random() * 10),
+                    gasOptimizationScore: 78 + Math.floor(Math.random() * 15),
+                    backgroundScanTimestamp: new Date()
+                  };
+                  
+                  this.createWalletHealthScore(healthScore).then(createdScore => {
+                    // Create some wallet health issues
+                    const issues: InsertWalletHealthIssue[] = [
+                      {
+                        healthScoreId: createdScore.id,
+                        title: 'Insufficient entropy in private key',
+                        description: 'Your wallet was created with lower than recommended entropy which could make it vulnerable to brute force attacks.',
+                        severity: 'medium',
+                        category: 'security',
+                        recommendation: 'Consider creating a new wallet with a hardware wallet device that generates high-entropy keys.',
+                        resolved: false
+                      },
+                      {
+                        healthScoreId: createdScore.id,
+                        title: 'High gas usage patterns',
+                        description: 'Your recent transactions show inefficient gas usage patterns that could be optimized.',
+                        severity: 'low',
+                        category: 'gasOptimization',
+                        recommendation: 'Use batch transactions and optimize contract interactions to reduce gas consumption.',
+                        resolved: false
+                      }
+                    ];
+                    
+                    if (i === 0) {
+                      // Add a critical issue for the first wallet
+                      issues.push({
+                        healthScoreId: createdScore.id,
+                        title: 'Interaction with flagged contract',
+                        description: 'Your wallet has interacted with a smart contract that has been flagged as potentially malicious by security researchers.',
+                        severity: 'critical',
+                        category: 'security',
+                        recommendation: 'Avoid further interactions with this contract and consider moving funds to a new wallet if you authorized token approvals.',
+                        resolved: false
+                      });
+                    }
+                    
+                    issues.forEach(issue => this.createWalletHealthIssue(issue));
+                  });
+                }
+            });
+          });
+        }
       });
     });
   }

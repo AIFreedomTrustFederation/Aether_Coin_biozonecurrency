@@ -1,4 +1,14 @@
-import { WalletBalance, Transaction, SmartContract, AiMonitoringLog, CidEntry, PaymentMethod, Payment } from '../types/wallet';
+import { 
+  WalletBalance, 
+  Transaction, 
+  SmartContract, 
+  AiMonitoringLog, 
+  CidEntry, 
+  PaymentMethod, 
+  Payment,
+  WalletHealthScore,
+  WalletHealthIssue
+} from '../types/wallet';
 import { apiRequest } from './queryClient';
 
 // Wallet API

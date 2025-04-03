@@ -8,7 +8,9 @@ import {
   insertAiMonitoringLogSchema, 
   insertCidEntrySchema,
   insertPaymentMethodSchema,
-  insertPaymentSchema 
+  insertPaymentSchema,
+  insertWalletHealthScoreSchema,
+  insertWalletHealthIssueSchema
 } from "@shared/schema";
 import { stripeService } from "./services/stripe";
 import { z } from "zod";
@@ -400,6 +402,110 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: "Webhook error",
         error: error instanceof Error ? error.message : String(error)
       });
+    }
+  });
+
+  // Wallet Health Score routes
+  
+  // Get wallet health scores for a user
+  app.get("/api/wallet-health/scores", async (req, res) => {
+    try {
+      const userId = 1; // For demo purposes
+      const scores = await storage.getWalletHealthScoresByUserId(userId);
+      res.json(scores);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch wallet health scores" });
+    }
+  });
+
+  // Get wallet health score by wallet ID
+  app.get("/api/wallet-health/scores/wallet/:walletId", async (req, res) => {
+    try {
+      const walletId = parseInt(req.params.walletId);
+      
+      if (isNaN(walletId)) {
+        return res.status(400).json({ message: "Invalid wallet ID" });
+      }
+      
+      const score = await storage.getWalletHealthScoreByWalletId(walletId);
+      
+      if (!score) {
+        return res.status(404).json({ message: "Wallet health score not found" });
+      }
+      
+      res.json(score);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch wallet health score" });
+    }
+  });
+
+  // Get wallet health issues by score ID
+  app.get("/api/wallet-health/issues/:scoreId", async (req, res) => {
+    try {
+      const scoreId = parseInt(req.params.scoreId);
+      
+      if (isNaN(scoreId)) {
+        return res.status(400).json({ message: "Invalid score ID" });
+      }
+      
+      const issues = await storage.getWalletHealthIssuesByScoreId(scoreId);
+      res.json(issues);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch wallet health issues" });
+    }
+  });
+
+  // Create a wallet health score
+  app.post("/api/wallet-health/scores", async (req, res) => {
+    try {
+      const scoreData = insertWalletHealthScoreSchema.parse(req.body);
+      const score = await storage.createWalletHealthScore(scoreData);
+      res.status(201).json(score);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid score data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create wallet health score" });
+    }
+  });
+
+  // Create a wallet health issue
+  app.post("/api/wallet-health/issues", async (req, res) => {
+    try {
+      const issueData = insertWalletHealthIssueSchema.parse(req.body);
+      const issue = await storage.createWalletHealthIssue(issueData);
+      res.status(201).json(issue);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid issue data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create wallet health issue" });
+    }
+  });
+
+  // Update a wallet health issue (mark as resolved/unresolved)
+  app.patch("/api/wallet-health/issues/:id/resolved", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { resolved } = req.body;
+      
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid issue ID" });
+      }
+      
+      if (typeof resolved !== 'boolean') {
+        return res.status(400).json({ message: "resolved must be a boolean" });
+      }
+      
+      const updatedIssue = await storage.updateWalletHealthIssueResolved(id, resolved);
+      
+      if (!updatedIssue) {
+        return res.status(404).json({ message: "Wallet health issue not found" });
+      }
+      
+      res.json(updatedIssue);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update wallet health issue" });
     }
   });
 

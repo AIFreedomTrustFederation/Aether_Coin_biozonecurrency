@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, jsonb, decimal } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, jsonb, decimal, primaryKey } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
@@ -19,6 +19,10 @@ export const usersRelations = relations(users, ({ many }) => ({
   cidEntries: many(cidEntries),
   paymentMethods: many(paymentMethods),
   payments: many(payments),
+  stakingPositions: many(stakingPositions),
+  createdProposals: many(proposals, { relationName: "createdProposals" }),
+  votes: many(votes),
+  governanceRewards: many(governanceRewards),
 }));
 
 export const insertUserSchema = createInsertSchema(users).omit({
@@ -47,6 +51,8 @@ export const walletsRelations = relations(wallets, ({ one, many }) => ({
     references: [users.id],
   }),
   transactions: many(transactions),
+  stakingPositions: many(stakingPositions),
+  votes: many(votes),
 }));
 
 export const insertWalletSchema = createInsertSchema(wallets).omit({
@@ -235,3 +241,235 @@ export type InsertPaymentMethod = z.infer<typeof insertPaymentMethodSchema>;
 
 export type Payment = typeof payments.$inferSelect;
 export type InsertPayment = z.infer<typeof insertPaymentSchema>;
+
+// Governance Schemas
+
+// Staking schema
+export const stakingPositions = pgTable("staking_positions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  walletId: integer("wallet_id").notNull().references(() => wallets.id),
+  amount: decimal("amount").notNull(),
+  tokenSymbol: text("token_symbol").notNull(),
+  startDate: timestamp("start_date").notNull().defaultNow(),
+  endDate: timestamp("end_date"),
+  status: text("status").notNull(), // 'active', 'ended', 'canceled'
+  rewardsEarned: decimal("rewards_earned").default("0"),
+  lockPeriodDays: integer("lock_period_days"),
+  stakingPoolId: text("staking_pool_id").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const stakingPositionsRelations = relations(stakingPositions, ({ one }) => ({
+  user: one(users, {
+    fields: [stakingPositions.userId],
+    references: [users.id],
+  }),
+  wallet: one(wallets, {
+    fields: [stakingPositions.walletId],
+    references: [wallets.id],
+  }),
+}));
+
+export const insertStakingPositionSchema = createInsertSchema(stakingPositions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  rewardsEarned: true,
+});
+
+// Proposals schema
+export const proposals = pgTable("proposals", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  creatorId: integer("creator_id").notNull().references(() => users.id),
+  status: text("status").notNull(), // 'draft', 'active', 'passed', 'rejected', 'expired'
+  startDate: timestamp("start_date").notNull(),
+  endDate: timestamp("end_date").notNull(),
+  contractAddress: text("contract_address"),
+  chain: text("chain").notNull(),
+  proposalType: text("proposal_type").notNull(), // 'parameter_change', 'treasury', 'upgrade', 'text'
+  requiredQuorum: decimal("required_quorum").notNull(),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const proposalsRelations = relations(proposals, ({ one, many }) => ({
+  creator: one(users, {
+    fields: [proposals.creatorId],
+    references: [users.id],
+  }),
+  votes: many(votes),
+  options: many(proposalOptions),
+}));
+
+export const insertProposalSchema = createInsertSchema(proposals).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// Proposal Options schema
+export const proposalOptions = pgTable("proposal_options", {
+  id: serial("id").primaryKey(),
+  proposalId: integer("proposal_id").notNull().references(() => proposals.id),
+  optionText: text("option_text").notNull(),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const proposalOptionsRelations = relations(proposalOptions, ({ one, many }) => ({
+  proposal: one(proposals, {
+    fields: [proposalOptions.proposalId],
+    references: [proposals.id],
+  }),
+  votes: many(votes),
+}));
+
+export const insertProposalOptionSchema = createInsertSchema(proposalOptions).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Votes schema
+export const votes = pgTable("votes", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  proposalId: integer("proposal_id").notNull().references(() => proposals.id),
+  optionId: integer("option_id").notNull().references(() => proposalOptions.id),
+  walletId: integer("wallet_id").notNull().references(() => wallets.id),
+  votePower: decimal("vote_power").notNull(),
+  transactionHash: text("transaction_hash"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const votesRelations = relations(votes, ({ one }) => ({
+  user: one(users, {
+    fields: [votes.userId],
+    references: [users.id],
+  }),
+  proposal: one(proposals, {
+    fields: [votes.proposalId],
+    references: [proposals.id],
+  }),
+  option: one(proposalOptions, {
+    fields: [votes.optionId],
+    references: [proposalOptions.id],
+  }),
+  wallet: one(wallets, {
+    fields: [votes.walletId],
+    references: [wallets.id],
+  }),
+}));
+
+export const insertVoteSchema = createInsertSchema(votes).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Governance Rewards schema
+export const governanceRewards = pgTable("governance_rewards", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  amount: decimal("amount").notNull(),
+  tokenSymbol: text("token_symbol").notNull(),
+  rewardType: text("reward_type").notNull(), // 'voting', 'staking', 'proposal_creation'
+  status: text("status").notNull(), // 'pending', 'claimed', 'expired'
+  relatedEntityId: integer("related_entity_id"), // ID of proposal, vote, or staking position
+  relatedEntityType: text("related_entity_type"), // 'proposal', 'vote', 'staking'
+  createdAt: timestamp("created_at").defaultNow(),
+  claimedAt: timestamp("claimed_at"),
+});
+
+export const governanceRewardsRelations = relations(governanceRewards, ({ one }) => ({
+  user: one(users, {
+    fields: [governanceRewards.userId],
+    references: [users.id],
+  }),
+}));
+
+export const insertGovernanceRewardSchema = createInsertSchema(governanceRewards).omit({
+  id: true,
+  createdAt: true,
+  claimedAt: true,
+});
+
+// Export the governance types
+export type StakingPosition = typeof stakingPositions.$inferSelect;
+export type InsertStakingPosition = z.infer<typeof insertStakingPositionSchema>;
+
+export type Proposal = typeof proposals.$inferSelect;
+export type InsertProposal = z.infer<typeof insertProposalSchema>;
+
+export type ProposalOption = typeof proposalOptions.$inferSelect;
+export type InsertProposalOption = z.infer<typeof insertProposalOptionSchema>;
+
+export type Vote = typeof votes.$inferSelect;
+export type InsertVote = z.infer<typeof insertVoteSchema>;
+
+export type GovernanceReward = typeof governanceRewards.$inferSelect;
+export type InsertGovernanceReward = z.infer<typeof insertGovernanceRewardSchema>;
+
+// Wallet Health Score Tables
+export const walletHealthScores = pgTable("wallet_health_scores", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  walletId: integer("wallet_id").notNull().references(() => wallets.id),
+  createdAt: timestamp("created_at", { mode: "date" }).defaultNow(),
+  overallScore: integer("overall_score").notNull(), // 0-100
+  securityScore: integer("security_score").notNull(), // 0-100
+  diversificationScore: integer("diversification_score").notNull(), // 0-100
+  activityScore: integer("activity_score").notNull(), // 0-100
+  gasOptimizationScore: integer("gas_optimization_score").notNull(), // 0-100
+  backgroundScanTimestamp: timestamp("background_scan_timestamp", { mode: "date" }),
+});
+
+export const walletHealthScoresRelations = relations(walletHealthScores, ({ one }) => ({
+  user: one(users, {
+    fields: [walletHealthScores.userId],
+    references: [users.id],
+  }),
+  wallet: one(wallets, {
+    fields: [walletHealthScores.walletId],
+    references: [wallets.id],
+  }),
+}));
+
+export const insertWalletHealthScoreSchema = createInsertSchema(walletHealthScores).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const walletHealthIssues = pgTable("wallet_health_issues", {
+  id: serial("id").primaryKey(),
+  healthScoreId: integer("health_score_id").notNull().references(() => walletHealthScores.id),
+  createdAt: timestamp("created_at", { mode: "date" }).defaultNow(),
+  category: text("category").notNull(), // security, diversification, activity, gasOptimization
+  severity: text("severity").notNull(), // low, medium, high, critical
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  recommendation: text("recommendation").notNull(),
+  resolved: boolean("resolved").default(false),
+  resolvedAt: timestamp("resolved_at", { mode: "date" }),
+});
+
+export const walletHealthIssuesRelations = relations(walletHealthIssues, ({ one }) => ({
+  healthScore: one(walletHealthScores, {
+    fields: [walletHealthIssues.healthScoreId],
+    references: [walletHealthScores.id],
+  }),
+}));
+
+export const insertWalletHealthIssueSchema = createInsertSchema(walletHealthIssues).omit({
+  id: true,
+  createdAt: true,
+  resolvedAt: true,
+});
+
+export type WalletHealthScore = typeof walletHealthScores.$inferSelect;
+export type InsertWalletHealthScore = z.infer<typeof insertWalletHealthScoreSchema>;
+export type WalletHealthIssue = typeof walletHealthIssues.$inferSelect;
+export type InsertWalletHealthIssue = z.infer<typeof insertWalletHealthIssueSchema>;

@@ -1,7 +1,8 @@
 import "dotenv/config";
 import { db, pgClient } from "./db";
 import { 
-  users, wallets, transactions, smartContracts, aiMonitoringLogs, cidEntries
+  users, wallets, transactions, smartContracts, aiMonitoringLogs, cidEntries,
+  walletHealthScores, walletHealthIssues
 } from "../shared/schema";
 import { sql } from "drizzle-orm";
 
@@ -78,6 +79,32 @@ async function migrate() {
         type VARCHAR(100) NOT NULL,
         status VARCHAR(50) NOT NULL,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS wallet_health_scores (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id),
+        wallet_id INTEGER NOT NULL REFERENCES wallets(id),
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        overall_score INTEGER NOT NULL,
+        security_score INTEGER NOT NULL,
+        diversification_score INTEGER NOT NULL,
+        activity_score INTEGER NOT NULL,
+        gas_optimization_score INTEGER NOT NULL,
+        background_scan_timestamp TIMESTAMP WITH TIME ZONE
+      );
+
+      CREATE TABLE IF NOT EXISTS wallet_health_issues (
+        id SERIAL PRIMARY KEY,
+        health_score_id INTEGER NOT NULL REFERENCES wallet_health_scores(id),
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        category VARCHAR(100) NOT NULL,
+        severity VARCHAR(50) NOT NULL,
+        title VARCHAR(255) NOT NULL,
+        description TEXT NOT NULL,
+        recommendation TEXT NOT NULL,
+        resolved BOOLEAN DEFAULT FALSE,
+        resolved_at TIMESTAMP WITH TIME ZONE
       );
     `);
 
@@ -287,6 +314,94 @@ async function migrate() {
         ]);
 
         console.log('Created sample CID entries');
+
+        // Create wallet health scores for each wallet
+        if (btcWallet && ethWallet && solWallet) {
+          // Create health scores
+          const [btcHealthScore] = await db.insert(walletHealthScores).values({
+            userId,
+            walletId: btcWallet.id,
+            overallScore: 87,
+            securityScore: 92,
+            diversificationScore: 75,
+            activityScore: 88,
+            gasOptimizationScore: 80,
+            backgroundScanTimestamp: new Date(Date.now() - 3600000) // 1 hour ago
+          }).returning();
+
+          const [ethHealthScore] = await db.insert(walletHealthScores).values({
+            userId,
+            walletId: ethWallet.id,
+            overallScore: 82,
+            securityScore: 89,
+            diversificationScore: 70,
+            activityScore: 85,
+            gasOptimizationScore: 78,
+            backgroundScanTimestamp: new Date(Date.now() - 3600000) // 1 hour ago
+          }).returning();
+            
+          const [solHealthScore] = await db.insert(walletHealthScores).values({
+            userId,
+            walletId: solWallet.id,
+            overallScore: 90,
+            securityScore: 95,
+            diversificationScore: 85,
+            activityScore: 87,
+            gasOptimizationScore: 92,
+            backgroundScanTimestamp: new Date(Date.now() - 3600000) // 1 hour ago
+          }).returning();
+
+          console.log('Created wallet health scores');
+
+          // Create health issues
+          if (btcHealthScore) {
+            await db.insert(walletHealthIssues).values([
+              {
+                healthScoreId: btcHealthScore.id,
+                category: 'security',
+                severity: 'medium',
+                title: 'Insufficient entropy in private key',
+                description: 'Your wallet was created with lower than recommended entropy which could make it vulnerable to brute force attacks.',
+                recommendation: 'Consider creating a new wallet with a hardware wallet device that generates high-entropy keys.',
+                resolved: false
+              },
+              {
+                healthScoreId: btcHealthScore.id,
+                category: 'security',
+                severity: 'critical',
+                title: 'Interaction with flagged contract',
+                description: 'Your wallet has interacted with a smart contract that has been flagged as potentially malicious by security researchers.',
+                recommendation: 'Avoid further interactions with this contract and consider moving funds to a new wallet if you authorized token approvals.',
+                resolved: false
+              }
+            ]);
+          }
+
+          if (ethHealthScore) {
+            await db.insert(walletHealthIssues).values([
+              {
+                healthScoreId: ethHealthScore.id,
+                category: 'gasOptimization',
+                severity: 'low',
+                title: 'High gas usage patterns',
+                description: 'Your recent transactions show inefficient gas usage patterns that could be optimized.',
+                recommendation: 'Use batch transactions and optimize contract interactions to reduce gas consumption.',
+                resolved: false
+              },
+              {
+                healthScoreId: ethHealthScore.id,
+                category: 'diversification',
+                severity: 'medium',
+                title: 'Portfolio concentration risk',
+                description: 'Over 70% of your portfolio value is concentrated in a single asset.',
+                recommendation: 'Consider diversifying your holdings across multiple assets to reduce risk.',
+                resolved: false
+              }
+            ]);
+          }
+
+          console.log('Created wallet health issues');
+        }
       }
     } else {
       console.log('Demo user already exists, skipping sample data creation');
