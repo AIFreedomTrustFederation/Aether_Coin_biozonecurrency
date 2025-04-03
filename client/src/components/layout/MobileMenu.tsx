@@ -1,6 +1,20 @@
 import { Link, useLocation } from 'wouter';
-import { X, Home, Coins, ArrowRightLeft, BarChart2, Image, Shield, Settings, FileText, GitMerge, CreditCard } from 'lucide-react';
-import FractalNavigation from './FractalNavigation';
+import { X, Home, Coins, ArrowRightLeft, BarChart2, Shield, Settings, FileText, GitMerge, CreditCard, Bell } from 'lucide-react';
+import { appRoutes } from '@/lib/routes';
+import { useQuery } from '@tanstack/react-query';
+
+// Define type for notification preferences
+interface NotificationPreference {
+  id: number;
+  userId: number;
+  phoneNumber: string | null;
+  isPhoneVerified: boolean;
+  smsEnabled: boolean;
+  transactionAlerts: boolean;
+  securityAlerts: boolean;
+  priceAlerts: boolean;
+  marketingUpdates: boolean;
+}
 
 interface MobileMenuProps {
   isOpen: boolean;
@@ -10,14 +24,19 @@ interface MobileMenuProps {
 const MobileMenu = ({ isOpen, onClose }: MobileMenuProps) => {
   const [location] = useLocation();
   
+  // Query notification preferences to check if there are any pending alerts
+  const { data: notificationPreferences } = useQuery<NotificationPreference>({
+    queryKey: ['/api/notification-preferences'],
+    retry: false
+  });
+  
+  // Convert app routes to nav items with icons
   const navItems = [
     { icon: Home, label: 'Dashboard', path: '/' },
     { icon: Coins, label: 'Assets', path: '/assets' },
     { icon: ArrowRightLeft, label: 'Transactions', path: '/transactions' },
+    { icon: Shield, label: 'Contracts', path: '/contracts' },
     { icon: CreditCard, label: 'Payments', path: '/payments' },
-    { icon: BarChart2, label: 'DeFi', path: '/defi' },
-    { icon: Image, label: 'NFTs', path: '/nfts' },
-    { icon: Shield, label: 'Smart Contracts', path: '/contracts' },
     { icon: GitMerge, label: 'Fractal Explorer', path: '/fractal-explorer' },
     { icon: FileText, label: 'White Paper', path: '/whitepaper' },
     { icon: Settings, label: 'Settings', path: '/settings' },
@@ -70,12 +89,37 @@ const MobileMenu = ({ isOpen, onClose }: MobileMenuProps) => {
           ))}
         </nav>
         
-        {/* AI Bot Status for Mobile */}
-        <div className="p-4 border-t border-border">
-          <div className="flex items-center">
-            <div className="relative w-3 h-3 mr-3">
-              <div className="absolute inset-0 bg-green-500 rounded-full animate-ping opacity-75"></div>
-              <div className="w-3 h-3 bg-green-500 rounded-full relative"></div>
+        {/* Notification & AI Bot Status for Mobile */}
+        <div className="p-4 border-t border-border space-y-3">
+          {/* Notification Status */}
+          <Link href="/settings" onClick={onClose}>
+            <div className="flex items-center hover:bg-primary/10 p-2 rounded-md cursor-pointer">
+              <div className="relative w-8 h-8 flex items-center justify-center mr-3 bg-primary/10 rounded-full">
+                <Bell className="w-4 h-4 text-primary" />
+                {notificationPreferences?.phoneNumber && !notificationPreferences?.isPhoneVerified && (
+                  <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full" />
+                )}
+              </div>
+              <div className="text-sm flex-1">
+                <div className="text-foreground">Notifications</div>
+                <div className="text-xs text-muted-foreground">
+                  {!notificationPreferences?.phoneNumber 
+                    ? "Not configured" 
+                    : !notificationPreferences?.isPhoneVerified 
+                      ? "Verification needed" 
+                      : notificationPreferences?.smsEnabled 
+                        ? "SMS alerts enabled" 
+                        : "SMS alerts disabled"}
+                </div>
+              </div>
+            </div>
+          </Link>
+
+          {/* AI Bot Status */}
+          <div className="flex items-center p-2 rounded-md">
+            <div className="relative w-8 h-8 flex items-center justify-center mr-3 bg-green-500/10 rounded-full">
+              <div className="absolute w-2 h-2 bg-green-500 rounded-full animate-ping opacity-75"></div>
+              <div className="w-2 h-2 bg-green-500 rounded-full relative"></div>
             </div>
             <div className="text-sm">
               <div className="text-foreground">AI Bot Status</div>
