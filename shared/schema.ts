@@ -12,7 +12,7 @@ export const users = pgTable("users", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const usersRelations = relations(users, ({ many }) => ({
+export const usersRelations = relations(users, ({ many, one }) => ({
   wallets: many(wallets),
   smartContracts: many(smartContracts),
   aiMonitoringLogs: many(aiMonitoringLogs),
@@ -23,6 +23,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   createdProposals: many(proposals, { relationName: "createdProposals" }),
   votes: many(votes),
   governanceRewards: many(governanceRewards),
+  notificationPreference: one(notificationPreferences),
 }));
 
 export const insertUserSchema = createInsertSchema(users).omit({
@@ -473,3 +474,34 @@ export type WalletHealthScore = typeof walletHealthScores.$inferSelect;
 export type InsertWalletHealthScore = z.infer<typeof insertWalletHealthScoreSchema>;
 export type WalletHealthIssue = typeof walletHealthIssues.$inferSelect;
 export type InsertWalletHealthIssue = z.infer<typeof insertWalletHealthIssueSchema>;
+
+// Notification preferences schema
+export const notificationPreferences = pgTable("notification_preferences", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  phoneNumber: text("phone_number"),
+  isPhoneVerified: boolean("is_phone_verified").default(false),
+  smsEnabled: boolean("sms_enabled").default(false),
+  transactionAlerts: boolean("transaction_alerts").default(true),
+  securityAlerts: boolean("security_alerts").default(true), 
+  priceAlerts: boolean("price_alerts").default(false),
+  marketingUpdates: boolean("marketing_updates").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const notificationPreferencesRelations = relations(notificationPreferences, ({ one }) => ({
+  user: one(users, {
+    fields: [notificationPreferences.userId],
+    references: [users.id],
+  }),
+}));
+
+export const insertNotificationPreferenceSchema = createInsertSchema(notificationPreferences).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type NotificationPreference = typeof notificationPreferences.$inferSelect;
+export type InsertNotificationPreference = z.infer<typeof insertNotificationPreferenceSchema>;

@@ -1,55 +1,29 @@
-import { useState } from 'react';
-import { Menu, Search, Bell } from 'lucide-react';
-import { Input } from "@/components/ui/input";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import React from 'react';
 
 interface HeaderProps {
-  toggleMobileMenu: () => void;
+  heading: string;
+  subheading?: string;
+  actions?: React.ReactNode;
 }
 
-const Header = ({ toggleMobileMenu }: HeaderProps) => {
+// Main Header component (default export)
+const Header = ({ heading, subheading, actions }: HeaderProps) => {
   return (
-    <header className="bg-card border-b border-border flex items-center justify-between p-4 relative" style={{ zIndex: 9999999 }}>
-      <div className="flex items-center lg:hidden">
-        <button 
-          className="text-primary hover:text-primary/80 mr-3 p-2 rounded-full bg-primary/10 hover:bg-primary/20 transition-colors"
-          onClick={toggleMobileMenu}
-          aria-label="Toggle mobile menu"
-          style={{ position: 'relative', zIndex: 9999999 }}
-        >
-          <Menu className="w-6 h-6" />
-        </button>
-        <h1 className="text-lg font-bold font-heading bg-gradient-to-r from-primary to-blue-500 bg-clip-text text-transparent">
-          Aetherion
-        </h1>
+    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">{heading}</h1>
+        {subheading && (
+          <p className="text-muted-foreground mt-1">{subheading}</p>
+        )}
       </div>
-      
-      <div className="flex-1 mx-4 lg:block hidden">
-        <div className="relative">
-          <Input
-            type="text"
-            placeholder="Search wallets, transactions, or tokens..."
-            className="w-full pl-10 bg-background"
-          />
-          <div className="absolute left-3 top-2.5 text-muted-foreground">
-            <Search className="w-5 h-5" />
-          </div>
-        </div>
-      </div>
-      
-      <div className="flex items-center">
-        <div className="relative mr-4">
-          <button className="text-muted-foreground hover:text-foreground">
-            <Bell className="w-6 h-6" />
-          </button>
-          <div className="absolute top-0 right-0 w-2 h-2 bg-primary rounded-full"></div>
-        </div>
-        <Avatar className="h-8 w-8 bg-gradient-to-r from-primary to-blue-500 cursor-pointer">
-          <AvatarFallback>JD</AvatarFallback>
-        </Avatar>
-      </div>
-    </header>
+      {actions && <div className="ml-auto">{actions}</div>}
+    </div>
   );
 };
+
+// For use in our Settings page
+export function PageHeader({ heading, subheading, actions }: HeaderProps) {
+  return <Header heading={heading} subheading={subheading} actions={actions} />;
+}
 
 export default Header;

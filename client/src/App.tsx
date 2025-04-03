@@ -10,6 +10,7 @@ import Contracts from "@/pages/Contracts";
 import WhitePaper from "@/pages/WhitePaper";
 import FractalExplorer from "@/pages/FractalExplorer";
 import Payments from "@/pages/Payments";
+import Settings from "@/pages/Settings";
 import NotFound from "@/pages/not-found";
 import { AnimatedRoutes } from "@/components/layout/AnimatedRoute";
 import { GestureProvider } from "@/contexts/gesture-context";
@@ -40,6 +41,11 @@ const routes = [
   {
     path: "/payments",
     component: Payments,
+    exact: true,
+  },
+  {
+    path: "/settings",
+    component: Settings,
     exact: true,
   },
   {

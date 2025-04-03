@@ -2,7 +2,7 @@ import "dotenv/config";
 import { db, pgClient } from "./db";
 import { 
   users, wallets, transactions, smartContracts, aiMonitoringLogs, cidEntries,
-  walletHealthScores, walletHealthIssues
+  walletHealthScores, walletHealthIssues, notificationPreferences
 } from "../shared/schema";
 import { sql } from "drizzle-orm";
 

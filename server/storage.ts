@@ -13,7 +13,8 @@ import {
   votes, type Vote, type InsertVote,
   governanceRewards, type GovernanceReward, type InsertGovernanceReward,
   walletHealthScores, type WalletHealthScore, type InsertWalletHealthScore,
-  walletHealthIssues, type WalletHealthIssue, type InsertWalletHealthIssue
+  walletHealthIssues, type WalletHealthIssue, type InsertWalletHealthIssue,
+  notificationPreferences, type NotificationPreference, type InsertNotificationPreference
 } from "@shared/schema";
 
 // Storage interface definition
@@ -108,6 +109,15 @@ export interface IStorage {
   getWalletHealthIssuesByScoreId(healthScoreId: number): Promise<WalletHealthIssue[]>;
   createWalletHealthIssue(issue: InsertWalletHealthIssue): Promise<WalletHealthIssue>;
   updateWalletHealthIssueResolved(id: number, resolved: boolean): Promise<WalletHealthIssue | undefined>;
+  
+  // Notification Preferences methods
+  getNotificationPreference(id: number): Promise<NotificationPreference | undefined>;
+  getNotificationPreferenceByUserId(userId: number): Promise<NotificationPreference | undefined>;
+  createNotificationPreference(preference: InsertNotificationPreference): Promise<NotificationPreference>;
+  updateNotificationPreferences(userId: number, data: Partial<NotificationPreference>): Promise<NotificationPreference | undefined>;
+  updateNotificationPreference(id: number, updates: Partial<NotificationPreference>): Promise<NotificationPreference | undefined>;
+  updatePhoneNumber(userId: number, phoneNumber: string, isVerified: boolean): Promise<NotificationPreference | undefined>;
+  verifyPhoneNumber(userId: number, isVerified: boolean): Promise<NotificationPreference | undefined>;
 }
 
 // In-memory storage implementation
@@ -127,6 +137,7 @@ export class MemStorage implements IStorage {
   private governanceRewards: Map<number, GovernanceReward>;
   private walletHealthScores: Map<number, WalletHealthScore>;
   private walletHealthIssues: Map<number, WalletHealthIssue>;
+  private notificationPreferences: Map<number, NotificationPreference>;
   
   private currentUserId: number;
   private currentWalletId: number;
@@ -143,6 +154,7 @@ export class MemStorage implements IStorage {
   private currentGovernanceRewardId: number;
   private currentWalletHealthScoreId: number;
   private currentWalletHealthIssueId: number;
+  private currentNotificationPreferenceId: number;
 
   constructor() {
     this.users = new Map();
@@ -160,6 +172,7 @@ export class MemStorage implements IStorage {
     this.governanceRewards = new Map();
     this.walletHealthScores = new Map();
     this.walletHealthIssues = new Map();
+    this.notificationPreferences = new Map();
     
     this.currentUserId = 1;
     this.currentWalletId = 1;
@@ -176,6 +189,7 @@ export class MemStorage implements IStorage {
     this.currentGovernanceRewardId = 1;
     this.currentWalletHealthScoreId = 1;
     this.currentWalletHealthIssueId = 1;
+    this.currentNotificationPreferenceId = 1;
     
     // Initialize with some demo data for development
     this.initializeDemoData();
@@ -689,6 +703,96 @@ export class MemStorage implements IStorage {
     return updatedIssue;
   }
   
+  // Notification Preferences methods
+  async getNotificationPreference(id: number): Promise<NotificationPreference | undefined> {
+    return this.notificationPreferences.get(id);
+  }
+  
+  async getNotificationPreferenceByUserId(userId: number): Promise<NotificationPreference | undefined> {
+    return Array.from(this.notificationPreferences.values()).find(
+      preference => preference.userId === userId
+    );
+  }
+  
+  async createNotificationPreference(insertPreference: InsertNotificationPreference): Promise<NotificationPreference> {
+    const id = this.currentNotificationPreferenceId++;
+    const createdAt = new Date();
+    const updatedAt = new Date();
+    
+    const preference: NotificationPreference = { 
+      ...insertPreference, 
+      id, 
+      createdAt, 
+      updatedAt 
+    };
+    
+    this.notificationPreferences.set(id, preference);
+    return preference;
+  }
+  
+  async updateNotificationPreference(id: number, updates: Partial<NotificationPreference>): Promise<NotificationPreference | undefined> {
+    const preference = this.notificationPreferences.get(id);
+    if (!preference) return undefined;
+    
+    const updatedPreference = { 
+      ...preference, 
+      ...updates, 
+      updatedAt: new Date() 
+    };
+    
+    this.notificationPreferences.set(id, updatedPreference);
+    return updatedPreference;
+  }
+  
+  async updatePhoneNumber(userId: number, phoneNumber: string, isVerified: boolean = false): Promise<NotificationPreference | undefined> {
+    // Find the user's notification preference
+    const preference = await this.getNotificationPreferenceByUserId(userId);
+    if (!preference) return undefined;
+    
+    const updates: Partial<NotificationPreference> = { 
+      phoneNumber, 
+      isPhoneVerified: isVerified,
+      updatedAt: new Date()
+    };
+    
+    const updatedPreference = { ...preference, ...updates };
+    this.notificationPreferences.set(preference.id, updatedPreference);
+    return updatedPreference;
+  }
+  
+  async updateNotificationPreferences(userId: number, data: Partial<NotificationPreference>): Promise<NotificationPreference | undefined> {
+    // Find the user's notification preference
+    const preference = await this.getNotificationPreferenceByUserId(userId);
+    if (!preference) return undefined;
+    
+    const updates: Partial<NotificationPreference> = { 
+      ...data,
+      updatedAt: new Date()
+    };
+    
+    const updatedPreference = { ...preference, ...updates };
+    this.notificationPreferences.set(preference.id, updatedPreference);
+    return updatedPreference;
+  }
+  
+  async verifyPhoneNumber(userId: number, isVerified: boolean): Promise<NotificationPreference | undefined> {
+    // Find the user's notification preference
+    const preference = await this.getNotificationPreferenceByUserId(userId);
+    if (!preference) return undefined;
+    
+    // If user doesn't have a phone number, we can't verify
+    if (!preference.phoneNumber) return undefined;
+    
+    const updates: Partial<NotificationPreference> = { 
+      isPhoneVerified: isVerified,
+      updatedAt: new Date()
+    };
+    
+    const updatedPreference = { ...preference, ...updates };
+    this.notificationPreferences.set(preference.id, updatedPreference);
+    return updatedPreference;
+  }
+  
   // Initialize demo data
   private initializeDemoData() {
     // Create a demo user
@@ -725,6 +829,20 @@ export class MemStorage implements IStorage {
         name: "Solana Wallet",
         type: "hot",
       };
+      
+      // Create notification preferences for the user
+      const notificationPrefs: InsertNotificationPreference = {
+        userId: user.id,
+        phoneNumber: null,
+        isPhoneVerified: false,
+        smsEnabled: false,
+        transactionAlerts: true,
+        securityAlerts: true,
+        priceAlerts: false,
+        marketingUpdates: false
+      };
+      
+      this.createNotificationPreference(notificationPrefs);
       
       Promise.all([
         this.createWallet(btcWallet),

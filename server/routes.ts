@@ -10,9 +10,11 @@ import {
   insertPaymentMethodSchema,
   insertPaymentSchema,
   insertWalletHealthScoreSchema,
-  insertWalletHealthIssueSchema
+  insertWalletHealthIssueSchema,
+  insertNotificationPreferenceSchema
 } from "@shared/schema";
 import { stripeService } from "./services/stripe";
+import * as twilioService from "./services/twilio";
 import { z } from "zod";
 import Stripe from "stripe";
 
@@ -506,6 +508,205 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(updatedIssue);
     } catch (error) {
       res.status(500).json({ message: "Failed to update wallet health issue" });
+    }
+  });
+  
+  // Notification routes
+  
+  // Get notification preferences for a user
+  app.get("/api/notification-preferences", async (req, res) => {
+    try {
+      const userId = 1; // For demo purposes
+      const preferences = await storage.getNotificationPreferenceByUserId(userId);
+      
+      if (!preferences) {
+        return res.status(404).json({ message: "Notification preferences not found" });
+      }
+      
+      res.json(preferences);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch notification preferences" });
+    }
+  });
+  
+  // Update notification preferences
+  app.patch("/api/notification-preferences", async (req, res) => {
+    try {
+      const userId = 1; // For demo purposes
+      const { 
+        smsEnabled, 
+        transactionAlerts, 
+        securityAlerts, 
+        priceAlerts, 
+        marketingUpdates 
+      } = req.body;
+      
+      // Get current preferences
+      const preferences = await storage.getNotificationPreferenceByUserId(userId);
+      
+      if (!preferences) {
+        return res.status(404).json({ message: "Notification preferences not found" });
+      }
+      
+      // Update preferences
+      const updatedData: Partial<typeof preferences> = {};
+      
+      if (typeof smsEnabled === 'boolean') updatedData.smsEnabled = smsEnabled;
+      if (typeof transactionAlerts === 'boolean') updatedData.transactionAlerts = transactionAlerts;
+      if (typeof securityAlerts === 'boolean') updatedData.securityAlerts = securityAlerts;
+      if (typeof priceAlerts === 'boolean') updatedData.priceAlerts = priceAlerts;
+      if (typeof marketingUpdates === 'boolean') updatedData.marketingUpdates = marketingUpdates;
+      
+      const updatedPreferences = await storage.updateNotificationPreferences(userId, updatedData);
+      
+      if (!updatedPreferences) {
+        return res.status(404).json({ message: "Failed to update notification preferences" });
+      }
+      
+      res.json(updatedPreferences);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update notification preferences" });
+    }
+  });
+  
+  // Add or update phone number and send verification code
+  app.post("/api/notification-preferences/phone", async (req, res) => {
+    try {
+      const userId = 1; // For demo purposes
+      const { phoneNumber } = req.body;
+      
+      if (!phoneNumber || typeof phoneNumber !== 'string') {
+        return res.status(400).json({ message: "Invalid phone number" });
+      }
+      
+      // Check if Twilio is configured
+      if (!twilioService.isTwilioConfigured()) {
+        // If testing without Twilio, we just update the phone number without verification
+        await storage.updatePhoneNumber(userId, phoneNumber, true);
+        return res.json({ 
+          success: true, 
+          message: "Phone number updated (no verification in testing mode)"
+        });
+      }
+      
+      // Send verification code
+      const verificationCode = await twilioService.sendVerificationCode(userId, phoneNumber);
+      
+      if (!verificationCode) {
+        return res.status(500).json({ message: "Failed to send verification code" });
+      }
+      
+      // In a real app, we would store the verification code securely or use a service like Twilio Verify
+      // For demo purposes, we'll return the code in the response (this would never be done in production)
+      // In a real app, we'd store this in a short-lived cache or session
+      res.json({ 
+        success: true, 
+        message: "Verification code sent",
+        verificationCode // In a real app, this would NEVER be returned to the client
+      });
+    } catch (error) {
+      res.status(500).json({ 
+        message: "Failed to send verification code", 
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
+  // Verify phone number with code
+  app.post("/api/notification-preferences/verify", async (req, res) => {
+    try {
+      const userId = 1; // For demo purposes
+      const { verificationCode, expectedCode } = req.body;
+      
+      if (!verificationCode || typeof verificationCode !== 'string') {
+        return res.status(400).json({ message: "Invalid verification code" });
+      }
+      
+      if (!expectedCode || typeof expectedCode !== 'string') {
+        return res.status(400).json({ message: "Invalid expected code" });
+      }
+      
+      // Check if Twilio is configured
+      if (!twilioService.isTwilioConfigured()) {
+        // If testing without Twilio, we just verify without sending codes
+        await storage.verifyPhoneNumber(userId, true);
+        return res.json({ 
+          success: true, 
+          message: "Phone number verified (testing mode)"
+        });
+      }
+      
+      // Verify code
+      const success = await twilioService.verifyPhoneNumber(userId, verificationCode, expectedCode);
+      
+      if (!success) {
+        return res.status(400).json({ message: "Invalid verification code" });
+      }
+      
+      res.json({ 
+        success: true, 
+        message: "Phone number verified successfully"
+      });
+    } catch (error) {
+      res.status(500).json({ 
+        message: "Failed to verify phone number", 
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
+  // Send a test SMS message
+  app.post("/api/notification-preferences/test-sms", async (req, res) => {
+    try {
+      const userId = 1; // For demo purposes
+      
+      // Check if Twilio is configured
+      if (!twilioService.isTwilioConfigured()) {
+        return res.status(503).json({ 
+          message: "SMS service not configured", 
+          needsConfiguration: true 
+        });
+      }
+      
+      // Get user's notification preferences
+      const preferences = await storage.getNotificationPreferenceByUserId(userId);
+      
+      if (!preferences) {
+        return res.status(404).json({ message: "Notification preferences not found" });
+      }
+      
+      if (!preferences.phoneNumber || !preferences.isPhoneVerified) {
+        return res.status(400).json({ 
+          message: "Phone number not verified", 
+          needsVerification: true 
+        });
+      }
+      
+      if (!preferences.smsEnabled) {
+        return res.status(400).json({ 
+          message: "SMS notifications are disabled", 
+          smsDisabled: true 
+        });
+      }
+      
+      // Send a test message
+      const message = "This is a test message from Aetherion Wallet. Your SMS notifications are working correctly!";
+      const messageSid = await twilioService.sendSmsNotification(userId, message);
+      
+      if (!messageSid) {
+        return res.status(500).json({ message: "Failed to send test message" });
+      }
+      
+      res.json({ 
+        success: true, 
+        message: "Test message sent successfully",
+        messageSid
+      });
+    } catch (error) {
+      res.status(500).json({ 
+        message: "Failed to send test message", 
+        error: error instanceof Error ? error.message : String(error)
+      });
     }
   });
 

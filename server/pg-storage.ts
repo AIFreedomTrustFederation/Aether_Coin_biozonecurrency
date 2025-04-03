@@ -10,8 +10,9 @@ import {
   Payment, InsertPayment,
   WalletHealthScore, InsertWalletHealthScore,
   WalletHealthIssue, InsertWalletHealthIssue,
+  NotificationPreference, InsertNotificationPreference,
   users, wallets, transactions, smartContracts, aiMonitoringLogs, cidEntries,
-  paymentMethods, payments, walletHealthScores, walletHealthIssues
+  paymentMethods, payments, walletHealthScores, walletHealthIssues, notificationPreferences
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql, inArray } from "drizzle-orm";
@@ -395,6 +396,144 @@ export class PgStorage implements IStorage {
       return result.length ? result[0] : undefined;
     } catch (error) {
       console.error('Error updating wallet health issue resolved status:', error);
+      return undefined;
+    }
+  }
+
+  // Notification Preference methods
+  async getNotificationPreference(id: number): Promise<NotificationPreference | undefined> {
+    try {
+      const result = await db.select()
+        .from(notificationPreferences)
+        .where(eq(notificationPreferences.id, id))
+        .limit(1);
+      
+      return result.length ? result[0] : undefined;
+    } catch (error) {
+      console.error('Error getting notification preference:', error);
+      return undefined;
+    }
+  }
+  
+  async getNotificationPreferenceByUserId(userId: number): Promise<NotificationPreference | undefined> {
+    try {
+      const result = await db.select()
+        .from(notificationPreferences)
+        .where(eq(notificationPreferences.userId, userId))
+        .limit(1);
+      
+      return result.length ? result[0] : undefined;
+    } catch (error) {
+      console.error('Error getting notification preference by user ID:', error);
+      return undefined;
+    }
+  }
+  
+  async createNotificationPreference(preference: InsertNotificationPreference): Promise<NotificationPreference> {
+    try {
+      const result = await db.insert(notificationPreferences)
+        .values(preference)
+        .returning();
+      
+      return result[0];
+    } catch (error) {
+      console.error('Error creating notification preference:', error);
+      throw error;
+    }
+  }
+  
+  async updateNotificationPreference(id: number, updates: Partial<NotificationPreference>): Promise<NotificationPreference | undefined> {
+    try {
+      const now = new Date();
+      const updatesWithTimestamp = { 
+        ...updates, 
+        updatedAt: now 
+      };
+      
+      const result = await db.update(notificationPreferences)
+        .set(updatesWithTimestamp)
+        .where(eq(notificationPreferences.id, id))
+        .returning();
+      
+      return result.length ? result[0] : undefined;
+    } catch (error) {
+      console.error('Error updating notification preference:', error);
+      return undefined;
+    }
+  }
+  
+  async updateNotificationPreferences(userId: number, data: Partial<NotificationPreference>): Promise<NotificationPreference | undefined> {
+    try {
+      // Find the user's notification preference
+      const preference = await this.getNotificationPreferenceByUserId(userId);
+      if (!preference) return undefined;
+      
+      const now = new Date();
+      const updates = { 
+        ...data, 
+        updatedAt: now 
+      };
+      
+      const result = await db.update(notificationPreferences)
+        .set(updates)
+        .where(eq(notificationPreferences.id, preference.id))
+        .returning();
+      
+      return result.length ? result[0] : undefined;
+    } catch (error) {
+      console.error('Error updating notification preferences:', error);
+      return undefined;
+    }
+  }
+  
+  async updatePhoneNumber(userId: number, phoneNumber: string, isVerified: boolean = false): Promise<NotificationPreference | undefined> {
+    try {
+      // Find the user's notification preference
+      const preference = await this.getNotificationPreferenceByUserId(userId);
+      if (!preference) return undefined;
+      
+      const now = new Date();
+      const updates = { 
+        phoneNumber, 
+        isPhoneVerified: isVerified,
+        updatedAt: now
+      };
+      
+      const result = await db.update(notificationPreferences)
+        .set(updates)
+        .where(eq(notificationPreferences.id, preference.id))
+        .returning();
+      
+      return result.length ? result[0] : undefined;
+    } catch (error) {
+      console.error('Error updating phone number:', error);
+      return undefined;
+    }
+  }
+  
+  async verifyPhoneNumber(userId: number, isVerified: boolean): Promise<NotificationPreference | undefined> {
+    try {
+      // Find the user's notification preference
+      const preference = await this.getNotificationPreferenceByUserId(userId);
+      if (!preference) return undefined;
+      
+      // If user doesn't have a phone number, we can't verify
+      if (!preference.phoneNumber) return undefined;
+      
+      const now = new Date();
+      const updates = { 
+        isPhoneVerified: isVerified,
+        updatedAt: now
+      };
+      
+      const result = await db.update(notificationPreferences)
+        .set(updates)
+        .where(eq(notificationPreferences.id, preference.id))
+        .returning();
+      
+      return result.length ? result[0] : undefined;
+    } catch (error) {
+      console.error('Error verifying phone number:', error);
       return undefined;
     }
   }
