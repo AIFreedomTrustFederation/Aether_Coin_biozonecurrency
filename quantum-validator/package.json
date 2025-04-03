@@ -1,0 +1,13 @@
+{
+  "name": "aetherion-quantum-validator",
+  "version": "1.0.0",
+  "description": "Quantum-resistant security validation module for Aetherion",
+  "main": "dist/validator.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}

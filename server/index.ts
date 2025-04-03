@@ -1,10 +1,22 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { gatewayValidationMiddleware } from "./middleware/gateway-validation";
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Allow direct access to health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'online', server: 'backend' });
+});
+
+// Apply API Gateway validation middleware to all API routes
+// In development mode, we still apply it but the middleware itself
+// has logic to allow local development requests through
+app.use('/api', gatewayValidationMiddleware);
+log(`API Gateway validation ${process.env.NODE_ENV === 'production' ? 'strictly enabled' : 'enabled with dev exceptions'} for all API endpoints`);
 
 app.use((req, res, next) => {
   const start = Date.now();
