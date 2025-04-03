@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { WidgetProps } from './WidgetRegistry';
 import { isWidgetType } from '@/types/widget';
@@ -9,6 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useQuery } from '@tanstack/react-query';
 import { 
   Newspaper,
   ExternalLink,
@@ -16,82 +17,64 @@ import {
   TrendingUp,
   TrendingDown,
   Bookmark,
-  RefreshCw
+  RefreshCw,
+  AlertCircle,
+  Loader2
 } from 'lucide-react';
 
-// Sample news data
-const sampleNews = [
+// Interface for news data
+interface NewsArticle {
+  id: string;
+  title: string;
+  summary: string;
+  source: string;
+  url: string;
+  timestamp: Date;
+  sentiment: 'bullish' | 'bearish' | 'neutral';
+  category: string;
+  coins: string[];
+  image?: string;
+}
+
+// Interface for CryptoCompare API response
+interface CryptoCompareNewsResponse {
+  Type: number;
+  Message: string;
+  Data: Array<{
+    id: string;
+    guid: string;
+    published_on: number;
+    imageurl: string;
+    title: string;
+    url: string;
+    body: string;
+    tags: string;
+    categories: string;
+    upvotes: string;
+    downvotes: string;
+    lang: string;
+    source: string;
+    source_info: {
+      name: string;
+      img: string;
+      lang: string;
+    };
+  }>;
+}
+
+// Fallback sample news data in case of API failure
+const fallbackNews: NewsArticle[] = [
   {
-    id: 'news1',
-    title: 'Bitcoin Surges Past $44K, Analysts Point to ETF Approval Rumors',
-    summary: 'Bitcoin has seen a remarkable 8% gain in the last 24 hours, pushing above $44,000 for the first time since...',
-    source: 'CryptoNews',
-    url: 'https://cryptonews.com/bitcoin-surge-44k',
-    timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 mins ago
-    sentiment: 'bullish',
-    category: 'market',
-    coins: ['BTC', 'ETH'],
-    image: 'https://example.com/btc-chart.jpg'
-  },
-  {
-    id: 'news2',
-    title: 'Ethereum Layer 2 Solutions Report 400% Growth in Users This Quarter',
-    summary: 'Ethereum scaling solutions have seen unprecedented adoption in Q1 2025, with Optimism and Arbitrum leading the charge with a combined...',
-    source: 'BlockchainInsider',
-    url: 'https://blockchaininsider.com/ethereum-l2-growth',
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 3), // 3 hours ago
-    sentiment: 'bullish',
-    category: 'technology',
-    coins: ['ETH', 'OP', 'ARB'],
-    image: 'https://example.com/ethereum-network.jpg'
-  },
-  {
-    id: 'news3',
-    title: 'New Regulations Could Impact DeFi Platforms, Experts Warn',
-    summary: 'A proposed regulatory framework could bring significant compliance challenges for decentralized finance protocols, according to legal experts...',
-    source: 'CoinDesk',
-    url: 'https://coindesk.com/defi-regulation-impact',
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 8), // 8 hours ago
-    sentiment: 'bearish',
-    category: 'regulation',
-    coins: ['AAVE', 'UNI', 'COMP'],
-    image: 'https://example.com/defi-regulation.jpg'
-  },
-  {
-    id: 'news4',
-    title: 'Solana Faces Network Congestion Amid NFT Launch Frenzy',
-    summary: 'The Solana blockchain experienced temporary slowdowns yesterday as a highly anticipated NFT collection launch led to unprecedented network traffic...',
-    source: 'NFTNow',
-    url: 'https://nftnow.com/solana-congestion',
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 12), // 12 hours ago
+    id: 'fallback1',
+    title: 'No news data available at the moment',
+    summary: 'Please check your connection and try again later. This is a placeholder while we try to reconnect to the news service.',
+    source: 'System',
+    url: '#',
+    timestamp: new Date(),
     sentiment: 'neutral',
-    category: 'technology',
-    coins: ['SOL'],
-    image: 'https://example.com/solana-network.jpg'
-  },
-  {
-    id: 'news5',
-    title: 'Leading Central Banks Accelerate CBDC Development Plans',
-    summary: 'Central banks from major economies have announced accelerated timelines for their central bank digital currency projects, citing concerns about stablecoins and...',
-    source: 'Financial Times',
-    url: 'https://ft.com/cbdc-development',
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
-    sentiment: 'neutral',
-    category: 'regulation',
-    coins: ['USDC', 'USDT', 'DAI'],
-    image: 'https://example.com/cbdc-concept.jpg'
-  },
-  {
-    id: 'news6',
-    title: 'Major Security Vulnerability Patched in Popular Wallet Software',
-    summary: 'A critical security update has been released for users of a widely used cryptocurrency wallet after researchers discovered a vulnerability that could potentially...',
-    source: 'CryptoSecurity',
-    url: 'https://cryptosecurity.com/wallet-vulnerability',
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 36), // 1.5 days ago
-    sentiment: 'bearish',
-    category: 'security',
+    category: 'system',
     coins: [],
-    image: 'https://example.com/security-update.jpg'
+    image: ''
   }
 ];
 
@@ -147,9 +130,161 @@ const NewsFeedWidget: React.FC<WidgetProps> = ({ widget, isEditing, onConfigChan
     }
   };
   
+  // Fetch cryptocurrency news from the API
+  const {
+    data: newsData,
+    isLoading,
+    error,
+    refetch
+  } = useQuery({
+    queryKey: ['/api/services/cryptocompare/news', editSettings.limit],
+    queryFn: async () => {
+      const response = await fetch(`/api/services/cryptocompare/news?limit=${editSettings.limit * 2}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch news');
+      }
+      return response.json() as Promise<CryptoCompareNewsResponse>;
+    },
+    // Refresh every X minutes where X is the user's refresh interval setting
+    refetchInterval: editSettings.refreshInterval * 60 * 1000,
+  });
+
+  // Process and transform the news data
+  const processedNews = React.useMemo((): NewsArticle[] => {
+    if (!newsData?.Data || newsData.Data.length === 0) {
+      return fallbackNews;
+    }
+
+    return newsData.Data.map(article => {
+      // Extract coins mentioned in the article
+      const coinMentions = extractCoinMentions(article.title + ' ' + article.body);
+      
+      // Determine article sentiment based on content analysis
+      const sentiment = determineSentiment(article.title, article.body);
+      
+      // Determine primary category
+      const categories = article.categories ? article.categories.split('|') : [];
+      const primaryCategory = determinePrimaryCategory(categories);
+
+      return {
+        id: article.id,
+        title: article.title,
+        summary: extractSummary(article.body),
+        source: article.source_info.name,
+        url: article.url,
+        timestamp: new Date(article.published_on * 1000),
+        sentiment,
+        category: primaryCategory,
+        coins: coinMentions,
+        image: article.imageurl
+      };
+    });
+  }, [newsData]);
+
+  // Helper function to extract a summary from the full article body
+  const extractSummary = (body: string): string => {
+    // Get first ~200 characters, trying to end at a sentence
+    const maxLength = 200;
+    if (body.length <= maxLength) return body;
+    
+    let summary = body.substring(0, maxLength);
+    const lastPeriod = summary.lastIndexOf('.');
+    if (lastPeriod > maxLength / 2) {
+      summary = summary.substring(0, lastPeriod + 1);
+    } else {
+      // If no good sentence break, just add ellipsis
+      summary += '...';
+    }
+    return summary;
+  };
+
+  // Helper function to extract coin mentions from text
+  const extractCoinMentions = (text: string): string[] => {
+    const commonCoins = ['BTC', 'ETH', 'USDT', 'BNB', 'SOL', 'XRP', 'ADA', 'AVAX', 'DOGE', 'DOT', 
+      'MATIC', 'LINK', 'UNI', 'LTC', 'SHIB', 'TRX', 'DAI', 'ATOM', 'BCH'];
+    
+    const mentions = commonCoins.filter(coin => 
+      text.toUpperCase().includes(coin) || 
+      text.includes(getCoinName(coin))
+    );
+    
+    return mentions;
+  };
+
+  // Helper to get full coin name
+  const getCoinName = (symbol: string): string => {
+    const coinNames: Record<string, string> = {
+      'BTC': 'Bitcoin',
+      'ETH': 'Ethereum',
+      'USDT': 'Tether',
+      'BNB': 'Binance',
+      'SOL': 'Solana',
+      'XRP': 'Ripple',
+      'ADA': 'Cardano',
+      'AVAX': 'Avalanche',
+      'DOGE': 'Dogecoin',
+      'DOT': 'Polkadot',
+      'MATIC': 'Polygon',
+      'LINK': 'Chainlink',
+      'UNI': 'Uniswap',
+      'LTC': 'Litecoin',
+      'SHIB': 'Shiba Inu',
+      'TRX': 'Tron',
+      'DAI': 'Dai',
+      'ATOM': 'Cosmos',
+      'BCH': 'Bitcoin Cash'
+    };
+    return coinNames[symbol] || symbol;
+  };
+
+  // Naive sentiment analysis based on keywords
+  const determineSentiment = (title: string, body: string): 'bullish' | 'bearish' | 'neutral' => {
+    const text = (title + ' ' + body).toLowerCase();
+    
+    const bullishTerms = ['surge', 'soar', 'gain', 'rally', 'bull', 'bullish', 'rise', 'uptrend', 'increase', 'growth'];
+    const bearishTerms = ['drop', 'fall', 'crash', 'bear', 'bearish', 'decline', 'dump', 'sink', 'plummet', 'collapse'];
+    
+    const bullishCount = bullishTerms.filter(term => text.includes(term)).length;
+    const bearishCount = bearishTerms.filter(term => text.includes(term)).length;
+    
+    if (bullishCount > bearishCount) return 'bullish';
+    if (bearishCount > bullishCount) return 'bearish';
+    return 'neutral';
+  };
+
+  // Determine primary category from a list of categories
+  const determinePrimaryCategory = (categories: string[]): string => {
+    const categoryMap: Record<string, string> = {
+      'MARKET': 'market',
+      'BLOCKCHAIN': 'technology',
+      'TECHNOLOGY': 'technology',
+      'REGULATION': 'regulation',
+      'MINING': 'technology',
+      'TRADING': 'market',
+      'DEFI': 'technology',
+      'NFT': 'technology',
+      'BUSINESS': 'market',
+      'SPONSORED': 'sponsored',
+      'ICO': 'market',
+      'EXCHANGE': 'market',
+      'SECURITY': 'security'
+    };
+    
+    // Look for known categories
+    for (const category of categories) {
+      const normalized = category.trim().toUpperCase();
+      if (categoryMap[normalized]) {
+        return categoryMap[normalized];
+      }
+    }
+    
+    // Default to 'other' if no match
+    return 'other';
+  };
+
   // Filter news based on settings
-  const filteredNews = sampleNews
-    .filter(news => {
+  const filteredNews = processedNews
+    .filter((news: NewsArticle) => {
       // Filter by sources
       if (editSettings.sources.length > 0 && !editSettings.sources.includes(news.source)) {
         return false;
@@ -169,9 +304,9 @@ const NewsFeedWidget: React.FC<WidgetProps> = ({ widget, isEditing, onConfigChan
     })
     .slice(0, editSettings.limit);
   
-  // Available sources and categories
-  const availableSources = Array.from(new Set(sampleNews.map(news => news.source)));
-  const availableCategories = Array.from(new Set(sampleNews.map(news => news.category)));
+  // Available sources and categories from all news data
+  const availableSources = Array.from(new Set(processedNews.map((news: NewsArticle) => news.source)));
+  const availableCategories = Array.from(new Set(processedNews.map((news: NewsArticle) => news.category)));
   
   // Get sentiment icon
   const getSentimentIcon = (sentiment: string) => {
@@ -314,7 +449,7 @@ const NewsFeedWidget: React.FC<WidgetProps> = ({ widget, isEditing, onConfigChan
           <ScrollArea className="h-[calc(100%-2rem)]">
             <div className="space-y-3 pr-3">
               {filteredNews.length > 0 ? (
-                filteredNews.map((news) => (
+                filteredNews.map((news: NewsArticle) => (
                   <div key={news.id} className="space-y-1">
                     <div className="flex items-start justify-between">
                       <h4 className="font-medium text-sm line-clamp-2">{news.title}</h4>
@@ -337,7 +472,7 @@ const NewsFeedWidget: React.FC<WidgetProps> = ({ widget, isEditing, onConfigChan
                     
                     <div className="flex items-center justify-between pt-1">
                       <div className="flex gap-1">
-                        {news.coins.slice(0, 3).map((coin) => (
+                        {news.coins.slice(0, 3).map((coin: string) => (
                           <Badge key={coin} variant="outline" className="text-xs">
                             {coin}
                           </Badge>
