@@ -1,233 +1,171 @@
-import { TransactionToVerify, VerificationResult } from '../types';
+import { Transaction, SecurityScan, SecurityIssue } from '../types';
 
-/**
- * Transaction Verifier utility
- * Analyzes blockchain transactions for potential risks and fraud
- */
+// This is a simulated transaction verifier for demo purposes
+// In a real application, this would connect to blockchain nodes and security services
+
 class TransactionVerifier {
-  private apiEndpoint: string = '/api/transaction-verification';
-  private initialized: boolean = false;
-  private securityLevel: 'standard' | 'high' | 'paranoid' = 'standard';
-  private holdingPeriod: number = 24; // Default: 24 hours
-
-  /**
-   * Initialize the transaction verifier
-   * @param apiEndpoint - Optional custom API endpoint
-   * @param securityLevel - Security level for verification
-   * @param holdingPeriod - Holding period in hours for reversals
-   */
-  initialize(
-    apiEndpoint?: string,
-    securityLevel?: 'standard' | 'high' | 'paranoid',
-    holdingPeriod?: number
-  ): void {
-    if (apiEndpoint) {
-      this.apiEndpoint = apiEndpoint;
-    }
-    
-    if (securityLevel) {
-      this.securityLevel = securityLevel;
-    }
-    
-    if (holdingPeriod) {
-      this.holdingPeriod = holdingPeriod;
-    }
-    
-    this.initialized = true;
+  private userId: number;
+  private knownScamAddresses: Set<string> = new Set([
+    '0x0000000000000000000000000000000000000000', // Example scam address
+    '0x1111111111111111111111111111111111111111', // Example scam address
+    '0x2222222222222222222222222222222222222222', // Example scam address
+  ]);
+  
+  private knownSafeAddresses: Set<string> = new Set([
+    '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', // Example safe address (major exchange)
+    '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb', // Example safe address (popular service)
+    '0xcccccccccccccccccccccccccccccccccccccccc', // Example safe address (known contract)
+  ]);
+  
+  constructor(userId: number) {
+    this.userId = userId;
   }
-
-  /**
-   * Verify a transaction for potential risks
-   * @param transaction - The transaction to verify
-   * @returns Promise resolving to verification result
-   */
-  async verifyTransaction(transaction: TransactionToVerify): Promise<VerificationResult> {
-    if (!this.initialized) {
-      console.warn('Transaction verifier not initialized, using default settings');
-      this.initialized = true;
+  
+  // Verify a transaction for security concerns
+  async verifyTransaction(transaction: Transaction): Promise<SecurityScan> {
+    // In a real implementation, this would query blockchain data and security services
+    
+    const issues: SecurityIssue[] = [];
+    
+    // Check for known scam addresses
+    if (this.knownScamAddresses.has(transaction.to)) {
+      issues.push({
+        id: `issue_${Date.now()}_1`,
+        title: 'Known Scam Address',
+        description: 'The recipient address is associated with known scam activities.',
+        severity: 'critical',
+        type: 'scam',
+        data: {
+          address: transaction.to,
+          reportCount: 25,
+          firstReported: '2025-01-15'
+        }
+      });
     }
-
-    try {
-      // In production, this would call the backend API
-      // For now, we'll simulate the verification process
-      return await this.simulateVerification(transaction);
-    } catch (error) {
-      console.error('Transaction verification failed:', error);
-      
-      // Return a default error result
+    
+    // Check for unusually large transaction amounts (simulated)
+    if (parseFloat(transaction.amount) > 5.0) {
+      issues.push({
+        id: `issue_${Date.now()}_2`,
+        title: 'Large Transaction',
+        description: `This transaction amount (${transaction.amount} ${transaction.token}) is larger than your typical transactions.`,
+        severity: 'medium',
+        type: 'suspicious_pattern',
+        data: {
+          averageTransactionSize: '0.5',
+          percentile: 95
+        }
+      });
+    }
+    
+    // Check transaction time patterns (simulated)
+    const hour = new Date(transaction.timestamp).getHours();
+    if (hour >= 0 && hour <= 5) {
+      issues.push({
+        id: `issue_${Date.now()}_3`,
+        title: 'Unusual Transaction Time',
+        description: 'This transaction is being made during unusual hours based on your transaction history.',
+        severity: 'low',
+        type: 'suspicious_pattern',
+        data: {
+          hour,
+          userActiveHours: '8:00 - 22:00'
+        }
+      });
+    }
+    
+    // Generate the result
+    let result: 'safe' | 'warning' | 'danger' = 'safe';
+    
+    if (issues.some(issue => issue.severity === 'critical')) {
+      result = 'danger';
+    } else if (issues.some(issue => issue.severity === 'high' || issue.severity === 'medium')) {
+      result = 'warning';
+    }
+    
+    return {
+      id: `scan_${Date.now()}`,
+      timestamp: new Date(),
+      result,
+      issues
+    };
+  }
+  
+  // Check if transaction can be reversed (simulated)
+  async canReverseTransaction(transaction: Transaction): Promise<boolean> {
+    // In a real implementation, this would check blockchain confirmation status,
+    // escrow status, and other factors that determine if a transaction is reversible
+    
+    // For demo, assume transactions less than 1 hour old can be reversed (escrow period)
+    const transactionTime = new Date(transaction.timestamp).getTime();
+    const currentTime = Date.now();
+    const hourInMs = 60 * 60 * 1000;
+    
+    return (currentTime - transactionTime) < hourInMs;
+  }
+  
+  // Attempt to reverse a transaction (simulated)
+  async reverseTransaction(transaction: Transaction): Promise<{
+    success: boolean;
+    message: string;
+    newTransactionHash?: string;
+  }> {
+    // Check if the transaction can be reversed
+    const canReverse = await this.canReverseTransaction(transaction);
+    
+    if (!canReverse) {
       return {
-        transactionId: transaction.id,
-        isVerified: false,
-        riskLevel: 'high',
-        issues: ['Verification service error'],
-        recommendations: ['Try again later or contact support'],
-        canBeReversed: this.isWithinHoldingPeriod(transaction.timestamp)
+        success: false,
+        message: 'Transaction cannot be reversed because it has been finalized on the blockchain and is beyond the holding period.'
       };
     }
-  }
-
-  /**
-   * Request a transaction reversal
-   * @param transactionId - ID of the transaction to reverse
-   * @returns Promise resolving to boolean indicating success
-   */
-  async reverseTransaction(transactionId: string): Promise<boolean> {
-    if (!this.initialized) {
-      console.warn('Transaction verifier not initialized, using default settings');
-      this.initialized = true;
-    }
-
-    try {
-      // In production, this would call the backend API
-      // For now, we'll simulate the reversal process
-      await this.simulateReversal(transactionId);
-      return true;
-    } catch (error) {
-      console.error('Transaction reversal failed:', error);
-      return false;
-    }
-  }
-
-  /**
-   * Check if transaction is within holding period for reversal
-   * @param timestamp - Transaction timestamp
-   * @returns boolean indicating if transaction is within holding period
-   */
-  isWithinHoldingPeriod(timestamp: Date): boolean {
-    const currentTime = new Date().getTime();
-    const transactionTime = new Date(timestamp).getTime();
-    const timeDifferenceHours = (currentTime - transactionTime) / (1000 * 60 * 60);
     
-    return timeDifferenceHours <= this.holdingPeriod;
-  }
-
-  /**
-   * Update verifier configuration
-   * @param securityLevel - New security level
-   * @param holdingPeriod - New holding period in hours
-   */
-  updateConfig(securityLevel?: 'standard' | 'high' | 'paranoid', holdingPeriod?: number): void {
-    if (securityLevel) {
-      this.securityLevel = securityLevel;
-    }
+    // In a real implementation, this would initiate a reversal transaction
+    // or release funds from an escrow contract
     
-    if (holdingPeriod) {
-      this.holdingPeriod = holdingPeriod;
-    }
-  }
-
-  /**
-   * Get current configuration
-   * @returns Current verifier configuration
-   */
-  getConfig(): { securityLevel: string, holdingPeriod: number } {
+    // Simulate a successful reversal
     return {
-      securityLevel: this.securityLevel,
-      holdingPeriod: this.holdingPeriod
+      success: true,
+      message: 'Transaction has been successfully reversed. Funds have been returned to your wallet.',
+      newTransactionHash: `0x${Math.random().toString(36).substring(2, 15)}${Math.random().toString(36).substring(2, 15)}`
     };
   }
-
-  /**
-   * Simulate transaction verification (for demo purposes)
-   * Will be replaced with actual API calls in production
-   */
-  private async simulateVerification(transaction: TransactionToVerify): Promise<VerificationResult> {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
+  
+  // Analyze an address for security risk (simulated)
+  async analyzeAddress(address: string): Promise<{
+    riskScore: number;
+    isSafe: boolean;
+    isKnownScam: boolean;
+    details: string;
+  }> {
+    // In a real implementation, this would query blockchain analytics APIs
+    // and security databases
     
-    // Risk factors to check
-    const highRiskAmount = parseFloat(transaction.amount) > 1000;
-    const unknownAddress = !transaction.toAddress.startsWith('0x') || transaction.toAddress.length !== 42;
-    const newTransaction = this.isWithinHoldingPeriod(new Date(Date.now() - 1000 * 60 * 5)); // Within 5 minutes
+    const isKnownScam = this.knownScamAddresses.has(address);
+    const isSafe = this.knownSafeAddresses.has(address);
     
-    // Adjust checks based on security level
-    const issues: string[] = [];
-    let riskLevel: 'low' | 'medium' | 'high' | 'critical' = 'low';
+    let riskScore = 50; // Neutral score by default
     
-    // Check for issues based on security level
-    if (this.securityLevel === 'standard' || this.securityLevel === 'high' || this.securityLevel === 'paranoid') {
-      if (highRiskAmount) {
-        issues.push('Large transaction amount detected');
-        riskLevel = 'medium';
-      }
-      
-      if (unknownAddress) {
-        issues.push('Recipient address has unusual format');
-        riskLevel = 'high';
-      }
-    }
-    
-    // Additional checks for higher security levels
-    if (this.securityLevel === 'high' || this.securityLevel === 'paranoid') {
-      if (transaction.network !== 'Ethereum' && transaction.network !== 'Bitcoin') {
-        issues.push('Non-standard blockchain network');
-        riskLevel = riskLevel === 'high' ? 'high' : 'medium';
-      }
-    }
-    
-    // Paranoid mode additional checks
-    if (this.securityLevel === 'paranoid') {
-      if (!newTransaction) {
-        issues.push('Transaction not initiated recently');
-        riskLevel = riskLevel === 'high' ? 'high' : 'medium';
-      }
-      
-      // Add time-based warning
-      const currentHour = new Date().getHours();
-      if (currentHour < 6 || currentHour > 22) {
-        issues.push('Transaction initiated outside normal hours');
-        riskLevel = riskLevel === 'high' ? 'high' : 'medium';
-      }
-    }
-    
-    // Generate recommendations based on issues
-    const recommendations: string[] = [];
-    
-    if (issues.length > 0) {
-      recommendations.push('Verify recipient address and transaction details');
-      
-      if (highRiskAmount) {
-        recommendations.push('Consider breaking into smaller transactions');
-      }
-      
-      if (unknownAddress) {
-        recommendations.push('Double-check the recipient address format');
-      }
-      
-      if (riskLevel === 'high' || riskLevel === 'critical') {
-        recommendations.push('Contact support before proceeding');
-      }
+    if (isKnownScam) {
+      riskScore = 95;
+    } else if (isSafe) {
+      riskScore = 5;
+    } else {
+      // Simulated risk assessment
+      riskScore = Math.floor(Math.random() * 30) + 30; // Random score between 30-60
     }
     
     return {
-      transactionId: transaction.id,
-      isVerified: issues.length === 0,
-      riskLevel,
-      issues,
-      recommendations,
-      canBeReversed: this.isWithinHoldingPeriod(transaction.timestamp)
+      riskScore,
+      isSafe: riskScore < 30,
+      isKnownScam: riskScore > 80,
+      details: isKnownScam 
+        ? 'This address has been reported multiple times for fraudulent activities.'
+        : isSafe
+          ? 'This address belongs to a verified entity with good reputation.'
+          : 'This address has limited transaction history and should be treated with caution.'
     };
-  }
-
-  /**
-   * Simulate transaction reversal (for demo purposes)
-   * Will be replaced with actual API calls in production
-   */
-  private async simulateReversal(transactionId: string): Promise<void> {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // In a real implementation, we would call the backend to initiate reversal
-    console.log(`Transaction ${transactionId} reversal initiated`);
-    
-    // Random success rate for simulation
-    const success = Math.random() > 0.2; // 80% success rate
-    
-    if (!success) {
-      throw new Error('Transaction reversal failed');
-    }
   }
 }
 
-// Export singleton instance
-export default new TransactionVerifier();
+export default TransactionVerifier;

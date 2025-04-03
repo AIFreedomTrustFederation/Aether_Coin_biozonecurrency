@@ -1,8 +1,14 @@
-// Export all components from the AI Assistant module
+// Components
 export { default as AIAssistant } from './components/AIAssistant';
-export { default as ChatInterface } from './components/ChatInterface';
-export { default as SecureStorage } from './utils/SecureStorage';
-export { default as TransactionVerifier } from './utils/TransactionVerifier';
-export { default as useAIContext } from './hooks/useAIContext';
+export { default as AISettings } from './components/AISettings';
+export { default as TransactionHold } from './components/TransactionHold';
+export { default as SecurityHistory } from './components/SecurityHistory';
+
+// Contexts
 export { AIProvider, useAI } from './contexts/AIContext';
+
+// Types
 export * from './types';
+
+// Utils
+export * from './utils/formatters';

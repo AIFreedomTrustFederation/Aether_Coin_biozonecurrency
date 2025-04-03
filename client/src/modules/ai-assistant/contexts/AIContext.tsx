@@ -1,309 +1,245 @@
-import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
+import React, { createContext, useReducer, useContext, useCallback } from 'react';
+import { AIState, AIAction, AIConfig, ChatMessage, Transaction, SecurityScan, SecurityIssue } from '../types';
 import { v4 as uuidv4 } from 'uuid';
-import { 
-  AIContextState, 
-  Message, 
-  AIAssistantConfig,
-  TransactionToVerify,
-  VerificationResult
-} from '../types';
 
-// Initial configuration
-const defaultConfig: AIAssistantConfig = {
-  userId: 0, // This will be set from auth context
-  theme: 'system',
+// Default AI configuration
+const defaultConfig: AIConfig = {
   enableVoice: false,
-  enableNotifications: true,
-  securityLevel: 'standard',
   language: 'en',
-  transactionReversal: true,
-  holdingPeriod: 24, // 24 hours by default
+  aiResponseStyle: 'detailed',
+  notificationLevel: 'important',
+  maxAlertThreshold: 5,
+  enablePhishingDetection: true,
+  autoVerifyTransactions: true
 };
 
 // Initial state
-const initialState: AIContextState = {
-  messages: [],
-  isTyping: false,
-  unreadCount: 0,
-  lastInteraction: null,
-  currentSession: null,
+const initialState: AIState = {
   config: defaultConfig,
-  isInitialized: false,
+  chatHistory: [],
+  pendingTransactions: [],
+  securityScans: [],
+  storedCredentials: [],
+  isAssistantActive: true,
+  currentView: 'chat'
 };
 
-// Action types
-type AIAction = 
-  | { type: 'INITIALIZE', payload: Partial<AIAssistantConfig> }
-  | { type: 'SEND_MESSAGE', payload: Omit<Message, 'id' | 'timestamp'> }
-  | { type: 'RECEIVE_MESSAGE', payload: Omit<Message, 'id' | 'timestamp'> }
-  | { type: 'SET_TYPING', payload: boolean }
-  | { type: 'MARK_READ' }
-  | { type: 'UPDATE_CONFIG', payload: Partial<AIAssistantConfig> }
-  | { type: 'CLEAR_HISTORY' }
-  | { type: 'START_SESSION' }
-  | { type: 'END_SESSION' };
-
-// AI Context definition
-interface AIContextType {
-  state: AIContextState;
-  dispatch: React.Dispatch<AIAction>;
-  sendMessage: (text: string, attachments?: Message['attachments']) => void;
-  verifyTransaction: (transaction: TransactionToVerify) => Promise<VerificationResult>;
-  reverseTransaction: (transactionId: string) => Promise<boolean>;
-  clearHistory: () => void;
-  updateConfig: (config: Partial<AIAssistantConfig>) => void;
-}
-
-// Create context
-const AIContext = createContext<AIContextType | undefined>(undefined);
-
-// Reducer function
-function aiReducer(state: AIContextState, action: AIAction): AIContextState {
+// Reducer for handling actions
+const aiReducer = (state: AIState, action: AIAction): AIState => {
   switch (action.type) {
-    case 'INITIALIZE':
-      return {
-        ...state,
-        config: {
-          ...state.config,
-          ...action.payload,
-        },
-        isInitialized: true,
-      };
-    case 'SEND_MESSAGE': {
-      const newMessage: Message = {
-        id: uuidv4(),
-        timestamp: new Date(),
-        ...action.payload,
-      };
-      return {
-        ...state,
-        messages: [...state.messages, newMessage],
-        lastInteraction: new Date(),
-      };
-    }
-    case 'RECEIVE_MESSAGE': {
-      const newMessage: Message = {
-        id: uuidv4(),
-        timestamp: new Date(),
-        ...action.payload,
-      };
-      return {
-        ...state,
-        messages: [...state.messages, newMessage],
-        unreadCount: state.unreadCount + 1,
-        isTyping: false,
-        lastInteraction: new Date(),
-      };
-    }
-    case 'SET_TYPING':
-      return {
-        ...state,
-        isTyping: action.payload,
-      };
-    case 'MARK_READ':
-      return {
-        ...state,
-        unreadCount: 0,
-        messages: state.messages.map(msg => ({
-          ...msg,
-          isRead: msg.sender === 'assistant' ? true : msg.isRead,
-        })),
-      };
     case 'UPDATE_CONFIG':
       return {
         ...state,
         config: {
           ...state.config,
-          ...action.payload,
-        },
+          ...action.payload
+        }
       };
+      
+    case 'ADD_MESSAGE':
+      return {
+        ...state,
+        chatHistory: [action.payload, ...state.chatHistory]
+      };
+      
     case 'CLEAR_HISTORY':
       return {
         ...state,
-        messages: [],
-        unreadCount: 0,
+        chatHistory: []
       };
-    case 'START_SESSION':
+      
+    case 'ADD_PENDING_TRANSACTION':
       return {
         ...state,
-        currentSession: uuidv4(),
+        pendingTransactions: [action.payload, ...state.pendingTransactions]
       };
-    case 'END_SESSION':
+      
+    case 'REMOVE_PENDING_TRANSACTION':
       return {
         ...state,
-        currentSession: null,
+        pendingTransactions: state.pendingTransactions.filter(tx => tx.id !== action.payload)
       };
+      
+    case 'ADD_SECURITY_SCAN':
+      return {
+        ...state,
+        securityScans: [action.payload, ...state.securityScans]
+      };
+      
+    case 'RESOLVE_SECURITY_ISSUE':
+      return {
+        ...state,
+        securityScans: state.securityScans.map(scan => 
+          scan.id === action.payload.scanId 
+            ? {
+                ...scan,
+                issues: scan.issues.map(issue => 
+                  issue.id === action.payload.issueId 
+                    ? { ...issue, resolved: true, resolvedAt: new Date() } 
+                    : issue
+                )
+              }
+            : scan
+        )
+      };
+      
+    case 'SET_ACTIVE':
+      return {
+        ...state,
+        isAssistantActive: action.payload
+      };
+      
+    case 'SET_VIEW':
+      return {
+        ...state,
+        currentView: action.payload
+      };
+      
+    case 'ADD_CREDENTIAL':
+      return {
+        ...state,
+        storedCredentials: [...state.storedCredentials, action.payload]
+      };
+      
+    case 'REMOVE_CREDENTIAL':
+      return {
+        ...state,
+        storedCredentials: state.storedCredentials.filter(cred => cred !== action.payload)
+      };
+      
     default:
       return state;
   }
+};
+
+// Define context type
+interface AIContextType {
+  state: AIState;
+  dispatch: React.Dispatch<AIAction>;
+  sendMessage: (content: string) => void;
+  clearHistory: () => void;
+  updateConfig: (config: Partial<AIConfig>) => void;
+  setActive: (active: boolean) => void;
+  setView: (view: AIState['currentView']) => void;
+  addPendingTransaction: (transaction: Transaction) => void;
+  removePendingTransaction: (id: number) => void;
+  addSecurityScan: (scan: SecurityScan) => void;
+  resolveSecurityIssue: (scanId: number, issueId: number) => void;
+  storeCredential: (credential: string) => void;
+  removeCredential: (id: string) => void;
 }
+
+// Create context
+const AIContext = createContext<AIContextType | undefined>(undefined);
 
 // Provider component
-interface AIProviderProps {
-  children: ReactNode;
-  initialConfig?: Partial<AIAssistantConfig>;
-}
-
-export const AIProvider: React.FC<AIProviderProps> = ({ 
-  children, 
-  initialConfig = {} 
-}) => {
+export const AIProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(aiReducer, initialState);
-
-  // Initialize AI on mount
-  useEffect(() => {
-    if (!state.isInitialized) {
-      // Load stored configuration or use defaults
-      const storedConfig = localStorage.getItem('aiAssistantConfig');
-      const config = storedConfig 
-        ? { ...defaultConfig, ...JSON.parse(storedConfig), ...initialConfig }
-        : { ...defaultConfig, ...initialConfig };
-      
-      dispatch({ type: 'INITIALIZE', payload: config });
-    }
-  }, [initialConfig, state.isInitialized]);
-
-  // Save config to localStorage on change
-  useEffect(() => {
-    if (state.isInitialized) {
-      localStorage.setItem('aiAssistantConfig', JSON.stringify(state.config));
-    }
-  }, [state.config, state.isInitialized]);
-
+  
   // Helper function to send a message
-  const sendMessage = (text: string, attachments?: Message['attachments']) => {
-    // First ensure we have an active session
-    if (!state.currentSession) {
-      dispatch({ type: 'START_SESSION' });
-    }
-    
-    // Send user message
-    dispatch({
-      type: 'SEND_MESSAGE',
-      payload: {
-        text,
-        sender: 'user',
-        attachments,
-      },
-    });
-
-    // Set assistant to typing
-    dispatch({ type: 'SET_TYPING', payload: true });
-
-    // Simulate AI response (will be replaced with actual API call)
-    setTimeout(() => {
-      dispatch({
-        type: 'RECEIVE_MESSAGE',
-        payload: {
-          text: `I've processed your message: "${text}"`,
-          sender: 'assistant',
-        },
-      });
-    }, 1500);
-  };
-
-  // Transaction verification function
-  const verifyTransaction = async (transaction: TransactionToVerify): Promise<VerificationResult> => {
-    // This will be replaced with actual API verification logic
-    // For now, we're simulating a verification process
-    console.log('Verifying transaction:', transaction);
-    
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    const isHigh = transaction.amount && parseFloat(transaction.amount) > 1000;
-    
-    // Sample verification result
-    const result: VerificationResult = {
-      transactionId: transaction.id,
-      isVerified: !isHigh,
-      riskLevel: isHigh ? 'high' : 'low',
-      issues: isHigh ? ['Large transaction amount detected'] : [],
-      recommendations: isHigh ? ['Consider splitting into smaller transactions'] : [],
-      canBeReversed: state.config.transactionReversal && 
-        (new Date().getTime() - new Date(transaction.timestamp).getTime()) / 3600000 < state.config.holdingPeriod
+  const sendMessage = useCallback((content: string) => {
+    const userMessage: ChatMessage = {
+      id: uuidv4(),
+      role: 'user',
+      content,
+      timestamp: new Date()
     };
     
-    return result;
-  };
-
-  // Transaction reversal function
-  const reverseTransaction = async (transactionId: string): Promise<boolean> => {
-    // This will be replaced with actual transaction reversal API call
-    console.log('Reversing transaction:', transactionId);
+    dispatch({ type: 'ADD_MESSAGE', payload: userMessage });
     
-    // Find the transaction in messages
-    const transactionMessage = state.messages.find(
-      msg => msg.attachments?.some(att => 
-        att.type === 'transaction' && att.data?.id === transactionId
-      )
-    );
-    
-    if (!transactionMessage) {
-      console.error('Transaction not found in message history');
-      return false;
-    }
-    
-    // Check if within holding period
-    const attachedTransaction = transactionMessage.attachments?.find(
-      att => att.type === 'transaction' && att.data?.id === transactionId
-    );
-    
-    if (!attachedTransaction?.data) {
-      console.error('Transaction data not found');
-      return false;
-    }
-    
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // Notify user of the result
-    dispatch({
-      type: 'RECEIVE_MESSAGE',
-      payload: {
-        text: `I've initiated the reversal process for transaction ${transactionId}. The funds should be returned to your wallet within 24-48 hours.`,
-        sender: 'assistant',
-        referencedTransaction: transactionId,
-      },
-    });
-    
-    return true;
-  };
-
-  // Clear chat history
-  const clearHistory = () => {
+    // Simulate AI response after a short delay
+    setTimeout(() => {
+      const aiResponse: ChatMessage = {
+        id: uuidv4(),
+        role: 'assistant',
+        content: `I'm processing your request: "${content}". This is a placeholder response. In the real implementation, this would be a response from the actual AI model.`,
+        timestamp: new Date()
+      };
+      
+      dispatch({ type: 'ADD_MESSAGE', payload: aiResponse });
+    }, 1000);
+  }, []);
+  
+  // Helper function to clear chat history
+  const clearHistory = useCallback(() => {
     dispatch({ type: 'CLEAR_HISTORY' });
-  };
-
-  // Update configuration
-  const updateConfig = (config: Partial<AIAssistantConfig>) => {
+  }, []);
+  
+  // Helper function to update config
+  const updateConfig = useCallback((config: Partial<AIConfig>) => {
     dispatch({ type: 'UPDATE_CONFIG', payload: config });
+  }, []);
+  
+  // Helper function to set assistant active state
+  const setActive = useCallback((active: boolean) => {
+    dispatch({ type: 'SET_ACTIVE', payload: active });
+  }, []);
+  
+  // Helper function to set current view
+  const setView = useCallback((view: AIState['currentView']) => {
+    dispatch({ type: 'SET_VIEW', payload: view });
+  }, []);
+  
+  // Helper function to add a pending transaction
+  const addPendingTransaction = useCallback((transaction: Transaction) => {
+    dispatch({ type: 'ADD_PENDING_TRANSACTION', payload: transaction });
+  }, []);
+  
+  // Helper function to remove a pending transaction
+  const removePendingTransaction = useCallback((id: number) => {
+    dispatch({ type: 'REMOVE_PENDING_TRANSACTION', payload: id });
+  }, []);
+  
+  // Helper function to add a security scan
+  const addSecurityScan = useCallback((scan: SecurityScan) => {
+    dispatch({ type: 'ADD_SECURITY_SCAN', payload: scan });
+  }, []);
+  
+  // Helper function to resolve a security issue
+  const resolveSecurityIssue = useCallback((scanId: number, issueId: number) => {
+    dispatch({ type: 'RESOLVE_SECURITY_ISSUE', payload: { scanId, issueId } });
+  }, []);
+  
+  // Helper function to store a credential
+  const storeCredential = useCallback((credential: string) => {
+    dispatch({ type: 'ADD_CREDENTIAL', payload: credential });
+  }, []);
+  
+  // Helper function to remove a credential
+  const removeCredential = useCallback((id: string) => {
+    dispatch({ type: 'REMOVE_CREDENTIAL', payload: id });
+  }, []);
+  
+  const value = {
+    state,
+    dispatch,
+    sendMessage,
+    clearHistory,
+    updateConfig,
+    setActive,
+    setView,
+    addPendingTransaction,
+    removePendingTransaction,
+    addSecurityScan,
+    resolveSecurityIssue,
+    storeCredential,
+    removeCredential
   };
-
+  
   return (
-    <AIContext.Provider
-      value={{
-        state,
-        dispatch,
-        sendMessage,
-        verifyTransaction,
-        reverseTransaction,
-        clearHistory,
-        updateConfig,
-      }}
-    >
+    <AIContext.Provider value={value}>
       {children}
     </AIContext.Provider>
   );
 };
 
-// Hook to use AI context
+// Custom hook to use the AI context
 export const useAI = () => {
   const context = useContext(AIContext);
+  
   if (context === undefined) {
     throw new Error('useAI must be used within an AIProvider');
   }
+  
   return context;
 };
-
-export default AIContext;

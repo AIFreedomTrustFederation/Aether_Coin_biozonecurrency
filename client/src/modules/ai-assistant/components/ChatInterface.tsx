@@ -1,313 +1,336 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAI } from '../contexts/AIContext';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { 
+  Send, 
+  Mic, 
+  X, 
+  Bot, 
+  User, 
+  Loader2,
+  AlertTriangle,
+} from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
-import { Mic, MicOff, Send, PaperclipIcon, X, Loader2 } from 'lucide-react';
-import { Message as MessageType } from '../types';
-import { formatDistance } from 'date-fns';
-import DOMPurify from 'dompurify';
-import { Markdown } from 'react-markdown/lib/react-markdown';
-
-interface ChatInterfaceProps {
-  className?: string;
-  minimized?: boolean;
-  fullWidth?: boolean;
-  showHeader?: boolean;
-  onClose?: () => void;
-}
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { formatDate } from '../utils/formatters';
+import ReactMarkdown from 'react-markdown';
+import { ChatInterfaceProps } from '../types';
 
 const ChatInterface: React.FC<ChatInterfaceProps> = ({
   className = '',
-  minimized = false,
-  fullWidth = false,
-  showHeader = true,
-  onClose
+  inputPlaceholder = 'Ask your AI assistant something...',
+  showTimestamps = true,
+  autoFocus = true,
 }) => {
-  const { state, sendMessage, dispatch } = useAI();
+  const { state, sendMessage } = useAI();
+  const { messages, isTyping, config } = state;
+
   const [message, setMessage] = useState('');
   const [isListening, setIsListening] = useState(false);
-  const [attachments, setAttachments] = useState<File[]>([]);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  
-  // Scroll to bottom on new messages
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    
-    // Mark messages as read when viewed
-    if (state.unreadCount > 0) {
-      dispatch({ type: 'MARK_READ' });
-    }
-  }, [state.messages, state.unreadCount, dispatch]);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const endOfMessagesRef = useRef<HTMLDivElement>(null);
 
-  // Handle voice input (would be integrated with a real speech recognition API)
-  const toggleVoiceInput = () => {
-    if (!state.config.enableVoice) return;
+  // Scroll to bottom when new messages arrive
+  useEffect(() => {
+    if (endOfMessagesRef.current) {
+      endOfMessagesRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages, isTyping]);
+
+  // Auto focus input on mount
+  useEffect(() => {
+    if (autoFocus && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [autoFocus]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!message.trim()) return;
+    
+    sendMessage(message);
+    setMessage('');
+  };
+
+  const handleMicToggle = () => {
+    // In a real implementation, this would use the Web Speech API
+    // or a similar speech recognition service
     
     if (isListening) {
-      // Stop listening
+      // Stop listening logic would go here
       setIsListening(false);
     } else {
-      // Start listening
+      // If voice is disabled in settings, show a notification
+      if (!config.enableVoice) {
+        // Here you might show a toast notification explaining that
+        // voice input is disabled in settings
+        alert('Voice input is disabled in settings. Please enable it first.');
+        return;
+      }
+      
+      // Start listening logic would go here
       setIsListening(true);
       
-      // For demonstration purposes, we'll simulate a voice input
+      // Mock voice recognition result after 3 seconds
       setTimeout(() => {
-        setMessage(prev => prev + 'Voice transcription would appear here. ');
+        setMessage(prev => prev + 'What security issues do I have?');
         setIsListening(false);
       }, 3000);
     }
   };
 
-  // Handle sending a message
-  const handleSendMessage = () => {
-    if (message.trim() === '' && attachments.length === 0) return;
-    
-    // Prepare attachments for sending
-    const messageAttachments = attachments.map(file => ({
-      id: `att_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
-      type: file.type.startsWith('image/') ? 'image' : 'file',
-      name: file.name,
-      size: file.size,
-      mimeType: file.type,
-      // In a real implementation, we would upload the file to a server and get a URL
-      url: URL.createObjectURL(file)
-    }));
-    
-    // Send the message
-    sendMessage(message, messageAttachments);
-    
-    // Clear input
-    setMessage('');
-    setAttachments([]);
-  };
-
-  // Handle file selection
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setAttachments(prev => [...prev, ...Array.from(e.target.files as FileList)]);
-    }
-  };
-
-  // Handle removing an attachment
-  const handleRemoveAttachment = (index: number) => {
-    setAttachments(prev => prev.filter((_, i) => i !== index));
-  };
-
-  // Render message component
-  const Message: React.FC<{ message: MessageType }> = ({ message }) => {
-    const isUser = message.sender === 'user';
-    
-    return (
-      <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`}>
-        <div
-          className={`max-w-[80%] rounded-lg px-4 py-2 ${
-            isUser 
-              ? 'bg-primary text-primary-foreground' 
-              : 'bg-secondary text-secondary-foreground'
-          }`}
-        >
-          {/* Message content with markdown support */}
-          <div className="prose prose-sm dark:prose-invert">
-            <Markdown>{DOMPurify.sanitize(message.text)}</Markdown>
-          </div>
-          
-          {/* Attachments if any */}
-          {message.attachments && message.attachments.length > 0 && (
-            <div className="mt-2 space-y-2">
-              {message.attachments.map(attachment => (
-                <div key={attachment.id} className="flex items-center space-x-2">
-                  {attachment.type === 'image' && attachment.url && (
-                    <img 
-                      src={attachment.url} 
-                      alt={attachment.name || 'Attachment'} 
-                      className="max-h-32 max-w-full rounded-md" 
-                    />
-                  )}
-                  
-                  {attachment.type === 'file' && (
-                    <div className="flex items-center space-x-2 text-xs bg-background/50 rounded p-1">
-                      <PaperclipIcon size={12} />
-                      <span>{attachment.name}</span>
-                      {attachment.size && (
-                        <span className="text-muted-foreground">
-                          ({Math.round(attachment.size / 1024)} KB)
-                        </span>
-                      )}
-                    </div>
-                  )}
-                  
-                  {attachment.type === 'transaction' && (
-                    <div className="text-xs bg-yellow-500/20 text-yellow-700 dark:text-yellow-300 rounded p-1">
-                      Transaction: {attachment.data?.id || 'Unknown'}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-          
-          {/* Timestamp */}
-          <div className={`text-xs mt-1 ${isUser ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
-            {formatDistance(new Date(message.timestamp), new Date(), { addSuffix: true })}
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  // If minimized, only show a notification badge
-  if (minimized) {
-    return (
-      <div className={`fixed bottom-4 right-4 ${className}`}>
-        <Button 
-          size="icon" 
-          className="h-12 w-12 rounded-full shadow-lg"
-          onClick={() => onClose && onClose()}
-        >
-          <span className="relative">
-            AI
-            {state.unreadCount > 0 && (
-              <Badge className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center">
-                {state.unreadCount}
-              </Badge>
-            )}
-          </span>
-        </Button>
-      </div>
-    );
-  }
-
   return (
-    <Card className={`flex flex-col ${fullWidth ? 'w-full' : 'w-96'} ${className}`}>
-      {/* Chat header */}
-      {showHeader && (
-        <div className="flex items-center justify-between p-3 border-b">
-          <div className="flex items-center">
-            <div className="mr-2 h-8 w-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-semibold">
-              AI
-            </div>
-            <div>
-              <h3 className="font-medium">AI Assistant</h3>
-              <p className="text-xs text-muted-foreground">
-                {state.isTyping ? 'Typing...' : 'How can I help you?'}
-              </p>
-            </div>
-          </div>
-          {onClose && (
-            <Button variant="ghost" size="icon" onClick={onClose}>
-              <X size={18} />
-            </Button>
-          )}
-        </div>
-      )}
-      
-      {/* Chat messages */}
-      <ScrollArea className="flex-1 p-3" style={{ height: fullWidth ? '400px' : '300px' }}>
-        {state.messages.length === 0 ? (
-          <div className="flex h-full items-center justify-center text-center text-muted-foreground p-4">
-            <div>
-              <p>No messages yet</p>
-              <p className="text-sm">Send a message to start a conversation with your AI assistant</p>
+    <div className={`flex flex-col h-full ${className}`}>
+      <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
+        {messages.length === 0 ? (
+          <div className="h-full flex flex-col items-center justify-center text-center">
+            <Bot className="h-12 w-12 mb-4 text-primary" />
+            <h3 className="text-lg font-medium mb-2">Quantum-Secure AI Assistant</h3>
+            <p className="text-muted-foreground max-w-md mb-6">
+              How can I help you with your blockchain wallet today? You can ask about security, transactions, market insights, or general wallet management.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-w-lg">
+              <Button 
+                variant="outline"
+                className="text-left justify-start"
+                onClick={() => sendMessage("What can you do?")}
+              >
+                What can you do?
+              </Button>
+              <Button 
+                variant="outline"
+                className="text-left justify-start"
+                onClick={() => sendMessage("Check my wallet security")}
+              >
+                Check my wallet security
+              </Button>
+              <Button 
+                variant="outline"
+                className="text-left justify-start"
+                onClick={() => sendMessage("What are my pending transactions?")}
+              >
+                Pending transactions
+              </Button>
+              <Button 
+                variant="outline"
+                className="text-left justify-start"
+                onClick={() => sendMessage("Securely store my credentials")}
+              >
+                Store credentials
+              </Button>
             </div>
           </div>
         ) : (
-          <div className="space-y-4">
-            {state.messages.map(msg => (
-              <Message key={msg.id} message={msg} />
+          <div className="space-y-4 pb-2">
+            {messages.map((msg, idx) => (
+              <div
+                key={msg.id}
+                className={`flex ${
+                  msg.sender === 'user' ? 'justify-end' : 'justify-start'
+                }`}
+              >
+                <div
+                  className={`flex gap-3 max-w-[90%] ${
+                    msg.sender === 'user' ? 'flex-row-reverse' : 'flex-row'
+                  }`}
+                >
+                  <div
+                    className={`flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-md border ${
+                      msg.sender === 'user'
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-muted'
+                    }`}
+                  >
+                    {msg.sender === 'user' ? (
+                      <User className="h-4 w-4" />
+                    ) : (
+                      <Bot className="h-4 w-4" />
+                    )}
+                  </div>
+                  <div>
+                    <Card
+                      className={`px-4 py-3 ${
+                        msg.sender === 'user'
+                          ? 'bg-primary text-primary-foreground'
+                          : ''
+                      }`}
+                    >
+                      <div className="prose dark:prose-invert break-words prose-p:leading-relaxed prose-pre:p-0">
+                        <ReactMarkdown className={msg.sender === 'user' ? '' : 'chat-markdown'}>
+                          {msg.text}
+                        </ReactMarkdown>
+                      </div>
+                    </Card>
+                    {showTimestamps && (
+                      <div className="text-xs text-muted-foreground mt-1 ml-1">
+                        {formatDate(msg.timestamp)}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
             ))}
-            {state.isTyping && (
-              <div className="flex justify-start mb-4">
-                <div className="bg-secondary text-secondary-foreground rounded-lg px-4 py-2">
-                  <div className="flex items-center space-x-2">
-                    <Loader2 size={16} className="animate-spin" />
-                    <span>Typing...</span>
+
+            {isTyping && (
+              <div className="flex justify-start">
+                <div className="flex gap-3 max-w-[90%]">
+                  <div className="flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-md border bg-muted">
+                    <Bot className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <Card className="px-4 py-3">
+                      <div className="flex items-center">
+                        <div className="typing-indicator">
+                          <span></span>
+                          <span></span>
+                          <span></span>
+                        </div>
+                      </div>
+                    </Card>
                   </div>
                 </div>
               </div>
             )}
-            <div ref={messagesEndRef} />
+            <div ref={endOfMessagesRef} />
           </div>
         )}
       </ScrollArea>
-      
-      {/* Attachment preview */}
-      {attachments.length > 0 && (
-        <div className="p-2 border-t bg-muted/50">
-          <div className="flex flex-wrap gap-2">
-            {attachments.map((file, index) => (
-              <div 
-                key={index} 
-                className="flex items-center bg-background rounded-md p-1 pr-2 text-xs"
-              >
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="h-4 w-4 mr-1"
-                  onClick={() => handleRemoveAttachment(index)}
-                >
-                  <X size={10} />
-                </Button>
-                <span className="truncate max-w-[100px]">{file.name}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-      
-      {/* Input area */}
-      <div className="p-3 border-t">
-        <div className="flex items-center space-x-2">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => fileInputRef.current?.click()}
-            title="Attach file"
-          >
-            <PaperclipIcon size={18} />
-            <input
-              type="file"
-              ref={fileInputRef}
-              className="hidden"
-              onChange={handleFileSelect}
-              multiple
-            />
-          </Button>
-          
+
+      <div className="p-4 border-t">
+        <form onSubmit={handleSubmit} className="flex gap-2">
           <Input
-            placeholder="Type a message..."
+            ref={inputRef}
             value={message}
-            onChange={e => setMessage(e.target.value)}
-            onKeyDown={e => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSendMessage();
-              }
-            }}
+            onChange={(e) => setMessage(e.target.value)}
+            placeholder={inputPlaceholder}
             className="flex-1"
+            disabled={isListening}
           />
           
-          {state.config.enableVoice && (
+          {message && (
             <Button
-              variant="outline"
+              type="button"
+              variant="ghost"
               size="icon"
-              onClick={toggleVoiceInput}
-              title={isListening ? 'Stop listening' : 'Voice input'}
-              className={isListening ? 'bg-red-100 text-red-500' : ''}
+              onClick={() => setMessage('')}
             >
-              {isListening ? <MicOff size={18} /> : <Mic size={18} />}
+              <X className="h-4 w-4" />
+              <span className="sr-only">Clear input</span>
             </Button>
           )}
           
-          <Button size="icon" onClick={handleSendMessage}>
-            <Send size={18} />
+          {config.enableVoice && (
+            <Button
+              type="button"
+              variant={isListening ? 'destructive' : 'outline'}
+              size="icon"
+              onClick={handleMicToggle}
+            >
+              {isListening ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Mic className="h-4 w-4" />
+              )}
+              <span className="sr-only">
+                {isListening ? 'Stop recording' : 'Start recording'}
+              </span>
+            </Button>
+          )}
+          
+          <Button type="submit" size="icon" disabled={!message.trim() || isListening}>
+            <Send className="h-4 w-4" />
+            <span className="sr-only">Send message</span>
           </Button>
+        </form>
+        
+        {/* Customize with additional information or disclaimers */}
+        <div className="mt-2 text-xs text-muted-foreground flex justify-between items-center">
+          <span>End-to-end quantum-secure encryption</span>
+          <AlertTriangle className="h-3 w-3" />
         </div>
       </div>
-    </Card>
+      
+      <style jsx>{`
+        .typing-indicator {
+          display: flex;
+          align-items: center;
+        }
+        
+        .typing-indicator span {
+          height: 8px;
+          width: 8px;
+          margin-right: 4px;
+          border-radius: 50%;
+          display: inline-block;
+          background-color: currentColor;
+          opacity: 0.6;
+          animation: bouncing 1.2s linear infinite;
+        }
+        
+        .typing-indicator span:nth-child(1) {
+          animation-delay: 0s;
+        }
+        
+        .typing-indicator span:nth-child(2) {
+          animation-delay: 0.2s;
+        }
+        
+        .typing-indicator span:nth-child(3) {
+          animation-delay: 0.4s;
+          margin-right: 0;
+        }
+        
+        @keyframes bouncing {
+          0%, 80%, 100% {
+            transform: translateY(0);
+          }
+          40% {
+            transform: translateY(-5px);
+          }
+        }
+        
+        .chat-markdown p {
+          margin: 0.5rem 0;
+        }
+        
+        .chat-markdown p:first-child {
+          margin-top: 0;
+        }
+        
+        .chat-markdown p:last-child {
+          margin-bottom: 0;
+        }
+        
+        .chat-markdown ul, .chat-markdown ol {
+          margin: 0.5rem 0;
+          padding-left: 1.5rem;
+        }
+        
+        .chat-markdown code {
+          background-color: rgba(0,0,0,0.1);
+          padding: 0.2rem 0.4rem;
+          border-radius: 3px;
+          font-size: 0.9em;
+        }
+        
+        .chat-markdown pre {
+          background-color: rgba(0,0,0,0.1);
+          padding: 0.5rem;
+          border-radius: 5px;
+          overflow-x: auto;
+          margin: 0.5rem 0;
+        }
+        
+        .chat-markdown pre code {
+          background-color: transparent;
+          padding: 0;
+        }
+      `}</style>
+    </div>
   );
 };
 
