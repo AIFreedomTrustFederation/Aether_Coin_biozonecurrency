@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import AIAssistantDemo from "./pages/AIAssistantDemo";
 import LandingPage from "./pages/LandingPage";
+import Dashboard from "@/components/Dashboard";
 
 // Create page components
 const SimpleDashboard = () => (
@@ -95,7 +96,7 @@ function App() {
         <main className="pt-[60px] h-[calc(100%-60px)] overflow-auto">
           <Switch>
             <Route path="/" component={LandingPage} />
-            <Route path="/dashboard" component={SimpleDashboard} />
+            <Route path="/dashboard" component={Dashboard} />
             <Route path="/settings" component={SimpleSettings} />
             <Route path="/assets" component={SimpleAssets} />
             <Route path="/ai-assistant" component={AIAssistantDemo} />

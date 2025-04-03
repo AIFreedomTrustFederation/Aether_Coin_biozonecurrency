@@ -17,7 +17,7 @@ import { stripeService } from "./services/stripe";
 import * as twilioService from "./services/twilio";
 import { z } from "zod";
 import Stripe from "stripe";
-import apiGateway from "./api-gateway";
+import apiGateway from "../api-gateway";
 
 // Initialize Stripe with the secret key from environment variables
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
