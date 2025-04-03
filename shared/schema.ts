@@ -511,3 +511,72 @@ export const insertNotificationPreferenceSchema = createInsertSchema(notificatio
 
 export type NotificationPreference = typeof notificationPreferences.$inferSelect;
 export type InsertNotificationPreference = z.infer<typeof insertNotificationPreferenceSchema>;
+
+// Widget schema imports
+import { 
+  widgets, 
+  widgetTemplates, 
+  dashboards, 
+  insertWidgetSchema,
+  insertWidgetTemplateSchema,
+  insertDashboardSchema
+} from './widget-schema';
+
+// Widget relations
+export const widgetsRelations = relations(widgets, ({ one }) => ({
+  user: one(users, {
+    fields: [widgets.userId],
+    references: [users.id],
+  }),
+}));
+
+export const widgetTemplatesRelations = relations(widgetTemplates, ({ many }) => ({
+  widgets: many(widgets),
+}));
+
+export const dashboardsRelations = relations(dashboards, ({ one, many }) => ({
+  user: one(users, {
+    fields: [dashboards.userId],
+    references: [users.id],
+  }),
+  widgets: many(widgets),
+}));
+
+// Extend user relations with widgets
+export const usersWidgetRelations = relations(users, ({ many }) => ({
+  widgets: many(widgets),
+  dashboards: many(dashboards),
+}));
+
+// Export widget types
+export type Widget = typeof widgets.$inferSelect;
+export type InsertWidget = z.infer<typeof insertWidgetSchema>;
+
+export type WidgetTemplate = typeof widgetTemplates.$inferSelect;
+export type InsertWidgetTemplate = z.infer<typeof insertWidgetTemplateSchema>;
+
+export type Dashboard = typeof dashboards.$inferSelect;
+export type InsertDashboard = z.infer<typeof insertDashboardSchema>;
+
+// Combine all schemas for export
+export const schema = {
+  users,
+  wallets,
+  transactions,
+  smartContracts,
+  aiMonitoringLogs,
+  cidEntries,
+  paymentMethods,
+  payments,
+  stakingPositions,
+  proposals,
+  proposalOptions,
+  votes,
+  governanceRewards,
+  walletHealthScores,
+  walletHealthIssues,
+  notificationPreferences,
+  widgets,
+  widgetTemplates,
+  dashboards,
+};
