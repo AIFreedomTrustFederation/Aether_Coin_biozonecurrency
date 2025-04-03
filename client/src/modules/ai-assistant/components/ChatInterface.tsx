@@ -1,155 +1,211 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ChatInterfaceProps, ChatMessage } from '../types';
+import { Send, Bot, User, Loader2, ChevronDown, Plus } from 'lucide-react';
+
+interface ChatMessage {
+  id: string;
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+  timestamp: Date;
+}
+
+interface ChatInterfaceProps {
+  messages: ChatMessage[];
+  onSendMessage: (message: string) => void;
+  isProcessing?: boolean;
+  placeholder?: string;
+  autoFocus?: boolean;
+  className?: string;
+  disableInput?: boolean;
+  clearOnSend?: boolean;
+  showNewChat?: boolean;
+  onNewChat?: () => void;
+}
 
 /**
- * A reusable chat interface component for AI interactions
+ * A chat interface component for interacting with the AI assistant
  */
 const ChatInterface: React.FC<ChatInterfaceProps> = ({
   messages,
   onSendMessage,
   isProcessing = false,
-  className = '',
   placeholder = 'Type a message...',
   autoFocus = false,
+  className = '',
+  disableInput = false,
+  clearOnSend = true,
+  showNewChat = false,
+  onNewChat
 }) => {
-  const [input, setInput] = useState('');
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const [message, setMessage] = useState('');
+  const endOfMessagesRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   
-  // Scroll to bottom when messages change
+  // Scroll to bottom of chat when messages change
   useEffect(() => {
-    scrollToBottom();
+    if (endOfMessagesRef.current) {
+      endOfMessagesRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
   }, [messages]);
   
-  // Auto-focus input when requested
+  // Auto focus input if specified
   useEffect(() => {
     if (autoFocus && inputRef.current) {
       inputRef.current.focus();
     }
   }, [autoFocus]);
   
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-  
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (input.trim() && !isProcessing) {
-      onSendMessage(input.trim());
-      setInput('');
+    if (message.trim() && !isProcessing && !disableInput) {
+      onSendMessage(message);
+      if (clearOnSend) {
+        setMessage('');
+      }
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
     }
   };
   
-  // Handle input resize
-  const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const textarea = e.target;
-    setInput(textarea.value);
-    
-    // Reset height to calculate actual required height
-    textarea.style.height = 'auto';
-    
-    // Set new height (capped at 150px max)
-    const newHeight = Math.min(textarea.scrollHeight, 150);
-    textarea.style.height = `${newHeight}px`;
-  };
-  
-  // Handle Enter key for submission (Shift+Enter for new line)
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSubmit(e);
-    }
-  };
-  
-  // Render message based on type
-  const renderMessage = (message: ChatMessage) => {
-    const isUser = message.sender === 'user';
-    const isSystem = message.sender === 'system';
-    
+  const renderMessageContent = (content: string) => {
+    // This could be expanded to handle markdown, code blocks, etc.
     return (
-      <div 
-        key={message.id}
-        className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`}
-      >
-        <div 
-          className={`
-            max-w-[80%] px-4 py-2 rounded-lg 
-            ${isUser 
-              ? 'bg-primary text-primary-foreground rounded-tr-none' 
-              : isSystem 
-                ? 'bg-muted text-muted-foreground' 
-                : 'bg-secondary text-secondary-foreground rounded-tl-none'
-            }
-            ${message.isLoading ? 'opacity-70' : ''}
-          `}
-        >
-          {message.content}
-          
-          {message.isLoading && (
-            <div className="flex space-x-1 mt-2 justify-center items-center">
-              <div className="w-2 h-2 rounded-full bg-current animate-bounce" style={{ animationDelay: '0ms' }} />
-              <div className="w-2 h-2 rounded-full bg-current animate-bounce" style={{ animationDelay: '150ms' }} />
-              <div className="w-2 h-2 rounded-full bg-current animate-bounce" style={{ animationDelay: '300ms' }} />
-            </div>
-          )}
-          
-          <div className="text-xs opacity-70 mt-1 text-right">
-            {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-          </div>
-        </div>
+      <div className="whitespace-pre-wrap break-words">
+        {content}
       </div>
     );
   };
   
+  const scrollToBottom = () => {
+    if (endOfMessagesRef.current) {
+      endOfMessagesRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+  
   return (
-    <div className={`flex flex-col h-full ${className}`}>
-      {/* Messages container */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.length === 0 ? (
-          <div className="h-full flex items-center justify-center text-muted-foreground text-center p-4">
-            <div>
-              <p className="mb-2">👋 Hi there! I'm your AI assistant.</p>
-              <p>How can I help you with your blockchain transactions today?</p>
-            </div>
-          </div>
-        ) : (
-          messages.map(renderMessage)
+    <div className={`flex flex-col rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-slate-900 overflow-hidden ${className}`}>
+      {/* Header */}
+      <div className="flex items-center justify-between p-3 border-b border-gray-200 dark:border-gray-800">
+        <div className="flex items-center space-x-2">
+          <Bot className="w-5 h-5 text-blue-500" />
+          <h3 className="font-medium">AI Assistant</h3>
+        </div>
+        
+        {showNewChat && onNewChat && (
+          <button 
+            onClick={onNewChat}
+            className="p-1.5 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-300 dark:hover:bg-gray-800"
+          >
+            <Plus size={16} />
+          </button>
         )}
-        <div ref={messagesEndRef} />
       </div>
       
-      {/* Input area */}
-      <div className="border-t p-4">
-        <form onSubmit={handleSubmit} className="flex items-end">
-          <textarea
-            ref={inputRef}
-            value={input}
-            onChange={handleInput}
-            onKeyDown={handleKeyDown}
-            placeholder={placeholder}
-            disabled={isProcessing}
-            className="flex-1 resize-none border rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent min-h-[44px] max-h-[150px]"
-            rows={1}
-          />
-          <button
-            type="submit"
-            disabled={!input.trim() || isProcessing}
-            className="ml-2 p-3 rounded-md bg-primary text-primary-foreground disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isProcessing ? (
-              <svg className="w-5 h-5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-            ) : (
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-              </svg>
-            )}
-          </button>
-        </form>
+      {/* Messages Container */}
+      <div 
+        ref={messagesContainerRef}
+        className="flex-1 overflow-y-auto p-4 space-y-4"
+        style={{ maxHeight: '400px', minHeight: '300px' }}
+      >
+        {messages.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full text-center text-gray-500 dark:text-gray-400 p-6">
+            <Bot size={32} className="mb-2 text-blue-500 opacity-70" />
+            <p className="text-sm">
+              How can I assist you with your blockchain transactions today?
+            </p>
+            <p className="text-xs mt-1 max-w-md">
+              I can help verify transactions, secure your wallet, and protect against phishing attacks.
+            </p>
+          </div>
+        ) : (
+          messages.map((msg, index) => (
+            <div
+              key={msg.id || index}
+              className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+            >
+              <div
+                className={`flex max-w-[85%] ${
+                  msg.role === 'user'
+                    ? 'bg-blue-500 text-white rounded-tl-lg rounded-tr-sm rounded-bl-lg rounded-br-lg'
+                    : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-tl-sm rounded-tr-lg rounded-bl-lg rounded-br-lg'
+                } px-4 py-2.5`}
+              >
+                <div className="flex-shrink-0 mr-2">
+                  {msg.role === 'user' ? (
+                    <User className="w-4 h-4 mt-1" />
+                  ) : (
+                    <Bot className="w-4 h-4 mt-1" />
+                  )}
+                </div>
+                <div className="flex-1">
+                  {renderMessageContent(msg.content)}
+                </div>
+              </div>
+            </div>
+          ))
+        )}
+        
+        {/* Show typing indicator when processing */}
+        {isProcessing && (
+          <div className="flex justify-start">
+            <div className="bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 px-4 py-3 rounded-tl-sm rounded-tr-lg rounded-bl-lg rounded-br-lg">
+              <div className="flex items-center space-x-2">
+                <Bot className="w-4 h-4" />
+                <div className="flex space-x-1">
+                  <div className="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <div className="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <div className="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* Invisible element to scroll to */}
+        <div ref={endOfMessagesRef} />
       </div>
+      
+      {/* Scroll to bottom button, visible when not at bottom */}
+      {messagesContainerRef.current && 
+       messagesContainerRef.current.scrollHeight > 
+       messagesContainerRef.current.clientHeight + 
+       messagesContainerRef.current.scrollTop + 100 && (
+        <button
+          onClick={scrollToBottom}
+          className="absolute bottom-16 right-4 bg-gray-100 dark:bg-gray-800 p-2 rounded-full shadow-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+        >
+          <ChevronDown size={16} />
+        </button>
+      )}
+      
+      {/* Input Form */}
+      <form onSubmit={handleSubmit} className="flex items-center p-3 border-t border-gray-200 dark:border-gray-800">
+        <input
+          ref={inputRef}
+          type="text"
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          placeholder={placeholder}
+          disabled={isProcessing || disableInput}
+          className="flex-1 border-0 bg-transparent focus:ring-0 text-sm text-gray-700 dark:text-gray-200 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+        />
+        <button
+          type="submit"
+          disabled={!message.trim() || isProcessing || disableInput}
+          className={`p-1.5 rounded-md ${
+            !message.trim() || isProcessing || disableInput
+              ? 'text-gray-400 cursor-not-allowed'
+              : 'text-blue-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20'
+          }`}
+        >
+          {isProcessing ? (
+            <Loader2 className="w-5 h-5 animate-spin" />
+          ) : (
+            <Send className="w-5 h-5" />
+          )}
+        </button>
+      </form>
     </div>
   );
 };

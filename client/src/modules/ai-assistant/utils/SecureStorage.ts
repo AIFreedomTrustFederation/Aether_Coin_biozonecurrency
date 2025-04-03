@@ -282,4 +282,5 @@ class SecureStorage {
 
 // Export a singleton instance
 const secureStorage = new SecureStorage();
+export { secureStorage };
 export default secureStorage;

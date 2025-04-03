@@ -4,7 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
-import { AIProvider, AIAssistant } from "./modules/ai-assistant";
+import AIAssistantDemo from "./pages/AIAssistantDemo";
 
 // Create page components
 const SimpleDashboard = () => (
@@ -70,52 +70,34 @@ const SimpleNotFound = () => (
   </div>
 );
 
-// AI Assistant Page
-
-const AIAssistantPage = () => (
-  <div className="p-4">
-    <h1 className="text-2xl font-bold mb-4">AI Assistant</h1>
-    <div className="flex flex-col items-center max-w-4xl mx-auto">
-      <AIAssistant userId={1} fullWidth={true} className="w-full" />
-    </div>
-    <div className="mt-4 text-center">
-      <Link href="/">
-        <Button>Back to Dashboard</Button>
-      </Link>
-    </div>
-  </div>
-);
-
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AIProvider initialConfig={{ userId: 1 }}>
-        <div className="app-container w-full h-full bg-background">
-          <header className="bg-background border-b p-4 flex justify-between items-center">
-            <h1 className="font-bold text-xl">Aetherion UI Wallet</h1>
-            <div className="flex space-x-2">
-              <Link href="/ai-assistant">
-                <Button variant="ghost" size="sm">AI Assistant</Button>
-              </Link>
-              <Link href="/settings">
-                <Button variant="ghost" size="sm">Settings</Button>
-              </Link>
-            </div>
-          </header>
-          
-          <main className="h-[calc(100%-4rem)] overflow-auto">
-            <Switch>
-              <Route path="/" component={SimpleDashboard} />
-              <Route path="/settings" component={SimpleSettings} />
-              <Route path="/assets" component={SimpleAssets} />
-              <Route path="/ai-assistant" component={AIAssistantPage} />
-              <Route component={SimpleNotFound} />
-            </Switch>
-          </main>
-          
-          <Toaster />
-        </div>
-      </AIProvider>
+      <div className="app-container w-full h-full bg-background">
+        <header className="bg-background border-b p-4 flex justify-between items-center">
+          <h1 className="font-bold text-xl">Aetherion UI Wallet</h1>
+          <div className="flex space-x-2">
+            <Link href="/ai-assistant">
+              <Button variant="ghost" size="sm">AI Assistant</Button>
+            </Link>
+            <Link href="/settings">
+              <Button variant="ghost" size="sm">Settings</Button>
+            </Link>
+          </div>
+        </header>
+        
+        <main className="h-[calc(100%-4rem)] overflow-auto">
+          <Switch>
+            <Route path="/" component={SimpleDashboard} />
+            <Route path="/settings" component={SimpleSettings} />
+            <Route path="/assets" component={SimpleAssets} />
+            <Route path="/ai-assistant" component={AIAssistantDemo} />
+            <Route component={SimpleNotFound} />
+          </Switch>
+        </main>
+        
+        <Toaster />
+      </div>
     </QueryClientProvider>
   );
 }

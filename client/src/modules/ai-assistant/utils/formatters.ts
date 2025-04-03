@@ -1,202 +1,204 @@
-import { FormatAddressOptions, FormatDateOptions, FormatTokenAmountOptions } from '../types';
-
 /**
- * Format a blockchain address to a user-friendly format
- * @param address The full address to format
- * @param startChars Number of starting characters to display (default: 6)
- * @param endChars Number of ending characters to display (default: 4)
- * @param separator Separator string between start and end (default: '...')
- * @returns Formatted address string
+ * Format a timestamp as a relative time (e.g., "2 hours ago")
  */
-export function formatAddress(
-  address: string | null | undefined, 
-  startChars: number = 6, 
-  endChars: number = 4,
-  separator: string = '...'
-): string {
-  if (!address) return 'N/A';
-  
-  if (address.length <= startChars + endChars) {
-    return address;
-  }
-  
-  return `${address.substring(0, startChars)}${separator}${address.substring(address.length - endChars)}`;
-}
-
-/**
- * Format a date to a user-friendly format
- * @param date Date to format
- * @param includeTime Whether to include time component (default: false)
- * @param includeSeconds Whether to include seconds in time (default: false)
- * @returns Formatted date string
- */
-export function formatDate(
-  date: Date | string | number | null | undefined,
-  includeTime: boolean = false,
-  includeSeconds: boolean = false
-): string {
-  if (!date) return 'N/A';
-  
-  const dateObj = typeof date === 'object' ? date : new Date(date);
-  
-  if (isNaN(dateObj.getTime())) {
-    return 'Invalid Date';
-  }
-  
-  // Format date part
-  const year = dateObj.getFullYear();
-  const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-  const day = String(dateObj.getDate()).padStart(2, '0');
-  let result = `${year}-${month}-${day}`;
-  
-  // Add time if requested
-  if (includeTime) {
-    const hours = String(dateObj.getHours()).padStart(2, '0');
-    const minutes = String(dateObj.getMinutes()).padStart(2, '0');
-    result += ` ${hours}:${minutes}`;
-    
-    if (includeSeconds) {
-      const seconds = String(dateObj.getSeconds()).padStart(2, '0');
-      result += `:${seconds}`;
-    }
-  }
-  
-  return result;
-}
-
-/**
- * Format a token amount with appropriate decimal places
- * @param amount Amount to format
- * @param tokenSymbol Symbol of the token (default: '')
- * @param minimumFractionDigits Minimum fraction digits (default: 2)
- * @param maximumFractionDigits Maximum fraction digits (default: 6)
- * @returns Formatted token amount string
- */
-export function formatTokenAmount(
-  amount: string | number | null | undefined,
-  tokenSymbol: string = '',
-  minimumFractionDigits: number = 2,
-  maximumFractionDigits: number = 6
-): string {
-  if (amount === null || amount === undefined || amount === '') {
-    return tokenSymbol ? `0 ${tokenSymbol}` : '0';
-  }
-  
-  const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
-  
-  if (isNaN(numAmount)) {
-    return tokenSymbol ? `0 ${tokenSymbol}` : '0';
-  }
-  
-  const formattedAmount = numAmount.toLocaleString('en-US', {
-    minimumFractionDigits,
-    maximumFractionDigits
-  });
-  
-  return tokenSymbol ? `${formattedAmount} ${tokenSymbol}` : formattedAmount;
-}
-
-/**
- * Format a relative time (e.g., "5 minutes ago")
- * @param date Date to format relative to now
- * @returns Formatted relative time string
- */
-export function formatRelativeTime(date: Date | string | number): string {
+export function formatRelativeTime(timestamp: Date | string | number): string {
+  const date = timestamp instanceof Date ? timestamp : new Date(timestamp);
   const now = new Date();
-  const timeDate = typeof date === 'object' ? date : new Date(date);
+  const diffMs = now.getTime() - date.getTime();
   
-  if (isNaN(timeDate.getTime())) {
-    return 'Invalid Date';
-  }
+  const seconds = Math.floor(diffMs / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+  const weeks = Math.floor(days / 7);
+  const months = Math.floor(days / 30);
+  const years = Math.floor(days / 365);
   
-  const diffMs = now.getTime() - timeDate.getTime();
-  const diffSecs = Math.floor(diffMs / 1000);
-  const diffMins = Math.floor(diffSecs / 60);
-  const diffHours = Math.floor(diffMins / 60);
-  const diffDays = Math.floor(diffHours / 24);
-  
-  if (diffSecs < 60) {
-    return diffSecs <= 5 ? 'just now' : `${diffSecs}s ago`;
-  } else if (diffMins < 60) {
-    return `${diffMins}m ago`;
-  } else if (diffHours < 24) {
-    return `${diffHours}h ago`;
-  } else if (diffDays < 7) {
-    return `${diffDays}d ago`;
+  if (seconds < 60) {
+    return seconds <= 10 ? 'just now' : `${seconds} seconds ago`;
+  } else if (minutes < 60) {
+    return `${minutes} ${minutes === 1 ? 'minute' : 'minutes'} ago`;
+  } else if (hours < 24) {
+    return `${hours} ${hours === 1 ? 'hour' : 'hours'} ago`;
+  } else if (days < 7) {
+    return `${days} ${days === 1 ? 'day' : 'days'} ago`;
+  } else if (weeks < 4) {
+    return `${weeks} ${weeks === 1 ? 'week' : 'weeks'} ago`;
+  } else if (months < 12) {
+    return `${months} ${months === 1 ? 'month' : 'months'} ago`;
   } else {
-    return formatDate(date);
+    return `${years} ${years === 1 ? 'year' : 'years'} ago`;
   }
 }
 
 /**
- * Format a gas fee with appropriate units
- * @param fee Fee amount in native units
- * @param showUnits Whether to show units (default: true)
- * @returns Formatted gas fee
+ * Format a date as a string (e.g., "Apr 3, 2025")
  */
-export function formatGasFee(
-  fee: string | number | null | undefined,
-  showUnits: boolean = true
-): string {
-  if (fee === null || fee === undefined || fee === '') {
-    return showUnits ? '0 Gwei' : '0';
+export function formatDate(timestamp: Date | string | number): string {
+  const date = timestamp instanceof Date ? timestamp : new Date(timestamp);
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  });
+}
+
+/**
+ * Format a time as a string (e.g., "14:32:45")
+ */
+export function formatTime(timestamp: Date | string | number): string {
+  const date = timestamp instanceof Date ? timestamp : new Date(timestamp);
+  return date.toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  });
+}
+
+/**
+ * Format a date and time together (e.g., "Apr 3, 2025 at 14:32")
+ */
+export function formatDateTime(timestamp: Date | string | number): string {
+  const date = timestamp instanceof Date ? timestamp : new Date(timestamp);
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true
+  });
+}
+
+/**
+ * Format a duration in milliseconds (e.g., "2m 32s")
+ */
+export function formatDuration(durationMs: number): string {
+  if (durationMs < 1000) {
+    return `${durationMs}ms`;
   }
   
-  const numFee = typeof fee === 'string' ? parseFloat(fee) : fee;
+  const seconds = Math.floor((durationMs / 1000) % 60);
+  const minutes = Math.floor((durationMs / (1000 * 60)) % 60);
+  const hours = Math.floor(durationMs / (1000 * 60 * 60));
   
-  if (isNaN(numFee)) {
-    return showUnits ? '0 Gwei' : '0';
+  const parts = [];
+  
+  if (hours > 0) {
+    parts.push(`${hours}h`);
   }
   
-  // Format based on size
-  if (numFee < 0.001) {
-    const formatted = (numFee * 1000000).toFixed(2);
-    return showUnits ? `${formatted} wei` : formatted;
-  } else if (numFee < 1) {
-    const formatted = (numFee * 1000).toFixed(2);
-    return showUnits ? `${formatted} mGwei` : formatted;
+  if (minutes > 0 || hours > 0) {
+    parts.push(`${minutes}m`);
+  }
+  
+  if (seconds > 0 || parts.length === 0) {
+    parts.push(`${seconds}s`);
+  }
+  
+  return parts.join(' ');
+}
+
+/**
+ * Format remaining time in seconds (e.g., "2:32" or "00:02:32")
+ */
+export function formatTimeRemaining(timeRemainingSeconds: number): string {
+  if (timeRemainingSeconds <= 0) {
+    return '0:00';
+  }
+  
+  const seconds = Math.floor(timeRemainingSeconds % 60);
+  const minutes = Math.floor((timeRemainingSeconds / 60) % 60);
+  const hours = Math.floor(timeRemainingSeconds / 3600);
+  
+  if (hours > 0) {
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
   } else {
-    const formatted = numFee.toFixed(2);
-    return showUnits ? `${formatted} Gwei` : formatted;
+    return `${minutes}:${String(seconds).padStart(2, '0')}`;
   }
 }
 
 /**
- * Format percentage values
- * @param value Percentage value (0-100 or 0-1)
- * @param normalize Whether to normalize value to 0-100 range
- * @returns Formatted percentage string
+ * Format a file size (e.g., "1.5 MB")
  */
-export function formatPercentage(
-  value: number | string | null | undefined,
-  normalize: boolean = false
-): string {
-  if (value === null || value === undefined || value === '') {
-    return '0%';
+export function formatFileSize(bytes: number): string {
+  if (bytes === 0) return '0 Bytes';
+  
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+}
+
+/**
+ * Format a currency amount (e.g., "$1,234.56")
+ */
+export function formatCurrency(amount: number, currency: string = 'USD'): string {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency
+  }).format(amount);
+}
+
+/**
+ * Format a percentage (e.g., "42.5%")
+ */
+export function formatPercentage(value: number, decimalPlaces: number = 1): string {
+  return `${value.toFixed(decimalPlaces)}%`;
+}
+
+/**
+ * Format a blockchain address with ellipsis (e.g., "0x1234...5678")
+ */
+export function formatAddress(address: string, startChars: number = 6, endChars: number = 4): string {
+  if (!address) return '';
+  if (address.length <= startChars + endChars) return address;
+  
+  return `${address.substring(0, startChars)}...${address.substring(address.length - endChars)}`;
+}
+
+/**
+ * Format a transaction hash with ellipsis (e.g., "0x1234...5678")
+ */
+export function formatTransactionHash(hash: string): string {
+  return formatAddress(hash, 6, 6);
+}
+
+/**
+ * Format a large number with commas (e.g., "1,234,567")
+ */
+export function formatNumber(num: number): string {
+  return num.toLocaleString('en-US');
+}
+
+/**
+ * Truncate text with ellipsis if it exceeds the maximum length
+ */
+export function truncateText(text: string, maxLength: number): string {
+  if (!text) return '';
+  if (text.length <= maxLength) return text;
+  
+  return text.substring(0, maxLength) + '...';
+}
+
+/**
+ * Format a token amount with proper decimal display
+ */
+export function formatTokenAmount(amount: string | number, decimals: number = 18, displayDecimals: number = 6): string {
+  if (typeof amount === 'string') {
+    amount = parseFloat(amount);
   }
   
-  let numValue = typeof value === 'string' ? parseFloat(value) : value;
+  if (isNaN(amount)) return '0';
   
-  if (isNaN(numValue)) {
-    return '0%';
-  }
+  // Convert from raw amount to decimal representation
+  const adjustedAmount = amount / Math.pow(10, decimals);
   
-  // Normalize if needed (convert decimal to percentage)
-  if (normalize && numValue <= 1) {
-    numValue = numValue * 100;
-  }
-  
-  // Ensure value is in range 0-100
-  numValue = Math.max(0, Math.min(100, numValue));
-  
-  // Format based on value
-  if (numValue === 0) {
-    return '0%';
-  } else if (numValue < 0.01) {
-    return '<0.01%';
-  } else if (numValue > 99.99 && numValue < 100) {
-    return '>99.99%';
-  } else {
-    return `${numValue.toFixed(2)}%`;
-  }
+  // Format the number with the specified display decimals
+  return adjustedAmount.toLocaleString('en-US', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: displayDecimals
+  });
 }
