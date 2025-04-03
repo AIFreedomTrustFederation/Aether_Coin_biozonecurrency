@@ -1,221 +1,381 @@
 import React, { useState } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
 import { WidgetProps } from './WidgetRegistry';
-import { NewsFeedConfig } from '@/types/widget';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { isWidgetType } from '@/types/widget';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
-import { RefreshCcw, Newspaper, Calendar, ExternalLink, MessageCircle } from 'lucide-react';
-import { Skeleton } from '@/components/ui/skeleton';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { 
+  Newspaper,
+  ExternalLink,
+  ChevronRight,
+  TrendingUp,
+  TrendingDown,
+  Bookmark,
+  RefreshCw
+} from 'lucide-react';
 
-// Mock news data (would come from API in real implementation)
-const NEWS_DATA = [
+// Sample news data
+const sampleNews = [
   {
     id: 'news1',
-    title: 'Ethereum 3.0 Upgrade on Track for July Release',
-    summary: 'The much-anticipated Ethereum 3.0 upgrade, codenamed "Quantum Leap," is on schedule for its July release, promising significant improvements in scalability and reduced energy consumption.',
-    source: 'CoinDesk',
-    url: 'https://coindesk.com/ethereum-3-upgrade',
-    publishedAt: new Date('2025-04-03T08:15:00Z'),
-    category: 'technology',
-    sentiment: 'positive',
-    relatedAssets: ['ETH']
+    title: 'Bitcoin Surges Past $44K, Analysts Point to ETF Approval Rumors',
+    summary: 'Bitcoin has seen a remarkable 8% gain in the last 24 hours, pushing above $44,000 for the first time since...',
+    source: 'CryptoNews',
+    url: 'https://cryptonews.com/bitcoin-surge-44k',
+    timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 mins ago
+    sentiment: 'bullish',
+    category: 'market',
+    coins: ['BTC', 'ETH'],
+    image: 'https://example.com/btc-chart.jpg'
   },
   {
     id: 'news2',
-    title: 'Bitcoin Surges Past $100K Amid Institutional Adoption',
-    summary: 'Bitcoin has broken the $100,000 barrier for the first time, as more financial institutions add the cryptocurrency to their balance sheets and treasury reserves.',
-    source: 'CoinTelegraph',
-    url: 'https://cointelegraph.com/bitcoin-100k-milestone',
-    publishedAt: new Date('2025-04-02T16:30:22Z'),
-    category: 'markets',
-    sentiment: 'positive',
-    relatedAssets: ['BTC']
+    title: 'Ethereum Layer 2 Solutions Report 400% Growth in Users This Quarter',
+    summary: 'Ethereum scaling solutions have seen unprecedented adoption in Q1 2025, with Optimism and Arbitrum leading the charge with a combined...',
+    source: 'BlockchainInsider',
+    url: 'https://blockchaininsider.com/ethereum-l2-growth',
+    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 3), // 3 hours ago
+    sentiment: 'bullish',
+    category: 'technology',
+    coins: ['ETH', 'OP', 'ARB'],
+    image: 'https://example.com/ethereum-network.jpg'
   },
   {
     id: 'news3',
-    title: 'Central Banks of G7 Nations Explore CBDC Integration',
-    summary: 'The central banks of G7 nations announced a collaborative framework for integrating their central bank digital currencies (CBDCs) to facilitate cross-border payments.',
-    source: 'Bloomberg Crypto',
-    url: 'https://bloomberg.com/g7-cbdc-integration',
-    publishedAt: new Date('2025-04-02T12:45:15Z'),
+    title: 'New Regulations Could Impact DeFi Platforms, Experts Warn',
+    summary: 'A proposed regulatory framework could bring significant compliance challenges for decentralized finance protocols, according to legal experts...',
+    source: 'CoinDesk',
+    url: 'https://coindesk.com/defi-regulation-impact',
+    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 8), // 8 hours ago
+    sentiment: 'bearish',
     category: 'regulation',
-    sentiment: 'neutral',
-    relatedAssets: []
+    coins: ['AAVE', 'UNI', 'COMP'],
+    image: 'https://example.com/defi-regulation.jpg'
   },
   {
     id: 'news4',
-    title: 'Solana DeFi Protocol Surpasses $50B in Total Value Locked',
-    summary: 'A leading Solana-based DeFi protocol has exceeded $50 billion in total value locked (TVL), signaling growing confidence in the Solana ecosystem despite earlier technical challenges.',
-    source: 'DeFi Pulse',
-    url: 'https://defipulse.com/solana-protocol-milestone',
-    publishedAt: new Date('2025-04-01T21:10:30Z'),
-    category: 'defi',
-    sentiment: 'positive',
-    relatedAssets: ['SOL']
+    title: 'Solana Faces Network Congestion Amid NFT Launch Frenzy',
+    summary: 'The Solana blockchain experienced temporary slowdowns yesterday as a highly anticipated NFT collection launch led to unprecedented network traffic...',
+    source: 'NFTNow',
+    url: 'https://nftnow.com/solana-congestion',
+    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 12), // 12 hours ago
+    sentiment: 'neutral',
+    category: 'technology',
+    coins: ['SOL'],
+    image: 'https://example.com/solana-network.jpg'
   },
   {
     id: 'news5',
-    title: 'New Regulatory Framework for Crypto in EU Takes Effect',
-    summary: 'The European Union\'s comprehensive regulatory framework for cryptocurrencies, known as MiCA 2.0, has officially taken effect, providing clarity for businesses operating in the space.',
-    source: 'Crypto Briefing',
-    url: 'https://cryptobriefing.com/eu-mica-framework',
-    publishedAt: new Date('2025-04-01T09:20:45Z'),
-    category: 'regulation',
+    title: 'Leading Central Banks Accelerate CBDC Development Plans',
+    summary: 'Central banks from major economies have announced accelerated timelines for their central bank digital currency projects, citing concerns about stablecoins and...',
+    source: 'Financial Times',
+    url: 'https://ft.com/cbdc-development',
+    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
     sentiment: 'neutral',
-    relatedAssets: []
+    category: 'regulation',
+    coins: ['USDC', 'USDT', 'DAI'],
+    image: 'https://example.com/cbdc-concept.jpg'
   },
   {
     id: 'news6',
-    title: 'Major Security Vulnerability Patched in Popular DeFi Protocol',
-    summary: 'Developers of a leading DeFi protocol have patched a critical security vulnerability that could have led to the loss of user funds. No assets were compromised before the fix was implemented.',
-    source: 'CoinDesk',
-    url: 'https://coindesk.com/defi-vulnerability-patched',
-    publishedAt: new Date('2025-03-31T14:05:12Z'),
+    title: 'Major Security Vulnerability Patched in Popular Wallet Software',
+    summary: 'A critical security update has been released for users of a widely used cryptocurrency wallet after researchers discovered a vulnerability that could potentially...',
+    source: 'CryptoSecurity',
+    url: 'https://cryptosecurity.com/wallet-vulnerability',
+    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 36), // 1.5 days ago
+    sentiment: 'bearish',
     category: 'security',
-    sentiment: 'negative',
-    relatedAssets: []
+    coins: [],
+    image: 'https://example.com/security-update.jpg'
   }
 ];
 
-const NewsFeedWidget: React.FC<WidgetProps> = ({ widget }) => {
-  const config = widget.config as NewsFeedConfig;
-  const sources = config.sources || ['coindesk', 'cointelegraph'];
-  const limit = config.limit || 5;
-  const refreshInterval = config.refreshInterval || 30;
+// Format relative time
+const formatRelativeTime = (timestamp: Date) => {
+  const now = new Date();
+  const diffMs = now.getTime() - timestamp.getTime();
+  const diffSec = Math.floor(diffMs / 1000);
+  const diffMin = Math.floor(diffSec / 60);
+  const diffHour = Math.floor(diffMin / 60);
+  const diffDay = Math.floor(diffHour / 24);
+
+  if (diffDay > 0) {
+    return `${diffDay}d ago`;
+  } else if (diffHour > 0) {
+    return `${diffHour}h ago`;
+  } else if (diffMin > 0) {
+    return `${diffMin}m ago`;
+  } else {
+    return 'Just now';
+  }
+};
+
+const NewsFeedWidget: React.FC<WidgetProps> = ({ widget, isEditing, onConfigChange }) => {
+  // Type guard
+  if (!isWidgetType(widget, 'news-feed')) {
+    return <div>Invalid widget configuration</div>;
+  }
   
-  const [isLoading, setIsLoading] = useState(false);
+  // Default config values
+  const sources = widget.config.sources || [];
+  const limit = widget.config.limit || 5;
+  const refreshInterval = widget.config.refreshInterval || 15;
+  const categories = widget.config.categories || [];
+  const sentiment = widget.config.sentiment || 'all';
   
-  // Filter news by sources and limit
-  const filteredNews = NEWS_DATA
-    .filter(news => sources.some(source => 
-      news.source.toLowerCase().includes(source.toLowerCase())
-    ))
-    .slice(0, limit);
+  // Local state for editing
+  const [editSettings, setEditSettings] = useState({
+    sources: [...sources],
+    limit,
+    refreshInterval,
+    categories: [...categories],
+    sentiment,
+  });
   
-  const handleRefresh = () => {
-    setIsLoading(true);
-    // Simulate refresh
-    setTimeout(() => {
-      setIsLoading(false);
-    }, 1000);
-  };
-  
-  const formatTime = (date: Date) => {
-    const now = new Date();
-    const diff = Math.floor((now.getTime() - date.getTime()) / 1000 / 60); // minutes
+  // Handle settings change
+  const handleSettingChange = (key: string, value: any) => {
+    const newSettings = { ...editSettings, [key]: value };
+    setEditSettings(newSettings);
     
-    if (diff < 60) {
-      return `${diff}m ago`;
-    } else if (diff < 1440) {
-      return `${Math.floor(diff / 60)}h ago`;
-    } else {
-      return `${Math.floor(diff / 1440)}d ago`;
+    if (onConfigChange) {
+      onConfigChange(newSettings);
     }
   };
   
-  const getSentimentColor = (sentiment: string) => {
+  // Filter news based on settings
+  const filteredNews = sampleNews
+    .filter(news => {
+      // Filter by sources
+      if (editSettings.sources.length > 0 && !editSettings.sources.includes(news.source)) {
+        return false;
+      }
+      
+      // Filter by category
+      if (editSettings.categories.length > 0 && !editSettings.categories.includes(news.category)) {
+        return false;
+      }
+      
+      // Filter by sentiment
+      if (editSettings.sentiment !== 'all' && news.sentiment !== editSettings.sentiment) {
+        return false;
+      }
+      
+      return true;
+    })
+    .slice(0, editSettings.limit);
+  
+  // Available sources and categories
+  const availableSources = Array.from(new Set(sampleNews.map(news => news.source)));
+  const availableCategories = Array.from(new Set(sampleNews.map(news => news.category)));
+  
+  // Get sentiment icon
+  const getSentimentIcon = (sentiment: string) => {
     switch (sentiment) {
-      case 'positive': return 'bg-green-100 text-green-800';
-      case 'negative': return 'bg-red-100 text-red-800';
-      default: return 'bg-blue-100 text-blue-800';
+      case 'bullish':
+        return <TrendingUp className="h-4 w-4 text-emerald-500" />;
+      case 'bearish':
+        return <TrendingDown className="h-4 w-4 text-red-500" />;
+      default:
+        return null;
     }
+  };
+  
+  // Get category badge
+  const getCategoryBadge = (category: string) => {
+    const colors: Record<string, string> = {
+      market: 'bg-blue-100 text-blue-800',
+      technology: 'bg-purple-100 text-purple-800',
+      regulation: 'bg-amber-100 text-amber-800',
+      security: 'bg-red-100 text-red-800'
+    };
+    
+    return (
+      <Badge className={`text-xs ${colors[category] || 'bg-gray-100 text-gray-800'}`}>
+        {category}
+      </Badge>
+    );
   };
   
   return (
-    <Card className="h-full">
-      <CardHeader className="p-4 pb-2">
-        <div className="flex justify-between items-center">
-          <CardTitle className="text-lg flex items-center">
-            <Newspaper className="h-5 w-5 mr-2" />
-            Crypto News
-          </CardTitle>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="h-8 w-8 p-0"
-            onClick={handleRefresh}
-            disabled={isLoading}
-          >
-            <RefreshCcw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent className="p-4 pt-2 overflow-auto">
-        {isLoading ? (
-          <div className="space-y-4">
-            {Array(3).fill(0).map((_, idx) => (
-              <div key={idx} className="flex flex-col space-y-2">
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-3/4" />
-                <div className="flex space-x-2">
-                  <Skeleton className="h-3 w-16" />
-                  <Skeleton className="h-3 w-12" />
-                </div>
-              </div>
-            ))}
+    <Card className="h-full flex flex-col">
+      <CardContent className="flex-1 pt-4 px-4 pb-2">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center space-x-2">
+            <Newspaper className="h-5 w-5 text-primary" />
+            <h3 className="font-semibold">Crypto News</h3>
           </div>
-        ) : filteredNews.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-8 text-center">
-            <Newspaper className="h-10 w-10 text-muted-foreground mb-2" />
-            <h3 className="font-medium">No News Available</h3>
-            <p className="text-sm text-muted-foreground mt-1">
-              Try adding more news sources or check back later.
-            </p>
+          
+          {!isEditing && (
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-8 w-8"
+              onClick={() => {/* Would refresh feed */}}
+            >
+              <RefreshCw className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+        
+        {isEditing ? (
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="limit">Number of articles: {editSettings.limit}</Label>
+              </div>
+              <Slider 
+                id="limit"
+                min={1}
+                max={10}
+                step={1}
+                value={[editSettings.limit]}
+                onValueChange={(value) => handleSettingChange('limit', value[0])}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="refreshInterval">Refresh Interval (minutes): {editSettings.refreshInterval}</Label>
+              <Slider 
+                id="refreshInterval"
+                min={5}
+                max={60}
+                step={5}
+                value={[editSettings.refreshInterval]}
+                onValueChange={(value) => handleSettingChange('refreshInterval', value[0])}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label>News Sources</Label>
+              <div className="grid grid-cols-2 gap-2">
+                {availableSources.map((source) => (
+                  <div key={source} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`source-${source}`}
+                      checked={editSettings.sources.includes(source)}
+                      onCheckedChange={(checked) => {
+                        const sources = checked 
+                          ? [...editSettings.sources, source]
+                          : editSettings.sources.filter(s => s !== source);
+                        handleSettingChange('sources', sources);
+                      }}
+                    />
+                    <Label htmlFor={`source-${source}`}>{source}</Label>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label>Categories</Label>
+              <div className="grid grid-cols-2 gap-2">
+                {availableCategories.map((category) => (
+                  <div key={category} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`category-${category}`}
+                      checked={editSettings.categories.includes(category)}
+                      onCheckedChange={(checked) => {
+                        const categories = checked 
+                          ? [...editSettings.categories, category]
+                          : editSettings.categories.filter(c => c !== category);
+                        handleSettingChange('categories', categories);
+                      }}
+                    />
+                    <Label htmlFor={`category-${category}`}>{category}</Label>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="sentiment">Sentiment Filter</Label>
+              <Select 
+                value={editSettings.sentiment} 
+                onValueChange={(value) => handleSettingChange('sentiment', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Filter by sentiment" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All News</SelectItem>
+                  <SelectItem value="bullish">Bullish Only</SelectItem>
+                  <SelectItem value="bearish">Bearish Only</SelectItem>
+                  <SelectItem value="neutral">Neutral Only</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         ) : (
-          <div className="space-y-4">
-            {filteredNews.map(news => (
-              <div key={news.id} className="border-b border-muted pb-3 last:border-0 last:pb-0">
-                <div className="space-y-2">
-                  <a 
-                    href={news.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="font-medium hover:text-primary flex items-start"
-                  >
-                    {news.title}
-                    <ExternalLink className="h-3 w-3 ml-1 flex-shrink-0 mt-1" />
-                  </a>
-                  <p className="text-xs text-muted-foreground line-clamp-2">
-                    {news.summary}
-                  </p>
-                  <div className="flex items-center space-x-2 text-xs text-muted-foreground">
-                    <span className="flex items-center">
-                      <Calendar className="h-3 w-3 mr-1" />
-                      {formatTime(news.publishedAt)}
-                    </span>
-                    <span>•</span>
-                    <span>{news.source}</span>
+          <ScrollArea className="h-[calc(100%-2rem)]">
+            <div className="space-y-3 pr-3">
+              {filteredNews.length > 0 ? (
+                filteredNews.map((news) => (
+                  <div key={news.id} className="space-y-1">
+                    <div className="flex items-start justify-between">
+                      <h4 className="font-medium text-sm line-clamp-2">{news.title}</h4>
+                      {getSentimentIcon(news.sentiment)}
+                    </div>
                     
-                    {news.sentiment && (
-                      <>
-                        <span>•</span>
-                        <Badge variant="outline" className={`text-[10px] px-1 ${getSentimentColor(news.sentiment)}`}>
-                          {news.sentiment}
-                        </Badge>
-                      </>
-                    )}
+                    <p className="text-xs text-muted-foreground line-clamp-2">
+                      {news.summary}
+                    </p>
                     
-                    {news.relatedAssets.length > 0 && (
-                      <>
-                        <span>•</span>
-                        {news.relatedAssets.map(asset => (
-                          <Badge key={asset} variant="secondary" className="text-[10px] px-1">
-                            {asset}
+                    <div className="flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">{news.source}</span>
+                        {getCategoryBadge(news.category)}
+                      </div>
+                      <span className="text-muted-foreground">
+                        {formatRelativeTime(news.timestamp)}
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center justify-between pt-1">
+                      <div className="flex gap-1">
+                        {news.coins.slice(0, 3).map((coin) => (
+                          <Badge key={coin} variant="outline" className="text-xs">
+                            {coin}
                           </Badge>
                         ))}
-                      </>
+                        {news.coins.length > 3 && (
+                          <Badge variant="outline" className="text-xs">
+                            +{news.coins.length - 3}
+                          </Badge>
+                        )}
+                      </div>
+                      
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-6 px-2 text-xs"
+                        asChild
+                      >
+                        <a href={news.url} target="_blank" rel="noopener noreferrer">
+                          <ExternalLink className="h-3 w-3 mr-1" />
+                          Read
+                        </a>
+                      </Button>
+                    </div>
+                    
+                    {/* Divider except for last item */}
+                    {news.id !== filteredNews[filteredNews.length - 1].id && (
+                      <div className="h-px bg-muted my-2" />
                     )}
                   </div>
+                ))
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  No news articles match your current filters
                 </div>
-              </div>
-            ))}
-          </div>
+              )}
+            </div>
+          </ScrollArea>
         )}
-        
-        <div className="text-xs text-muted-foreground text-center mt-4">
-          Updated every {refreshInterval} minutes
-        </div>
       </CardContent>
     </Card>
   );
