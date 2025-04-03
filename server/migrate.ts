@@ -106,6 +106,20 @@ async function migrate() {
         resolved BOOLEAN DEFAULT FALSE,
         resolved_at TIMESTAMP WITH TIME ZONE
       );
+      
+      CREATE TABLE IF NOT EXISTS notification_preferences (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id),
+        phone_number VARCHAR(20),
+        is_phone_verified BOOLEAN DEFAULT FALSE,
+        sms_enabled BOOLEAN DEFAULT FALSE,
+        transaction_alerts BOOLEAN DEFAULT TRUE,
+        security_alerts BOOLEAN DEFAULT TRUE, 
+        price_alerts BOOLEAN DEFAULT FALSE,
+        marketing_updates BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
     `);
 
     // Create a sample user for demo purposes
@@ -402,9 +416,45 @@ async function migrate() {
 
           console.log('Created wallet health issues');
         }
+        
+        // Create a default notification preference for the demo user
+        await db.insert(notificationPreferences).values({
+          userId,
+          phoneNumber: null,
+          isPhoneVerified: false,
+          smsEnabled: false,
+          transactionAlerts: true,
+          securityAlerts: true,
+          priceAlerts: false,
+          marketingUpdates: false
+        });
+        
+        console.log('Created default notification preferences');
       }
     } else {
       console.log('Demo user already exists, skipping sample data creation');
+      
+      // Ensure notification preferences exist for existing users
+      const userIds = await db.select({ id: users.id }).from(users);
+      for (const { id } of userIds) {
+        const prefExists = await db.select({ count: sql`count(*)` })
+          .from(notificationPreferences)
+          .where(sql`user_id = ${id}`);
+          
+        if (parseInt(prefExists[0].count.toString()) === 0) {
+          await db.insert(notificationPreferences).values({
+            userId: id,
+            phoneNumber: null,
+            isPhoneVerified: false,
+            smsEnabled: false,
+            transactionAlerts: true,
+            securityAlerts: true,
+            priceAlerts: false,
+            marketingUpdates: false
+          });
+          console.log(`Created default notification preferences for existing user ${id}`);
+        }
+      }
     }
 
     console.log("Database migration completed successfully");
