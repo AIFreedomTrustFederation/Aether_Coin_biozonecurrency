@@ -103,9 +103,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, className }) => {
   };
 
   return (
-    <div className={cn("main-layout h-full w-full flex flex-col", className)}>
-      {/* Mobile menu */}
-      <MobileMenu isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
+    <div className={cn("main-layout h-full w-full flex flex-col bg-background", className)}>
+      {/* Mobile menu - rendered conditionally */}
+      {isMobileMenuOpen && <MobileMenu isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />}
 
       {/* Header with hamburger menu and notification icons */}
       <header className="bg-background/80 backdrop-blur-sm border-b border-border/40 px-4 py-3 z-10">

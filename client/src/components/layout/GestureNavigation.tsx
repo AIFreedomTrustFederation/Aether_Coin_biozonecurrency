@@ -89,8 +89,13 @@ const GestureNavigation: React.FC<GestureNavigationProps> = ({
   return (
     <div
       ref={containerRef}
-      className={cn('gesture-navigation-container relative overflow-hidden', className)}
+      className={cn('gesture-navigation-container relative h-full w-full bg-background', className)}
     >
+      {/* Page content */}
+      <div className="w-full h-full bg-background">
+        {children}
+      </div>
+      
       {/* Enhanced swipe progress indicator */}
       <SwipeProgressIndicator
         isTransitioning={isTransitioning}
@@ -98,72 +103,21 @@ const GestureNavigation: React.FC<GestureNavigationProps> = ({
         direction={transitionDirection}
       />
 
-      {/* Navigation dots/indicator */}
-      <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 z-40">
+      {/* Navigation dots/indicator - simplified */}
+      <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 z-20">
         {routes.map((route, index) => (
-          <Touchable
+          <button
             key={route.path}
             className={cn(
-              "rounded-full h-2 transition-all duration-300 p-0 flex items-center justify-center",
+              "rounded-full h-2 transition-all duration-300 p-0",
               index === currentIndex 
                 ? "bg-primary w-6" 
                 : "bg-gray-500 hover:bg-gray-400 w-2"
             )}
             onClick={() => navigateTo(index)}
             aria-label={`Go to ${route.label}`}
-            scale={0.9} // Subtle scale for better feedback
           />
         ))}
-      </div>
-
-      {/* Edge navigation buttons - only shown during transitions */}
-      {isTransitioning && (
-        <>
-          {/* Previous page button */}
-          {canNavigatePrev && (
-            <motion.div 
-              className="absolute left-4 top-1/2 -translate-y-1/2 z-40"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 0.8, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-            >
-              <Touchable
-                className="w-10 h-10 bg-background/80 backdrop-blur-sm rounded-full flex items-center justify-center"
-                onClick={navigatePrev}
-                aria-label="Previous page"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-left">
-                  <path d="m15 18-6-6 6-6"/>
-                </svg>
-              </Touchable>
-            </motion.div>
-          )}
-          
-          {/* Next page button */}
-          {canNavigateNext && (
-            <motion.div 
-              className="absolute right-4 top-1/2 -translate-y-1/2 z-40"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 0.8, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-            >
-              <Touchable
-                className="w-10 h-10 bg-background/80 backdrop-blur-sm rounded-full flex items-center justify-center"
-                onClick={navigateNext}
-                aria-label="Next page"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-right">
-                  <path d="m9 18 6-6-6-6"/>
-                </svg>
-              </Touchable>
-            </motion.div>
-          )}
-        </>
-      )}
-
-      {/* Page content with animations */}
-      <div className="w-full h-full bg-background">
-        {children}
       </div>
     </div>
   );

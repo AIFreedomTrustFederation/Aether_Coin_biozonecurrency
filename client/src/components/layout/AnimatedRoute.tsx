@@ -114,32 +114,31 @@ export const AnimatedRoutes: React.FC<AnimatedRoutesProps> = ({
   }, [location, prevLocation, routes]);
 
   return (
-    <div className={cn("animated-routes-container w-full h-full bg-background", className)}>
-      <AnimatePresence mode="popLayout">
-        {routes.map((route) => (
-          <Route key={route.path} path={route.path}>
-            {(params) => {
-              const isMatch = location === route.path || 
-                (!route.exact && location.startsWith(route.path));
-              
-              if (!isMatch) return null;
-              
-              return (
+    <div className={cn("animated-routes-container w-full h-full bg-background relative", className)}>
+      <AnimatePresence initial={false}>
+        {routes.map((route) => {
+          const isMatch = location === route.path || 
+            (!route.exact && location.startsWith(route.path));
+          
+          if (!isMatch) return null;
+          
+          return (
+            <Route key={route.path} path={route.path}>
+              {(params) => (
                 <motion.div
-                  className="w-full h-full"
+                  key={route.path}
+                  className="w-full h-full bg-background"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  transition={{
-                    duration: 0.3,
-                  }}
+                  transition={{ duration: 0.15 }}
                 >
                   <route.component {...params} />
                 </motion.div>
-              );
-            }}
-          </Route>
-        ))}
+              )}
+            </Route>
+          );
+        })}
       </AnimatePresence>
     </div>
   );
