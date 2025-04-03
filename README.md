@@ -16,6 +16,21 @@ A cutting-edge blockchain wallet platform that delivers a secure and engaging cr
 - Security health scoring for wallet safety
 - Multi-layer authentication system
 - Mobile-first responsive design
+- AI Assistant with:
+  - Conversational interface for wallet management
+  - Secure credential storage with AES-256 encryption
+  - Transaction verification and risk assessment
+  - Voice command support for hands-free operation
+- Transaction Security:
+  - Real-time phishing detection and prevention
+  - Address reputation checking
+  - Customizable security rules
+  - Transaction risk scoring
+- Escrow System:
+  - Configurable holding periods for transactions
+  - Dispute resolution mechanism
+  - Conditional release based on custom rules
+  - Transaction reversal within holding period
 
 ## Technology Stack
 
@@ -26,7 +41,18 @@ A cutting-edge blockchain wallet platform that delivers a secure and engaging cr
 - **Notifications**:
   - SMS: Twilio API integration
   - Open-source: Matrix protocol (matrix-js-sdk)
-- **Security**: Quantum-resistant API validation layer
+- **Security**: 
+  - Quantum-resistant API validation layer
+  - AES-256 encryption for sensitive data
+  - Real-time phishing detection
+- **AI Integration**:
+  - Natural language processing for chat interface
+  - Voice recognition and command processing
+  - Transaction risk analysis using AI models
+- **Escrow System**:
+  - Transaction holding mechanisms
+  - Smart-contract based conditional releases
+  - Dispute resolution framework
 - **Charts**: Recharts for data visualization
 - **State Management**: React Query + Context
 - **Routing**: Wouter for lightweight client-side routing
@@ -200,3 +226,9 @@ This project is licensed under the MIT License - see the [LICENSE](./LICENSE) fi
 - The Twilio team for their reliable messaging API
 - The Matrix.org team for their open-source communication protocol
 - The matrix-js-sdk maintainers for their JavaScript SDK
+- The crypto-js team for their cryptographic library
+- The react-chatbot-kit contributors for the AI assistant framework
+- The React Speech Recognition team for voice command capabilities
+- The secure-web-storage team for their encrypted storage solution
+- The DOMPurify team for their HTML sanitization library
+- The react-markdown team for their Markdown rendering capabilities

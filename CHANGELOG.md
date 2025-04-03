@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- AI Assistant module with contextual chat interface
+- Secure credential storage with AES-256 encryption
+- Transaction verification and risk assessment system
+- Phishing detection for URLs and content analysis
+- Transaction escrow system with configurable holding periods
+- Transaction reversal capability within holding period
+- Dispute resolution mechanism for contested transactions
+- Voice command functionality for hands-free operation
+- Custom security levels (standard, high, paranoid)
+- Escrow templates for common transaction types
 - Open-source Matrix protocol integration for secure notifications
 - SMS notification support through Twilio integration
 - Quantum-resistant API validation layer between frontend and backend
@@ -27,6 +37,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Restructured application layout for better performance
 - Improved error handling for API requests
 - Enhanced mobile responsiveness in dashboard views
+- Modular architecture with isolated component APIs
+- Enhanced transaction security with multiple validation layers
 
 ### Fixed
 - UI rendering issues causing white screens
