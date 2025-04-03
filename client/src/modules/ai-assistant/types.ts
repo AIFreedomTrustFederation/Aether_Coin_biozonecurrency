@@ -1,31 +1,55 @@
 /**
- * Type definitions for the AI Assistant module
+ * Types for the AI Assistant module
  */
 
-// AI Assistant component props
-export interface AIAssistantProps {
-  userId: number;
+// ProgressCircle Component
+export interface ProgressCircleProps {
+  percentage: number;
+  size?: number;
+  strokeWidth?: number;
+  color?: string;
+  backgroundColor?: string;
+  children?: React.ReactNode;
   className?: string;
 }
 
-// AI configuration options
-export interface AIConfig {
-  enabled: boolean;
-  transactionMonitoring: boolean;
-  securityScanning: boolean;
-  credentialManagement: boolean;
-  holdPeriodHours: number;
-  autoVerification: boolean;
-  notificationLevel: 'all' | 'important' | 'critical';
-  voiceEnabled: boolean;
-  personalization: {
-    name: string;
-    appearance: 'default' | 'minimal' | 'professional';
-    responseLength: 'concise' | 'balanced' | 'detailed';
-  };
+// Transaction Hold Component
+export interface TransactionHoldProps {
+  transaction: Transaction;
+  className?: string;
+  title?: string;
 }
 
-// Security issue in a scan
+// Security Enums and Types
+export enum SecurityCategory {
+  PHISHING = 'phishing',
+  UNUSUAL_ACTIVITY = 'unusual_activity',
+  SMART_CONTRACT = 'smart_contract',
+  GAS_OPTIMIZATION = 'gas_optimization',
+  PRIVACY = 'privacy',
+  NETWORK = 'network'
+}
+
+export interface Transaction {
+  id: number;
+  timestamp: Date;
+  type: string;
+  status: string;
+  walletId: number;
+  amount: string;
+  tokenSymbol: string;
+  txHash: string;
+  fromAddress: string;
+  toAddress: string;
+  fee?: string;
+  blockNumber?: number;
+  network?: string;
+  aiVerified?: boolean;
+  riskScore?: number;
+  holdReason?: string;
+  holdUntil?: Date;
+}
+
 export interface SecurityIssue {
   id: number;
   title: string;
@@ -38,146 +62,107 @@ export interface SecurityIssue {
   resolvedAt?: Date;
 }
 
-// Security scan result
 export interface SecurityScan {
   id: number;
   timestamp: Date;
   type: string;
-  status: 'in_progress' | 'completed' | 'failed';
+  status: string;
   focus: string;
   durationMs: number;
   issues: SecurityIssue[];
 }
 
-// Transaction data
-export interface Transaction {
-  id: number;
-  timestamp: Date;
-  type: 'send' | 'receive' | 'swap' | 'stake' | 'unstake' | 'approve';
-  status: 'pending' | 'confirmed' | 'failed' | 'held';
-  fromAddress: string;
-  toAddress: string;
-  amount: string;
-  tokenSymbol: string;
-  fee?: string;
-  txHash: string;
-  blockNumber?: number;
-  holdUntil?: Date;
-  holdReason?: string;
-  aiVerified?: boolean;
-  riskScore?: number;
-  riskFactors?: string[];
+// Credential Management
+export enum CredentialType {
+  API_KEY = 'api_key',
+  PASSWORD = 'password',
+  PRIVATE_KEY = 'private_key',
+  MNEMONIC = 'mnemonic',
+  SESSION_TOKEN = 'session_token',
+  OAUTH_TOKEN = 'oauth_token'
 }
 
-// Credential data
 export interface SecureCredential {
-  id: string;
-  type: 'password' | 'private_key' | 'seed_phrase' | 'api_key' | 'two_factor';
-  name: string;
-  service?: string;
+  id: number;
+  userId: number;
   createdAt: Date;
-  lastUsed?: Date;
-  encryptedData: string;
-  tags?: string[];
+  updatedAt?: Date;
+  name: string;
+  type: CredentialType;
+  expiresAt?: Date | null;
+  lastAccessed?: Date | null;
+  isEncrypted: boolean;
+  data: string;
+  service?: string;
+  accessCount: number;
 }
 
-// Chat message
+// Chat Interface
 export interface ChatMessage {
   id: string;
-  sender: 'user' | 'ai' | 'system';
-  content: string;
+  senderId: string | number;
+  senderType: 'user' | 'ai' | 'system';
   timestamp: Date;
+  content: string;
+  contentType: 'text' | 'transaction' | 'security_report' | 'warning';
   metadata?: {
-    relatedEntityId?: number;
-    relatedEntityType?: string;
-    action?: string;
-    suggestions?: string[];
+    transactionId?: number;
+    securityScanId?: number;
     [key: string]: any;
   };
+  status?: 'sending' | 'sent' | 'delivered' | 'error';
 }
 
-// AI Assistant state
-export interface AIState {
-  initialized: boolean;
-  config: AIConfig;
+// AI Context
+export interface AIContextState {
+  isInitialized: boolean;
+  isLoading: boolean;
   messages: ChatMessage[];
-  pendingTransactions: Transaction[];
+  transactionHistory: Transaction[];
   securityScans: SecurityScan[];
   credentials: SecureCredential[];
-  lastScanTimestamp?: Date;
-  error?: string;
-  isProcessing: boolean;
+  activeView: 'chat' | 'settings' | 'security' | 'transactions';
+  error: string | null;
 }
 
-// AI Action for reducer
 export type AIAction =
-  | { type: 'INITIALIZE_AI'; payload: AIConfig }
-  | { type: 'TOGGLE_AI'; payload: boolean }
-  | { type: 'UPDATE_CONFIG'; payload: Partial<AIConfig> }
+  | { type: 'INITIALIZE'; payload: Partial<AIContextState> }
+  | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'ADD_MESSAGE'; payload: ChatMessage }
-  | { type: 'CLEAR_MESSAGES' }
-  | { type: 'ADD_PENDING_TRANSACTION'; payload: Transaction }
-  | { type: 'REMOVE_PENDING_TRANSACTION'; payload: number }
+  | { type: 'ADD_TRANSACTION'; payload: Transaction }
+  | { type: 'UPDATE_TRANSACTION'; payload: { id: number; updates: Partial<Transaction> } }
   | { type: 'ADD_SECURITY_SCAN'; payload: SecurityScan }
-  | { type: 'RESOLVE_SECURITY_ISSUE'; payload: { scanId: number; issueId: number } }
   | { type: 'ADD_CREDENTIAL'; payload: SecureCredential }
-  | { type: 'REMOVE_CREDENTIAL'; payload: string }
-  | { type: 'SET_ERROR'; payload: string }
-  | { type: 'CLEAR_ERROR' }
-  | { type: 'SET_PROCESSING'; payload: boolean };
+  | { type: 'REMOVE_CREDENTIAL'; payload: number }
+  | { type: 'SET_ACTIVE_VIEW'; payload: AIContextState['activeView'] }
+  | { type: 'SET_ERROR'; payload: string | null }
+  | { type: 'CLEAR_HISTORY' };
 
-// Context value type
-export interface AIContextType {
-  state: AIState;
-  toggleAI: (enabled: boolean) => void;
-  updateConfig: (config: Partial<AIConfig>) => void;
-  addMessage: (message: Omit<ChatMessage, 'id' | 'timestamp'>) => void;
-  clearMessages: () => void;
-  addPendingTransaction: (transaction: Omit<Transaction, 'id'>) => void;
-  removePendingTransaction: (id: number) => void;
-  addSecurityScan: (scan: Omit<SecurityScan, 'id'>) => void;
-  resolveSecurityIssue: (scanId: number, issueId: number) => void;
-  addCredential: (credential: Omit<SecureCredential, 'id'>) => void;
-  removeCredential: (id: string) => void;
+export interface AIConfig {
+  autoVerifyTransactions: boolean;
+  transactionHoldThreshold: number;
+  scanFrequency: 'high' | 'medium' | 'low';
+  alertLevel: 'all' | 'critical_only' | 'none';
+  privacyLevel: 'high' | 'medium' | 'low';
 }
 
-// AI Provider props
 export interface AIProviderProps {
+  userId: number;
+  initialState?: Partial<AIContextState>;
+  config?: Partial<AIConfig>;
   children: React.ReactNode;
-  initialConfig?: Partial<AIConfig>;
 }
 
-// Chat Interface component props
-export interface ChatInterfaceProps {
-  className?: string;
-  autoFocus?: boolean;
-  inputPlaceholder?: string;
-}
-
-// SecurityHistory component props
-export interface SecurityHistoryProps {
-  className?: string;
-}
-
-// TransactionHold component props
-export interface TransactionHoldProps {
-  className?: string;
-  transaction?: Transaction;
-}
-
-// AISettings component props
-export interface AISettingsProps {
-  className?: string;
-  onClose?: () => void;
-}
-
-// ProgressCircle component props
-export interface ProgressCircleProps {
-  percentage: number;
-  size?: number;
-  strokeWidth?: number;
-  color?: string;
-  backgroundColor?: string;
-  children?: React.ReactNode;
-  className?: string;
+export interface AIContextType {
+  state: AIContextState;
+  dispatch: React.Dispatch<AIAction>;
+  config: AIConfig;
+  verifyTransaction: (tx: Transaction) => Promise<SecurityScan>;
+  holdTransaction: (tx: Transaction, reason: string, hours: number) => Promise<Transaction>;
+  releaseTransaction: (id: number) => Promise<Transaction>;
+  cancelTransaction: (id: number) => Promise<boolean>;
+  secureCredential: (credential: SecureCredential) => Promise<SecureCredential>;
+  getCredential: (id: number) => Promise<SecureCredential | null>;
+  removeCredential: (id: number) => Promise<boolean>;
+  sendMessage: (content: string) => Promise<void>;
 }

@@ -1,171 +1,270 @@
-import { Transaction, SecurityScan, SecurityIssue } from '../types';
+import { Transaction, SecurityScan, SecurityIssue, SecurityCategory } from '../types';
 
-// This is a simulated transaction verifier for demo purposes
-// In a real application, this would connect to blockchain nodes and security services
-
+/**
+ * TransactionVerifier provides utilities for analyzing blockchain transactions
+ * for potential security issues or optimizations
+ */
 class TransactionVerifier {
-  private userId: number;
-  private knownScamAddresses: Set<string> = new Set([
-    '0x0000000000000000000000000000000000000000', // Example scam address
-    '0x1111111111111111111111111111111111111111', // Example scam address
-    '0x2222222222222222222222222222222222222222', // Example scam address
+  // Known phishing addresses (in a real implementation, this would be sourced from an API)
+  private knownPhishingAddresses: Set<string> = new Set([
+    '0x4d224452801aced8b2f0aebe155379bb5d594381',
+    '0x7f367cc41522ce07553e823bf3be79a889debe1b',
+    '0x0e5069514a3dd613350bab01b58fd850058e5ca4'
   ]);
   
-  private knownSafeAddresses: Set<string> = new Set([
-    '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', // Example safe address (major exchange)
-    '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb', // Example safe address (popular service)
-    '0xcccccccccccccccccccccccccccccccccccccccc', // Example safe address (known contract)
+  // Known malicious domains and contract addresses
+  private maliciousPatterns: Set<string> = new Set([
+    'cryptosteal',
+    'walletsync',
+    'connectweb3',
+    'validate-wallet',
+    'airdrop',
+    'free-nft',
+    'claim-token'
   ]);
   
-  constructor(userId: number) {
-    this.userId = userId;
-  }
-  
-  // Verify a transaction for security concerns
-  async verifyTransaction(transaction: Transaction): Promise<SecurityScan> {
-    // In a real implementation, this would query blockchain data and security services
+  /**
+   * Verify a transaction for security issues
+   * 
+   * @param transaction The transaction to verify
+   * @returns A security scan with analysis results
+   */
+  public async verifyTransaction(transaction: Transaction): Promise<SecurityScan> {
+    const startTime = performance.now();
     
-    const issues: SecurityIssue[] = [];
-    
-    // Check for known scam addresses
-    if (this.knownScamAddresses.has(transaction.to)) {
-      issues.push({
-        id: `issue_${Date.now()}_1`,
-        title: 'Known Scam Address',
-        description: 'The recipient address is associated with known scam activities.',
-        severity: 'critical',
-        type: 'scam',
-        data: {
-          address: transaction.to,
-          reportCount: 25,
-          firstReported: '2025-01-15'
-        }
-      });
-    }
-    
-    // Check for unusually large transaction amounts (simulated)
-    if (parseFloat(transaction.amount) > 5.0) {
-      issues.push({
-        id: `issue_${Date.now()}_2`,
-        title: 'Large Transaction',
-        description: `This transaction amount (${transaction.amount} ${transaction.token}) is larger than your typical transactions.`,
-        severity: 'medium',
-        type: 'suspicious_pattern',
-        data: {
-          averageTransactionSize: '0.5',
-          percentile: 95
-        }
-      });
-    }
-    
-    // Check transaction time patterns (simulated)
-    const hour = new Date(transaction.timestamp).getHours();
-    if (hour >= 0 && hour <= 5) {
-      issues.push({
-        id: `issue_${Date.now()}_3`,
-        title: 'Unusual Transaction Time',
-        description: 'This transaction is being made during unusual hours based on your transaction history.',
-        severity: 'low',
-        type: 'suspicious_pattern',
-        data: {
-          hour,
-          userActiveHours: '8:00 - 22:00'
-        }
-      });
-    }
-    
-    // Generate the result
-    let result: 'safe' | 'warning' | 'danger' = 'safe';
-    
-    if (issues.some(issue => issue.severity === 'critical')) {
-      result = 'danger';
-    } else if (issues.some(issue => issue.severity === 'high' || issue.severity === 'medium')) {
-      result = 'warning';
-    }
-    
-    return {
-      id: `scan_${Date.now()}`,
+    // Create a scan object
+    const scan: SecurityScan = {
+      id: Date.now(),
       timestamp: new Date(),
-      result,
-      issues
+      type: 'transaction',
+      status: 'completed',
+      focus: transaction.txHash,
+      durationMs: 0,
+      issues: []
     };
+    
+    // Run various checks
+    await Promise.all([
+      this.checkForPhishingAddress(transaction, scan),
+      this.checkForUnusualAmount(transaction, scan),
+      this.checkForGasOptimization(transaction, scan),
+      this.checkForSmartContractRisks(transaction, scan),
+      this.checkForPrivacyIssues(transaction, scan),
+      this.checkForNetworkIssues(transaction, scan)
+    ]);
+    
+    // Calculate duration
+    const endTime = performance.now();
+    scan.durationMs = Math.round(endTime - startTime);
+    
+    // Update transaction with verification status
+    return scan;
   }
   
-  // Check if transaction can be reversed (simulated)
-  async canReverseTransaction(transaction: Transaction): Promise<boolean> {
-    // In a real implementation, this would check blockchain confirmation status,
-    // escrow status, and other factors that determine if a transaction is reversible
+  /**
+   * Check if the transaction involves a known phishing address
+   */
+  private async checkForPhishingAddress(transaction: Transaction, scan: SecurityScan): Promise<void> {
+    const toAddressLower = transaction.toAddress.toLowerCase();
+    const fromAddressLower = transaction.fromAddress.toLowerCase();
     
-    // For demo, assume transactions less than 1 hour old can be reversed (escrow period)
-    const transactionTime = new Date(transaction.timestamp).getTime();
-    const currentTime = Date.now();
-    const hourInMs = 60 * 60 * 1000;
-    
-    return (currentTime - transactionTime) < hourInMs;
-  }
-  
-  // Attempt to reverse a transaction (simulated)
-  async reverseTransaction(transaction: Transaction): Promise<{
-    success: boolean;
-    message: string;
-    newTransactionHash?: string;
-  }> {
-    // Check if the transaction can be reversed
-    const canReverse = await this.canReverseTransaction(transaction);
-    
-    if (!canReverse) {
-      return {
-        success: false,
-        message: 'Transaction cannot be reversed because it has been finalized on the blockchain and is beyond the holding period.'
-      };
+    if (this.knownPhishingAddresses.has(toAddressLower)) {
+      scan.issues.push({
+        id: scan.issues.length + 1,
+        title: 'Known Phishing Address Detected',
+        description: `The recipient address (${transaction.toAddress}) is associated with known phishing activities.`,
+        severity: 'critical',
+        category: SecurityCategory.PHISHING,
+        recommendation: 'Cancel this transaction immediately and report the address to your wallet provider.',
+        detectedAt: new Date(),
+        resolved: false
+      });
     }
     
-    // In a real implementation, this would initiate a reversal transaction
-    // or release funds from an escrow contract
-    
-    // Simulate a successful reversal
-    return {
-      success: true,
-      message: 'Transaction has been successfully reversed. Funds have been returned to your wallet.',
-      newTransactionHash: `0x${Math.random().toString(36).substring(2, 15)}${Math.random().toString(36).substring(2, 15)}`
-    };
+    // Check for potential phishing by examining transaction metadata
+    if (transaction.type.toLowerCase().includes('approve') && parseFloat(transaction.amount) > 1000) {
+      scan.issues.push({
+        id: scan.issues.length + 1,
+        title: 'Suspicious Token Approval',
+        description: 'This transaction approves a large amount of tokens to be spent by another address.',
+        severity: 'high',
+        category: SecurityCategory.PHISHING,
+        recommendation: 'Verify that you intended to approve this amount and that the recipient is trusted.',
+        detectedAt: new Date(),
+        resolved: false
+      });
+    }
   }
   
-  // Analyze an address for security risk (simulated)
-  async analyzeAddress(address: string): Promise<{
-    riskScore: number;
-    isSafe: boolean;
-    isKnownScam: boolean;
-    details: string;
-  }> {
-    // In a real implementation, this would query blockchain analytics APIs
-    // and security databases
+  /**
+   * Check if transaction amount is unusually high or exhibits other anomalies
+   */
+  private async checkForUnusualAmount(transaction: Transaction, scan: SecurityScan): Promise<void> {
+    // Example threshold checks
+    const amount = parseFloat(transaction.amount);
     
-    const isKnownScam = this.knownScamAddresses.has(address);
-    const isSafe = this.knownSafeAddresses.has(address);
-    
-    let riskScore = 50; // Neutral score by default
-    
-    if (isKnownScam) {
-      riskScore = 95;
-    } else if (isSafe) {
-      riskScore = 5;
-    } else {
-      // Simulated risk assessment
-      riskScore = Math.floor(Math.random() * 30) + 30; // Random score between 30-60
+    // High-value transaction check
+    if (amount > 10000) {
+      scan.issues.push({
+        id: scan.issues.length + 1,
+        title: 'High Value Transaction',
+        description: `This transaction involves a large amount (${amount} ${transaction.tokenSymbol}).`,
+        severity: 'medium',
+        category: SecurityCategory.UNUSUAL_ACTIVITY,
+        recommendation: 'Verify the recipient address and amount before proceeding.',
+        detectedAt: new Date(),
+        resolved: false
+      });
     }
     
-    return {
-      riskScore,
-      isSafe: riskScore < 30,
-      isKnownScam: riskScore > 80,
-      details: isKnownScam 
-        ? 'This address has been reported multiple times for fraudulent activities.'
-        : isSafe
-          ? 'This address belongs to a verified entity with good reputation.'
-          : 'This address has limited transaction history and should be treated with caution.'
+    // Round number check (often used in scams)
+    if (amount === Math.round(amount) && amount > 100) {
+      scan.issues.push({
+        id: scan.issues.length + 1,
+        title: 'Round-Number Transaction',
+        description: 'This transaction uses a large, round number which is sometimes associated with scams.',
+        severity: 'low',
+        category: SecurityCategory.UNUSUAL_ACTIVITY,
+        recommendation: 'Verify that this transaction was intended and not a result of a scam request.',
+        detectedAt: new Date(),
+        resolved: false
+      });
+    }
+  }
+  
+  /**
+   * Check for potential gas fee optimizations
+   */
+  private async checkForGasOptimization(transaction: Transaction, scan: SecurityScan): Promise<void> {
+    if (!transaction.fee) return;
+    
+    const feeValue = parseFloat(transaction.fee);
+    
+    // High gas fee check
+    if (feeValue > 0.01) {
+      scan.issues.push({
+        id: scan.issues.length + 1,
+        title: 'High Gas Fee',
+        description: `This transaction has a relatively high gas fee (${transaction.fee}).`,
+        severity: 'info',
+        category: SecurityCategory.GAS_OPTIMIZATION,
+        recommendation: 'Consider waiting for lower network congestion or using a gas optimization tool.',
+        detectedAt: new Date(),
+        resolved: false
+      });
+    }
+  }
+  
+  /**
+   * Check for smart contract security risks
+   */
+  private async checkForSmartContractRisks(transaction: Transaction, scan: SecurityScan): Promise<void> {
+    // In a real implementation, this would call an API to check the contract
+    // For now, we'll just do a basic simulation
+    if (transaction.type.toLowerCase().includes('contract')) {
+      scan.issues.push({
+        id: scan.issues.length + 1,
+        title: 'Smart Contract Interaction',
+        description: 'This transaction interacts with a smart contract that has not been verified.',
+        severity: 'medium',
+        category: SecurityCategory.SMART_CONTRACT,
+        recommendation: 'Ensure the contract is verified and audited before proceeding.',
+        detectedAt: new Date(),
+        resolved: false
+      });
+    }
+  }
+  
+  /**
+   * Check for privacy issues in the transaction
+   */
+  private async checkForPrivacyIssues(transaction: Transaction, scan: SecurityScan): Promise<void> {
+    // Check if transaction might expose user's activity
+    // This is simplified - in reality, privacy analysis is more complex
+    if (transaction.type.toLowerCase().includes('transfer') && parseFloat(transaction.amount) > 0) {
+      scan.issues.push({
+        id: scan.issues.length + 1,
+        title: 'Privacy Consideration',
+        description: 'This public transaction may reveal your financial activity to blockchain observers.',
+        severity: 'info',
+        category: SecurityCategory.PRIVACY,
+        recommendation: 'For privacy-sensitive transactions, consider using a privacy-focused solution.',
+        detectedAt: new Date(),
+        resolved: false
+      });
+    }
+  }
+  
+  /**
+   * Check for network-related issues
+   */
+  private async checkForNetworkIssues(transaction: Transaction, scan: SecurityScan): Promise<void> {
+    // Check if network is congested or has known issues
+    // This would typically query a network status API
+    if (transaction.network && transaction.network.toLowerCase() === 'ethereum') {
+      // Just an example - in real life, we'd check actual network conditions
+      if (Math.random() > 0.7) {
+        scan.issues.push({
+          id: scan.issues.length + 1,
+          title: 'Network Congestion',
+          description: 'The Ethereum network currently has high congestion.',
+          severity: 'info',
+          category: SecurityCategory.NETWORK,
+          recommendation: 'Consider delaying non-urgent transactions for lower fees.',
+          detectedAt: new Date(),
+          resolved: false
+        });
+      }
+    }
+  }
+  
+  /**
+   * Calculate the overall risk score for a transaction
+   * 
+   * @param issues List of security issues detected
+   * @returns Risk score from 0-100
+   */
+  public calculateRiskScore(issues: SecurityIssue[]): number {
+    if (!issues.length) return 0;
+    
+    // Severity weights
+    const weights = {
+      critical: 100,
+      high: 70,
+      medium: 40,
+      low: 20,
+      info: 5
     };
+    
+    // Calculate weighted score
+    let totalWeight = 0;
+    let weightedSum = 0;
+    
+    for (const issue of issues) {
+      const weight = weights[issue.severity];
+      totalWeight += weight;
+      weightedSum += weight * 1; // Multiply by 1 to convert to number
+    }
+    
+    // Normalize to 0-100 scale with exponential curve to emphasize critical issues
+    const baseScore = (weightedSum / (totalWeight || 1)) * 100;
+    
+    // Count critical and high severity issues
+    const criticalCount = issues.filter(i => i.severity === 'critical').length;
+    const highCount = issues.filter(i => i.severity === 'high').length;
+    
+    // Apply multipliers for critical and high issues
+    let finalScore = baseScore;
+    if (criticalCount > 0) {
+      finalScore = Math.min(100, finalScore * (1 + (criticalCount * 0.5)));
+    }
+    if (highCount > 0) {
+      finalScore = Math.min(100, finalScore * (1 + (highCount * 0.2)));
+    }
+    
+    return Math.round(finalScore);
   }
 }
 
-export default TransactionVerifier;
+// Export a singleton instance
+export const transactionVerifier = new TransactionVerifier();

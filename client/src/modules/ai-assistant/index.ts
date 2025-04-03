@@ -1,90 +1,56 @@
 /**
  * AI Assistant Module
  * 
- * This module provides a comprehensive AI assistant for the wallet platform
- * with features like secure credential storage, transaction verification,
- * security scanning, and conversational interface.
+ * Provides AI-powered assistance for cryptocurrency wallet operations, including:
+ * - Transaction security verification
+ * - Credential management with secure storage
+ * - Transaction holds for suspicious activities
+ * - Chat interface for user interactions
  */
 
 // Components
-import AIAssistant from './components/AIAssistant';
-import ChatInterface from './components/ChatInterface';
-import SecurityHistory from './components/SecurityHistory';
-import TransactionHold from './components/TransactionHold';
-import AISettings from './components/AISettings';
 import ProgressCircle from './components/ProgressCircle';
+import TransactionHold from './components/TransactionHold';
 
 // Context
-import { AIProvider, useAI } from './contexts/AIContext';
+// import { AIProvider, useAIContext } from './contexts/AIContext';
 
-// Utils
+// Utilities
+import { secureStorage } from './utils/SecureStorage';
+import { transactionVerifier } from './utils/TransactionVerifier';
 import { 
-  formatDate,
-  formatDuration,
   formatAddress,
   formatTokenAmount,
+  formatCurrency,
+  formatDate,
+  formatDuration,
+  formatLargeNumber,
   formatPercentage,
-  formatCurrency
+  convertWeiToGwei
 } from './utils/formatters';
 
-// Types
-import {
-  AIAssistantProps,
-  AIConfig,
-  AIContextType,
-  AIProviderProps,
-  AIState,
-  ChatInterfaceProps,
-  ChatMessage,
-  AISettingsProps,
-  SecurityHistoryProps,
-  SecurityIssue,
-  SecurityScan,
-  SecureCredential,
-  Transaction,
-  TransactionHoldProps,
-  ProgressCircleProps
-} from './types';
-
-// Export everything
+// Export components and utilities
 export {
   // Components
-  AIAssistant,
-  ChatInterface,
-  SecurityHistory,
-  TransactionHold,
-  AISettings,
   ProgressCircle,
+  TransactionHold,
   
   // Context
-  AIProvider,
-  useAI,
+  // AIProvider,
+  // useAIContext,
   
-  // Utils
-  formatDate,
-  formatDuration,
+  // Utilities
+  secureStorage,
+  transactionVerifier,
   formatAddress,
   formatTokenAmount,
-  formatPercentage,
   formatCurrency,
-  
-  // Types
-  type AIAssistantProps,
-  type AIConfig,
-  type AIContextType,
-  type AIProviderProps,
-  type AIState,
-  type ChatInterfaceProps,
-  type ChatMessage,
-  type AISettingsProps,
-  type SecurityHistoryProps,
-  type SecurityIssue,
-  type SecurityScan,
-  type SecureCredential,
-  type Transaction,
-  type TransactionHoldProps,
-  type ProgressCircleProps
+  formatDate,
+  formatDuration,
+  formatLargeNumber,
+  formatPercentage,
+  convertWeiToGwei
 };
 
-// Default export
-export default AIAssistant;
+// Export types
+export * from './types';

@@ -2,62 +2,62 @@ import React from 'react';
 import { ProgressCircleProps } from '../types';
 
 /**
- * ProgressCircle component displays a circular progress indicator 
- * with a customizable appearance and optional children in the center.
+ * A circular progress indicator component
+ * 
+ * @param props Component properties
+ * @returns React component
  */
 const ProgressCircle: React.FC<ProgressCircleProps> = ({
   percentage,
-  size = 120,
-  strokeWidth = 10,
-  color = 'var(--primary)',
-  backgroundColor = 'rgba(0, 0, 0, 0.1)',
+  size = 64,
+  strokeWidth = 4,
+  color = '#0284c7',
+  backgroundColor = '#e2e8f0',
   children,
   className = ''
 }) => {
-  // Calculate the circle properties
+  // Calculate dimensions
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
-  const strokeDashoffset = circumference - (percentage / 100) * circumference;
-  
-  // Center coordinates
-  const center = size / 2;
+  const offset = circumference - (percentage / 100) * circumference;
   
   return (
-    <div className={`relative ${className}`} style={{ width: size, height: size }}>
-      <svg 
-        width={size} 
-        height={size} 
-        viewBox={`0 0 ${size} ${size}`}
-        className="transform -rotate-90" // Rotate to start from the top
+    <div 
+      className={`relative inline-flex items-center justify-center ${className}`}
+      style={{ width: size, height: size }}
+    >
+      <svg
+        className="transform -rotate-90"
+        width={size}
+        height={size}
       >
         {/* Background circle */}
-        <circle 
-          cx={center}
-          cy={center}
+        <circle
+          className="transition-all duration-300"
+          cx={size / 2}
+          cy={size / 2}
           r={radius}
-          fill="none"
-          stroke={backgroundColor}
           strokeWidth={strokeWidth}
+          stroke={backgroundColor}
+          fill="transparent"
         />
         
         {/* Progress circle */}
-        <circle 
-          cx={center}
-          cy={center}
+        <circle
+          className="transition-all duration-300 ease-in-out"
+          cx={size / 2}
+          cy={size / 2}
           r={radius}
-          fill="none"
-          stroke={color}
           strokeWidth={strokeWidth}
+          stroke={color}
           strokeDasharray={circumference}
-          strokeDashoffset={strokeDashoffset}
+          strokeDashoffset={offset}
           strokeLinecap="round"
-          style={{
-            transition: 'stroke-dashoffset 0.5s ease-in-out'
-          }}
+          fill="transparent"
         />
       </svg>
       
-      {/* Center content */}
+      {/* Children content (typically text or icon) */}
       {children && (
         <div className="absolute inset-0 flex items-center justify-center">
           {children}

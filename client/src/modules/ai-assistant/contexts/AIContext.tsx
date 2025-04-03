@@ -1,57 +1,51 @@
-import React, { createContext, useContext, useReducer } from 'react';
-import { v4 as uuid } from 'uuid';
-import { 
-  AIState, 
-  AIAction, 
-  AIConfig, 
-  AIProviderProps,
-  AIContextType,
-  ChatMessage, 
-  Transaction, 
-  SecurityScan, 
-  SecurityIssue, 
-  SecureCredential 
-} from '../types';
+import React, { createContext, useReducer, useContext, ReactNode } from 'react';
+import { v4 as uuidv4 } from 'uuid';
+
+// Import types
+import { AIState, AIAction, AIConfig, AIProviderProps } from '../types';
+import { AIContextType } from '../types';
+import { ChatMessage, Transaction, SecurityScan, SecurityIssue, SecureCredential } from '../types';
 
 // Default AI configuration
-const defaultConfig: AIConfig = {
+const DEFAULT_CONFIG: AIConfig = {
   enabled: true,
   transactionMonitoring: true,
   securityScanning: true,
   credentialManagement: true,
   holdPeriodHours: 24,
-  autoVerification: true,
+  autoVerification: false,
   notificationLevel: 'important',
   voiceEnabled: false,
   personalization: {
-    name: 'Aetherion Assistant',
+    name: 'Quantum AI',
     appearance: 'default',
     responseLength: 'balanced'
   }
 };
 
-// Initial state for the AI assistant
+// Initial state
 const initialState: AIState = {
   initialized: false,
-  config: defaultConfig,
+  config: DEFAULT_CONFIG,
   messages: [],
   pendingTransactions: [],
   securityScans: [],
   credentials: [],
-  isProcessing: false
+  isProcessing: false,
+  lastScanTimestamp: undefined
 };
 
-// Create context
-const AIContext = createContext<AIContextType | undefined>(undefined);
-
-// AI state reducer
-const aiReducer = (state: AIState, action: AIAction): AIState => {
+// Reducer function for managing state
+const AIReducer = (state: AIState, action: AIAction): AIState => {
   switch (action.type) {
     case 'INITIALIZE_AI':
       return {
         ...state,
         initialized: true,
-        config: action.payload
+        config: {
+          ...state.config,
+          ...action.payload
+        }
       };
       
     case 'TOGGLE_AI':
@@ -75,7 +69,14 @@ const aiReducer = (state: AIState, action: AIAction): AIState => {
     case 'ADD_MESSAGE':
       return {
         ...state,
-        messages: [...state.messages, action.payload]
+        messages: [
+          ...state.messages,
+          {
+            ...action.payload,
+            id: uuidv4(),
+            timestamp: new Date()
+          }
+        ]
       };
       
     case 'CLEAR_MESSAGES':
@@ -87,19 +88,37 @@ const aiReducer = (state: AIState, action: AIAction): AIState => {
     case 'ADD_PENDING_TRANSACTION':
       return {
         ...state,
-        pendingTransactions: [...state.pendingTransactions, action.payload]
+        pendingTransactions: [
+          ...state.pendingTransactions,
+          {
+            ...action.payload,
+            id: state.pendingTransactions.length > 0 
+              ? Math.max(...state.pendingTransactions.map(tx => tx.id)) + 1 
+              : 1
+          }
+        ]
       };
       
     case 'REMOVE_PENDING_TRANSACTION':
       return {
         ...state,
-        pendingTransactions: state.pendingTransactions.filter(tx => tx.id !== action.payload)
+        pendingTransactions: state.pendingTransactions.filter(
+          tx => tx.id !== action.payload
+        )
       };
       
     case 'ADD_SECURITY_SCAN':
       return {
         ...state,
-        securityScans: [...state.securityScans, action.payload],
+        securityScans: [
+          {
+            ...action.payload,
+            id: state.securityScans.length > 0 
+              ? Math.max(...state.securityScans.map(scan => scan.id)) + 1 
+              : 1
+          },
+          ...state.securityScans
+        ],
         lastScanTimestamp: new Date()
       };
       
@@ -129,13 +148,21 @@ const aiReducer = (state: AIState, action: AIAction): AIState => {
     case 'ADD_CREDENTIAL':
       return {
         ...state,
-        credentials: [...state.credentials, action.payload]
+        credentials: [
+          ...state.credentials,
+          {
+            ...action.payload,
+            id: uuidv4()
+          }
+        ]
       };
       
     case 'REMOVE_CREDENTIAL':
       return {
         ...state,
-        credentials: state.credentials.filter(cred => cred.id !== action.payload)
+        credentials: state.credentials.filter(
+          cred => cred.id !== action.payload
+        )
       };
       
     case 'SET_ERROR':
@@ -161,44 +188,36 @@ const aiReducer = (state: AIState, action: AIAction): AIState => {
   }
 };
 
-// AI Provider component
+// Create context
+const AIContext = createContext<AIContextType | undefined>(undefined);
+
+// Provider component
 export const AIProvider: React.FC<AIProviderProps> = ({ 
-  children,
-  initialConfig = {}
+  children, 
+  initialConfig 
 }) => {
-  const [state, dispatch] = useReducer(aiReducer, {
-    ...initialState,
-    config: {
-      ...defaultConfig,
-      ...initialConfig
-    }
-  });
+  const [state, dispatch] = useReducer(AIReducer, initialState);
   
-  // Initialize AI assistant
+  // Initialize on first render if initial config provided
   React.useEffect(() => {
-    if (!state.initialized) {
+    if (initialConfig && !state.initialized) {
       dispatch({ 
         type: 'INITIALIZE_AI', 
-        payload: {
-          ...state.config,
-          ...initialConfig
-        }
+        payload: initialConfig 
       });
       
       // Add welcome message
       dispatch({
         type: 'ADD_MESSAGE',
         payload: {
-          id: uuid(),
           sender: 'ai',
-          timestamp: new Date(),
-          content: `Hello! I'm ${state.config.personalization.name}, your AI assistant. How can I help you today?`
+          content: `Hello! I'm your Aetherion Quantum AI assistant. I'm here to help you safely manage your transactions and provide security insights for your blockchain activities.`,
         }
       });
     }
-  }, [state.initialized, state.config, initialConfig]);
+  }, [initialConfig, state.initialized]);
   
-  // Set up context functions
+  // Define context methods
   const toggleAI = (enabled: boolean) => {
     dispatch({ type: 'TOGGLE_AI', payload: enabled });
   };
@@ -208,14 +227,7 @@ export const AIProvider: React.FC<AIProviderProps> = ({
   };
   
   const addMessage = (message: Omit<ChatMessage, 'id' | 'timestamp'>) => {
-    dispatch({
-      type: 'ADD_MESSAGE',
-      payload: {
-        ...message,
-        id: uuid(),
-        timestamp: new Date()
-      }
-    });
+    dispatch({ type: 'ADD_MESSAGE', payload: message });
   };
   
   const clearMessages = () => {
@@ -223,13 +235,7 @@ export const AIProvider: React.FC<AIProviderProps> = ({
   };
   
   const addPendingTransaction = (transaction: Omit<Transaction, 'id'>) => {
-    dispatch({
-      type: 'ADD_PENDING_TRANSACTION',
-      payload: {
-        ...transaction,
-        id: Math.floor(Math.random() * 1000000) // In a real app, this would be a DB-generated ID
-      }
-    });
+    dispatch({ type: 'ADD_PENDING_TRANSACTION', payload: transaction });
   };
   
   const removePendingTransaction = (id: number) => {
@@ -237,37 +243,24 @@ export const AIProvider: React.FC<AIProviderProps> = ({
   };
   
   const addSecurityScan = (scan: Omit<SecurityScan, 'id'>) => {
-    dispatch({
-      type: 'ADD_SECURITY_SCAN',
-      payload: {
-        ...scan,
-        id: Math.floor(Math.random() * 1000000) // In a real app, this would be a DB-generated ID
-      }
-    });
+    dispatch({ type: 'ADD_SECURITY_SCAN', payload: scan });
   };
   
   const resolveSecurityIssue = (scanId: number, issueId: number) => {
-    dispatch({
-      type: 'RESOLVE_SECURITY_ISSUE',
-      payload: { scanId, issueId }
+    dispatch({ 
+      type: 'RESOLVE_SECURITY_ISSUE', 
+      payload: { scanId, issueId } 
     });
   };
   
   const addCredential = (credential: Omit<SecureCredential, 'id'>) => {
-    dispatch({
-      type: 'ADD_CREDENTIAL',
-      payload: {
-        ...credential,
-        id: uuid()
-      }
-    });
+    dispatch({ type: 'ADD_CREDENTIAL', payload: credential });
   };
   
   const removeCredential = (id: string) => {
     dispatch({ type: 'REMOVE_CREDENTIAL', payload: id });
   };
   
-  // Context value
   const value = {
     state,
     toggleAI,
@@ -289,7 +282,7 @@ export const AIProvider: React.FC<AIProviderProps> = ({
   );
 };
 
-// Custom hook to use the AI context
+// Custom hook for using the AI context
 export const useAI = (): AIContextType => {
   const context = useContext(AIContext);
   
