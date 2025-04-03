@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import AIAssistantDemo from "./pages/AIAssistantDemo";
+import LandingPage from "./pages/LandingPage";
 
 // Create page components
 const SimpleDashboard = () => (
@@ -37,7 +38,7 @@ const SimpleSettings = () => (
     </div>
     <div className="mt-4">
       <Link href="/">
-        <Button>Back to Dashboard</Button>
+        <Button>Back to Home</Button>
       </Link>
     </div>
   </div>
@@ -53,7 +54,7 @@ const SimpleAssets = () => (
     </div>
     <div className="mt-4">
       <Link href="/">
-        <Button>Back to Dashboard</Button>
+        <Button>Back to Home</Button>
       </Link>
     </div>
   </div>
@@ -64,7 +65,7 @@ const SimpleNotFound = () => (
     <h1 className="text-2xl font-bold mb-4">Page Not Found</h1>
     <div className="mt-4">
       <Link href="/">
-        <Button>Back to Dashboard</Button>
+        <Button>Back to Home</Button>
       </Link>
     </div>
   </div>
@@ -73,10 +74,15 @@ const SimpleNotFound = () => (
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="app-container w-full h-full bg-background">
-        <header className="bg-background border-b p-4 flex justify-between items-center">
-          <h1 className="font-bold text-xl">Aetherion UI Wallet</h1>
+      <div className="app-container w-full h-full">
+        <div className="flex justify-between items-center p-4 bg-background border-b fixed top-0 left-0 right-0 z-50">
+          <Link href="/">
+            <h1 className="font-bold text-xl cursor-pointer">Aetherion</h1>
+          </Link>
           <div className="flex space-x-2">
+            <Link href="/dashboard">
+              <Button variant="ghost" size="sm">Dashboard</Button>
+            </Link>
             <Link href="/ai-assistant">
               <Button variant="ghost" size="sm">AI Assistant</Button>
             </Link>
@@ -84,11 +90,12 @@ function App() {
               <Button variant="ghost" size="sm">Settings</Button>
             </Link>
           </div>
-        </header>
+        </div>
         
-        <main className="h-[calc(100%-4rem)] overflow-auto">
+        <main className="pt-[60px] h-[calc(100%-60px)] overflow-auto">
           <Switch>
-            <Route path="/" component={SimpleDashboard} />
+            <Route path="/" component={LandingPage} />
+            <Route path="/dashboard" component={SimpleDashboard} />
             <Route path="/settings" component={SimpleSettings} />
             <Route path="/assets" component={SimpleAssets} />
             <Route path="/ai-assistant" component={AIAssistantDemo} />
