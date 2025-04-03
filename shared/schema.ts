@@ -479,9 +479,15 @@ export type InsertWalletHealthIssue = z.infer<typeof insertWalletHealthIssueSche
 export const notificationPreferences = pgTable("notification_preferences", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id),
+  // Phone notification fields
   phoneNumber: text("phone_number"),
   isPhoneVerified: boolean("is_phone_verified").default(false),
   smsEnabled: boolean("sms_enabled").default(false),
+  // Matrix notification fields (open-source alternative to Twilio)
+  matrixId: text("matrix_id"), // Format: @username:homeserver.org
+  isMatrixVerified: boolean("is_matrix_verified").default(false),
+  matrixEnabled: boolean("matrix_enabled").default(false),
+  // Alert types
   transactionAlerts: boolean("transaction_alerts").default(true),
   securityAlerts: boolean("security_alerts").default(true), 
   priceAlerts: boolean("price_alerts").default(false),

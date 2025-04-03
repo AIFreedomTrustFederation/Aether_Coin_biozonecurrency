@@ -116,8 +116,12 @@ export interface IStorage {
   createNotificationPreference(preference: InsertNotificationPreference): Promise<NotificationPreference>;
   updateNotificationPreferences(userId: number, data: Partial<NotificationPreference>): Promise<NotificationPreference | undefined>;
   updateNotificationPreference(id: number, updates: Partial<NotificationPreference>): Promise<NotificationPreference | undefined>;
+  // Phone notification methods
   updatePhoneNumber(userId: number, phoneNumber: string, isVerified: boolean): Promise<NotificationPreference | undefined>;
   verifyPhoneNumber(userId: number, isVerified: boolean): Promise<NotificationPreference | undefined>;
+  // Matrix notification methods (open-source alternative to SMS)
+  updateMatrixId(userId: number, matrixId: string, isVerified: boolean): Promise<NotificationPreference | undefined>;
+  verifyMatrixId(userId: number, isVerified: boolean): Promise<NotificationPreference | undefined>;
 }
 
 // In-memory storage implementation
@@ -793,6 +797,40 @@ export class MemStorage implements IStorage {
     return updatedPreference;
   }
   
+  async updateMatrixId(userId: number, matrixId: string, isVerified: boolean = false): Promise<NotificationPreference | undefined> {
+    // Find the user's notification preference
+    const preference = await this.getNotificationPreferenceByUserId(userId);
+    if (!preference) return undefined;
+    
+    const updates: Partial<NotificationPreference> = { 
+      matrixId, 
+      isMatrixVerified: isVerified,
+      updatedAt: new Date()
+    };
+    
+    const updatedPreference = { ...preference, ...updates };
+    this.notificationPreferences.set(preference.id, updatedPreference);
+    return updatedPreference;
+  }
+  
+  async verifyMatrixId(userId: number, isVerified: boolean): Promise<NotificationPreference | undefined> {
+    // Find the user's notification preference
+    const preference = await this.getNotificationPreferenceByUserId(userId);
+    if (!preference) return undefined;
+    
+    // If user doesn't have a Matrix ID, we can't verify
+    if (!preference.matrixId) return undefined;
+    
+    const updates: Partial<NotificationPreference> = { 
+      isMatrixVerified: isVerified,
+      updatedAt: new Date()
+    };
+    
+    const updatedPreference = { ...preference, ...updates };
+    this.notificationPreferences.set(preference.id, updatedPreference);
+    return updatedPreference;
+  }
+  
   // Initialize demo data
   private initializeDemoData() {
     // Create a demo user
@@ -833,9 +871,15 @@ export class MemStorage implements IStorage {
       // Create notification preferences for the user
       const notificationPrefs: InsertNotificationPreference = {
         userId: user.id,
+        // Phone notification settings
         phoneNumber: null,
         isPhoneVerified: false,
         smsEnabled: false,
+        // Matrix notification settings (open-source alternative)
+        matrixId: null,
+        isMatrixVerified: false,
+        matrixEnabled: true,
+        // Alert types
         transactionAlerts: true,
         securityAlerts: true,
         priceAlerts: false,

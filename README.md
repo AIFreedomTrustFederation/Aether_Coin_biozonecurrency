@@ -8,7 +8,9 @@ A cutting-edge blockchain wallet platform that delivers a secure and engaging cr
 
 - Secure quantum-resistant blockchain wallet management
 - Real-time transaction tracking and notifications
-- SMS alerts for critical security and transaction events
+- Multiple notification channels:
+  - SMS alerts for critical security and transaction events
+  - Open-source Matrix protocol integration for secure notifications
 - Advanced portfolio analytics and visualization
 - Smart contract deployment and interaction
 - Security health scoring for wallet safety
@@ -21,7 +23,10 @@ A cutting-edge blockchain wallet platform that delivers a secure and engaging cr
 - **Backend**: Node.js, Express
 - **Database**: PostgreSQL with Drizzle ORM
 - **Authentication**: Session-based with secure cookie handling
-- **SMS Notifications**: Twilio API integration
+- **Notifications**:
+  - SMS: Twilio API integration
+  - Open-source: Matrix protocol (matrix-js-sdk)
+- **Security**: Quantum-resistant API validation layer
 - **Charts**: Recharts for data visualization
 - **State Management**: React Query + Context
 - **Routing**: Wouter for lightweight client-side routing
@@ -32,7 +37,9 @@ A cutting-edge blockchain wallet platform that delivers a secure and engaging cr
 
 - Node.js (v18+)
 - PostgreSQL database
-- Twilio account for SMS notifications
+- For notifications (at least one of):
+  - Twilio account for SMS notifications
+  - Matrix homeserver access for open-source notifications
 
 ### Installation
 
@@ -91,9 +98,13 @@ This project includes several helpful scripts to assist with development:
 - **./script_runner.sh reset**: Reset project to a clean state
 - **./env-manager.sh check**: Check for missing environment variables
 
-## SMS Notification System
+## Notification Systems
 
-The application uses Twilio for sending SMS notifications to users for:
+The application supports multiple notification channels for maximum flexibility and user choice:
+
+### SMS Notifications
+
+SMS notifications via Twilio send alerts to users for:
 
 1. **Transaction Alerts**: Notify users of incoming/outgoing transactions
 2. **Security Alerts**: Warn about suspicious activities or login attempts
@@ -109,7 +120,36 @@ To configure SMS notifications:
    TWILIO_PHONE_NUMBER=your_twilio_phone
    ```
 
-2. Users can manage their notification preferences in the Settings page of the application.
+2. Ensure SMS notifications are enabled in the feature flags:
+   ```
+   ENABLE_SMS_NOTIFICATIONS=true
+   ```
+
+### Matrix Notifications (Open Source Alternative)
+
+The application also integrates with Matrix, an open-source, decentralized communication protocol:
+
+1. **Benefits of Matrix**:
+   - Fully open-source and self-hostable
+   - End-to-end encryption support
+   - No dependence on proprietary services
+   - Federated architecture for resilience
+
+To configure Matrix notifications:
+
+1. Add your Matrix server credentials to the `.env` file:
+   ```
+   MATRIX_SERVER_URL=https://matrix.org (or your self-hosted instance)
+   MATRIX_USER_ID=@yourbotuser:matrix.org
+   MATRIX_ACCESS_TOKEN=your_matrix_access_token
+   ```
+
+2. Enable Matrix notifications in the feature flags:
+   ```
+   ENABLE_MATRIX_NOTIFICATIONS=true
+   ```
+
+Users can manage their notification preferences for both channels in the Settings page of the application.
 
 ## Database Management
 
@@ -158,3 +198,5 @@ This project is licensed under the MIT License - see the [LICENSE](./LICENSE) fi
 - The shadcn/ui team for their excellent component library
 - The Drizzle ORM team for their TypeScript-first database toolkit
 - The Twilio team for their reliable messaging API
+- The Matrix.org team for their open-source communication protocol
+- The matrix-js-sdk maintainers for their JavaScript SDK

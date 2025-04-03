@@ -537,4 +537,56 @@ export class PgStorage implements IStorage {
       return undefined;
     }
   }
+  
+  async updateMatrixId(userId: number, matrixId: string, isVerified: boolean = false): Promise<NotificationPreference | undefined> {
+    try {
+      // Find the user's notification preference
+      const preference = await this.getNotificationPreferenceByUserId(userId);
+      if (!preference) return undefined;
+      
+      const now = new Date();
+      const updates = { 
+        matrixId: matrixId, 
+        isMatrixVerified: isVerified,
+        updatedAt: now
+      };
+      
+      const result = await db.update(notificationPreferences)
+        .set(updates)
+        .where(eq(notificationPreferences.id, preference.id))
+        .returning();
+      
+      return result.length ? result[0] : undefined;
+    } catch (error) {
+      console.error('Error updating Matrix ID:', error);
+      return undefined;
+    }
+  }
+  
+  async verifyMatrixId(userId: number, isVerified: boolean): Promise<NotificationPreference | undefined> {
+    try {
+      // Find the user's notification preference
+      const preference = await this.getNotificationPreferenceByUserId(userId);
+      if (!preference) return undefined;
+      
+      // If user doesn't have a Matrix ID, we can't verify
+      if (!preference.matrixId) return undefined;
+      
+      const now = new Date();
+      const updates = { 
+        isMatrixVerified: isVerified,
+        updatedAt: now
+      };
+      
+      const result = await db.update(notificationPreferences)
+        .set(updates)
+        .where(eq(notificationPreferences.id, preference.id))
+        .returning();
+      
+      return result.length ? result[0] : undefined;
+    } catch (error) {
+      console.error('Error verifying Matrix ID:', error);
+      return undefined;
+    }
+  }
 }

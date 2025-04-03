@@ -8,7 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Open-source Matrix protocol integration for secure notifications
 - SMS notification support through Twilio integration
+- Quantum-resistant API validation layer between frontend and backend
+- Feature flag system for enabling/disabling notification channels
 - Comprehensive backup system with `backup.sh`
 - Development workflow scripts for easier project management
 - Environment variable management system
@@ -17,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Repository maintenance tools and scripts
 
 ### Changed
+- Implemented open-source alternatives for key system components
+- Enhanced notification system with modular provider architecture
 - Simplified UI rendering approach to improve stability
 - Replaced complex animations with standard navigation patterns
 - Restructured application layout for better performance
