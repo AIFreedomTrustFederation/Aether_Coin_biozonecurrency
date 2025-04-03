@@ -1,32 +1,68 @@
-import React, { createContext, useReducer, useContext, useCallback } from 'react';
-import { AIState, AIAction, AIConfig, ChatMessage, Transaction, SecurityScan, SecurityIssue } from '../types';
-import { v4 as uuidv4 } from 'uuid';
+import React, { createContext, useContext, useReducer } from 'react';
+import { v4 as uuid } from 'uuid';
+import { 
+  AIState, 
+  AIAction, 
+  AIConfig, 
+  AIProviderProps,
+  AIContextType,
+  ChatMessage, 
+  Transaction, 
+  SecurityScan, 
+  SecurityIssue, 
+  SecureCredential 
+} from '../types';
 
 // Default AI configuration
 const defaultConfig: AIConfig = {
-  enableVoice: false,
-  language: 'en',
-  aiResponseStyle: 'detailed',
+  enabled: true,
+  transactionMonitoring: true,
+  securityScanning: true,
+  credentialManagement: true,
+  holdPeriodHours: 24,
+  autoVerification: true,
   notificationLevel: 'important',
-  maxAlertThreshold: 5,
-  enablePhishingDetection: true,
-  autoVerifyTransactions: true
+  voiceEnabled: false,
+  personalization: {
+    name: 'Aetherion Assistant',
+    appearance: 'default',
+    responseLength: 'balanced'
+  }
 };
 
-// Initial state
+// Initial state for the AI assistant
 const initialState: AIState = {
+  initialized: false,
   config: defaultConfig,
-  chatHistory: [],
+  messages: [],
   pendingTransactions: [],
   securityScans: [],
-  storedCredentials: [],
-  isAssistantActive: true,
-  currentView: 'chat'
+  credentials: [],
+  isProcessing: false
 };
 
-// Reducer for handling actions
+// Create context
+const AIContext = createContext<AIContextType | undefined>(undefined);
+
+// AI state reducer
 const aiReducer = (state: AIState, action: AIAction): AIState => {
   switch (action.type) {
+    case 'INITIALIZE_AI':
+      return {
+        ...state,
+        initialized: true,
+        config: action.payload
+      };
+      
+    case 'TOGGLE_AI':
+      return {
+        ...state,
+        config: {
+          ...state.config,
+          enabled: action.payload
+        }
+      };
+      
     case 'UPDATE_CONFIG':
       return {
         ...state,
@@ -39,19 +75,19 @@ const aiReducer = (state: AIState, action: AIAction): AIState => {
     case 'ADD_MESSAGE':
       return {
         ...state,
-        chatHistory: [action.payload, ...state.chatHistory]
+        messages: [...state.messages, action.payload]
       };
       
-    case 'CLEAR_HISTORY':
+    case 'CLEAR_MESSAGES':
       return {
         ...state,
-        chatHistory: []
+        messages: []
       };
       
     case 'ADD_PENDING_TRANSACTION':
       return {
         ...state,
-        pendingTransactions: [action.payload, ...state.pendingTransactions]
+        pendingTransactions: [...state.pendingTransactions, action.payload]
       };
       
     case 'REMOVE_PENDING_TRANSACTION':
@@ -63,48 +99,61 @@ const aiReducer = (state: AIState, action: AIAction): AIState => {
     case 'ADD_SECURITY_SCAN':
       return {
         ...state,
-        securityScans: [action.payload, ...state.securityScans]
+        securityScans: [...state.securityScans, action.payload],
+        lastScanTimestamp: new Date()
       };
       
     case 'RESOLVE_SECURITY_ISSUE':
       return {
         ...state,
-        securityScans: state.securityScans.map(scan => 
-          scan.id === action.payload.scanId 
-            ? {
-                ...scan,
-                issues: scan.issues.map(issue => 
-                  issue.id === action.payload.issueId 
-                    ? { ...issue, resolved: true, resolvedAt: new Date() } 
-                    : issue
-                )
-              }
-            : scan
-        )
-      };
-      
-    case 'SET_ACTIVE':
-      return {
-        ...state,
-        isAssistantActive: action.payload
-      };
-      
-    case 'SET_VIEW':
-      return {
-        ...state,
-        currentView: action.payload
+        securityScans: state.securityScans.map(scan => {
+          if (scan.id === action.payload.scanId) {
+            return {
+              ...scan,
+              issues: scan.issues.map(issue => {
+                if (issue.id === action.payload.issueId) {
+                  return {
+                    ...issue,
+                    resolved: true,
+                    resolvedAt: new Date()
+                  };
+                }
+                return issue;
+              })
+            };
+          }
+          return scan;
+        })
       };
       
     case 'ADD_CREDENTIAL':
       return {
         ...state,
-        storedCredentials: [...state.storedCredentials, action.payload]
+        credentials: [...state.credentials, action.payload]
       };
       
     case 'REMOVE_CREDENTIAL':
       return {
         ...state,
-        storedCredentials: state.storedCredentials.filter(cred => cred !== action.payload)
+        credentials: state.credentials.filter(cred => cred.id !== action.payload)
+      };
+      
+    case 'SET_ERROR':
+      return {
+        ...state,
+        error: action.payload
+      };
+      
+    case 'CLEAR_ERROR':
+      return {
+        ...state,
+        error: undefined
+      };
+      
+    case 'SET_PROCESSING':
+      return {
+        ...state,
+        isProcessing: action.payload
       };
       
     default:
@@ -112,117 +161,124 @@ const aiReducer = (state: AIState, action: AIAction): AIState => {
   }
 };
 
-// Define context type
-interface AIContextType {
-  state: AIState;
-  dispatch: React.Dispatch<AIAction>;
-  sendMessage: (content: string) => void;
-  clearHistory: () => void;
-  updateConfig: (config: Partial<AIConfig>) => void;
-  setActive: (active: boolean) => void;
-  setView: (view: AIState['currentView']) => void;
-  addPendingTransaction: (transaction: Transaction) => void;
-  removePendingTransaction: (id: number) => void;
-  addSecurityScan: (scan: SecurityScan) => void;
-  resolveSecurityIssue: (scanId: number, issueId: number) => void;
-  storeCredential: (credential: string) => void;
-  removeCredential: (id: string) => void;
-}
-
-// Create context
-const AIContext = createContext<AIContextType | undefined>(undefined);
-
-// Provider component
-export const AIProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [state, dispatch] = useReducer(aiReducer, initialState);
+// AI Provider component
+export const AIProvider: React.FC<AIProviderProps> = ({ 
+  children,
+  initialConfig = {}
+}) => {
+  const [state, dispatch] = useReducer(aiReducer, {
+    ...initialState,
+    config: {
+      ...defaultConfig,
+      ...initialConfig
+    }
+  });
   
-  // Helper function to send a message
-  const sendMessage = useCallback((content: string) => {
-    const userMessage: ChatMessage = {
-      id: uuidv4(),
-      role: 'user',
-      content,
-      timestamp: new Date()
-    };
-    
-    dispatch({ type: 'ADD_MESSAGE', payload: userMessage });
-    
-    // Simulate AI response after a short delay
-    setTimeout(() => {
-      const aiResponse: ChatMessage = {
-        id: uuidv4(),
-        role: 'assistant',
-        content: `I'm processing your request: "${content}". This is a placeholder response. In the real implementation, this would be a response from the actual AI model.`,
-        timestamp: new Date()
-      };
+  // Initialize AI assistant
+  React.useEffect(() => {
+    if (!state.initialized) {
+      dispatch({ 
+        type: 'INITIALIZE_AI', 
+        payload: {
+          ...state.config,
+          ...initialConfig
+        }
+      });
       
-      dispatch({ type: 'ADD_MESSAGE', payload: aiResponse });
-    }, 1000);
-  }, []);
+      // Add welcome message
+      dispatch({
+        type: 'ADD_MESSAGE',
+        payload: {
+          id: uuid(),
+          sender: 'ai',
+          timestamp: new Date(),
+          content: `Hello! I'm ${state.config.personalization.name}, your AI assistant. How can I help you today?`
+        }
+      });
+    }
+  }, [state.initialized, state.config, initialConfig]);
   
-  // Helper function to clear chat history
-  const clearHistory = useCallback(() => {
-    dispatch({ type: 'CLEAR_HISTORY' });
-  }, []);
+  // Set up context functions
+  const toggleAI = (enabled: boolean) => {
+    dispatch({ type: 'TOGGLE_AI', payload: enabled });
+  };
   
-  // Helper function to update config
-  const updateConfig = useCallback((config: Partial<AIConfig>) => {
+  const updateConfig = (config: Partial<AIConfig>) => {
     dispatch({ type: 'UPDATE_CONFIG', payload: config });
-  }, []);
+  };
   
-  // Helper function to set assistant active state
-  const setActive = useCallback((active: boolean) => {
-    dispatch({ type: 'SET_ACTIVE', payload: active });
-  }, []);
+  const addMessage = (message: Omit<ChatMessage, 'id' | 'timestamp'>) => {
+    dispatch({
+      type: 'ADD_MESSAGE',
+      payload: {
+        ...message,
+        id: uuid(),
+        timestamp: new Date()
+      }
+    });
+  };
   
-  // Helper function to set current view
-  const setView = useCallback((view: AIState['currentView']) => {
-    dispatch({ type: 'SET_VIEW', payload: view });
-  }, []);
+  const clearMessages = () => {
+    dispatch({ type: 'CLEAR_MESSAGES' });
+  };
   
-  // Helper function to add a pending transaction
-  const addPendingTransaction = useCallback((transaction: Transaction) => {
-    dispatch({ type: 'ADD_PENDING_TRANSACTION', payload: transaction });
-  }, []);
+  const addPendingTransaction = (transaction: Omit<Transaction, 'id'>) => {
+    dispatch({
+      type: 'ADD_PENDING_TRANSACTION',
+      payload: {
+        ...transaction,
+        id: Math.floor(Math.random() * 1000000) // In a real app, this would be a DB-generated ID
+      }
+    });
+  };
   
-  // Helper function to remove a pending transaction
-  const removePendingTransaction = useCallback((id: number) => {
+  const removePendingTransaction = (id: number) => {
     dispatch({ type: 'REMOVE_PENDING_TRANSACTION', payload: id });
-  }, []);
+  };
   
-  // Helper function to add a security scan
-  const addSecurityScan = useCallback((scan: SecurityScan) => {
-    dispatch({ type: 'ADD_SECURITY_SCAN', payload: scan });
-  }, []);
+  const addSecurityScan = (scan: Omit<SecurityScan, 'id'>) => {
+    dispatch({
+      type: 'ADD_SECURITY_SCAN',
+      payload: {
+        ...scan,
+        id: Math.floor(Math.random() * 1000000) // In a real app, this would be a DB-generated ID
+      }
+    });
+  };
   
-  // Helper function to resolve a security issue
-  const resolveSecurityIssue = useCallback((scanId: number, issueId: number) => {
-    dispatch({ type: 'RESOLVE_SECURITY_ISSUE', payload: { scanId, issueId } });
-  }, []);
+  const resolveSecurityIssue = (scanId: number, issueId: number) => {
+    dispatch({
+      type: 'RESOLVE_SECURITY_ISSUE',
+      payload: { scanId, issueId }
+    });
+  };
   
-  // Helper function to store a credential
-  const storeCredential = useCallback((credential: string) => {
-    dispatch({ type: 'ADD_CREDENTIAL', payload: credential });
-  }, []);
+  const addCredential = (credential: Omit<SecureCredential, 'id'>) => {
+    dispatch({
+      type: 'ADD_CREDENTIAL',
+      payload: {
+        ...credential,
+        id: uuid()
+      }
+    });
+  };
   
-  // Helper function to remove a credential
-  const removeCredential = useCallback((id: string) => {
+  const removeCredential = (id: string) => {
     dispatch({ type: 'REMOVE_CREDENTIAL', payload: id });
-  }, []);
+  };
   
+  // Context value
   const value = {
     state,
-    dispatch,
-    sendMessage,
-    clearHistory,
+    toggleAI,
     updateConfig,
-    setActive,
-    setView,
+    addMessage,
+    clearMessages,
     addPendingTransaction,
     removePendingTransaction,
     addSecurityScan,
     resolveSecurityIssue,
-    storeCredential,
+    addCredential,
     removeCredential
   };
   
@@ -234,7 +290,7 @@ export const AIProvider: React.FC<{ children: React.ReactNode }> = ({ children }
 };
 
 // Custom hook to use the AI context
-export const useAI = () => {
+export const useAI = (): AIContextType => {
   const context = useContext(AIContext);
   
   if (context === undefined) {
@@ -243,3 +299,5 @@ export const useAI = () => {
   
   return context;
 };
+
+export default AIContext;

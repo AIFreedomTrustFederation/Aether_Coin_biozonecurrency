@@ -1,349 +1,515 @@
 import React, { useState } from 'react';
-import { useAI } from '../contexts/AIContext';
 import { 
-  Bell, 
-  VolumeX, 
-  Volume2, 
-  Languages, 
-  Shield, 
-  MessageSquare,
-  RotateCcw, 
-  Trash2,
-  AlertTriangle,
-  Globe,
-  Info,
-  Lock
-} from 'lucide-react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardFooter, 
+  CardHeader, 
+  CardTitle 
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Slider } from '@/components/ui/slider';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { 
+  Select, 
+  SelectContent, 
+  SelectGroup, 
+  SelectItem, 
+  SelectLabel, 
+  SelectTrigger, 
+  SelectValue 
 } from '@/components/ui/select';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
+import { Slider } from '@/components/ui/slider';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useToast } from '@/hooks/use-toast';
+import { 
+  Settings, 
+  BellRing, 
+  Shield, 
+  MessageSquare, 
+  Key, 
+  CheckCircle2, 
+  AlertTriangle,
+  Trash2,
+  Mic,
+  Languages
+} from 'lucide-react';
+import { useAI } from '../contexts/AIContext';
 import { AISettingsProps } from '../types';
 
+/**
+ * AISettings component for configuring AI assistant preferences,
+ * security options, and notification settings.
+ */
 const AISettings: React.FC<AISettingsProps> = ({ className = '' }) => {
-  const { state, updateConfig, clearHistory } = useAI();
-  const { config } = state;
+  const { state, updateConfig, clearConversation, removeCredential } = useAI();
+  const { config, storedCredentials } = state;
+  const { toast } = useToast();
+  const [matrixId, setMatrixId] = useState(config.matrixId || '');
+  const [currentTab, setCurrentTab] = useState('general');
   
-  // Local state for confirmation dialogs
-  const [showClearHistoryDialog, setShowClearHistoryDialog] = useState(false);
-  
-  // Handle updates for toggles
-  const handleToggleChange = (key: keyof typeof config, value: boolean) => {
-    updateConfig({ [key]: value });
+  // Handle save matrix ID
+  const handleSaveMatrixId = () => {
+    if (!matrixId) {
+      toast({
+        variant: 'destructive',
+        title: 'Matrix ID Required',
+        description: 'Please enter a valid Matrix ID to enable Matrix notifications.'
+      });
+      return;
+    }
+    
+    updateConfig({ matrixId });
+    
+    toast({
+      title: 'Matrix ID Saved',
+      description: 'Your Matrix ID has been updated successfully.'
+    });
   };
   
-  // Handle updates for select inputs
-  const handleSelectChange = (key: keyof typeof config, value: string) => {
+  // Handle toggle for boolean settings
+  const handleToggleSetting = (key: keyof typeof config, value: boolean) => {
     updateConfig({ [key]: value });
+    
+    toast({
+      title: 'Setting Updated',
+      description: `${key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())} has been ${value ? 'enabled' : 'disabled'}.`
+    });
   };
   
-  // Handle updates for numeric slider
-  const handleSliderChange = (value: number[]) => {
+  // Handle notification level change
+  const handleNotificationLevelChange = (value: string) => {
+    updateConfig({ 
+      notificationLevel: value as 'all' | 'important' | 'minimal' 
+    });
+    
+    toast({
+      title: 'Notification Level Updated',
+      description: `Notifications set to: ${value.charAt(0).toUpperCase() + value.slice(1)}`
+    });
+  };
+  
+  // Handle AI response style change
+  const handleResponseStyleChange = (value: string) => {
+    updateConfig({ 
+      aiResponseStyle: value as 'concise' | 'detailed'
+    });
+    
+    toast({
+      title: 'AI Response Style Updated',
+      description: `AI responses will now be more ${value}.`
+    });
+  };
+  
+  // Handle language change
+  const handleLanguageChange = (value: string) => {
+    updateConfig({ language: value });
+    
+    toast({
+      title: 'Language Updated',
+      description: `Interface language set to: ${value.toUpperCase()}`
+    });
+  };
+  
+  // Handle alert threshold change
+  const handleAlertThresholdChange = (value: number[]) => {
     updateConfig({ maxAlertThreshold: value[0] });
   };
   
-  // Handle clear history
-  const handleClearHistory = () => {
-    clearHistory();
-    setShowClearHistoryDialog(false);
+  // Handle clear conversation
+  const handleClearConversation = () => {
+    clearConversation();
+    
+    toast({
+      title: 'Conversation Cleared',
+      description: 'Your chat history has been cleared.'
+    });
+  };
+  
+  // Handle credential removal
+  const handleRemoveCredential = (id: string, name: string) => {
+    removeCredential(id);
+    
+    toast({
+      title: 'Credential Removed',
+      description: `"${name}" has been removed from secure storage.`
+    });
   };
   
   return (
     <div className={`space-y-6 ${className}`}>
-      <div>
-        <h2 className="text-xl font-semibold mb-1 flex items-center">
-          <Bell className="mr-2 h-5 w-5 text-primary" />
-          AI Assistant Settings
-        </h2>
-        <p className="text-muted-foreground text-sm">
-          Customize your AI assistant's behavior and preferences
-        </p>
+      <div className="flex items-center gap-2">
+        <Settings className="h-5 w-5" />
+        <h2 className="text-xl font-semibold">AI Assistant Settings</h2>
       </div>
       
-      <Tabs defaultValue="general" className="w-full">
-        <TabsList className="grid grid-cols-3">
+      <Tabs defaultValue="general" value={currentTab} onValueChange={setCurrentTab}>
+        <TabsList className="grid grid-cols-4 mb-4">
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="security">Security</TabsTrigger>
-          <TabsTrigger value="data">Data Management</TabsTrigger>
+          <TabsTrigger value="notifications">Notifications</TabsTrigger>
+          <TabsTrigger value="credentials">Credentials</TabsTrigger>
         </TabsList>
         
-        {/* General Settings Tab */}
-        <TabsContent value="general" className="space-y-4 p-1">
+        {/* General Settings */}
+        <TabsContent value="general" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Interface Preferences</CardTitle>
-              <CardDescription>Configure how the AI interacts with you</CardDescription>
+              <CardTitle>General Preferences</CardTitle>
+              <CardDescription>
+                Configure how the AI assistant communicates with you
+              </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label className="text-base">Voice Interaction</Label>
-                  <p className="text-sm text-muted-foreground">Enable voice commands and responses</p>
-                </div>
-                <Switch
-                  checked={config.enableVoice}
-                  onCheckedChange={(checked) => handleToggleChange('enableVoice', checked)}
-                />
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label className="text-base">Response Style</Label>
-                  <p className="text-sm text-muted-foreground">Set how detailed AI responses should be</p>
-                </div>
-                <Select 
-                  value={config.aiResponseStyle} 
-                  onValueChange={(value) => handleSelectChange('aiResponseStyle', value)}
+            <CardContent className="space-y-6">
+              {/* Language Selection */}
+              <div className="space-y-2">
+                <Label htmlFor="language" className="flex items-center gap-2">
+                  <Languages className="h-4 w-4" />
+                  Interface Language
+                </Label>
+                <Select
+                  value={config.language}
+                  onValueChange={handleLanguageChange}
                 >
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Select style" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="detailed">Detailed</SelectItem>
-                    <SelectItem value="concise">Concise</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <div className="flex items-center gap-2">
-                    <Label className="text-base">Language</Label>
-                    <Languages className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                  <p className="text-sm text-muted-foreground">Set your preferred language</p>
-                </div>
-                <Select 
-                  value={config.language} 
-                  onValueChange={(value) => handleSelectChange('language', value)}
-                >
-                  <SelectTrigger className="w-[180px]">
+                  <SelectTrigger id="language">
                     <SelectValue placeholder="Select language" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="en">English</SelectItem>
-                    <SelectItem value="es">Spanish</SelectItem>
-                    <SelectItem value="fr">French</SelectItem>
-                    <SelectItem value="de">German</SelectItem>
-                    <SelectItem value="ja">Japanese</SelectItem>
-                    <SelectItem value="zh">Chinese</SelectItem>
-                    <SelectItem value="ru">Russian</SelectItem>
+                    <SelectGroup>
+                      <SelectLabel>Languages</SelectLabel>
+                      <SelectItem value="en">English</SelectItem>
+                      <SelectItem value="es">Spanish</SelectItem>
+                      <SelectItem value="fr">French</SelectItem>
+                      <SelectItem value="de">German</SelectItem>
+                      <SelectItem value="ja">Japanese</SelectItem>
+                      <SelectItem value="zh">Chinese</SelectItem>
+                    </SelectGroup>
                   </SelectContent>
                 </Select>
               </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle>Notification Settings</CardTitle>
-              <CardDescription>Control which notifications you receive</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label className="text-base">Notification Level</Label>
-                  <p className="text-sm text-muted-foreground">Choose which alerts you want to receive</p>
-                </div>
-                <Select 
-                  value={config.notificationLevel} 
-                  onValueChange={(value: 'all' | 'important' | 'none') => handleSelectChange('notificationLevel', value)}
+
+              {/* AI Response Style */}
+              <div className="space-y-2">
+                <Label htmlFor="responseStyle" className="flex items-center gap-2">
+                  <MessageSquare className="h-4 w-4" />
+                  AI Response Style
+                </Label>
+                <Select
+                  value={config.aiResponseStyle}
+                  onValueChange={handleResponseStyleChange}
                 >
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Select level" />
+                  <SelectTrigger id="responseStyle">
+                    <SelectValue placeholder="Select style" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Notifications</SelectItem>
-                    <SelectItem value="important">Important Only</SelectItem>
-                    <SelectItem value="none">None</SelectItem>
+                    <SelectItem value="concise">Concise</SelectItem>
+                    <SelectItem value="detailed">Detailed</SelectItem>
                   </SelectContent>
                 </Select>
+                <p className="text-sm text-muted-foreground">
+                  {config.aiResponseStyle === 'concise' 
+                    ? 'Concise: Short and to-the-point responses' 
+                    : 'Detailed: More comprehensive explanations'}
+                </p>
               </div>
               
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <Label className="text-base">Alert Threshold</Label>
-                  <span className="text-sm">{config.maxAlertThreshold}</span>
+              {/* Voice Interaction */}
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label 
+                    htmlFor="voiceToggle"
+                    className="flex items-center gap-2"
+                  >
+                    <Mic className="h-4 w-4" />
+                    Voice Interaction
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    Enable speech recognition and text-to-speech
+                  </p>
                 </div>
-                <Slider
-                  value={[config.maxAlertThreshold]}
-                  min={1}
-                  max={10}
-                  step={1}
-                  onValueChange={handleSliderChange}
+                <Switch 
+                  id="voiceToggle"
+                  checked={config.enableVoice}
+                  onCheckedChange={(checked) => 
+                    handleToggleSetting('enableVoice', checked)
+                  }
                 />
+              </div>
+            </CardContent>
+            <CardFooter className="justify-between border-t pt-4">
+              <Button 
+                variant="outline" 
+                onClick={handleClearConversation}
+              >
+                Clear Conversation History
+              </Button>
+            </CardFooter>
+          </Card>
+        </TabsContent>
+        
+        {/* Security Settings */}
+        <TabsContent value="security" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Security Settings</CardTitle>
+              <CardDescription>
+                Configure security features and transaction verification
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Phishing Detection */}
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label 
+                    htmlFor="phishingToggle"
+                    className="flex items-center gap-2"
+                  >
+                    <Shield className="h-4 w-4" />
+                    Phishing Detection
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    Automatically detect and warn about potential phishing attempts
+                  </p>
+                </div>
+                <Switch 
+                  id="phishingToggle"
+                  checked={config.enablePhishingDetection}
+                  onCheckedChange={(checked) => 
+                    handleToggleSetting('enablePhishingDetection', checked)
+                  }
+                />
+              </div>
+              
+              {/* Auto Transaction Verification */}
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label 
+                    htmlFor="transactionToggle"
+                    className="flex items-center gap-2"
+                  >
+                    <CheckCircle2 className="h-4 w-4" />
+                    Auto Transaction Verification
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    Automatically verify transactions for suspicious activity
+                  </p>
+                </div>
+                <Switch 
+                  id="transactionToggle"
+                  checked={config.autoVerifyTransactions}
+                  onCheckedChange={(checked) => 
+                    handleToggleSetting('autoVerifyTransactions', checked)
+                  }
+                />
+              </div>
+              
+              {/* Alert Threshold */}
+              <div className="space-y-3">
+                <div className="space-y-0.5">
+                  <Label 
+                    htmlFor="alertThreshold"
+                    className="flex items-center gap-2"
+                  >
+                    <AlertTriangle className="h-4 w-4" />
+                    Alert Threshold
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    Set the sensitivity level for security alerts (1-10)
+                  </p>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <Slider
+                    id="alertThreshold"
+                    min={1}
+                    max={10}
+                    step={1}
+                    value={[config.maxAlertThreshold]}
+                    onValueChange={handleAlertThresholdChange}
+                  />
+                  <span className="min-w-8 text-center font-medium">
+                    {config.maxAlertThreshold}
+                  </span>
+                </div>
+                
                 <p className="text-sm text-muted-foreground">
-                  Set the maximum daily alerts you want to receive
+                  {config.maxAlertThreshold < 4 ? (
+                    "Low: Only critical security issues will be reported"
+                  ) : config.maxAlertThreshold < 8 ? (
+                    "Medium: Balance between security and convenience"
+                  ) : (
+                    "High: Maximum security with more frequent alerts"
+                  )}
                 </p>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
         
-        {/* Security Settings Tab */}
-        <TabsContent value="security" className="space-y-4 p-1">
+        {/* Notification Settings */}
+        <TabsContent value="notifications" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Security Features</CardTitle>
-              <CardDescription>Configure security and privacy settings</CardDescription>
+              <CardTitle>Notification Settings</CardTitle>
+              <CardDescription>
+                Configure how and when you receive notifications
+              </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6">
+              {/* Notification Level */}
+              <div className="space-y-2">
+                <Label htmlFor="notificationLevel" className="flex items-center gap-2">
+                  <BellRing className="h-4 w-4" />
+                  Notification Level
+                </Label>
+                <Select
+                  value={config.notificationLevel}
+                  onValueChange={handleNotificationLevelChange}
+                >
+                  <SelectTrigger id="notificationLevel">
+                    <SelectValue placeholder="Select level" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Notifications</SelectItem>
+                    <SelectItem value="important">Important Only</SelectItem>
+                    <SelectItem value="minimal">Minimal (Critical Only)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              {/* Email Notifications */}
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <div className="flex items-center gap-2">
-                    <Label className="text-base">Phishing Detection</Label>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Info className="h-4 w-4 text-muted-foreground" />
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Automatically scan for and detect potential phishing activities</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </div>
+                  <Label 
+                    htmlFor="emailToggle"
+                    className="flex items-center gap-2"
+                  >
+                    Email Notifications
+                  </Label>
                   <p className="text-sm text-muted-foreground">
-                    Scan and alert about suspicious URLs and wallet interactions
+                    Receive security and transaction alerts via email
                   </p>
                 </div>
-                <Switch
-                  checked={config.enablePhishingDetection}
-                  onCheckedChange={(checked) => handleToggleChange('enablePhishingDetection', checked)}
+                <Switch 
+                  id="emailToggle"
+                  checked={config.emailEnabled}
+                  onCheckedChange={(checked) => 
+                    handleToggleSetting('emailEnabled', checked)
+                  }
                 />
               </div>
               
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <div className="flex items-center gap-2">
-                    <Label className="text-base">Auto-Verify Transactions</Label>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Info className="h-4 w-4 text-muted-foreground" />
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Automatically verify transactions for security issues before submission</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    AI automatically checks transactions for security risks
-                  </p>
-                </div>
-                <Switch
-                  checked={config.autoVerifyTransactions}
-                  onCheckedChange={(checked) => handleToggleChange('autoVerifyTransactions', checked)}
-                />
-              </div>
-              
-              <div className="mt-6 p-3 bg-amber-50 dark:bg-amber-950 rounded-md border border-amber-200 dark:border-amber-800">
-                <div className="flex items-start gap-3">
-                  <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <h4 className="font-medium text-amber-800 dark:text-amber-300">Security Information</h4>
-                    <p className="text-sm text-amber-700 dark:text-amber-400 mt-1">
-                      Your AI analysis and security scanning is performed locally with quantum-grade encryption.
-                      No sensitive wallet information is transmitted to external servers.
+              {/* Matrix Notifications */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label 
+                      htmlFor="matrixToggle"
+                      className="flex items-center gap-2"
+                    >
+                      Matrix Notifications
+                    </Label>
+                    <p className="text-sm text-muted-foreground">
+                      Receive notifications via Matrix messaging protocol
                     </p>
                   </div>
+                  <Switch 
+                    id="matrixToggle"
+                    checked={config.matrixEnabled}
+                    onCheckedChange={(checked) => 
+                      handleToggleSetting('matrixEnabled', checked)
+                    }
+                  />
                 </div>
+                
+                {config.matrixEnabled && (
+                  <div className="space-y-2">
+                    <Label htmlFor="matrixId">Matrix ID</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        id="matrixId"
+                        placeholder="@username:matrix.org"
+                        value={matrixId}
+                        onChange={(e) => setMatrixId(e.target.value)}
+                      />
+                      <Button onClick={handleSaveMatrixId}>Save</Button>
+                    </div>
+                    {!config.matrixId && (
+                      <p className="text-sm text-amber-500">
+                        Please add your Matrix ID to receive notifications
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
         </TabsContent>
         
-        {/* Data Management Tab */}
-        <TabsContent value="data" className="space-y-4 p-1">
+        {/* Stored Credentials */}
+        <TabsContent value="credentials" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Data Management</CardTitle>
-              <CardDescription>Control your conversation data and histories</CardDescription>
+              <CardTitle>Secure Credentials</CardTitle>
+              <CardDescription>
+                View and manage securely stored credentials
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="p-3 border rounded-md">
-                <div className="flex items-center gap-3">
-                  <Lock className="h-5 w-5 text-primary" />
-                  <div>
-                    <h4 className="font-medium">Your data is encrypted</h4>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      All conversation data is encrypted with quantum-resistant encryption and stored locally.
-                    </p>
-                  </div>
+              {storedCredentials.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <Key className="h-12 w-12 text-muted-foreground/50 mb-4" />
+                  <h3 className="text-lg font-medium mb-2">No Stored Credentials</h3>
+                  <p className="text-muted-foreground max-w-md">
+                    You haven't stored any credentials yet. The AI assistant can securely store your credentials for various services.
+                  </p>
                 </div>
-              </div>
-              
-              <div className="grid gap-4 pt-4">
-                <Button 
-                  variant="outline" 
-                  onClick={() => setShowClearHistoryDialog(true)}
-                  className="flex items-center justify-center gap-2"
-                >
-                  <RotateCcw className="h-4 w-4" />
-                  Clear Conversation History
-                </Button>
-                
-                <Button 
-                  variant="outline" 
-                  className="flex items-center justify-center gap-2 text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
-                >
-                  <Trash2 className="h-4 w-4" />
-                  Delete All Saved Credentials
-                </Button>
-              </div>
+              ) : (
+                <div className="space-y-4">
+                  {storedCredentials.map((credential) => (
+                    <div 
+                      key={credential.id}
+                      className="flex items-center justify-between p-4 border rounded-lg"
+                    >
+                      <div className="space-y-1">
+                        <div className="font-medium">{credential.name}</div>
+                        <div className="text-sm text-muted-foreground flex gap-2">
+                          <span>{credential.service}</span>
+                          <span>•</span>
+                          <span>{credential.type}</span>
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          Last used: {credential.lastUsed ? 
+                            new Date(credential.lastUsed).toLocaleDateString() : 
+                            'Never'}
+                        </div>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleRemoveCredential(credential.id, credential.name)}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
+            <CardFooter>
+              <Alert className="w-full">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Security Notice</AlertTitle>
+                <AlertDescription>
+                  All credentials are securely encrypted using advanced encryption standards and can only be accessed by you.
+                </AlertDescription>
+              </Alert>
+            </CardFooter>
           </Card>
         </TabsContent>
       </Tabs>
-      
-      {/* Clear History Confirmation Dialog */}
-      <AlertDialog open={showClearHistoryDialog} onOpenChange={setShowClearHistoryDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Clear Conversation History?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete your entire conversation history with the AI assistant.
-              This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={handleClearHistory}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Clear History
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 };

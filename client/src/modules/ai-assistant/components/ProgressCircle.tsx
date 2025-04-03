@@ -1,57 +1,70 @@
 import React from 'react';
+import { ProgressCircleProps } from '../types';
 
-interface ProgressCircleProps {
-  value: number;
-  size?: number;
-  strokeWidth?: number;
-  className?: string;
-}
-
-export const ProgressCircle: React.FC<ProgressCircleProps> = ({ 
-  value, 
-  size = 100, 
-  strokeWidth = 8,
+/**
+ * ProgressCircle component displays a circular progress indicator 
+ * with a customizable appearance and optional children in the center.
+ */
+const ProgressCircle: React.FC<ProgressCircleProps> = ({
+  percentage,
+  size = 120,
+  strokeWidth = 10,
+  color = 'var(--primary)',
+  backgroundColor = 'rgba(0, 0, 0, 0.1)',
+  children,
   className = ''
 }) => {
-  // Ensure value is between 0 and 100
-  const normalizedValue = Math.min(Math.max(0, value), 100);
+  // Calculate the circle properties
+  const radius = (size - strokeWidth) / 2;
+  const circumference = radius * 2 * Math.PI;
+  const strokeDashoffset = circumference - (percentage / 100) * circumference;
   
-  // Calculate SVG parameters
-  const radius = (size / 2) - (strokeWidth / 2);
-  const circumference = 2 * Math.PI * radius;
-  const dashOffset = circumference - (normalizedValue / 100) * circumference;
+  // Center coordinates
+  const center = size / 2;
   
   return (
-    <svg 
-      width={size} 
-      height={size} 
-      viewBox={`0 0 ${size} ${size}`}
-      className="transform -rotate-90"
-    >
-      {/* Background circle */}
-      <circle
-        cx={size / 2}
-        cy={size / 2}
-        r={radius}
-        fill="none"
-        stroke="currentColor"
-        strokeWidth={strokeWidth}
-        className="opacity-10"
-      />
+    <div className={`relative ${className}`} style={{ width: size, height: size }}>
+      <svg 
+        width={size} 
+        height={size} 
+        viewBox={`0 0 ${size} ${size}`}
+        className="transform -rotate-90" // Rotate to start from the top
+      >
+        {/* Background circle */}
+        <circle 
+          cx={center}
+          cy={center}
+          r={radius}
+          fill="none"
+          stroke={backgroundColor}
+          strokeWidth={strokeWidth}
+        />
+        
+        {/* Progress circle */}
+        <circle 
+          cx={center}
+          cy={center}
+          r={radius}
+          fill="none"
+          stroke={color}
+          strokeWidth={strokeWidth}
+          strokeDasharray={circumference}
+          strokeDashoffset={strokeDashoffset}
+          strokeLinecap="round"
+          style={{
+            transition: 'stroke-dashoffset 0.5s ease-in-out'
+          }}
+        />
+      </svg>
       
-      {/* Progress circle */}
-      <circle
-        cx={size / 2}
-        cy={size / 2}
-        r={radius}
-        fill="none"
-        stroke="currentColor"
-        strokeWidth={strokeWidth}
-        strokeDasharray={circumference}
-        strokeDashoffset={dashOffset}
-        strokeLinecap="round"
-        className={className}
-      />
-    </svg>
+      {/* Center content */}
+      {children && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          {children}
+        </div>
+      )}
+    </div>
   );
 };
+
+export default ProgressCircle;

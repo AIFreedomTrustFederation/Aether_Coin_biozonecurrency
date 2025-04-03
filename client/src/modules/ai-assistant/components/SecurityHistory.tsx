@@ -1,520 +1,810 @@
-import React, { useState } from 'react';
-import { useAI } from '../contexts/AIContext';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState, useMemo } from 'react';
+import { format } from 'date-fns';
+import { 
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardFooter, 
+  CardHeader, 
+  CardTitle 
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
-import { Progress } from '@/components/ui/progress';
 import { 
-  ShieldCheck, 
-  Shield, 
-  AlertTriangle, 
-  AlarmClock, 
-  Fingerprint, 
-  CheckCircle2,
-  BarChart3,
-  Zap,
-  GaugeCircle,
-  ShieldX,
-  AlertOctagon,
-  Info,
-  ChevronDown,
-  ChevronUp,
-  Award
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from '@/components/ui/table';
+import { 
+  Tabs, 
+  TabsContent, 
+  TabsList, 
+  TabsTrigger 
+} from '@/components/ui/tabs';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  ShieldAlert,
+  ShieldCheck,
+  AlertCircle,
+  Clock,
+  CheckCircle,
+  BarChart4,
+  Calendar,
+  List,
+  ArrowUpCircle,
+  ArrowDownCircle,
+  ExternalLink,
+  Search,
+  Info
 } from 'lucide-react';
-import { ProgressCircle } from './ProgressCircle';
-import { formatDate } from '../utils/formatters';
-import { SecurityHistoryProps, SecurityIssue } from '../types';
+import { formatDate, formatDuration } from '../utils/formatters';
+import { useAI } from '../contexts/AIContext';
+import { SecurityHistoryProps } from '../types';
+import ProgressCircle from './ProgressCircle';
 
-// Badge variant for different severity levels
-const getSeverityBadge = (severity: string) => {
-  switch(severity.toLowerCase()) {
-    case 'critical':
-      return <Badge variant="destructive" className="bg-red-600">Critical</Badge>;
-    case 'high':
-      return <Badge variant="destructive">High</Badge>;
-    case 'medium':
-      return <Badge variant="secondary" className="bg-orange-500 text-white">Medium</Badge>;
-    case 'low':
-      return <Badge variant="secondary" className="bg-blue-500 text-white">Low</Badge>;
-    default:
-      return null;
-  }
-};
-
-// Issue card component
-interface IssueCardProps {
-  issue: SecurityIssue;
-  onResolve: (id: number) => void;
-}
-
-const IssueCard: React.FC<IssueCardProps> = ({ issue, onResolve }) => {
-  const [expanded, setExpanded] = useState(false);
-  
-  const severityIcon = {
-    critical: <AlertOctagon className="h-5 w-5 text-red-600" />,
-    high: <AlertTriangle className="h-5 w-5 text-red-500" />,
-    medium: <AlertTriangle className="h-5 w-5 text-orange-500" />,
-    low: <Info className="h-5 w-5 text-blue-500" />
-  }[issue.severity.toLowerCase()] || <Info className="h-5 w-5" />;
-  
-  return (
-    <Card className={`mb-4 ${issue.resolved ? 'bg-muted/30' : ''}`}>
-      <CardHeader className="pb-2">
-        <div className="flex justify-between items-start">
-          <div className="flex items-start gap-3">
-            {severityIcon}
-            <div>
-              <CardTitle className="text-base">
-                {issue.title}
-              </CardTitle>
-              <CardDescription className="text-xs">
-                Detected on {formatDate(issue.detectedAt)}
-              </CardDescription>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            {getSeverityBadge(issue.severity)}
-            {issue.resolved && (
-              <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200 dark:bg-green-900 dark:text-green-300 dark:border-green-800">
-                Resolved
-              </Badge>
-            )}
-          </div>
-        </div>
-      </CardHeader>
-      
-      <CardContent className="pb-2">
-        <p className="text-sm mb-3">
-          {expanded ? issue.description : issue.description.substring(0, 100) + (issue.description.length > 100 ? '...' : '')}
-        </p>
-        
-        {expanded && (
-          <div className="space-y-3 mt-4">
-            <div>
-              <h4 className="text-sm font-medium mb-1">Category</h4>
-              <p className="text-sm text-muted-foreground">{issue.category}</p>
-            </div>
-            
-            <div>
-              <h4 className="text-sm font-medium mb-1">Recommendation</h4>
-              <p className="text-sm text-muted-foreground">{issue.recommendation}</p>
-            </div>
-          </div>
-        )}
-      </CardContent>
-      
-      <CardFooter className="pt-2 flex justify-between items-center">
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="p-0 h-auto font-normal"
-          onClick={() => setExpanded(!expanded)}
-        >
-          {expanded ? (
-            <span className="flex items-center">
-              <ChevronUp className="h-4 w-4 mr-1" />
-              Show Less
-            </span>
-          ) : (
-            <span className="flex items-center">
-              <ChevronDown className="h-4 w-4 mr-1" />
-              Show More
-            </span>
-          )}
-        </Button>
-        
-        {!issue.resolved && (
-          <Button 
-            variant="outline" 
-            size="sm"
-            className="text-green-600 border-green-600 hover:bg-green-600 hover:text-white"
-            onClick={() => onResolve(issue.id)}
-          >
-            <CheckCircle2 className="h-4 w-4 mr-1" />
-            Mark as Resolved
-          </Button>
-        )}
-      </CardFooter>
-    </Card>
-  );
-};
-
-// Score summary card component
-interface ScoreSummaryProps {
-  score: number;
-  title: string;
-  icon: React.ReactNode;
-  description: string;
-  color: string;
-}
-
-const ScoreSummary: React.FC<ScoreSummaryProps> = ({ score, title, icon, description, color }) => {
-  return (
-    <div className="flex items-start gap-3">
-      <div className={`rounded-full p-2 ${color}`}>
-        {icon}
-      </div>
-      <div>
-        <div className="flex items-baseline gap-2">
-          <h3 className="font-medium">{title}</h3>
-          <span className="text-lg font-bold">{score}/100</span>
-        </div>
-        <p className="text-sm text-muted-foreground">{description}</p>
-      </div>
-    </div>
-  );
-};
-
-// Main component
+/**
+ * SecurityHistory component displays a history of AI-powered security scans
+ * and allows users to view issues and take action on them.
+ */
 const SecurityHistory: React.FC<SecurityHistoryProps> = ({ className = '' }) => {
   const { state, resolveSecurityIssue } = useAI();
   const { securityScans } = state;
+  const [activeTab, setActiveTab] = useState('all');
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedScan, setSelectedScan] = useState<any | null>(null);
+  const [selectedIssue, setSelectedIssue] = useState<any | null>(null);
   
-  const [activeTab, setActiveTab] = useState<string>('all');
-  const [activeScore, setActiveScore] = useState<string>('overall');
-  
-  const handleResolveIssue = (scanId: number, issueId: number) => {
-    resolveSecurityIssue(scanId, issueId);
+  // Format scanType to more readable form
+  const formatScanType = (scanType: string): string => {
+    return scanType
+      .replace(/_/g, ' ')
+      .replace(/\b\w/g, char => char.toUpperCase());
   };
   
-  // Filter issues based on active tab
-  const filterIssues = (scan: any) => {
-    switch (activeTab) {
-      case 'critical':
-        return scan.issues.filter((issue: any) => issue.severity.toLowerCase() === 'critical' && !issue.resolved);
-      case 'high':
-        return scan.issues.filter((issue: any) => issue.severity.toLowerCase() === 'high' && !issue.resolved);
-      case 'medium':
-        return scan.issues.filter((issue: any) => issue.severity.toLowerCase() === 'medium' && !issue.resolved);
-      case 'low':
-        return scan.issues.filter((issue: any) => issue.severity.toLowerCase() === 'low' && !issue.resolved);
-      case 'resolved':
-        return scan.issues.filter((issue: any) => issue.resolved);
-      default:
-        return scan.issues;
-    }
-  };
-  
-  // Get counts of issues by severity and resolved status
-  const getIssueCounts = () => {
-    if (securityScans.length === 0) return { critical: 0, high: 0, medium: 0, low: 0, resolved: 0, total: 0 };
-    
-    // Get most recent scan
-    const latestScan = securityScans[0];
-    
-    const counts = {
-      critical: 0,
-      high: 0,
-      medium: 0,
-      low: 0,
-      resolved: 0,
-      total: latestScan.issues.length
+  // Get badge variant based on issue severity
+  const getSeverityBadge = (severity: string) => {
+    const severityMap: Record<string, { variant: string, icon: React.ReactNode }> = {
+      critical: { 
+        variant: 'destructive', 
+        icon: <AlertCircle className="h-3 w-3 mr-1" /> 
+      },
+      high: { 
+        variant: 'destructive', 
+        icon: <ArrowUpCircle className="h-3 w-3 mr-1" /> 
+      },
+      medium: { 
+        variant: 'default', 
+        icon: <Info className="h-3 w-3 mr-1" /> 
+      },
+      low: { 
+        variant: 'secondary', 
+        icon: <ArrowDownCircle className="h-3 w-3 mr-1" /> 
+      },
+      info: { 
+        variant: 'outline', 
+        icon: <Info className="h-3 w-3 mr-1" /> 
+      }
     };
     
-    latestScan.issues.forEach(issue => {
-      if (issue.resolved) {
-        counts.resolved++;
-      } else {
-        counts[issue.severity.toLowerCase() as keyof typeof counts] += 1;
-      }
-    });
+    const config = severityMap[severity.toLowerCase()] || severityMap.info;
     
-    return counts;
+    return (
+      <Badge variant={config.variant as any} className="capitalize">
+        {config.icon}
+        {severity}
+      </Badge>
+    );
   };
   
-  const issueCounts = getIssueCounts();
+  // Calculate statistics from scans
+  const stats = useMemo(() => {
+    // Count total scans
+    const totalScans = securityScans.length;
+    
+    // Count total issues
+    const totalIssues = securityScans.reduce((acc, scan) => 
+      acc + scan.issues.length, 0
+    );
+    
+    // Count resolved issues
+    const resolvedIssues = securityScans.reduce((acc, scan) => 
+      acc + scan.issues.filter(issue => issue.resolved).length, 0
+    );
+    
+    // Count by severity
+    const issuesBySeverity = securityScans.reduce((acc, scan) => {
+      scan.issues.forEach(issue => {
+        const severity = issue.severity.toLowerCase();
+        acc[severity] = (acc[severity] || 0) + 1;
+      });
+      return acc;
+    }, {} as Record<string, number>);
+    
+    // Last scan date
+    const lastScanDate = securityScans.length > 0 
+      ? new Date(Math.max(...securityScans.map(s => new Date(s.timestamp).getTime())))
+      : null;
+    
+    return {
+      totalScans,
+      totalIssues,
+      resolvedIssues,
+      issuesBySeverity,
+      lastScanDate,
+      resolutionRate: totalIssues > 0 ? (resolvedIssues / totalIssues) * 100 : 0
+    };
+  }, [securityScans]);
   
-  // If there are no scans, show empty state
-  if (securityScans.length === 0) {
+  // Sort scans by timestamp (newest first)
+  const sortedScans = [...securityScans].sort((a, b) => 
+    new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+  );
+  
+  // Filter scans based on active tab
+  const filteredScans = useMemo(() => {
+    if (activeTab === 'all') return sortedScans;
+    return sortedScans.filter(scan => scan.type.toLowerCase() === activeTab.toLowerCase());
+  }, [sortedScans, activeTab]);
+  
+  // Open scan details dialog
+  const openScanDetails = (scan: any) => {
+    setSelectedScan(scan);
+    setDialogOpen(true);
+  };
+  
+  // Handle issue resolution
+  const handleResolveIssue = () => {
+    if (!selectedScan || !selectedIssue) return;
+    
+    resolveSecurityIssue(selectedScan.id, selectedIssue.id);
+    setSelectedIssue(null);
+  };
+  
+  // Get severity count badge color
+  const getSeverityCountColor = (severity: string): string => {
+    const colorMap: Record<string, string> = {
+      critical: 'bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300',
+      high: 'bg-orange-100 text-orange-800 dark:bg-orange-950 dark:text-orange-300',
+      medium: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-950 dark:text-yellow-300',
+      low: 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300',
+      info: 'bg-slate-100 text-slate-800 dark:bg-slate-950 dark:text-slate-300'
+    };
+    
+    return colorMap[severity.toLowerCase()] || 'bg-slate-100 text-slate-800';
+  };
+  
+  // Render overview cards
+  const renderOverviewCards = () => {
+    if (securityScans.length === 0) {
+      return (
+        <div className="text-center py-8">
+          <ShieldCheck className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+          <h3 className="text-lg font-medium mb-2">No Security Scans Yet</h3>
+          <p className="text-muted-foreground max-w-md mx-auto">
+            When AI completes security scans of your wallet and transactions, 
+            the results will appear here.
+          </p>
+        </div>
+      );
+    }
+    
     return (
-      <div className={`flex flex-col items-center justify-center h-full ${className}`}>
-        <Shield className="h-12 w-12 text-muted-foreground mb-4" />
-        <h3 className="text-lg font-medium mb-2">No Security Scans Available</h3>
-        <p className="text-muted-foreground text-center max-w-md mb-6">
-          Your wallet hasn't been scanned for security vulnerabilities yet. Security scans help identify potential risks and improve your wallet security.
-        </p>
-        <Button className="gap-2">
-          <ShieldCheck className="h-4 w-4" /> 
-          Run Security Scan
-        </Button>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        {/* Total Scans Card */}
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Total Scans
+                </p>
+                <h3 className="text-2xl font-bold mt-1">
+                  {stats.totalScans}
+                </h3>
+              </div>
+              <div className="bg-primary/10 p-2 rounded-full">
+                <Search className="h-5 w-5 text-primary" />
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              Last scan {stats.lastScanDate ? formatDate(stats.lastScanDate, false, true) : 'never'}
+            </p>
+          </CardContent>
+        </Card>
+        
+        {/* Issues Found Card */}
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Issues Found
+                </p>
+                <h3 className="text-2xl font-bold mt-1">
+                  {stats.totalIssues}
+                </h3>
+              </div>
+              <div className="bg-primary/10 p-2 rounded-full">
+                <AlertCircle className="h-5 w-5 text-primary" />
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-1 mt-2">
+              {Object.entries(stats.issuesBySeverity).map(([severity, count]) => (
+                <span 
+                  key={severity}
+                  className={`px-2 py-0.5 rounded-full text-xs ${getSeverityCountColor(severity)}`}
+                >
+                  {severity}: {count}
+                </span>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+        
+        {/* Resolution Rate Card */}
+        <Card>
+          <CardContent className="pt-6 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">
+                Resolution Rate
+              </p>
+              <h3 className="text-2xl font-bold mt-1">
+                {Math.round(stats.resolutionRate)}%
+              </h3>
+              <p className="text-xs text-muted-foreground mt-2">
+                {stats.resolvedIssues} of {stats.totalIssues} issues resolved
+              </p>
+            </div>
+            <ProgressCircle 
+              percentage={stats.resolutionRate}
+              size={60}
+              strokeWidth={8}
+              color={stats.resolutionRate > 70 ? 'var(--primary)' : 'var(--warning)'}
+            >
+              <div className="text-sm font-medium">
+                {Math.round(stats.resolutionRate)}%
+              </div>
+            </ProgressCircle>
+          </CardContent>
+        </Card>
+        
+        {/* Security Status Card */}
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Security Status
+                </p>
+                <h3 className="text-2xl font-bold mt-1 flex items-center">
+                  {stats.totalIssues === 0 ? (
+                    <>
+                      <ShieldCheck className="h-5 w-5 text-green-500 mr-2" />
+                      Secure
+                    </>
+                  ) : stats.issuesBySeverity.critical || stats.issuesBySeverity.high ? (
+                    <>
+                      <ShieldAlert className="h-5 w-5 text-red-500 mr-2" />
+                      At Risk
+                    </>
+                  ) : (
+                    <>
+                      <Info className="h-5 w-5 text-yellow-500 mr-2" />
+                      Attention Needed
+                    </>
+                  )}
+                </h3>
+              </div>
+              <div className={`p-2 rounded-full ${
+                stats.totalIssues === 0 
+                  ? 'bg-green-100 dark:bg-green-950' 
+                  : stats.issuesBySeverity.critical || stats.issuesBySeverity.high
+                    ? 'bg-red-100 dark:bg-red-950'
+                    : 'bg-yellow-100 dark:bg-yellow-950'
+              }`}>
+                {stats.totalIssues === 0 ? (
+                  <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
+                ) : stats.issuesBySeverity.critical || stats.issuesBySeverity.high ? (
+                  <ShieldAlert className="h-5 w-5 text-red-600 dark:text-red-400" />
+                ) : (
+                  <AlertCircle className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+                )}
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              {stats.totalIssues === 0 
+                ? 'No security issues detected'
+                : stats.issuesBySeverity.critical 
+                  ? `${stats.issuesBySeverity.critical || 0} critical issues found`
+                  : stats.issuesBySeverity.high
+                    ? `${stats.issuesBySeverity.high || 0} high severity issues found`
+                    : `${stats.totalIssues} minor issues found`
+              }
+            </p>
+          </CardContent>
+        </Card>
       </div>
     );
-  }
+  };
   
-  // Get the most recent scan
-  const latestScan = securityScans[0];
-  
-  // Get score based on active score tab
-  const getActiveScore = () => {
-    switch (activeScore) {
-      case 'security':
-        return latestScan.securityScore;
-      case 'diversification':
-        return latestScan.diversificationScore;
-      case 'activity':
-        return latestScan.activityScore;
-      case 'gas':
-        return latestScan.gasOptimizationScore;
-      default:
-        return latestScan.overallScore;
+  // Render scan table
+  const renderScanTable = () => {
+    if (filteredScans.length === 0) {
+      return (
+        <div className="text-center py-8 border rounded-md bg-muted/20">
+          <Search className="h-10 w-10 mx-auto text-muted-foreground mb-4" />
+          <h3 className="text-lg font-medium mb-2">No Scans Found</h3>
+          <p className="text-muted-foreground max-w-md mx-auto">
+            {activeTab === 'all' 
+              ? "No security scans have been performed yet."
+              : `No ${formatScanType(activeTab)} scans have been performed yet.`
+            }
+          </p>
+        </div>
+      );
     }
+    
+    return (
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Date</TableHead>
+            <TableHead>Type</TableHead>
+            <TableHead>Focus</TableHead>
+            <TableHead>Duration</TableHead>
+            <TableHead>Issues</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {filteredScans.map((scan, index) => {
+            // Count issues by severity
+            const issueCount = {
+              total: scan.issues.length,
+              resolved: scan.issues.filter(issue => issue.resolved).length,
+              critical: scan.issues.filter(c => c.severity.toLowerCase() === 'critical').length,
+              high: scan.issues.filter(c => c.severity.toLowerCase() === 'high').length,
+              medium: scan.issues.filter(c => c.severity.toLowerCase() === 'medium').length,
+              low: scan.issues.filter(c => c.severity.toLowerCase() === 'low').length,
+              info: scan.issues.filter(c => c.severity.toLowerCase() === 'info').length
+            };
+            
+            return (
+              <TableRow key={index}>
+                <TableCell>
+                  <div className="font-medium">
+                    {formatDate(scan.timestamp, false)}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {formatDate(scan.timestamp, true, false)}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <Badge variant="outline" className="capitalize">
+                    {formatScanType(scan.type)}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  <span className="truncate block max-w-[120px]">
+                    {scan.focus}
+                  </span>
+                </TableCell>
+                <TableCell>
+                  {formatDuration(scan.durationMs)}
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center space-x-1">
+                    {issueCount.critical > 0 && (
+                      <Badge variant="destructive" className="text-xs">
+                        {issueCount.critical}
+                      </Badge>
+                    )}
+                    {issueCount.high > 0 && (
+                      <Badge variant="default" className="text-xs">
+                        {issueCount.high}
+                      </Badge>
+                    )}
+                    {issueCount.medium + issueCount.low + issueCount.info > 0 && (
+                      <Badge variant="secondary" className="text-xs">
+                        {issueCount.medium + issueCount.low + issueCount.info}
+                      </Badge>
+                    )}
+                    {issueCount.total === 0 && (
+                      <Badge variant="outline" className="text-xs">
+                        0
+                      </Badge>
+                    )}
+                    <span className="text-xs text-muted-foreground ml-1">
+                      {issueCount.resolved > 0 && `(${issueCount.resolved} fixed)`}
+                    </span>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  {scan.status === 'completed' ? (
+                    <Badge variant="outline" className="bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/30">
+                      <CheckCircle className="h-3 w-3 mr-1" />
+                      Complete
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30">
+                      <Clock className="h-3 w-3 mr-1" />
+                      {scan.status}
+                    </Badge>
+                  )}
+                </TableCell>
+                <TableCell className="text-right">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => openScanDetails(scan)}
+                  >
+                    View Details
+                  </Button>
+                </TableCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
+    );
   };
   
-  const scoreValue = getActiveScore();
-  
-  // Generate color for score value
-  const getScoreColor = (score: number) => {
-    if (score >= 90) return 'text-green-600';
-    if (score >= 75) return 'text-emerald-600';
-    if (score >= 60) return 'text-amber-600';
-    if (score >= 40) return 'text-orange-600';
-    return 'text-red-600';
+  // Render scan details dialog
+  const renderScanDetailsDialog = () => {
+    if (!selectedScan) return null;
+    
+    // Count issues by severity
+    const issueCount = {
+      total: selectedScan.issues.length,
+      resolved: selectedScan.issues.filter((issue: any) => issue.resolved).length,
+      pending: selectedScan.issues.filter((issue: any) => !issue.resolved).length
+    };
+    
+    // Group issues by category
+    const issuesByCategory = selectedScan.issues.reduce((groups: any, issue: any) => {
+      const category = issue.category || 'Uncategorized';
+      if (!groups[category]) {
+        groups[category] = [];
+      }
+      groups[category].push(issue);
+      return groups;
+    }, {});
+    
+    return (
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Search className="h-5 w-5" />
+              Security Scan Details
+            </DialogTitle>
+            <DialogDescription>
+              {formatScanType(selectedScan.type)} scan performed on {formatDate(selectedScan.timestamp)}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-6">
+            {/* Scan Summary */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+              <Card className="bg-muted/30">
+                <CardContent className="p-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm font-medium text-muted-foreground">Focus</span>
+                    <Search className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <div className="font-medium">{selectedScan.focus}</div>
+                </CardContent>
+              </Card>
+              
+              <Card className="bg-muted/30">
+                <CardContent className="p-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm font-medium text-muted-foreground">Duration</span>
+                    <Clock className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <div className="font-medium">{formatDuration(selectedScan.durationMs)}</div>
+                </CardContent>
+              </Card>
+              
+              <Card className="bg-muted/30">
+                <CardContent className="p-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm font-medium text-muted-foreground">Issues</span>
+                    <AlertCircle className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <div className="font-medium">
+                    {issueCount.total} found, {issueCount.resolved} resolved
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card className="bg-muted/30">
+                <CardContent className="p-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm font-medium text-muted-foreground">Status</span>
+                    <BarChart4 className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <div className="font-medium capitalize">{selectedScan.status}</div>
+                </CardContent>
+              </Card>
+            </div>
+            
+            {/* Issues List */}
+            <div>
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <List className="h-5 w-5" />
+                Issues ({issueCount.total})
+              </h3>
+              
+              {selectedScan.issues.length === 0 ? (
+                <Card>
+                  <CardContent className="p-6 text-center">
+                    <CheckCircle className="h-12 w-12 mx-auto text-green-500 mb-4" />
+                    <h3 className="text-lg font-medium mb-2">No Issues Found</h3>
+                    <p className="text-muted-foreground">
+                      No security issues were detected during this scan.
+                    </p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <Tabs defaultValue="all">
+                  <div className="flex items-center justify-between mb-4">
+                    <TabsList>
+                      <TabsTrigger value="all">
+                        All ({issueCount.total})
+                      </TabsTrigger>
+                      <TabsTrigger value="pending">
+                        Pending ({issueCount.pending})
+                      </TabsTrigger>
+                      <TabsTrigger value="resolved">
+                        Resolved ({issueCount.resolved})
+                      </TabsTrigger>
+                    </TabsList>
+                  </div>
+                  
+                  <TabsContent value="all" className="space-y-6">
+                    {Object.entries(issuesByCategory).map(([category, issues]: [string, any]) => (
+                      <div key={category}>
+                        <h4 className="text-sm font-medium mb-3 text-muted-foreground">{category}</h4>
+                        <div className="space-y-3">
+                          {issues.map((issue: any) => (
+                            <Card key={issue.id} className={issue.resolved ? 'border-green-200 dark:border-green-800/40 bg-green-50/50 dark:bg-green-950/20' : ''}>
+                              <CardHeader className="p-4 pb-2">
+                                <div className="flex justify-between items-start">
+                                  <CardTitle className="text-base">{issue.title}</CardTitle>
+                                  {getSeverityBadge(issue.severity)}
+                                </div>
+                              </CardHeader>
+                              <CardContent className="p-4 pt-0 pb-2">
+                                <CardDescription className="text-foreground/80">
+                                  {issue.description}
+                                </CardDescription>
+                              </CardContent>
+                              <CardFooter className="p-4 pt-0 flex justify-between items-center">
+                                <div className="text-xs text-muted-foreground flex items-center">
+                                  <Calendar className="h-3 w-3 mr-1" />
+                                  {issue.resolved 
+                                    ? `Resolved ${formatDate(issue.resolvedAt, false, true)}`
+                                    : `Detected ${formatDate(issue.detectedAt, false, true)}`
+                                  }
+                                </div>
+                                {issue.resolved ? (
+                                  <Badge variant="outline" className="bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/30">
+                                    <CheckCircle className="h-3 w-3 mr-1" />
+                                    Resolved
+                                  </Badge>
+                                ) : (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setSelectedIssue(issue)}
+                                  >
+                                    Mark as Resolved
+                                  </Button>
+                                )}
+                              </CardFooter>
+                            </Card>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </TabsContent>
+                  
+                  <TabsContent value="pending" className="space-y-3">
+                    {selectedScan.issues.filter((issue: any) => !issue.resolved).length === 0 ? (
+                      <div className="text-center py-12 border rounded-md">
+                        <CheckCircle className="h-12 w-12 mx-auto text-green-500 mb-4" />
+                        <h3 className="text-lg font-medium mb-2">All Issues Resolved</h3>
+                        <p className="text-muted-foreground max-w-md mx-auto">
+                          All security issues from this scan have been resolved.
+                        </p>
+                      </div>
+                    ) : (
+                      selectedScan.issues.filter((issue: any) => !issue.resolved).map((issue: any) => (
+                        <Card key={issue.id}>
+                          <CardHeader className="p-4 pb-2">
+                            <div className="flex justify-between items-start">
+                              <CardTitle className="text-base">{issue.title}</CardTitle>
+                              {getSeverityBadge(issue.severity)}
+                            </div>
+                          </CardHeader>
+                          <CardContent className="p-4 pt-0 pb-2">
+                            <CardDescription className="text-foreground/80">
+                              {issue.description}
+                            </CardDescription>
+                            
+                            <div className="mt-3 bg-muted/50 p-3 rounded-md">
+                              <div className="text-sm font-medium mb-1">Recommendation:</div>
+                              <div className="text-sm">{issue.recommendation}</div>
+                            </div>
+                          </CardContent>
+                          <CardFooter className="p-4 pt-2 flex justify-between items-center">
+                            <div className="text-xs text-muted-foreground flex items-center">
+                              <Calendar className="h-3 w-3 mr-1" />
+                              Detected {formatDate(issue.detectedAt, false, true)}
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setSelectedIssue(issue)}
+                            >
+                              Mark as Resolved
+                            </Button>
+                          </CardFooter>
+                        </Card>
+                      ))
+                    )}
+                  </TabsContent>
+                  
+                  <TabsContent value="resolved" className="space-y-3">
+                    {selectedScan.issues.filter((issue: any) => issue.resolved).length === 0 ? (
+                      <div className="text-center py-12 border rounded-md">
+                        <AlertCircle className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                        <h3 className="text-lg font-medium mb-2">No Resolved Issues</h3>
+                        <p className="text-muted-foreground max-w-md mx-auto">
+                          None of the security issues from this scan have been resolved yet.
+                        </p>
+                      </div>
+                    ) : (
+                      selectedScan.issues.filter((issue: any) => issue.resolved).map((issue: any) => (
+                        <Card key={issue.id} className="border-green-200 dark:border-green-800/40 bg-green-50/50 dark:bg-green-950/20">
+                          <CardHeader className="p-4 pb-2">
+                            <div className="flex justify-between items-start">
+                              <CardTitle className="text-base">{issue.title}</CardTitle>
+                              {getSeverityBadge(issue.severity)}
+                            </div>
+                          </CardHeader>
+                          <CardContent className="p-4 pt-0 pb-2">
+                            <CardDescription className="text-foreground/80">
+                              {issue.description}
+                            </CardDescription>
+                          </CardContent>
+                          <CardFooter className="p-4 pt-0 flex justify-between items-center">
+                            <div className="text-xs text-muted-foreground flex items-center">
+                              <Calendar className="h-3 w-3 mr-1" />
+                              Resolved {formatDate(issue.resolvedAt, false, true)}
+                            </div>
+                            <Badge variant="outline" className="bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/30">
+                              <CheckCircle className="h-3 w-3 mr-1" />
+                              Resolved
+                            </Badge>
+                          </CardFooter>
+                        </Card>
+                      ))
+                    )}
+                  </TabsContent>
+                </Tabs>
+              )}
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
   };
   
-  const scoreColor = getScoreColor(scoreValue);
-  
-  // Get background color based on score for the circle
-  const getScoreBgColor = (score: number) => {
-    if (score >= 90) return 'text-green-600';
-    if (score >= 75) return 'text-emerald-500';
-    if (score >= 60) return 'text-amber-500';
-    if (score >= 40) return 'text-orange-500';
-    return 'text-red-500';
+  // Render confirmation dialog
+  const renderConfirmationDialog = () => {
+    if (!selectedIssue) return null;
+    
+    return (
+      <Dialog open={!!selectedIssue} onOpenChange={() => setSelectedIssue(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CheckCircle className="h-5 w-5 text-green-500" />
+              Mark Issue as Resolved
+            </DialogTitle>
+            <DialogDescription>
+              Are you sure you want to mark this issue as resolved?
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-3">
+            <div className="bg-muted p-3 rounded-md mb-4">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-medium">{selectedIssue.title}</h3>
+                {getSeverityBadge(selectedIssue.severity)}
+              </div>
+              <p className="text-sm">{selectedIssue.description}</p>
+            </div>
+            
+            <p className="text-sm text-muted-foreground">
+              If you've addressed this issue according to the recommendations, 
+              you can mark it as resolved. This action can be verified in future security scans.
+            </p>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSelectedIssue(null)}>
+              Cancel
+            </Button>
+            <Button onClick={handleResolveIssue}>
+              Confirm Resolution
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
   };
-  
-  const scoreBgColor = getScoreBgColor(scoreValue);
-  
-  // Get score description
-  const getScoreDescription = () => {
-    switch (activeScore) {
-      case 'security':
-        return "Measures how well your wallet is protected against vulnerabilities and threats.";
-      case 'diversification':
-        return "Evaluates how well your assets are diversified across different tokens and chains.";
-      case 'activity':
-        return "Assesses your wallet's transaction patterns and frequency of use.";
-      case 'gas':
-        return "Analyzes how efficiently you're spending on gas fees across transactions.";
-      default:
-        return "Composite score reflecting your wallet's overall health and security posture.";
-    }
-  };
-  
-  const scoreDescription = getScoreDescription();
-  
-  // Generate score status text
-  const getScoreStatus = (score: number) => {
-    if (score >= 90) return "Excellent";
-    if (score >= 75) return "Good";
-    if (score >= 60) return "Fair";
-    if (score >= 40) return "Needs Improvement";
-    return "Poor";
-  };
-  
-  const scoreStatus = getScoreStatus(scoreValue);
-  
-  const filteredIssues = filterIssues(latestScan);
   
   return (
     <div className={`space-y-6 ${className}`}>
+      <div className="flex items-center gap-2">
+        <ShieldCheck className="h-5 w-5" />
+        <h2 className="text-xl font-semibold">Security History</h2>
+      </div>
+      
+      {renderOverviewCards()}
+      
       <div>
-        <div className="flex items-center justify-between mb-1">
-          <h2 className="text-xl font-semibold flex items-center">
-            <ShieldCheck className="mr-2 h-5 w-5 text-primary" />
-            Wallet Security Health
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            Last scan: {formatDate(latestScan.timestamp)}
-          </p>
-        </div>
-        <p className="text-muted-foreground mb-4">
-          Monitor your wallet security and resolve detected issues
-        </p>
-      </div>
-      
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* Score Overview Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Wallet Health Score</CardTitle>
-            <CardDescription>
-              Comprehensive assessment of your wallet's security posture
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col items-center space-y-4">
-              <div className="relative flex flex-col items-center">
-                <ProgressCircle 
-                  value={scoreValue} 
-                  size={150} 
-                  strokeWidth={10} 
-                  className={scoreBgColor}
-                />
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className={`text-3xl font-bold ${scoreColor}`}>{scoreValue}</span>
-                  <span className="text-sm text-muted-foreground">out of 100</span>
-                </div>
-              </div>
-              
-              <div>
-                <Badge 
-                  className={`
-                    ${scoreValue >= 90 ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' :
-                      scoreValue >= 75 ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-300' :
-                      scoreValue >= 60 ? 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300' :
-                      scoreValue >= 40 ? 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300' :
-                      'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
-                    }
-                  `}
-                >
-                  {scoreStatus}
-                </Badge>
-              </div>
-              
-              <p className="text-sm text-center text-muted-foreground">
-                {scoreDescription}
-              </p>
-            </div>
-            
-            <Separator className="my-4" />
-            
-            <div className="grid grid-cols-2 gap-4 pt-3">
-              <Button 
-                variant={activeScore === 'overall' ? 'default' : 'outline'} 
-                size="sm"
-                onClick={() => setActiveScore('overall')}
-              >
-                <Award className="h-4 w-4 mr-1" />
-                Overall
-              </Button>
-              <Button 
-                variant={activeScore === 'security' ? 'default' : 'outline'} 
-                size="sm"
-                onClick={() => setActiveScore('security')}
-              >
-                <Shield className="h-4 w-4 mr-1" />
-                Security
-              </Button>
-              <Button 
-                variant={activeScore === 'diversification' ? 'default' : 'outline'} 
-                size="sm"
-                onClick={() => setActiveScore('diversification')}
-              >
-                <BarChart3 className="h-4 w-4 mr-1" />
-                Diversification
-              </Button>
-              <Button 
-                variant={activeScore === 'activity' ? 'default' : 'outline'} 
-                size="sm"
-                onClick={() => setActiveScore('activity')}
-              >
-                <AlarmClock className="h-4 w-4 mr-1" />
-                Activity
-              </Button>
-              <Button 
-                variant={activeScore === 'gas' ? 'default' : 'outline'} 
-                size="sm" 
-                className="col-span-2"
-                onClick={() => setActiveScore('gas')}
-              >
-                <Zap className="h-4 w-4 mr-1" />
-                Gas Optimization
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-        
-        {/* Score Breakdown Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Score Breakdown</CardTitle>
-            <CardDescription>
-              Detailed view of score components
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-3">
-              <div className="flex justify-between text-sm">
-                <span>Overall</span>
-                <span className="font-medium">{latestScan.overallScore}/100</span>
-              </div>
-              <Progress value={latestScan.overallScore} className="h-2" />
-            </div>
-            
-            <div className="space-y-3">
-              <div className="flex justify-between text-sm">
-                <span>Security</span>
-                <span className="font-medium">{latestScan.securityScore}/100</span>
-              </div>
-              <Progress value={latestScan.securityScore} className="h-2" />
-            </div>
-            
-            <div className="space-y-3">
-              <div className="flex justify-between text-sm">
-                <span>Diversification</span>
-                <span className="font-medium">{latestScan.diversificationScore}/100</span>
-              </div>
-              <Progress value={latestScan.diversificationScore} className="h-2" />
-            </div>
-            
-            <div className="space-y-3">
-              <div className="flex justify-between text-sm">
-                <span>Activity</span>
-                <span className="font-medium">{latestScan.activityScore}/100</span>
-              </div>
-              <Progress value={latestScan.activityScore} className="h-2" />
-            </div>
-            
-            <div className="space-y-3">
-              <div className="flex justify-between text-sm">
-                <span>Gas Optimization</span>
-                <span className="font-medium">{latestScan.gasOptimizationScore}/100</span>
-              </div>
-              <Progress value={latestScan.gasOptimizationScore} className="h-2" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-      
-      {/* Security Issues */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-medium">Security Issues & Recommendations</h3>
-        
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid grid-cols-6">
-            <TabsTrigger value="all">All ({issueCounts.total})</TabsTrigger>
-            <TabsTrigger value="critical" className="text-red-600">Critical ({issueCounts.critical})</TabsTrigger>
-            <TabsTrigger value="high" className="text-red-500">High ({issueCounts.high})</TabsTrigger>
-            <TabsTrigger value="medium" className="text-orange-500">Medium ({issueCounts.medium})</TabsTrigger>
-            <TabsTrigger value="low" className="text-blue-500">Low ({issueCounts.low})</TabsTrigger>
-            <TabsTrigger value="resolved" className="text-green-600">Resolved ({issueCounts.resolved})</TabsTrigger>
-          </TabsList>
+        <Tabs defaultValue="all" onValueChange={setActiveTab}>
+          <div className="flex items-center justify-between mb-4">
+            <TabsList>
+              <TabsTrigger value="all">All Scans</TabsTrigger>
+              <TabsTrigger value="wallet_scan">Wallet</TabsTrigger>
+              <TabsTrigger value="transaction_scan">Transactions</TabsTrigger>
+              <TabsTrigger value="smart_contract_scan">Smart Contracts</TabsTrigger>
+            </TabsList>
+          </div>
           
-          <TabsContent value={activeTab} className="pt-4">
-            <ScrollArea className="h-[400px] pr-4">
-              {filteredIssues.length > 0 ? (
-                <div className="space-y-4">
-                  {filteredIssues.map(issue => (
-                    <IssueCard 
-                      key={issue.id} 
-                      issue={issue}
-                      onResolve={(id) => handleResolveIssue(latestScan.id, id)} 
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="h-full flex flex-col items-center justify-center py-10">
-                  <ShieldCheck className="h-10 w-10 text-green-500 mb-2" />
-                  <p className="text-muted-foreground">No issues in this category</p>
-                </div>
-              )}
-            </ScrollArea>
+          <TabsContent value="all" className="mt-0">
+            {renderScanTable()}
+          </TabsContent>
+          
+          <TabsContent value="wallet_scan" className="mt-0">
+            {renderScanTable()}
+          </TabsContent>
+          
+          <TabsContent value="transaction_scan" className="mt-0">
+            {renderScanTable()}
+          </TabsContent>
+          
+          <TabsContent value="smart_contract_scan" className="mt-0">
+            {renderScanTable()}
           </TabsContent>
         </Tabs>
       </div>
+      
+      {renderScanDetailsDialog()}
+      {renderConfirmationDialog()}
     </div>
   );
 };

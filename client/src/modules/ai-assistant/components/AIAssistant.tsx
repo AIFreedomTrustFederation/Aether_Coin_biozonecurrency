@@ -1,104 +1,108 @@
 import React, { useState } from 'react';
-import { AIProvider } from '../contexts/AIContext';
-import ChatInterface from './ChatInterface';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { 
+  Tabs, 
+  TabsContent, 
+  TabsList, 
+  TabsTrigger 
+} from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Bot, ShieldAlert, Clock, Settings, AlertTriangle } from 'lucide-react';
+import { MessageCircle, Settings, Shield, ClockIcon } from 'lucide-react';
+import ChatInterface from './ChatInterface';
 import AISettings from './AISettings';
 import SecurityHistory from './SecurityHistory';
 import TransactionHold from './TransactionHold';
+import { AIProvider } from '../contexts/AIContext';
 import { AIAssistantProps } from '../types';
 
-const AIAssistant: React.FC<AIAssistantProps> = ({ userId, className = '' }) => {
+/**
+ * AIAssistant is the main component that combines the chat interface,
+ * transaction escrow system, security history, and AI settings.
+ */
+const AIAssistant: React.FC<AIAssistantProps> = ({ 
+  userId, 
+  className = ''
+}) => {
   const [activeTab, setActiveTab] = useState('chat');
-
-  // Demo data - in a real app, these would come from the AIContext
-  const pendingTransactionCount = 3;
-  const unresolvedSecurityIssuesCount = 2;
-
+  
   return (
-    <AIProvider initialConfig={{ userId }}>
-      <div className={`flex flex-col ${className}`}>
-        <Card className="overflow-hidden">
-          <CardContent className="p-0">
-            <Tabs
-              value={activeTab}
-              onValueChange={setActiveTab}
-              className="h-[600px] flex flex-col"
-            >
-              <TabsList className="grid grid-cols-4 rounded-none border-b">
-                <TabsTrigger value="chat" className="rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary">
-                  <div className="flex items-center">
-                    <Bot className="h-4 w-4 mr-2" />
-                    <span className="hidden sm:inline">Assistant</span>
-                  </div>
+    <AIProvider userId={userId}>
+      <Card className={`overflow-hidden border-none shadow-md ${className}`}>
+        <CardContent className="p-0">
+          <Tabs 
+            defaultValue="chat" 
+            value={activeTab} 
+            onValueChange={setActiveTab}
+            className="h-[calc(100vh-120px)]"
+          >
+            <div className="border-b bg-muted/20">
+              <TabsList className="bg-transparent h-14 w-full rounded-none justify-center">
+                <TabsTrigger 
+                  value="chat" 
+                  className="flex items-center gap-2 data-[state=active]:bg-background"
+                >
+                  <MessageCircle className="h-4 w-4" />
+                  <span className="sm:inline hidden">AI Assistant</span>
                 </TabsTrigger>
-                
-                <TabsTrigger value="security" className="rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary">
-                  <div className="flex items-center">
-                    <ShieldAlert className="h-4 w-4 mr-2" />
-                    <span className="hidden sm:inline">Security</span>
-                    {unresolvedSecurityIssuesCount > 0 && (
-                      <Badge variant="warning" className="ml-2 h-5 px-1 bg-orange-500 text-white">
-                        {unresolvedSecurityIssuesCount}
-                      </Badge>
-                    )}
-                  </div>
+                <TabsTrigger 
+                  value="security" 
+                  className="flex items-center gap-2 data-[state=active]:bg-background"
+                >
+                  <Shield className="h-4 w-4" />
+                  <span className="sm:inline hidden">Security</span>
                 </TabsTrigger>
-                
-                <TabsTrigger value="transactions" className="rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary">
-                  <div className="flex items-center">
-                    <Clock className="h-4 w-4 mr-2" />
-                    <span className="hidden sm:inline">Holds</span>
-                    {pendingTransactionCount > 0 && (
-                      <Badge variant="warning" className="ml-2 h-5 px-1 bg-orange-500 text-white">
-                        {pendingTransactionCount}
-                      </Badge>
-                    )}
-                  </div>
+                <TabsTrigger 
+                  value="hold" 
+                  className="flex items-center gap-2 data-[state=active]:bg-background"
+                >
+                  <ClockIcon className="h-4 w-4" />
+                  <span className="sm:inline hidden">Transaction Hold</span>
                 </TabsTrigger>
-                
-                <TabsTrigger value="settings" className="rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary">
-                  <div className="flex items-center">
-                    <Settings className="h-4 w-4 mr-2" />
-                    <span className="hidden sm:inline">Settings</span>
-                  </div>
+                <TabsTrigger 
+                  value="settings" 
+                  className="flex items-center gap-2 data-[state=active]:bg-background"
+                >
+                  <Settings className="h-4 w-4" />
+                  <span className="sm:inline hidden">Settings</span>
                 </TabsTrigger>
               </TabsList>
-              
-              <TabsContent
-                value="chat"
-                className="flex-1 data-[state=active]:flex flex-col overflow-hidden p-0 m-0"
+            </div>
+            
+            <div className="relative flex-1 overflow-hidden h-[calc(100%-3.5rem)]">
+              <TabsContent 
+                value="chat" 
+                className="absolute inset-0 overflow-hidden m-0"
               >
-                <ChatInterface />
+                <ChatInterface 
+                  className="h-full" 
+                  autoFocus={activeTab === 'chat'}
+                  inputPlaceholder="Ask me about your wallet, transactions, or security..."
+                />
               </TabsContent>
               
-              <TabsContent
-                value="security"
-                className="flex-1 data-[state=active]:flex flex-col overflow-hidden p-4 m-0"
+              <TabsContent 
+                value="security" 
+                className="absolute inset-0 overflow-auto m-0 p-6"
               >
-                <SecurityHistory />
+                <SecurityHistory className="h-full" />
               </TabsContent>
               
-              <TabsContent
-                value="transactions"
-                className="flex-1 data-[state=active]:flex flex-col overflow-hidden p-4 m-0"
+              <TabsContent 
+                value="hold" 
+                className="absolute inset-0 overflow-auto m-0 p-6"
               >
-                <TransactionHold />
+                <TransactionHold className="h-full" />
               </TabsContent>
               
-              <TabsContent
-                value="settings"
-                className="flex-1 data-[state=active]:flex flex-col overflow-auto p-4 m-0"
+              <TabsContent 
+                value="settings" 
+                className="absolute inset-0 overflow-auto m-0 p-6"
               >
-                <AISettings />
+                <AISettings className="h-full" />
               </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
-      </div>
+            </div>
+          </Tabs>
+        </CardContent>
+      </Card>
     </AIProvider>
   );
 };

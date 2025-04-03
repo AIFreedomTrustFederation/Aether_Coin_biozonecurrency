@@ -1,335 +1,194 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useAI } from '../contexts/AIContext';
-import { 
-  Send, 
-  Mic, 
-  X, 
-  Bot, 
-  User, 
-  Loader2,
-  AlertTriangle,
-} from 'lucide-react';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Input } from '@/components/ui/input';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import { PaperPlaneIcon, Loader2 } from 'lucide-react';
 import { formatDate } from '../utils/formatters';
-import ReactMarkdown from 'react-markdown';
 import { ChatInterfaceProps } from '../types';
+import { useAI } from '../contexts/AIContext';
+import ReactMarkdown from 'react-markdown';
 
-const ChatInterface: React.FC<ChatInterfaceProps> = ({
-  className = '',
-  inputPlaceholder = 'Ask your AI assistant something...',
-  showTimestamps = true,
-  autoFocus = true,
+/**
+ * Chat interface component for the AI assistant.
+ * Displays conversation history and allows users to send messages.
+ */
+const ChatInterface: React.FC<ChatInterfaceProps> = ({ 
+  className = '', 
+  autoFocus = false,
+  inputPlaceholder = 'Type a message...',
 }) => {
   const { state, sendMessage } = useAI();
-  const { messages, isTyping, config } = state;
-
+  const { conversation, isProcessing } = state;
   const [message, setMessage] = useState('');
-  const [isListening, setIsListening] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
-  const endOfMessagesRef = useRef<HTMLDivElement>(null);
-
-  // Scroll to bottom when new messages arrive
+  
+  // Auto-scroll to the bottom when new messages are added
   useEffect(() => {
-    if (endOfMessagesRef.current) {
-      endOfMessagesRef.current.scrollIntoView({ behavior: 'smooth' });
+    if (scrollAreaRef.current) {
+      const scrollElement = scrollAreaRef.current;
+      scrollElement.scrollTop = scrollElement.scrollHeight;
     }
-  }, [messages, isTyping]);
-
-  // Auto focus input on mount
+  }, [conversation]);
+  
+  // Focus textarea when component is mounted if autoFocus is true
   useEffect(() => {
-    if (autoFocus && inputRef.current) {
-      inputRef.current.focus();
+    if (autoFocus && textareaRef.current) {
+      textareaRef.current.focus();
     }
   }, [autoFocus]);
-
+  
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!message.trim()) return;
-    
-    sendMessage(message);
-    setMessage('');
-  };
-
-  const handleMicToggle = () => {
-    // In a real implementation, this would use the Web Speech API
-    // or a similar speech recognition service
-    
-    if (isListening) {
-      // Stop listening logic would go here
-      setIsListening(false);
-    } else {
-      // If voice is disabled in settings, show a notification
-      if (!config.enableVoice) {
-        // Here you might show a toast notification explaining that
-        // voice input is disabled in settings
-        alert('Voice input is disabled in settings. Please enable it first.');
-        return;
-      }
-      
-      // Start listening logic would go here
-      setIsListening(true);
-      
-      // Mock voice recognition result after 3 seconds
-      setTimeout(() => {
-        setMessage(prev => prev + 'What security issues do I have?');
-        setIsListening(false);
-      }, 3000);
+    if (message.trim() && !isProcessing) {
+      sendMessage(message.trim());
+      setMessage('');
     }
   };
-
+  
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit(e);
+    }
+  };
+  
   return (
     <div className={`flex flex-col h-full ${className}`}>
+      {/* Chat history */}
       <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
-        {messages.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-center">
-            <Bot className="h-12 w-12 mb-4 text-primary" />
-            <h3 className="text-lg font-medium mb-2">Quantum-Secure AI Assistant</h3>
-            <p className="text-muted-foreground max-w-md mb-6">
-              How can I help you with your blockchain wallet today? You can ask about security, transactions, market insights, or general wallet management.
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-w-lg">
-              <Button 
-                variant="outline"
-                className="text-left justify-start"
-                onClick={() => sendMessage("What can you do?")}
-              >
-                What can you do?
-              </Button>
-              <Button 
-                variant="outline"
-                className="text-left justify-start"
-                onClick={() => sendMessage("Check my wallet security")}
-              >
-                Check my wallet security
-              </Button>
-              <Button 
-                variant="outline"
-                className="text-left justify-start"
-                onClick={() => sendMessage("What are my pending transactions?")}
-              >
-                Pending transactions
-              </Button>
-              <Button 
-                variant="outline"
-                className="text-left justify-start"
-                onClick={() => sendMessage("Securely store my credentials")}
-              >
-                Store credentials
-              </Button>
+        <div className="space-y-4">
+          {conversation.length === 0 ? (
+            <div className="h-full flex items-center justify-center min-h-[60vh]">
+              <div className="text-center p-6 rounded-lg max-w-md">
+                <h3 className="text-lg font-medium mb-2">Welcome to your AI Assistant</h3>
+                <p className="text-muted-foreground mb-4">
+                  I can help you with managing your wallet, verifying transactions, and monitoring security threats. How can I assist you today?
+                </p>
+                <div className="grid grid-cols-1 gap-2 mt-4">
+                  {[
+                    'How secure is my wallet?',
+                    'Verify my latest transaction',
+                    'Explain escrow protection',
+                    'Show me recent security scans'
+                  ].map((suggestion, idx) => (
+                    <Button
+                      key={idx}
+                      variant="outline"
+                      className="justify-start text-left h-auto py-2 px-3"
+                      onClick={() => {
+                        setMessage(suggestion);
+                        if (textareaRef.current) {
+                          textareaRef.current.focus();
+                        }
+                      }}
+                    >
+                      {suggestion}
+                    </Button>
+                  ))}
+                </div>
+              </div>
             </div>
-          </div>
-        ) : (
-          <div className="space-y-4 pb-2">
-            {messages.map((msg, idx) => (
+          ) : (
+            conversation.map((msg, idx) => (
               <div
                 key={msg.id}
-                className={`flex ${
-                  msg.sender === 'user' ? 'justify-end' : 'justify-start'
+                className={`flex flex-col ${
+                  msg.role === 'user' ? 'items-end' : 'items-start'
                 }`}
               >
                 <div
-                  className={`flex gap-3 max-w-[90%] ${
-                    msg.sender === 'user' ? 'flex-row-reverse' : 'flex-row'
+                  className={`px-4 py-2 rounded-lg max-w-[85%] ${
+                    msg.role === 'user'
+                      ? 'bg-primary text-primary-foreground rounded-br-none'
+                      : 'bg-muted rounded-bl-none'
                   }`}
                 >
-                  <div
-                    className={`flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-md border ${
-                      msg.sender === 'user'
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted'
-                    }`}
-                  >
-                    {msg.sender === 'user' ? (
-                      <User className="h-4 w-4" />
-                    ) : (
-                      <Bot className="h-4 w-4" />
-                    )}
-                  </div>
-                  <div>
-                    <Card
-                      className={`px-4 py-3 ${
-                        msg.sender === 'user'
-                          ? 'bg-primary text-primary-foreground'
-                          : ''
-                      }`}
+                  {msg.role === 'assistant' ? (
+                    <ReactMarkdown
+                      className="prose prose-sm dark:prose-invert"
+                      components={{
+                        a: ({ children, ...props }) => (
+                          <a {...props} className="text-blue-500 hover:underline" target="_blank" rel="noopener noreferrer">
+                            {children}
+                          </a>
+                        ),
+                        code: ({ children }) => (
+                          <code className="px-1 py-0.5 rounded bg-muted-foreground/20 text-sm font-mono">
+                            {children}
+                          </code>
+                        ),
+                        pre: ({ children }) => (
+                          <pre className="p-2 rounded bg-muted-foreground/20 overflow-x-auto text-sm font-mono my-2">
+                            {children}
+                          </pre>
+                        ),
+                        ul: ({ children }) => (
+                          <ul className="list-disc pl-4 my-1 space-y-1">
+                            {children}
+                          </ul>
+                        ),
+                        ol: ({ children }) => (
+                          <ol className="list-decimal pl-4 my-1 space-y-1">
+                            {children}
+                          </ol>
+                        ),
+                        p: ({ children }) => (
+                          <p className="mb-1">{children}</p>
+                        )
+                      }}
                     >
-                      <div className="prose dark:prose-invert break-words prose-p:leading-relaxed prose-pre:p-0">
-                        <ReactMarkdown className={msg.sender === 'user' ? '' : 'chat-markdown'}>
-                          {msg.text}
-                        </ReactMarkdown>
-                      </div>
-                    </Card>
-                    {showTimestamps && (
-                      <div className="text-xs text-muted-foreground mt-1 ml-1">
-                        {formatDate(msg.timestamp)}
-                      </div>
-                    )}
-                  </div>
+                      {msg.content}
+                    </ReactMarkdown>
+                  ) : (
+                    msg.content
+                  )}
                 </div>
+                <span className="text-xs text-muted-foreground mt-1 px-1">
+                  {formatDate(msg.timestamp, true, false)}
+                </span>
               </div>
-            ))}
-
-            {isTyping && (
-              <div className="flex justify-start">
-                <div className="flex gap-3 max-w-[90%]">
-                  <div className="flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-md border bg-muted">
-                    <Bot className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <Card className="px-4 py-3">
-                      <div className="flex items-center">
-                        <div className="typing-indicator">
-                          <span></span>
-                          <span></span>
-                          <span></span>
-                        </div>
-                      </div>
-                    </Card>
-                  </div>
-                </div>
+            ))
+          )}
+          
+          {isProcessing && (
+            <div className="flex items-start">
+              <div className="px-4 py-2 rounded-lg bg-muted rounded-bl-none flex items-center">
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                <span>AI is thinking...</span>
               </div>
-            )}
-            <div ref={endOfMessagesRef} />
-          </div>
-        )}
+            </div>
+          )}
+        </div>
       </ScrollArea>
-
-      <div className="p-4 border-t">
+      
+      {/* Message input */}
+      <div className="border-t p-4">
         <form onSubmit={handleSubmit} className="flex gap-2">
-          <Input
-            ref={inputRef}
+          <Textarea
+            ref={textareaRef}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
+            onKeyDown={handleKeyDown}
             placeholder={inputPlaceholder}
-            className="flex-1"
-            disabled={isListening}
+            className="min-h-[60px] resize-none"
+            disabled={isProcessing}
           />
-          
-          {message && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              onClick={() => setMessage('')}
-            >
-              <X className="h-4 w-4" />
-              <span className="sr-only">Clear input</span>
-            </Button>
-          )}
-          
-          {config.enableVoice && (
-            <Button
-              type="button"
-              variant={isListening ? 'destructive' : 'outline'}
-              size="icon"
-              onClick={handleMicToggle}
-            >
-              {isListening ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Mic className="h-4 w-4" />
-              )}
-              <span className="sr-only">
-                {isListening ? 'Stop recording' : 'Start recording'}
-              </span>
-            </Button>
-          )}
-          
-          <Button type="submit" size="icon" disabled={!message.trim() || isListening}>
-            <Send className="h-4 w-4" />
-            <span className="sr-only">Send message</span>
+          <Button 
+            type="submit" 
+            size="icon" 
+            disabled={isProcessing || !message.trim()}
+            className="h-[60px] w-[60px] flex-shrink-0"
+          >
+            {isProcessing ? (
+              <Loader2 className="h-5 w-5 animate-spin" />
+            ) : (
+              <PaperPlaneIcon className="h-5 w-5" />
+            )}
           </Button>
         </form>
-        
-        {/* Customize with additional information or disclaimers */}
-        <div className="mt-2 text-xs text-muted-foreground flex justify-between items-center">
-          <span>End-to-end quantum-secure encryption</span>
-          <AlertTriangle className="h-3 w-3" />
-        </div>
       </div>
-      
-      <style jsx>{`
-        .typing-indicator {
-          display: flex;
-          align-items: center;
-        }
-        
-        .typing-indicator span {
-          height: 8px;
-          width: 8px;
-          margin-right: 4px;
-          border-radius: 50%;
-          display: inline-block;
-          background-color: currentColor;
-          opacity: 0.6;
-          animation: bouncing 1.2s linear infinite;
-        }
-        
-        .typing-indicator span:nth-child(1) {
-          animation-delay: 0s;
-        }
-        
-        .typing-indicator span:nth-child(2) {
-          animation-delay: 0.2s;
-        }
-        
-        .typing-indicator span:nth-child(3) {
-          animation-delay: 0.4s;
-          margin-right: 0;
-        }
-        
-        @keyframes bouncing {
-          0%, 80%, 100% {
-            transform: translateY(0);
-          }
-          40% {
-            transform: translateY(-5px);
-          }
-        }
-        
-        .chat-markdown p {
-          margin: 0.5rem 0;
-        }
-        
-        .chat-markdown p:first-child {
-          margin-top: 0;
-        }
-        
-        .chat-markdown p:last-child {
-          margin-bottom: 0;
-        }
-        
-        .chat-markdown ul, .chat-markdown ol {
-          margin: 0.5rem 0;
-          padding-left: 1.5rem;
-        }
-        
-        .chat-markdown code {
-          background-color: rgba(0,0,0,0.1);
-          padding: 0.2rem 0.4rem;
-          border-radius: 3px;
-          font-size: 0.9em;
-        }
-        
-        .chat-markdown pre {
-          background-color: rgba(0,0,0,0.1);
-          padding: 0.5rem;
-          border-radius: 5px;
-          overflow-x: auto;
-          margin: 0.5rem 0;
-        }
-        
-        .chat-markdown pre code {
-          background-color: transparent;
-          padding: 0;
-        }
-      `}</style>
     </div>
   );
 };
