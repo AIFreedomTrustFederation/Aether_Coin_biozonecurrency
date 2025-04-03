@@ -162,19 +162,9 @@ const GestureNavigation: React.FC<GestureNavigationProps> = ({
       )}
 
       {/* Page content with animations */}
-      <AnimatePresence initial={false} mode="sync">
-        <motion.div
-          key={location}
-          className="w-full h-full"
-          initial={getInitialAnimationState()}
-          animate="center"
-          exit={getExitAnimationState()}
-          variants={pageVariants}
-          transition={pageTransition}
-        >
-          {children}
-        </motion.div>
-      </AnimatePresence>
+      <div className="w-full h-full bg-background">
+        {children}
+      </div>
     </div>
   );
 };

@@ -224,13 +224,13 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, className }) => {
       </header>
 
       {/* Main content area with gesture navigation */}
-      <main className="flex-1 relative">
+      <main className="flex-1 relative bg-background">
         {isMobile ? (
           <GestureNavigation
             routes={appRoutes}
             className="w-full h-full"
           >
-            {children}
+            <div className="w-full h-full">{children}</div>
           </GestureNavigation>
         ) : (
           <div className="w-full h-full overflow-auto">{children}</div>

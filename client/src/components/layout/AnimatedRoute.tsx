@@ -114,8 +114,8 @@ export const AnimatedRoutes: React.FC<AnimatedRoutesProps> = ({
   }, [location, prevLocation, routes]);
 
   return (
-    <div className={cn("animated-routes-container relative w-full h-full overflow-hidden", className)}>
-      <AnimatePresence mode="sync">
+    <div className={cn("animated-routes-container w-full h-full bg-background", className)}>
+      <AnimatePresence mode="popLayout">
         {routes.map((route) => (
           <Route key={route.path} path={route.path}>
             {(params) => {
@@ -127,26 +127,11 @@ export const AnimatedRoutes: React.FC<AnimatedRoutesProps> = ({
               return (
                 <motion.div
                   className="w-full h-full"
-                  initial="initial"
-                  animate="in"
-                  exit="out"
-                  variants={
-                    transitionDirection === 'right' 
-                      ? {
-                          initial: { opacity: 0, x: '100%' },
-                          in: { opacity: 1, x: 0 },
-                          out: { opacity: 0, x: '-100%' },
-                        }
-                      : {
-                          initial: { opacity: 0, x: '-100%' },
-                          in: { opacity: 1, x: 0 },
-                          out: { opacity: 0, x: '100%' },
-                        }
-                  }
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
                   transition={{
-                    type: 'spring',
-                    stiffness: 260,
-                    damping: 20,
+                    duration: 0.3,
                   }}
                 >
                   <route.component {...params} />

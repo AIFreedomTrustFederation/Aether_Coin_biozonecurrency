@@ -68,7 +68,7 @@ const routes = [
 
 function Router() {
   return (
-    <div className="relative w-full h-full overflow-hidden">
+    <div className="relative w-full h-full">
       <MainLayout>
         <AnimatedRoutes routes={routes} />
       </MainLayout>
@@ -80,7 +80,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <GestureProvider>
-        <div className="app-container w-full h-full">
+        <div className="app-container w-full h-full bg-background">
           <Router />
           <Toaster />
           <DevToolsToggle />
