@@ -1,50 +1,93 @@
-import { Switch, Route } from "wouter";
+import { Route, Switch } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
-import DevToolsToggle from "@/components/layout/DevToolsToggle";
-import Dashboard from "@/pages/Dashboard";
-import Assets from "@/pages/Assets";
-import Transactions from "@/pages/Transactions";
-import Contracts from "@/pages/Contracts";
-import WhitePaper from "@/pages/WhitePaper";
-import FractalExplorer from "@/pages/FractalExplorer";
-import Payments from "@/pages/Payments";
-import Settings from "@/pages/Settings";
-import NotFound from "@/pages/not-found";
-import { GestureProvider } from "@/contexts/gesture-context";
-import MainLayout from "@/components/layout/MainLayout";
+import { Button } from "@/components/ui/button";
+import { Link } from "wouter";
 
-function Router() {
-  return (
-    <div className="relative w-full h-full">
-      <MainLayout>
-        <Switch>
-          <Route path="/" component={Dashboard} />
-          <Route path="/assets" component={Assets} />
-          <Route path="/transactions" component={Transactions} />
-          <Route path="/contracts" component={Contracts} />
-          <Route path="/payments" component={Payments} />
-          <Route path="/settings" component={Settings} />
-          <Route path="/whitepaper" component={WhitePaper} />
-          <Route path="/fractal-explorer" component={FractalExplorer} />
-          <Route component={NotFound} />
-        </Switch>
-      </MainLayout>
+// Create extremely simple page components
+const SimpleDashboard = () => (
+  <div className="p-4">
+    <h1 className="text-2xl font-bold mb-4">Dashboard</h1>
+    <div className="bg-card p-4 rounded-lg border mb-4">
+      <h2 className="text-xl mb-2">Wallet Balance</h2>
+      <p className="text-2xl font-bold">$15,557.00</p>
     </div>
-  );
-}
+    <div className="flex space-x-2 mt-4">
+      <Link href="/settings">
+        <Button>Go to Settings</Button>
+      </Link>
+      <Link href="/assets">
+        <Button variant="outline">View Assets</Button>
+      </Link>
+    </div>
+  </div>
+);
+
+const SimpleSettings = () => (
+  <div className="p-4">
+    <h1 className="text-2xl font-bold mb-4">Settings</h1>
+    <div className="bg-card p-4 rounded-lg border mb-4">
+      <h2 className="text-xl mb-2">Notification Settings</h2>
+      <p>Configure your notification preferences</p>
+    </div>
+    <div className="mt-4">
+      <Link href="/">
+        <Button>Back to Dashboard</Button>
+      </Link>
+    </div>
+  </div>
+);
+
+const SimpleAssets = () => (
+  <div className="p-4">
+    <h1 className="text-2xl font-bold mb-4">Assets</h1>
+    <div className="bg-card p-4 rounded-lg border mb-4">
+      <h2 className="text-xl mb-2">Your Assets</h2>
+      <p>Bitcoin: 0.35000000 BTC</p>
+      <p>Ethereum: 1.50000000 ETH</p>
+    </div>
+    <div className="mt-4">
+      <Link href="/">
+        <Button>Back to Dashboard</Button>
+      </Link>
+    </div>
+  </div>
+);
+
+const SimpleNotFound = () => (
+  <div className="p-4">
+    <h1 className="text-2xl font-bold mb-4">Page Not Found</h1>
+    <div className="mt-4">
+      <Link href="/">
+        <Button>Back to Dashboard</Button>
+      </Link>
+    </div>
+  </div>
+);
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <GestureProvider>
-        <div className="app-container w-full h-full bg-background">
-          <Router />
-          <Toaster />
-          <DevToolsToggle />
-        </div>
-      </GestureProvider>
+      <div className="app-container w-full h-full bg-background">
+        <header className="bg-background border-b p-4 flex justify-between items-center">
+          <h1 className="font-bold text-xl">Aetherion UI Wallet</h1>
+          <Link href="/settings">
+            <Button variant="ghost" size="sm">Settings</Button>
+          </Link>
+        </header>
+        
+        <main className="h-[calc(100%-4rem)] overflow-auto">
+          <Switch>
+            <Route path="/" component={SimpleDashboard} />
+            <Route path="/settings" component={SimpleSettings} />
+            <Route path="/assets" component={SimpleAssets} />
+            <Route component={SimpleNotFound} />
+          </Switch>
+        </main>
+        
+        <Toaster />
+      </div>
     </QueryClientProvider>
   );
 }
