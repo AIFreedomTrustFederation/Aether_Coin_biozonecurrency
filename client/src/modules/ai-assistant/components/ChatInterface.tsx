@@ -1,52 +1,60 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
-import { PaperPlaneIcon, Loader2 } from 'lucide-react';
-import { formatDate } from '../utils/formatters';
-import { ChatInterfaceProps } from '../types';
-import { useAI } from '../contexts/AIContext';
-import ReactMarkdown from 'react-markdown';
+import { ChatInterfaceProps, ChatMessage } from '../types';
 
 /**
- * Chat interface component for the AI assistant.
- * Displays conversation history and allows users to send messages.
+ * A reusable chat interface component for AI interactions
  */
-const ChatInterface: React.FC<ChatInterfaceProps> = ({ 
-  className = '', 
+const ChatInterface: React.FC<ChatInterfaceProps> = ({
+  messages,
+  onSendMessage,
+  isProcessing = false,
+  className = '',
+  placeholder = 'Type a message...',
   autoFocus = false,
-  inputPlaceholder = 'Type a message...',
 }) => {
-  const { state, sendMessage } = useAI();
-  const { conversation, isProcessing } = state;
-  const [message, setMessage] = useState('');
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const [input, setInput] = useState('');
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   
-  // Auto-scroll to the bottom when new messages are added
+  // Scroll to bottom when messages change
   useEffect(() => {
-    if (scrollAreaRef.current) {
-      const scrollElement = scrollAreaRef.current;
-      scrollElement.scrollTop = scrollElement.scrollHeight;
-    }
-  }, [conversation]);
+    scrollToBottom();
+  }, [messages]);
   
-  // Focus textarea when component is mounted if autoFocus is true
+  // Auto-focus input when requested
   useEffect(() => {
-    if (autoFocus && textareaRef.current) {
-      textareaRef.current.focus();
+    if (autoFocus && inputRef.current) {
+      inputRef.current.focus();
     }
   }, [autoFocus]);
+  
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (message.trim() && !isProcessing) {
-      sendMessage(message.trim());
-      setMessage('');
+    if (input.trim() && !isProcessing) {
+      onSendMessage(input.trim());
+      setInput('');
     }
   };
   
+  // Handle input resize
+  const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const textarea = e.target;
+    setInput(textarea.value);
+    
+    // Reset height to calculate actual required height
+    textarea.style.height = 'auto';
+    
+    // Set new height (capped at 150px max)
+    const newHeight = Math.min(textarea.scrollHeight, 150);
+    textarea.style.height = `${newHeight}px`;
+  };
+  
+  // Handle Enter key for submission (Shift+Enter for new line)
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -54,139 +62,92 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     }
   };
   
-  return (
-    <div className={`flex flex-col h-full ${className}`}>
-      {/* Chat history */}
-      <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
-        <div className="space-y-4">
-          {conversation.length === 0 ? (
-            <div className="h-full flex items-center justify-center min-h-[60vh]">
-              <div className="text-center p-6 rounded-lg max-w-md">
-                <h3 className="text-lg font-medium mb-2">Welcome to your AI Assistant</h3>
-                <p className="text-muted-foreground mb-4">
-                  I can help you with managing your wallet, verifying transactions, and monitoring security threats. How can I assist you today?
-                </p>
-                <div className="grid grid-cols-1 gap-2 mt-4">
-                  {[
-                    'How secure is my wallet?',
-                    'Verify my latest transaction',
-                    'Explain escrow protection',
-                    'Show me recent security scans'
-                  ].map((suggestion, idx) => (
-                    <Button
-                      key={idx}
-                      variant="outline"
-                      className="justify-start text-left h-auto py-2 px-3"
-                      onClick={() => {
-                        setMessage(suggestion);
-                        if (textareaRef.current) {
-                          textareaRef.current.focus();
-                        }
-                      }}
-                    >
-                      {suggestion}
-                    </Button>
-                  ))}
-                </div>
-              </div>
+  // Render message based on type
+  const renderMessage = (message: ChatMessage) => {
+    const isUser = message.sender === 'user';
+    const isSystem = message.sender === 'system';
+    
+    return (
+      <div 
+        key={message.id}
+        className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`}
+      >
+        <div 
+          className={`
+            max-w-[80%] px-4 py-2 rounded-lg 
+            ${isUser 
+              ? 'bg-primary text-primary-foreground rounded-tr-none' 
+              : isSystem 
+                ? 'bg-muted text-muted-foreground' 
+                : 'bg-secondary text-secondary-foreground rounded-tl-none'
+            }
+            ${message.isLoading ? 'opacity-70' : ''}
+          `}
+        >
+          {message.content}
+          
+          {message.isLoading && (
+            <div className="flex space-x-1 mt-2 justify-center items-center">
+              <div className="w-2 h-2 rounded-full bg-current animate-bounce" style={{ animationDelay: '0ms' }} />
+              <div className="w-2 h-2 rounded-full bg-current animate-bounce" style={{ animationDelay: '150ms' }} />
+              <div className="w-2 h-2 rounded-full bg-current animate-bounce" style={{ animationDelay: '300ms' }} />
             </div>
-          ) : (
-            conversation.map((msg, idx) => (
-              <div
-                key={msg.id}
-                className={`flex flex-col ${
-                  msg.role === 'user' ? 'items-end' : 'items-start'
-                }`}
-              >
-                <div
-                  className={`px-4 py-2 rounded-lg max-w-[85%] ${
-                    msg.role === 'user'
-                      ? 'bg-primary text-primary-foreground rounded-br-none'
-                      : 'bg-muted rounded-bl-none'
-                  }`}
-                >
-                  {msg.role === 'assistant' ? (
-                    <ReactMarkdown
-                      className="prose prose-sm dark:prose-invert"
-                      components={{
-                        a: ({ children, ...props }) => (
-                          <a {...props} className="text-blue-500 hover:underline" target="_blank" rel="noopener noreferrer">
-                            {children}
-                          </a>
-                        ),
-                        code: ({ children }) => (
-                          <code className="px-1 py-0.5 rounded bg-muted-foreground/20 text-sm font-mono">
-                            {children}
-                          </code>
-                        ),
-                        pre: ({ children }) => (
-                          <pre className="p-2 rounded bg-muted-foreground/20 overflow-x-auto text-sm font-mono my-2">
-                            {children}
-                          </pre>
-                        ),
-                        ul: ({ children }) => (
-                          <ul className="list-disc pl-4 my-1 space-y-1">
-                            {children}
-                          </ul>
-                        ),
-                        ol: ({ children }) => (
-                          <ol className="list-decimal pl-4 my-1 space-y-1">
-                            {children}
-                          </ol>
-                        ),
-                        p: ({ children }) => (
-                          <p className="mb-1">{children}</p>
-                        )
-                      }}
-                    >
-                      {msg.content}
-                    </ReactMarkdown>
-                  ) : (
-                    msg.content
-                  )}
-                </div>
-                <span className="text-xs text-muted-foreground mt-1 px-1">
-                  {formatDate(msg.timestamp, true, false)}
-                </span>
-              </div>
-            ))
           )}
           
-          {isProcessing && (
-            <div className="flex items-start">
-              <div className="px-4 py-2 rounded-lg bg-muted rounded-bl-none flex items-center">
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                <span>AI is thinking...</span>
-              </div>
-            </div>
-          )}
+          <div className="text-xs opacity-70 mt-1 text-right">
+            {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          </div>
         </div>
-      </ScrollArea>
+      </div>
+    );
+  };
+  
+  return (
+    <div className={`flex flex-col h-full ${className}`}>
+      {/* Messages container */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {messages.length === 0 ? (
+          <div className="h-full flex items-center justify-center text-muted-foreground text-center p-4">
+            <div>
+              <p className="mb-2">👋 Hi there! I'm your AI assistant.</p>
+              <p>How can I help you with your blockchain transactions today?</p>
+            </div>
+          </div>
+        ) : (
+          messages.map(renderMessage)
+        )}
+        <div ref={messagesEndRef} />
+      </div>
       
-      {/* Message input */}
+      {/* Input area */}
       <div className="border-t p-4">
-        <form onSubmit={handleSubmit} className="flex gap-2">
-          <Textarea
-            ref={textareaRef}
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
+        <form onSubmit={handleSubmit} className="flex items-end">
+          <textarea
+            ref={inputRef}
+            value={input}
+            onChange={handleInput}
             onKeyDown={handleKeyDown}
-            placeholder={inputPlaceholder}
-            className="min-h-[60px] resize-none"
+            placeholder={placeholder}
             disabled={isProcessing}
+            className="flex-1 resize-none border rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent min-h-[44px] max-h-[150px]"
+            rows={1}
           />
-          <Button 
-            type="submit" 
-            size="icon" 
-            disabled={isProcessing || !message.trim()}
-            className="h-[60px] w-[60px] flex-shrink-0"
+          <button
+            type="submit"
+            disabled={!input.trim() || isProcessing}
+            className="ml-2 p-3 rounded-md bg-primary text-primary-foreground disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isProcessing ? (
-              <Loader2 className="h-5 w-5 animate-spin" />
+              <svg className="w-5 h-5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
             ) : (
-              <PaperPlaneIcon className="h-5 w-5" />
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+              </svg>
             )}
-          </Button>
+          </button>
         </form>
       </div>
     </div>

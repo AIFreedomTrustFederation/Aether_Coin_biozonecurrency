@@ -1,152 +1,137 @@
-import { CredentialType, SecureCredential } from '../types';
-import crypto from 'crypto-js';
+import CryptoJS from "crypto-js";
+import { v4 as uuidv4 } from "uuid";
+import { CredentialType, SecureCredential } from "../types";
 
 /**
- * SecureStorage provides utilities for storing sensitive credentials
- * with encryption and secure access methods
+ * Secure storage utility for sensitive credentials
+ * Uses AES encryption with a master key derived from the user's session
  */
 class SecureStorage {
-  private readonly storagePrefix: string = 'aetherion_secure_';
-  private readonly encryptionKey: string;
-  private readonly localStorage: Storage;
-  private readonly sessionStorage: Storage;
+  private readonly STORAGE_KEY = "ai_secure_credentials";
+  private readonly TEST_KEY = "ai_secure_storage_test";
+  private masterKey: string | null = null;
+  private credentials: SecureCredential[] = [];
+  private initialized = false;
   
   constructor() {
-    this.localStorage = typeof window !== 'undefined' ? window.localStorage : null as any;
-    this.sessionStorage = typeof window !== 'undefined' ? window.sessionStorage : null as any;
+    this.loadFromStorage();
+  }
+  
+  /**
+   * Initialize secure storage with a master key
+   */
+  initialize(userKey: string): boolean {
+    if (!userKey) return false;
     
-    // In a real implementation, this would be more secure and not hardcoded
-    // Could use a master password provided by the user, or device-specific identifier
-    this.encryptionKey = 'QUANTUM_RESISTANT_ENCRYPTION_KEY';
+    try {
+      // Derive master key from user key (in a real app, use proper key derivation)
+      this.masterKey = CryptoJS.SHA256(userKey).toString();
+      
+      // Test if we can encrypt/decrypt with this key
+      const testData = `test-${Date.now()}`;
+      const encrypted = this.encrypt(testData);
+      const decrypted = this.decrypt(encrypted);
+      
+      if (decrypted !== testData) {
+        this.masterKey = null;
+        return false;
+      }
+      
+      // Save test key to verify later
+      localStorage.setItem(this.TEST_KEY, encrypted);
+      
+      // Re-encrypt any stored credentials with the new key
+      this.reEncryptAll();
+      
+      this.initialized = true;
+      return true;
+    } catch (error) {
+      console.error("Failed to initialize secure storage:", error);
+      this.masterKey = null;
+      return false;
+    }
+  }
+  
+  /**
+   * Check if secure storage is initialized
+   */
+  isInitialized(): boolean {
+    return this.initialized;
   }
   
   /**
    * Store a credential securely
-   * 
-   * @param credential The credential to store
-   * @returns The stored credential with ID
    */
-  public storeCredential(credential: Omit<SecureCredential, 'id' | 'createdAt'>): SecureCredential {
-    const id = this.generateId();
-    const now = new Date();
+  saveCredential(type: CredentialType, name: string, data: string, label?: string): SecureCredential | null {
+    if (!this.masterKey) return null;
     
-    const fullCredential: SecureCredential = {
-      id,
-      createdAt: now,
-      ...credential,
-      accessCount: 0
-    };
-    
-    // Encrypt sensitive data if needed
-    const storedCredential = { ...fullCredential };
-    if (!storedCredential.isEncrypted && storedCredential.data) {
-      storedCredential.data = this.encrypt(storedCredential.data);
-      storedCredential.isEncrypted = true;
+    try {
+      const id = uuidv4();
+      const now = new Date().toISOString();
+      
+      const credential: SecureCredential = {
+        id,
+        type,
+        name,
+        createdAt: now,
+        lastUsed: null,
+        label: label || null,
+        isEncrypted: true,
+        data: this.encrypt(data)
+      };
+      
+      this.credentials.push(credential);
+      this.saveToStorage();
+      
+      // Return a copy without sensitive data
+      return this.sanitizeCredential(credential);
+    } catch (error) {
+      console.error("Failed to save credential:", error);
+      return null;
     }
-    
-    // Save to storage
-    this.setItem(this.getCredentialKey(id), JSON.stringify(storedCredential));
-    
-    return fullCredential;
   }
   
   /**
    * Get a credential by ID
-   * 
-   * @param id The credential ID
-   * @returns The credential or null if not found
    */
-  public getCredential(id: number): SecureCredential | null {
-    const key = this.getCredentialKey(id);
-    const json = this.getItem(key);
+  getCredential(id: string): SecureCredential | null {
+    if (!this.masterKey) return null;
     
-    if (!json) {
-      return null;
-    }
+    const credential = this.credentials.find(c => c.id === id);
+    if (!credential) return null;
     
     try {
-      const credential = JSON.parse(json) as SecureCredential;
+      // Update last used timestamp
+      credential.lastUsed = new Date().toISOString();
+      this.saveToStorage();
       
-      // Update access count and time
-      credential.accessCount = (credential.accessCount || 0) + 1;
-      credential.lastAccessed = new Date();
-      
-      // Store updated access info
-      this.setItem(key, JSON.stringify({
+      // Return a copy with decrypted data
+      return {
         ...credential,
-        data: credential.data, // Keep encrypted in storage
-        isEncrypted: credential.isEncrypted
-      }));
-      
-      // Return decrypted data
-      if (credential.isEncrypted && credential.data) {
-        credential.data = this.decrypt(credential.data);
-        credential.isEncrypted = false;
-      }
-      
-      return credential;
+        data: credential.isEncrypted ? this.decrypt(credential.data!) : credential.data
+      };
     } catch (error) {
-      console.error('Failed to parse credential:', error);
+      console.error("Failed to get credential:", error);
       return null;
     }
   }
   
   /**
-   * Update an existing credential
-   * 
-   * @param id The credential ID to update
-   * @param updates The updates to apply
-   * @returns The updated credential or null if not found
+   * Get all credentials (without sensitive data)
    */
-  public updateCredential(id: number, updates: Partial<Omit<SecureCredential, 'id' | 'createdAt'>>): SecureCredential | null {
-    const credential = this.getCredential(id);
-    
-    if (!credential) {
-      return null;
-    }
-    
-    // Apply updates
-    const updatedCredential: SecureCredential = {
-      ...credential,
-      ...updates,
-      updatedAt: new Date()
-    };
-    
-    // Handle encryption if data was updated
-    if ('data' in updates) {
-      // Ensure data is encrypted before storing
-      if (!updatedCredential.isEncrypted && updatedCredential.data) {
-        updatedCredential.data = this.encrypt(updatedCredential.data);
-        updatedCredential.isEncrypted = true;
-      }
-    }
-    
-    // Save updated credential
-    this.setItem(
-      this.getCredentialKey(id),
-      JSON.stringify(updatedCredential)
-    );
-    
-    // Return decrypted version
-    if (updatedCredential.isEncrypted && updatedCredential.data) {
-      updatedCredential.data = this.decrypt(updatedCredential.data);
-      updatedCredential.isEncrypted = false;
-    }
-    
-    return updatedCredential;
+  getAllCredentials(): SecureCredential[] {
+    return this.credentials.map(this.sanitizeCredential);
   }
   
   /**
-   * Remove a credential by ID
-   * 
-   * @param id The credential ID
-   * @returns True if removed successfully
+   * Delete a credential by ID
    */
-  public removeCredential(id: number): boolean {
-    const key = this.getCredentialKey(id);
+  deleteCredential(id: string): boolean {
+    const initialLength = this.credentials.length;
+    this.credentials = this.credentials.filter(c => c.id !== id);
     
-    if (this.getItem(key)) {
-      this.removeItem(key);
+    if (this.credentials.length !== initialLength) {
+      this.saveToStorage();
       return true;
     }
     
@@ -154,155 +139,147 @@ class SecureStorage {
   }
   
   /**
-   * Get all credentials
-   * 
-   * @param userId Optional user ID to filter by
-   * @returns Array of credentials (decrypted)
+   * Reset all storage (for logout/session end)
    */
-  public getAllCredentials(userId?: number): SecureCredential[] {
-    const credentials: SecureCredential[] = [];
+  reset(): void {
+    this.masterKey = null;
+    this.credentials = [];
+    this.initialized = false;
+    localStorage.removeItem(this.STORAGE_KEY);
+    localStorage.removeItem(this.TEST_KEY);
+  }
+  
+  /**
+   * Verify if the current key can decrypt the test data
+   */
+  verifyMasterKey(): boolean {
+    if (!this.masterKey) return false;
     
-    // Get all keys in localStorage that match our prefix
-    for (let i = 0; i < this.localStorage.length; i++) {
-      const key = this.localStorage.key(i);
+    try {
+      const testEncrypted = localStorage.getItem(this.TEST_KEY);
+      if (!testEncrypted) return false;
       
-      if (key && key.startsWith(this.storagePrefix)) {
-        try {
-          const json = this.getItem(key);
-          if (!json) continue;
-          
-          const credential = JSON.parse(json) as SecureCredential;
-          
-          // Filter by userId if specified
-          if (userId !== undefined && credential.userId !== userId) {
-            continue;
-          }
-          
-          // Decrypt data before returning
-          if (credential.isEncrypted && credential.data) {
-            credential.data = this.decrypt(credential.data);
-            credential.isEncrypted = false;
-          }
-          
-          credentials.push(credential);
-        } catch (error) {
-          console.error('Failed to parse credential:', error);
-        }
-      }
+      // Try to decrypt
+      const decrypted = this.decrypt(testEncrypted);
+      
+      // If we can decrypt and it starts with "test-", key is valid
+      return decrypted.startsWith("test-");
+    } catch (error) {
+      return false;
     }
-    
-    return credentials;
   }
   
   /**
-   * Get credentials by service name
-   * 
-   * @param service The service name
-   * @returns Array of matching credentials
+   * Load credentials from storage
    */
-  public getCredentialsByService(service: string): SecureCredential[] {
-    return this.getAllCredentials().filter(cred => 
-      cred.service && cred.service.toLowerCase() === service.toLowerCase()
-    );
+  private loadFromStorage(): void {
+    try {
+      const stored = localStorage.getItem(this.STORAGE_KEY);
+      if (stored) {
+        this.credentials = JSON.parse(stored);
+      }
+    } catch (error) {
+      console.error("Failed to load from storage:", error);
+      this.credentials = [];
+    }
   }
   
   /**
-   * Get credentials by type
-   * 
-   * @param type The credential type
-   * @returns Array of matching credentials
+   * Save credentials to storage
    */
-  public getCredentialsByType(type: CredentialType): SecureCredential[] {
-    return this.getAllCredentials().filter(cred => cred.type === type);
+  private saveToStorage(): void {
+    try {
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.credentials));
+    } catch (error) {
+      console.error("Failed to save to storage:", error);
+    }
   }
   
   /**
-   * Clear all credentials
-   * 
-   * @param userId Optional user ID to clear credentials for
-   * @returns Number of credentials removed
-   */
-  public clearAllCredentials(userId?: number): number {
-    const credentials = this.getAllCredentials(userId);
-    
-    credentials.forEach(credential => {
-      this.removeCredential(credential.id);
-    });
-    
-    return credentials.length;
-  }
-  
-  /**
-   * Encrypt sensitive data
-   * 
-   * @param data The data to encrypt
-   * @returns Encrypted data string
+   * Encrypt data with the master key
    */
   private encrypt(data: string): string {
-    return crypto.AES.encrypt(data, this.encryptionKey).toString();
+    if (!this.masterKey) throw new Error("Master key not initialized");
+    
+    try {
+      return CryptoJS.AES.encrypt(data, this.masterKey).toString();
+    } catch (error) {
+      console.error("Encryption failed:", error);
+      throw error;
+    }
   }
   
   /**
-   * Decrypt sensitive data
-   * 
-   * @param encryptedData The encrypted data
-   * @returns Decrypted data string
+   * Decrypt data with the master key
    */
   private decrypt(encryptedData: string): string {
-    const bytes = crypto.AES.decrypt(encryptedData, this.encryptionKey);
-    return bytes.toString(crypto.enc.Utf8);
+    if (!this.masterKey) throw new Error("Master key not initialized");
+    
+    try {
+      const bytes = CryptoJS.AES.decrypt(encryptedData, this.masterKey);
+      return bytes.toString(CryptoJS.enc.Utf8);
+    } catch (error) {
+      console.error("Decryption failed:", error);
+      throw error;
+    }
   }
   
   /**
-   * Generate a unique ID for a credential
-   * 
-   * @returns A unique numeric ID
+   * Re-encrypt all credentials with the current master key
    */
-  private generateId(): number {
-    return Date.now() + Math.floor(Math.random() * 1000);
+  private reEncryptAll(): void {
+    if (!this.masterKey) return;
+    
+    // Skip if no credentials
+    if (this.credentials.length === 0) return;
+    
+    try {
+      this.credentials = this.credentials.map(credential => {
+        // Skip if already properly encrypted or has no data
+        if (!credential.data) return credential;
+        
+        // Try to decrypt and re-encrypt if needed
+        if (credential.isEncrypted) {
+          try {
+            const decrypted = this.decrypt(credential.data);
+            return {
+              ...credential,
+              data: this.encrypt(decrypted)
+            };
+          } catch (e) {
+            // If we can't decrypt, the credential may be encrypted with a different key
+            // We can't recover this data, so we'll mark it as corrupted
+            return {
+              ...credential,
+              isEncrypted: false,
+              data: "[Encryption key changed - data inaccessible]"
+            };
+          }
+        } else {
+          // Not encrypted, encrypt it now
+          return {
+            ...credential,
+            isEncrypted: true,
+            data: this.encrypt(credential.data)
+          };
+        }
+      });
+      
+      this.saveToStorage();
+    } catch (error) {
+      console.error("Failed to re-encrypt credentials:", error);
+    }
   }
   
   /**
-   * Get the storage key for a credential
-   * 
-   * @param id The credential ID
-   * @returns The storage key
+   * Create a copy of the credential without sensitive data
    */
-  private getCredentialKey(id: number): string {
-    return `${this.storagePrefix}credential_${id}`;
-  }
-  
-  /**
-   * Wrapper for localStorage.getItem
-   */
-  private getItem(key: string): string | null {
-    if (!this.localStorage) return null;
-    return this.localStorage.getItem(key);
-  }
-  
-  /**
-   * Wrapper for localStorage.setItem
-   */
-  private setItem(key: string, value: string): void {
-    if (!this.localStorage) return;
-    this.localStorage.setItem(key, value);
-  }
-  
-  /**
-   * Wrapper for localStorage.removeItem
-   */
-  private removeItem(key: string): void {
-    if (!this.localStorage) return;
-    this.localStorage.removeItem(key);
-  }
-  
-  /**
-   * Calculate SHA-256 hash
-   */
-  private calculateHash(data: string): string {
-    return crypto.SHA256(data).toString();
+  private sanitizeCredential(credential: SecureCredential): SecureCredential {
+    const { data, ...safeCredential } = credential;
+    return safeCredential as SecureCredential;
   }
 }
 
 // Export a singleton instance
-export const secureStorage = new SecureStorage();
+const secureStorage = new SecureStorage();
+export default secureStorage;

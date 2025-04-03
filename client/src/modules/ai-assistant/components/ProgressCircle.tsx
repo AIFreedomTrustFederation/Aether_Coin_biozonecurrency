@@ -1,68 +1,91 @@
 import React from 'react';
-import { ProgressCircleProps } from '../types';
+
+interface ProgressCircleProps {
+  value: number;
+  size?: number;
+  strokeWidth?: number;
+  thresholds?: {
+    low: number;
+    medium: number;
+    high: number;
+  };
+  showLabel?: boolean;
+  label?: string;
+  className?: string;
+}
 
 /**
- * A circular progress indicator component
- * 
- * @param props Component properties
- * @returns React component
+ * A circular progress indicator with customizable thresholds for color coding
  */
 const ProgressCircle: React.FC<ProgressCircleProps> = ({
-  percentage,
-  size = 64,
+  value,
+  size = 40,
   strokeWidth = 4,
-  color = '#0284c7',
-  backgroundColor = '#e2e8f0',
-  children,
-  className = ''
+  thresholds = { low: 30, medium: 60, high: 85 },
+  showLabel = false,
+  label = '',
+  className = '',
 }) => {
-  // Calculate dimensions
+  // Normalize value to 0-100 range
+  const normalizedValue = Math.min(100, Math.max(0, value));
+  
+  // Calculate circle properties
   const radius = (size - strokeWidth) / 2;
-  const circumference = radius * 2 * Math.PI;
-  const offset = circumference - (percentage / 100) * circumference;
+  const circumference = 2 * Math.PI * radius;
+  const dashOffset = circumference - (normalizedValue / 100) * circumference;
+  
+  // Determine color based on thresholds
+  const getColor = () => {
+    if (normalizedValue >= thresholds.high) {
+      return 'text-red-500';
+    } else if (normalizedValue >= thresholds.medium) {
+      return 'text-yellow-500';
+    } else if (normalizedValue >= thresholds.low) {
+      return 'text-emerald-500';
+    } else {
+      return 'text-blue-500';
+    }
+  };
   
   return (
-    <div 
-      className={`relative inline-flex items-center justify-center ${className}`}
-      style={{ width: size, height: size }}
-    >
+    <div className={`relative flex flex-col items-center justify-center ${className}`}>
       <svg
-        className="transform -rotate-90"
         width={size}
         height={size}
+        viewBox={`0 0 ${size} ${size}`}
+        className="transform -rotate-90"
       >
         {/* Background circle */}
         <circle
-          className="transition-all duration-300"
           cx={size / 2}
           cy={size / 2}
           r={radius}
+          fill="none"
           strokeWidth={strokeWidth}
-          stroke={backgroundColor}
-          fill="transparent"
+          className="stroke-gray-200 dark:stroke-gray-700"
         />
         
-        {/* Progress circle */}
+        {/* Progress arc */}
         <circle
-          className="transition-all duration-300 ease-in-out"
           cx={size / 2}
           cy={size / 2}
           r={radius}
+          fill="none"
           strokeWidth={strokeWidth}
-          stroke={color}
           strokeDasharray={circumference}
-          strokeDashoffset={offset}
+          strokeDashoffset={dashOffset}
           strokeLinecap="round"
-          fill="transparent"
+          className={getColor()}
         />
       </svg>
       
-      {/* Children content (typically text or icon) */}
-      {children && (
-        <div className="absolute inset-0 flex items-center justify-center">
-          {children}
-        </div>
-      )}
+      {/* Value */}
+      <div className="absolute flex flex-col items-center justify-center w-full h-full">
+        <span className="text-xs font-semibold">{Math.round(normalizedValue)}%</span>
+        {showLabel && label && (
+          <span className="text-[0.6rem] opacity-70 mt-[-2px]">{label}</span>
+        )}
+      </div>
     </div>
   );
 };

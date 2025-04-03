@@ -1,127 +1,229 @@
-import React from 'react';
-import { formatAddress, formatDate, formatTokenAmount } from '../utils/formatters';
+import React, { useState } from 'react';
 import { TransactionHoldProps } from '../types';
+import { formatAddress, formatDate, formatTokenAmount } from '../utils/formatters';
+import ProgressCircle from './ProgressCircle';
 
 /**
- * TransactionHold component displays a transaction that is being held
- * for security review, allowing users to release or cancel it.
+ * Component to display a held transaction with release options
  */
-const TransactionHold: React.FC<TransactionHoldProps> = ({ 
-  transaction, 
+const TransactionHold: React.FC<TransactionHoldProps> = ({
+  transaction,
   className = '',
-  title = 'Transaction Hold'
+  title = 'Transaction On Hold'
 }) => {
-  // Call these when implemented
-  const handleRelease = () => {
-    console.log('Release transaction:', transaction.id);
-    // Implementation would call API to release transaction
-  };
+  const [expanded, setExpanded] = useState(false);
+  const [releasing, setReleasing] = useState(false);
+  const [rejecting, setRejecting] = useState(false);
   
-  const handleCancel = () => {
-    console.log('Cancel transaction:', transaction.id);
-    // Implementation would call API to cancel transaction
-  };
-  
-  // Calculate remaining hold time
-  const calculateRemainingTime = () => {
-    if (!transaction.holdUntil) {
-      return 'No hold period';
-    }
+  // Calculate time remaining if there's a holdUntil date
+  const getTimeRemaining = () => {
+    if (!transaction.holdUntil) return null;
     
     const now = new Date();
-    const holdUntil = new Date(transaction.holdUntil);
+    const holdTime = new Date(transaction.holdUntil);
+    const diffMs = holdTime.getTime() - now.getTime();
     
-    if (now > holdUntil) {
-      return 'Hold period expired';
-    }
+    if (diffMs <= 0) return 'Hold period expired';
     
-    const diffMs = holdUntil.getTime() - now.getTime();
-    const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
     
-    return `${diffHrs}h ${diffMins}m remaining`;
+    return `${diffHours}h ${diffMinutes}m remaining`;
   };
   
-  // Get a badge color based on risk score
-  const getRiskBadgeColor = () => {
-    const score = transaction.riskScore || 0;
+  const handleRelease = async () => {
+    setReleasing(true);
     
-    if (score >= 80) return 'bg-red-100 text-red-800 border-red-200';
-    if (score >= 60) return 'bg-orange-100 text-orange-800 border-orange-200';
-    if (score >= 40) return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-    if (score >= 20) return 'bg-blue-100 text-blue-800 border-blue-200';
-    return 'bg-green-100 text-green-800 border-green-200';
+    try {
+      // API call to release transaction would go here
+      // await releaseTransaction(transaction.id);
+      
+      // Simulate API call for now
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      console.log('Transaction released:', transaction.id);
+      
+      // Would normally update state or trigger a refresh
+    } catch (error) {
+      console.error('Error releasing transaction:', error);
+    } finally {
+      setReleasing(false);
+    }
+  };
+  
+  const handleReject = async () => {
+    setRejecting(true);
+    
+    try {
+      // API call to reject transaction would go here
+      // await rejectTransaction(transaction.id);
+      
+      // Simulate API call for now
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      console.log('Transaction rejected:', transaction.id);
+      
+      // Would normally update state or trigger a refresh
+    } catch (error) {
+      console.error('Error rejecting transaction:', error);
+    } finally {
+      setRejecting(false);
+    }
+  };
+  
+  // Determine the risk level (0-100) based on hold reason
+  // In a real implementation, this would come from the AI analysis
+  const getRiskLevel = () => {
+    if (!transaction.holdReason) return 50;
+    
+    const reason = transaction.holdReason.toLowerCase();
+    
+    if (reason.includes('critical')) return 95;
+    if (reason.includes('multiple') || reason.includes('high')) return 75;
+    if (reason.includes('suspicious')) return 60;
+    if (reason.includes('unusual')) return 40;
+    
+    return 50;
   };
   
   return (
-    <div className={`border rounded-lg shadow-sm p-4 ${className}`}>
-      <div className="flex justify-between items-start mb-3">
-        <h3 className="text-lg font-medium">{title}</h3>
+    <div className={`border rounded-lg overflow-hidden shadow-sm ${className}`}>
+      {/* Header */}
+      <div className="bg-yellow-50 dark:bg-yellow-900/20 px-4 py-3 border-b flex items-center justify-between">
+        <div className="flex items-center space-x-2">
+          <div className="h-2 w-2 rounded-full bg-yellow-500"></div>
+          <h3 className="font-medium text-yellow-800 dark:text-yellow-300">{title}</h3>
+        </div>
         
-        <div className={`px-2 py-1 text-xs font-medium rounded-full border ${getRiskBadgeColor()}`}>
-          Risk Score: {transaction.riskScore || 'Unknown'}
+        <div className="flex items-center space-x-2">
+          <span className="text-xs text-yellow-700 dark:text-yellow-400">
+            {getTimeRemaining() || 'Manual review required'}
+          </span>
+          <button
+            onClick={() => setExpanded(!expanded)}
+            className="p-1 text-yellow-700 dark:text-yellow-400"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className={`transform transition-transform ${expanded ? 'rotate-180' : ''}`}
+            >
+              <path d="m6 9 6 6 6-6" />
+            </svg>
+          </button>
         </div>
       </div>
       
-      <div className="space-y-3">
-        {/* Transaction details */}
-        <div className="grid grid-cols-2 gap-2 text-sm">
-          <div className="text-gray-500">Transaction ID</div>
-          <div className="font-mono text-sm truncate">{transaction.id}</div>
+      {/* Transaction details */}
+      <div className="p-4 bg-white dark:bg-gray-900">
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
+            <div className="text-sm font-medium">{transaction.type}</div>
+            <div className="text-2xl font-bold">
+              {formatTokenAmount(transaction.amount, transaction.tokenSymbol)}
+            </div>
+            <div className="text-sm text-muted-foreground">
+              {formatDate(transaction.timestamp, true)}
+            </div>
+          </div>
           
-          <div className="text-gray-500">Type</div>
-          <div className="capitalize">{transaction.type}</div>
-          
-          <div className="text-gray-500">Amount</div>
-          <div className="font-medium">{formatTokenAmount(transaction.amount, 6, transaction.tokenSymbol)}</div>
-          
-          <div className="text-gray-500">From</div>
-          <div className="font-mono text-sm truncate">{formatAddress(transaction.fromAddress)}</div>
-          
-          <div className="text-gray-500">To</div>
-          <div className="font-mono text-sm truncate">{formatAddress(transaction.toAddress)}</div>
-          
-          <div className="text-gray-500">Network</div>
-          <div>{transaction.network || 'Unknown'}</div>
-          
-          {transaction.fee && (
-            <>
-              <div className="text-gray-500">Fee</div>
-              <div>{transaction.fee}</div>
-            </>
-          )}
-          
-          <div className="text-gray-500">Date</div>
-          <div>{formatDate(transaction.timestamp)}</div>
+          <div className="flex flex-col items-center">
+            <ProgressCircle 
+              value={getRiskLevel()} 
+              size={50} 
+              thresholds={{ low: 30, medium: 60, high: 80 }}
+              showLabel
+              label="Risk"
+            />
+          </div>
+        </div>
+        
+        {/* Address information */}
+        <div className="mt-4 space-y-2">
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">From:</span>
+            <span className="font-mono">{formatAddress(transaction.fromAddress)}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">To:</span>
+            <span className="font-mono">{formatAddress(transaction.toAddress)}</span>
+          </div>
         </div>
         
         {/* Hold reason */}
         {transaction.holdReason && (
-          <div className="bg-amber-50 border border-amber-200 rounded p-3 text-sm">
-            <div className="font-medium text-amber-800 mb-1">Hold Reason</div>
-            <p className="text-amber-700">{transaction.holdReason}</p>
-            <div className="mt-2 text-xs text-amber-600 font-medium">{calculateRemainingTime()}</div>
+          <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-md text-sm text-yellow-800 dark:text-yellow-300">
+            <div className="font-medium mb-1">Hold Reason:</div>
+            <div>{transaction.holdReason}</div>
+          </div>
+        )}
+        
+        {/* Additional details when expanded */}
+        {expanded && (
+          <div className="mt-4 border-t pt-4 space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Transaction Hash:</span>
+              <span className="font-mono">{formatAddress(transaction.txHash, 8, 8)}</span>
+            </div>
+            {transaction.fee && (
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Network Fee:</span>
+                <span>{transaction.fee}</span>
+              </div>
+            )}
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Status:</span>
+              <span>{transaction.status}</span>
+            </div>
+            {transaction.blockNumber && (
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Block:</span>
+                <span>{transaction.blockNumber}</span>
+              </div>
+            )}
           </div>
         )}
         
         {/* Action buttons */}
-        <div className="flex space-x-3 justify-end pt-2">
+        <div className="mt-6 grid grid-cols-2 gap-3">
           <button
-            onClick={handleCancel}
-            className="px-3 py-1.5 border border-gray-300 text-gray-700 text-sm rounded-md 
-                      hover:bg-gray-50 transition-colors"
-            aria-label="Cancel transaction"
+            onClick={handleReject}
+            disabled={rejecting || releasing}
+            className="px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-md font-medium text-sm transition-colors flex items-center justify-center"
           >
-            Cancel
+            {rejecting ? (
+              <>
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Rejecting...
+              </>
+            ) : (
+              'Reject'
+            )}
           </button>
-          
           <button
             onClick={handleRelease}
-            className="px-3 py-1.5 bg-primary text-white text-sm rounded-md 
-                      hover:bg-primary/90 transition-colors"
-            aria-label="Release transaction"
+            disabled={rejecting || releasing}
+            className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 dark:bg-yellow-600 dark:hover:bg-yellow-700 text-white rounded-md font-medium text-sm transition-colors flex items-center justify-center"
           >
-            Release
+            {releasing ? (
+              <>
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Releasing...
+              </>
+            ) : (
+              'Release Transaction'
+            )}
           </button>
         </div>
       </div>

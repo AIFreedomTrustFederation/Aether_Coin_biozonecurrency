@@ -1,195 +1,202 @@
-/**
- * String and number formatting utilities for consistent display
- */
+import { FormatAddressOptions, FormatDateOptions, FormatTokenAmountOptions } from '../types';
 
 /**
- * Format a blockchain address for display (truncate middle)
- * 
+ * Format a blockchain address to a user-friendly format
  * @param address The full address to format
- * @param startChars Number of starting characters to show
- * @param endChars Number of ending characters to show
+ * @param startChars Number of starting characters to display (default: 6)
+ * @param endChars Number of ending characters to display (default: 4)
+ * @param separator Separator string between start and end (default: '...')
  * @returns Formatted address string
  */
-export const formatAddress = (address: string, startChars = 6, endChars = 4): string => {
-  if (!address) return 'Unknown';
-  if (address.length <= startChars + endChars) return address;
+export function formatAddress(
+  address: string | null | undefined, 
+  startChars: number = 6, 
+  endChars: number = 4,
+  separator: string = '...'
+): string {
+  if (!address) return 'N/A';
   
-  return `${address.substring(0, startChars)}...${address.substring(address.length - endChars)}`;
-};
-
-/**
- * Format token amount with appropriate decimal places and symbol
- * 
- * @param amount The token amount as string
- * @param decimals Number of decimal places to display
- * @param symbol Optional token symbol to append
- * @returns Formatted token amount string
- */
-export const formatTokenAmount = (amount: string, decimals = 4, symbol?: string): string => {
-  if (!amount) return '0';
-  
-  let formattedAmount: string;
-  
-  try {
-    // Parse amount as number and format with fixed decimals
-    const numAmount = parseFloat(amount);
-    formattedAmount = numAmount.toFixed(decimals);
-    
-    // Remove trailing zeros
-    formattedAmount = formattedAmount.replace(/\.?0+$/, '');
-    
-    // Add commas for thousands
-    formattedAmount = formatLargeNumber(formattedAmount);
-    
-    // Add symbol if provided
-    if (symbol) {
-      formattedAmount = `${formattedAmount} ${symbol}`;
-    }
-  } catch (error) {
-    console.error('Error formatting token amount:', error);
-    formattedAmount = amount;
+  if (address.length <= startChars + endChars) {
+    return address;
   }
   
-  return formattedAmount;
-};
+  return `${address.substring(0, startChars)}${separator}${address.substring(address.length - endChars)}`;
+}
 
 /**
- * Format a date for display
- * 
- * @param date Date object or string
- * @param includeTime Whether to include time
+ * Format a date to a user-friendly format
+ * @param date Date to format
+ * @param includeTime Whether to include time component (default: false)
+ * @param includeSeconds Whether to include seconds in time (default: false)
  * @returns Formatted date string
  */
-export const formatDate = (date: Date | string, includeTime = true): string => {
-  if (!date) return 'Unknown';
+export function formatDate(
+  date: Date | string | number | null | undefined,
+  includeTime: boolean = false,
+  includeSeconds: boolean = false
+): string {
+  if (!date) return 'N/A';
   
-  const dateObj = date instanceof Date ? date : new Date(date);
+  const dateObj = typeof date === 'object' ? date : new Date(date);
   
-  try {
-    if (includeTime) {
-      return dateObj.toLocaleString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-    }
+  if (isNaN(dateObj.getTime())) {
+    return 'Invalid Date';
+  }
+  
+  // Format date part
+  const year = dateObj.getFullYear();
+  const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+  const day = String(dateObj.getDate()).padStart(2, '0');
+  let result = `${year}-${month}-${day}`;
+  
+  // Add time if requested
+  if (includeTime) {
+    const hours = String(dateObj.getHours()).padStart(2, '0');
+    const minutes = String(dateObj.getMinutes()).padStart(2, '0');
+    result += ` ${hours}:${minutes}`;
     
-    return dateObj.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  } catch (error) {
-    console.error('Error formatting date:', error);
-    return String(date);
+    if (includeSeconds) {
+      const seconds = String(dateObj.getSeconds()).padStart(2, '0');
+      result += `:${seconds}`;
+    }
   }
-};
+  
+  return result;
+}
 
 /**
- * Format a duration in milliseconds to a human-readable string
- * 
- * @param ms Duration in milliseconds
- * @returns Formatted duration string
+ * Format a token amount with appropriate decimal places
+ * @param amount Amount to format
+ * @param tokenSymbol Symbol of the token (default: '')
+ * @param minimumFractionDigits Minimum fraction digits (default: 2)
+ * @param maximumFractionDigits Maximum fraction digits (default: 6)
+ * @returns Formatted token amount string
  */
-export const formatDuration = (ms: number): string => {
-  if (ms < 1000) return `${ms}ms`;
-  
-  const seconds = Math.floor(ms / 1000);
-  if (seconds < 60) return `${seconds}s`;
-  
-  const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = seconds % 60;
-  if (minutes < 60) return `${minutes}m ${remainingSeconds}s`;
-  
-  const hours = Math.floor(minutes / 60);
-  const remainingMinutes = minutes % 60;
-  return `${hours}h ${remainingMinutes}m`;
-};
-
-/**
- * Format a large number with commas
- * 
- * @param value Number or string to format
- * @returns Formatted number string with commas
- */
-export const formatLargeNumber = (value: number | string): string => {
-  if (value === null || value === undefined) return '0';
-  
-  // Convert to string if it's a number
-  const strValue = typeof value === 'number' ? value.toString() : value;
-  
-  // Split into integer and decimal parts
-  const parts = strValue.split('.');
-  
-  // Add commas to integer part
-  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-  
-  // Join back with decimal part if exists
-  return parts.length > 1 ? parts.join('.') : parts[0];
-};
-
-/**
- * Format currency value with symbol
- * 
- * @param value Currency value
- * @param currency Currency code (USD, EUR, etc.)
- * @param decimals Number of decimal places
- * @returns Formatted currency string
- */
-export const formatCurrency = (value: number | string, currency = 'USD', decimals = 2): string => {
-  if (value === null || value === undefined) return '$0.00';
-  
-  const numValue = typeof value === 'string' ? parseFloat(value) : value;
-  
-  try {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency,
-      minimumFractionDigits: decimals,
-      maximumFractionDigits: decimals
-    }).format(numValue);
-  } catch (error) {
-    console.error('Error formatting currency:', error);
-    return `$${numValue.toFixed(decimals)}`;
+export function formatTokenAmount(
+  amount: string | number | null | undefined,
+  tokenSymbol: string = '',
+  minimumFractionDigits: number = 2,
+  maximumFractionDigits: number = 6
+): string {
+  if (amount === null || amount === undefined || amount === '') {
+    return tokenSymbol ? `0 ${tokenSymbol}` : '0';
   }
-};
+  
+  const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+  
+  if (isNaN(numAmount)) {
+    return tokenSymbol ? `0 ${tokenSymbol}` : '0';
+  }
+  
+  const formattedAmount = numAmount.toLocaleString('en-US', {
+    minimumFractionDigits,
+    maximumFractionDigits
+  });
+  
+  return tokenSymbol ? `${formattedAmount} ${tokenSymbol}` : formattedAmount;
+}
 
 /**
- * Format percentage value
- * 
+ * Format a relative time (e.g., "5 minutes ago")
+ * @param date Date to format relative to now
+ * @returns Formatted relative time string
+ */
+export function formatRelativeTime(date: Date | string | number): string {
+  const now = new Date();
+  const timeDate = typeof date === 'object' ? date : new Date(date);
+  
+  if (isNaN(timeDate.getTime())) {
+    return 'Invalid Date';
+  }
+  
+  const diffMs = now.getTime() - timeDate.getTime();
+  const diffSecs = Math.floor(diffMs / 1000);
+  const diffMins = Math.floor(diffSecs / 60);
+  const diffHours = Math.floor(diffMins / 60);
+  const diffDays = Math.floor(diffHours / 24);
+  
+  if (diffSecs < 60) {
+    return diffSecs <= 5 ? 'just now' : `${diffSecs}s ago`;
+  } else if (diffMins < 60) {
+    return `${diffMins}m ago`;
+  } else if (diffHours < 24) {
+    return `${diffHours}h ago`;
+  } else if (diffDays < 7) {
+    return `${diffDays}d ago`;
+  } else {
+    return formatDate(date);
+  }
+}
+
+/**
+ * Format a gas fee with appropriate units
+ * @param fee Fee amount in native units
+ * @param showUnits Whether to show units (default: true)
+ * @returns Formatted gas fee
+ */
+export function formatGasFee(
+  fee: string | number | null | undefined,
+  showUnits: boolean = true
+): string {
+  if (fee === null || fee === undefined || fee === '') {
+    return showUnits ? '0 Gwei' : '0';
+  }
+  
+  const numFee = typeof fee === 'string' ? parseFloat(fee) : fee;
+  
+  if (isNaN(numFee)) {
+    return showUnits ? '0 Gwei' : '0';
+  }
+  
+  // Format based on size
+  if (numFee < 0.001) {
+    const formatted = (numFee * 1000000).toFixed(2);
+    return showUnits ? `${formatted} wei` : formatted;
+  } else if (numFee < 1) {
+    const formatted = (numFee * 1000).toFixed(2);
+    return showUnits ? `${formatted} mGwei` : formatted;
+  } else {
+    const formatted = numFee.toFixed(2);
+    return showUnits ? `${formatted} Gwei` : formatted;
+  }
+}
+
+/**
+ * Format percentage values
  * @param value Percentage value (0-100 or 0-1)
- * @param decimals Number of decimal places
- * @param includeSymbol Whether to include % symbol
+ * @param normalize Whether to normalize value to 0-100 range
  * @returns Formatted percentage string
  */
-export const formatPercentage = (value: number | string, decimals = 2, includeSymbol = true): string => {
-  if (value === null || value === undefined) return '0%';
+export function formatPercentage(
+  value: number | string | null | undefined,
+  normalize: boolean = false
+): string {
+  if (value === null || value === undefined || value === '') {
+    return '0%';
+  }
   
   let numValue = typeof value === 'string' ? parseFloat(value) : value;
   
-  // If value is a decimal (0-1), convert to percentage (0-100)
-  if (numValue > 0 && numValue < 1) {
-    numValue *= 100;
+  if (isNaN(numValue)) {
+    return '0%';
   }
   
-  try {
-    const formatted = numValue.toFixed(decimals);
-    return includeSymbol ? `${formatted}%` : formatted;
-  } catch (error) {
-    console.error('Error formatting percentage:', error);
-    return includeSymbol ? `${numValue}%` : `${numValue}`;
+  // Normalize if needed (convert decimal to percentage)
+  if (normalize && numValue <= 1) {
+    numValue = numValue * 100;
   }
-};
-
-/**
- * Convert wei to gwei
- * 
- * @param wei Wei value as string or number
- * @returns Gwei value
- */
-export const convertWeiToGwei = (wei: string | number): number => {
-  const weiValue = typeof wei === 'string' ? parseFloat(wei) : wei;
-  return weiValue / 1e9; // 1 Gwei = 10^9 Wei
-};
+  
+  // Ensure value is in range 0-100
+  numValue = Math.max(0, Math.min(100, numValue));
+  
+  // Format based on value
+  if (numValue === 0) {
+    return '0%';
+  } else if (numValue < 0.01) {
+    return '<0.01%';
+  } else if (numValue > 99.99 && numValue < 100) {
+    return '>99.99%';
+  } else {
+    return `${numValue.toFixed(2)}%`;
+  }
+}
