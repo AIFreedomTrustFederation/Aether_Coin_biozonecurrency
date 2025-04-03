@@ -8,11 +8,13 @@ import {
   CidEntry, InsertCidEntry,
   PaymentMethod, InsertPaymentMethod,
   Payment, InsertPayment,
+  WalletHealthScore, InsertWalletHealthScore,
+  WalletHealthIssue, InsertWalletHealthIssue,
   users, wallets, transactions, smartContracts, aiMonitoringLogs, cidEntries,
-  paymentMethods, payments
+  paymentMethods, payments, walletHealthScores, walletHealthIssues
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, sql } from "drizzle-orm";
+import { eq, desc, and, sql, inArray } from "drizzle-orm";
 
 export class PgStorage implements IStorage {
   // User methods
@@ -284,5 +286,116 @@ export class PgStorage implements IStorage {
       .returning();
     
     return result.length ? result[0] : undefined;
+  }
+
+  // Wallet Health Score methods
+  async getWalletHealthScoresByUserId(userId: number): Promise<WalletHealthScore[]> {
+    try {
+      // First get the user's wallets
+      const userWallets = await this.getWalletsByUserId(userId);
+      if (userWallets.length === 0) {
+        return [];
+      }
+      
+      const walletIds = userWallets.map(wallet => wallet.id);
+      
+      // Get health scores for these wallets
+      const scores = await db.select()
+        .from(walletHealthScores)
+        .where(inArray(walletHealthScores.walletId, walletIds))
+        .orderBy(desc(walletHealthScores.createdAt));
+      
+      return scores;
+    } catch (error) {
+      console.error('Error getting wallet health scores by user ID:', error);
+      return [];
+    }
+  }
+  
+  async getWalletHealthScoreByWalletId(walletId: number): Promise<WalletHealthScore | undefined> {
+    try {
+      const scores = await db.select()
+        .from(walletHealthScores)
+        .where(eq(walletHealthScores.walletId, walletId))
+        .orderBy(desc(walletHealthScores.createdAt))
+        .limit(1);
+      
+      return scores.length ? scores[0] : undefined;
+    } catch (error) {
+      console.error('Error getting wallet health score by wallet ID:', error);
+      return undefined;
+    }
+  }
+  
+  async createWalletHealthScore(insertScore: InsertWalletHealthScore): Promise<WalletHealthScore> {
+    try {
+      const result = await db.insert(walletHealthScores)
+        .values(insertScore)
+        .returning();
+        
+      return result[0];
+    } catch (error) {
+      console.error('Error creating wallet health score:', error);
+      throw error;
+    }
+  }
+  
+  // Wallet Health Issue methods
+  async getWalletHealthIssuesByScoreId(healthScoreId: number): Promise<WalletHealthIssue[]> {
+    try {
+      const issues = await db.select()
+        .from(walletHealthIssues)
+        .where(eq(walletHealthIssues.healthScoreId, healthScoreId))
+        .orderBy(
+          // Order by severity first (critical, high, medium, low)
+          sql`CASE 
+            WHEN ${walletHealthIssues.severity} = 'critical' THEN 1
+            WHEN ${walletHealthIssues.severity} = 'high' THEN 2
+            WHEN ${walletHealthIssues.severity} = 'medium' THEN 3
+            WHEN ${walletHealthIssues.severity} = 'low' THEN 4
+            ELSE 5
+          END`,
+          // Then by creation date (newest first)
+          desc(walletHealthIssues.createdAt)
+        );
+      
+      return issues;
+    } catch (error) {
+      console.error('Error getting wallet health issues by score ID:', error);
+      return [];
+    }
+  }
+  
+  async createWalletHealthIssue(insertIssue: InsertWalletHealthIssue): Promise<WalletHealthIssue> {
+    try {
+      const result = await db.insert(walletHealthIssues)
+        .values(insertIssue)
+        .returning();
+        
+      return result[0];
+    } catch (error) {
+      console.error('Error creating wallet health issue:', error);
+      throw error;
+    }
+  }
+  
+  async updateWalletHealthIssueResolved(id: number, resolved: boolean): Promise<WalletHealthIssue | undefined> {
+    try {
+      const now = new Date();
+      const updates: Partial<WalletHealthIssue> = { 
+        resolved, 
+        resolvedAt: resolved ? now : null 
+      };
+      
+      const result = await db.update(walletHealthIssues)
+        .set(updates)
+        .where(eq(walletHealthIssues.id, id))
+        .returning();
+      
+      return result.length ? result[0] : undefined;
+    } catch (error) {
+      console.error('Error updating wallet health issue resolved status:', error);
+      return undefined;
+    }
   }
 }

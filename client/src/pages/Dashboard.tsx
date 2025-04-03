@@ -5,6 +5,7 @@ import AIMonitoring from '@/components/dashboard/AIMonitoring';
 import RecentTransactions from '@/components/dashboard/RecentTransactions';
 import SmartContracts from '@/components/dashboard/SmartContracts';
 import CIDManagement from '@/components/dashboard/CIDManagement';
+import WalletHealthScore from '@/components/dashboard/WalletHealthScore';
 
 const Dashboard = () => {
   const isMobile = useIsMobile();
@@ -18,6 +19,11 @@ const Dashboard = () => {
       
       {/* Portfolio Summary Section */}
       <PortfolioSummary />
+      
+      {/* One-Tap Wallet Health Score Section */}
+      <div className="mb-6">
+        <WalletHealthScore />
+      </div>
       
       {/* Chart and AI Monitoring Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">

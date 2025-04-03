@@ -94,3 +94,29 @@ export interface Payment {
   createdAt: Date;
   processedAt?: Date;
 }
+
+export interface WalletHealthScore {
+  id: number;
+  userId: number;
+  walletId: number;
+  createdAt: Date | null;
+  overallScore: number; // 0-100
+  securityScore: number; // 0-100
+  diversificationScore: number; // 0-100
+  activityScore: number; // 0-100
+  gasOptimizationScore: number; // 0-100
+  backgroundScanTimestamp: Date | null;
+}
+
+export interface WalletHealthIssue {
+  id: number;
+  healthScoreId: number;
+  createdAt: Date | null;
+  category: 'security' | 'diversification' | 'activity' | 'gasOptimization';
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  title: string;
+  description: string;
+  recommendation: string;
+  resolved: boolean;
+  resolvedAt: Date | null;
+}

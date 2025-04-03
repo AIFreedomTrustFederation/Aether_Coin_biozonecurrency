@@ -342,3 +342,93 @@ export const processPayment = async (paymentMethodId: number, amount: number, cu
     processedAt: payment.processedAt ? new Date(payment.processedAt) : undefined
   };
 };
+
+// Wallet Health API
+export const fetchWalletHealthScores = async (): Promise<WalletHealthScore[]> => {
+  const response = await fetch('/api/wallet-health/scores', {
+    credentials: 'include',
+  });
+  
+  if (!response.ok) {
+    throw new Error('Failed to fetch wallet health scores');
+  }
+  
+  const scores = await response.json();
+  
+  // Convert date strings to Date objects
+  return scores.map((score: any) => ({
+    ...score,
+    createdAt: score.createdAt ? new Date(score.createdAt) : null,
+    backgroundScanTimestamp: score.backgroundScanTimestamp ? new Date(score.backgroundScanTimestamp) : null,
+  }));
+};
+
+export const fetchWalletHealthScoreByWalletId = async (walletId: number): Promise<WalletHealthScore> => {
+  const response = await fetch(`/api/wallet-health/scores/wallet/${walletId}`, {
+    credentials: 'include',
+  });
+  
+  if (!response.ok) {
+    throw new Error(`Failed to fetch health score for wallet ${walletId}`);
+  }
+  
+  const score = await response.json();
+  
+  return {
+    ...score,
+    createdAt: score.createdAt ? new Date(score.createdAt) : null,
+    backgroundScanTimestamp: score.backgroundScanTimestamp ? new Date(score.backgroundScanTimestamp) : null,
+  };
+};
+
+export const fetchWalletHealthIssues = async (scoreId: number): Promise<WalletHealthIssue[]> => {
+  const response = await fetch(`/api/wallet-health/issues/${scoreId}`, {
+    credentials: 'include',
+  });
+  
+  if (!response.ok) {
+    throw new Error(`Failed to fetch health issues for score ${scoreId}`);
+  }
+  
+  const issues = await response.json();
+  
+  // Convert date strings to Date objects
+  return issues.map((issue: any) => ({
+    ...issue,
+    createdAt: issue.createdAt ? new Date(issue.createdAt) : null,
+    resolvedAt: issue.resolvedAt ? new Date(issue.resolvedAt) : null,
+  }));
+};
+
+export const createWalletHealthScore = async (score: Omit<WalletHealthScore, 'id' | 'createdAt'>): Promise<WalletHealthScore> => {
+  const response = await apiRequest('POST', '/api/wallet-health/scores', score);
+  const newScore = await response.json();
+  
+  return {
+    ...newScore,
+    createdAt: newScore.createdAt ? new Date(newScore.createdAt) : null,
+    backgroundScanTimestamp: newScore.backgroundScanTimestamp ? new Date(newScore.backgroundScanTimestamp) : null,
+  };
+};
+
+export const createWalletHealthIssue = async (issue: Omit<WalletHealthIssue, 'id' | 'createdAt' | 'resolvedAt'>): Promise<WalletHealthIssue> => {
+  const response = await apiRequest('POST', '/api/wallet-health/issues', issue);
+  const newIssue = await response.json();
+  
+  return {
+    ...newIssue,
+    createdAt: newIssue.createdAt ? new Date(newIssue.createdAt) : null,
+    resolvedAt: newIssue.resolvedAt ? new Date(newIssue.resolvedAt) : null,
+  };
+};
+
+export const updateWalletHealthIssueResolved = async (id: number, resolved: boolean): Promise<WalletHealthIssue> => {
+  const response = await apiRequest('PATCH', `/api/wallet-health/issues/${id}/resolved`, { resolved });
+  const updatedIssue = await response.json();
+  
+  return {
+    ...updatedIssue,
+    createdAt: updatedIssue.createdAt ? new Date(updatedIssue.createdAt) : null,
+    resolvedAt: updatedIssue.resolvedAt ? new Date(updatedIssue.resolvedAt) : null,
+  };
+};
