@@ -81,8 +81,8 @@ const PortfolioChart = () => {
           </div>
         </div>
         
-        <div className="w-full" style={{ height: '300px' }}>
-          <ResponsiveContainer width="100%" height="100%">
+        <div className="w-full h-[300px] min-h-[300px] min-w-[200px]">
+          <ResponsiveContainer width="99%" height="99%" minHeight={250}>
             <AreaChart
               data={data}
               margin={{ top: 10, right: 5, left: 5, bottom: 0 }}

@@ -48,11 +48,9 @@ const MobileMenu = ({ isOpen, onClose }: MobileMenuProps) => {
     return false;
   };
 
-  if (!isOpen) return null;
-  
   return (
     <div 
-      className="fixed inset-0 bg-background lg:hidden"
+      className={`fixed inset-0 bg-background lg:hidden transition-opacity duration-300 ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
       style={{ zIndex: 1000 }}
     >
       <div className="flex flex-col h-full">
