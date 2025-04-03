@@ -1,62 +1,16 @@
 import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import {
-  Area,
-  AreaChart,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from 'recharts';
-
-// Sample data
-const generateChartData = (days: number, trend: 'up' | 'down' | 'mixed') => {
-  const data = [];
-  let value = 40000 + Math.random() * 2000;
-  const now = new Date();
-  
-  for (let i = days; i >= 0; i--) {
-    const date = new Date(now);
-    date.setDate(date.getDate() - i);
-    
-    // Generate the next value based on trend
-    if (trend === 'up') {
-      value = value + (Math.random() * 1000) - 200;
-    } else if (trend === 'down') {
-      value = value - (Math.random() * 800) + 200;
-    } else {
-      value = value + (Math.random() * 1600) - 800;
-    }
-    
-    data.push({
-      date: date.toISOString().split('T')[0],
-      value: Math.max(value, 1000), // Ensure we don't go below 1000
-      formattedDate: date.toLocaleDateString('en-US', { weekday: 'short' }),
-    });
-  }
-  
-  return data;
-};
-
-const timeRanges = [
-  { label: '1W', days: 7, trend: 'up' as const },
-  { label: '1M', days: 30, trend: 'mixed' as const },
-  { label: '3M', days: 90, trend: 'up' as const },
-  { label: '1Y', days: 365, trend: 'mixed' as const },
-];
 
 const PortfolioChart = () => {
   const [activeRange, setActiveRange] = useState(0);
-  const data = generateChartData(
-    timeRanges[activeRange].days,
-    timeRanges[activeRange].trend
-  );
   
-  const formatYAxis = (value: number) => {
-    return `$${(value / 1000).toFixed(0)}k`;
-  };
+  const timeRanges = [
+    { label: '1W', days: 7 },
+    { label: '1M', days: 30 },
+    { label: '3M', days: 90 },
+    { label: '1Y', days: 365 },
+  ];
 
   return (
     <Card className="lg:col-span-2">
@@ -81,51 +35,16 @@ const PortfolioChart = () => {
           </div>
         </div>
         
-        <div className="w-full h-[300px] min-h-[300px] min-w-[200px]">
-          <ResponsiveContainer width="99%" height="99%" minHeight={250}>
-            <AreaChart
-              data={data}
-              margin={{ top: 10, right: 5, left: 5, bottom: 0 }}
-            >
-              <defs>
-                <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.1} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
-              <XAxis 
-                dataKey="formattedDate" 
-                stroke="hsl(var(--muted-foreground))"
-                fontSize={12}
-                tickLine={false}
-                axisLine={false}
-              />
-              <YAxis 
-                tickFormatter={formatYAxis} 
-                stroke="hsl(var(--muted-foreground))"
-                fontSize={12}
-                tickLine={false}
-                axisLine={false}
-              />
-              <Tooltip 
-                formatter={(value: number) => [`$${value.toFixed(2)}`, 'Value']}
-                labelFormatter={(label) => `Date: ${label}`}
-                contentStyle={{ 
-                  backgroundColor: 'hsl(var(--background))',
-                  border: '1px solid hsl(var(--border))'
-                }}
-              />
-              <Area 
-                type="monotone" 
-                dataKey="value" 
-                stroke="hsl(var(--primary))" 
-                fill="url(#colorGradient)" 
-                strokeWidth={3}
-                activeDot={{ r: 6 }}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
+        <div className="w-full h-[300px] border border-border rounded-lg bg-muted/20 flex items-center justify-center">
+          <div className="text-center">
+            <div className="text-2xl font-bold text-primary mb-2">$15,557.00</div>
+            <div className="text-sm text-green-500 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+              </svg>
+              +1.76% Last {timeRanges[activeRange].days} days
+            </div>
+          </div>
         </div>
       </CardContent>
     </Card>

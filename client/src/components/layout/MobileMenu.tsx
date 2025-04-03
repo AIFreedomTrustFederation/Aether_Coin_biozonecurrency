@@ -8,7 +8,7 @@ interface MobileMenuProps {
 }
 
 const MobileMenu = ({ isOpen, onClose }: MobileMenuProps) => {
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   
   // Convert app routes to nav items with icons
   const navItems = [
@@ -26,6 +26,11 @@ const MobileMenu = ({ isOpen, onClose }: MobileMenuProps) => {
     if (path === '/' && location === '/') return true;
     if (path !== '/' && location.startsWith(path)) return true;
     return false;
+  };
+
+  const handleNavigation = (path: string) => {
+    setLocation(path);
+    onClose();
   };
 
   // If menu is not open, don't render anything
@@ -47,44 +52,34 @@ const MobileMenu = ({ isOpen, onClose }: MobileMenuProps) => {
         
         <nav className="flex-1 overflow-y-auto py-2">
           {navItems.map((item) => (
-            <a 
+            <div 
               key={item.path}
-              href={item.path}
-              className={`block px-4 py-3 mb-1 ${
+              className={`block px-4 py-3 mb-1 cursor-pointer ${
                 isActive(item.path) 
                   ? 'text-foreground bg-primary/10 border-l-2 border-primary' 
                   : 'text-muted-foreground hover:text-foreground hover:bg-primary/5 border-l-2 border-transparent'
               }`}
-              onClick={(e) => {
-                e.preventDefault();
-                window.location.href = item.path;
-                onClose();
-              }}
+              onClick={() => handleNavigation(item.path)}
             >
               <div className="flex items-center">
                 <item.icon className="w-5 h-5 mr-3" />
                 {item.label}
               </div>
-            </a>
+            </div>
           ))}
         </nav>
         
         {/* Notification Status */}
         <div className="p-4 border-t border-border">
-          <a 
-            href="/settings"
-            className="block p-2"
-            onClick={(e) => {
-              e.preventDefault();
-              window.location.href = '/settings';
-              onClose();
-            }}
+          <div 
+            className="block p-2 cursor-pointer"
+            onClick={() => handleNavigation('/settings')}
           >
             <div className="flex items-center">
               <Settings className="w-5 h-5 mr-3" />
               <div className="text-sm">Settings</div>
             </div>
-          </a>
+          </div>
         </div>
       </div>
     </div>
