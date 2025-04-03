@@ -18,6 +18,7 @@ import * as twilioService from "./services/twilio";
 import { z } from "zod";
 import Stripe from "stripe";
 import apiGateway from "../api-gateway";
+import apiServicesRouter from "./routes/api-services";
 
 // Initialize Stripe with the secret key from environment variables
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -27,6 +28,10 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 export async function registerRoutes(app: Express): Promise<Server> {
   // Register the API gateway for modular widget system and other modular services
   app.use('/api/gateway', apiGateway);
+  
+  // Mount external API services router (CoinGecko, Blockstream, Etherscan, CryptoCompare, Matrix)
+  app.use('/api/services', apiServicesRouter);
+  
   // API routes
   
   // Get user wallets

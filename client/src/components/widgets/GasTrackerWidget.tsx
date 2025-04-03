@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { WidgetProps } from './WidgetRegistry';
 import { isWidgetType } from '@/types/widget';
@@ -8,40 +8,63 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
+import { useQuery } from '@tanstack/react-query';
 import {
   Gauge,
   Flame,
   Clock,
   RefreshCw,
   CheckCircle,
-  Hourglass
+  Hourglass,
+  AlertTriangle
 } from 'lucide-react';
 
-// Sample gas price data
-const sampleGasData = {
-  ethereum: {
-    network: 'Ethereum',
-    currentBaseFee: 22, // Gwei
-    priorityFee: {
-      low: 1.2,
-      medium: 1.5,
-      high: 2.5
-    },
-    totalFees: {
-      low: 23.2,
-      medium: 23.5,
-      high: 24.5
-    },
-    estimatedTimes: {
-      low: '3-5 min',
-      medium: '1-3 min',
-      high: '<1 min'
-    },
-    recommendations: 'Medium priority is good for most transactions.',
-    trend: 'decreasing',
-    lastUpdated: new Date(Date.now() - 1000 * 60 * 2), // 2 minutes ago
-    historicalData: [28, 30, 25, 23, 22, 24, 22]
-  },
+// Type for Etherscan gas price data
+interface EtherscanGasResponse {
+  LastBlock: string;
+  SafeGasPrice: string;
+  ProposeGasPrice: string;
+  FastGasPrice: string;
+  suggestBaseFee: string;
+  gasUsedRatio: string;
+}
+
+// Type for Bitcoin fee estimates
+interface BlockstreamFeesResponse {
+  [blocks: string]: number;
+  '1': number;
+  '3': number;
+  '6': number;
+  '144': number;
+}
+
+// Define the network gas data interface
+interface NetworkGasData {
+  network: string;
+  currentBaseFee: number;
+  priorityFee: {
+    low: number;
+    medium: number;
+    high: number;
+  };
+  totalFees: {
+    low: number;
+    medium: number;
+    high: number;
+  };
+  estimatedTimes: {
+    low: string;
+    medium: string;
+    high: string;
+  };
+  recommendations: string;
+  trend: string;
+  lastUpdated: Date;
+  historicalData?: number[];
+}
+
+// Fallback sample data for networks without real-time API integration yet
+const sampleGasData: Record<string, NetworkGasData> = {
   polygon: {
     network: 'Polygon',
     currentBaseFee: 85, // Gwei
@@ -62,7 +85,7 @@ const sampleGasData = {
     },
     recommendations: 'Low fees are sufficient for most use cases.',
     trend: 'stable',
-    lastUpdated: new Date(Date.now() - 1000 * 60 * 4), // 4 minutes ago
+    lastUpdated: new Date(),
     historicalData: [100, 95, 90, 105, 95, 85, 85]
   },
   arbitrum: {
@@ -85,7 +108,7 @@ const sampleGasData = {
     },
     recommendations: 'Low fees are perfectly fine for all transactions.',
     trend: 'stable',
-    lastUpdated: new Date(Date.now() - 1000 * 60 * 3), // 3 minutes ago
+    lastUpdated: new Date(),
     historicalData: [0.11, 0.13, 0.12, 0.11, 0.12, 0.12, 0.12]
   },
   optimism: {
@@ -108,7 +131,7 @@ const sampleGasData = {
     },
     recommendations: 'Network is running smoothly, even the lowest fee is fast.',
     trend: 'increasing',
-    lastUpdated: new Date(Date.now() - 1000 * 60 * 1), // 1 minute ago
+    lastUpdated: new Date(),
     historicalData: [0.05, 0.06, 0.07, 0.08, 0.09, 0.09, 0.09]
   },
   base: {
@@ -131,8 +154,31 @@ const sampleGasData = {
     },
     recommendations: 'Low fees are usually sufficient unless the network is congested.',
     trend: 'increasing',
-    lastUpdated: new Date(Date.now() - 1000 * 60 * 5), // 5 minutes ago
+    lastUpdated: new Date(),
     historicalData: [0.18, 0.19, 0.20, 0.22, 0.23, 0.24, 0.24]
+  },
+  bitcoin: {
+    network: 'Bitcoin',
+    currentBaseFee: 0,
+    priorityFee: {
+      low: 0,
+      medium: 0,
+      high: 0
+    },
+    totalFees: {
+      low: 0,
+      medium: 0,
+      high: 0
+    },
+    estimatedTimes: {
+      low: 'Next day',
+      medium: 'Several hours',
+      high: 'Next block'
+    },
+    recommendations: 'Choose fee based on urgency of transaction.',
+    trend: 'stable',
+    lastUpdated: new Date(),
+    historicalData: []
   }
 };
 
@@ -212,8 +258,137 @@ const GasTrackerWidget: React.FC<WidgetProps> = ({ widget, isEditing, onConfigCh
     handleSettingChange('primaryNetwork', network);
   };
   
+  // Fetch real-time data
+  const {
+    data: ethereumGasData,
+    isLoading: isEthereumLoading,
+    error: ethereumError,
+    refetch: refetchEthereum
+  } = useQuery({
+    queryKey: ['/api/services/etherscan/gas'],
+    enabled: editSettings.networks.includes('ethereum'),
+    refetchInterval: refreshInterval * 1000,
+  });
+
+  const {
+    data: bitcoinFeeData,
+    isLoading: isBitcoinLoading,
+    error: bitcoinError,
+    refetch: refetchBitcoin
+  } = useQuery({
+    queryKey: ['/api/services/blockstream/fees'],
+    enabled: editSettings.networks.includes('bitcoin'),
+    refetchInterval: refreshInterval * 1000,
+  });
+
+  // Process Ethereum data
+  const ethereumData: NetworkGasData | undefined = React.useMemo(() => {
+    if (!ethereumGasData) return undefined;
+
+    // Cast the data to the proper type
+    const gasData = ethereumGasData as unknown as EtherscanGasResponse;
+    
+    const baseFee = parseFloat(gasData.suggestBaseFee);
+    const safeGasPrice = parseFloat(gasData.SafeGasPrice);
+    const proposeGasPrice = parseFloat(gasData.ProposeGasPrice);
+    const fastGasPrice = parseFloat(gasData.FastGasPrice);
+
+    // Calculate trend based on gas price comparison
+    let trend = 'stable';
+    // Compare current base fee with average of other prices to determine trend
+    const avgOtherPrices = (safeGasPrice + proposeGasPrice + fastGasPrice) / 3;
+    if (baseFee < avgOtherPrices * 0.8) {
+      trend = 'decreasing';
+    } else if (baseFee > avgOtherPrices * 1.2) {
+      trend = 'increasing';
+    }
+
+    return {
+      network: 'Ethereum',
+      currentBaseFee: baseFee,
+      priorityFee: {
+        low: safeGasPrice - baseFee > 0 ? safeGasPrice - baseFee : 0.1,
+        medium: proposeGasPrice - baseFee > 0 ? proposeGasPrice - baseFee : 0.5,
+        high: fastGasPrice - baseFee > 0 ? fastGasPrice - baseFee : 1.0,
+      },
+      totalFees: {
+        low: safeGasPrice,
+        medium: proposeGasPrice,
+        high: fastGasPrice,
+      },
+      estimatedTimes: {
+        low: '5-10 min',
+        medium: '1-3 min',
+        high: '<1 min',
+      },
+      recommendations: baseFee < 1 
+        ? 'Gas prices are very low. Great time for transactions!'
+        : baseFee > 10
+          ? 'Gas prices are high. Consider waiting for non-urgent transactions.'
+          : 'Gas prices are moderate. Standard priority should work for most transactions.',
+      trend: trend,
+      lastUpdated: new Date(),
+    };
+  }, [ethereumGasData]);
+
+  // Process Bitcoin data
+  const bitcoinData: NetworkGasData | undefined = React.useMemo(() => {
+    if (!bitcoinFeeData) return undefined;
+
+    // Cast to proper type
+    const feeData = bitcoinFeeData as unknown as BlockstreamFeesResponse;
+    
+    // Extract fee estimates for different confirmation targets
+    const nextBlockFee = feeData['1'] || 0;
+    const hourlyFee = feeData['3'] || 0;
+    const economyFee = feeData['6'] || 0;
+    const lowPriorityFee = feeData['144'] || 0; // 24 hours (1 day)
+
+    // Determine trend based on fee comparison
+    let trend = 'stable';
+    if (nextBlockFee > hourlyFee * 1.5) {
+      trend = 'increasing';
+    } else if (nextBlockFee < hourlyFee * 0.8) {
+      trend = 'decreasing';
+    }
+
+    return {
+      network: 'Bitcoin',
+      currentBaseFee: 0, // Bitcoin doesn't have a base fee concept like Ethereum
+      priorityFee: {
+        low: lowPriorityFee,
+        medium: economyFee,
+        high: nextBlockFee,
+      },
+      totalFees: {
+        low: lowPriorityFee,
+        medium: economyFee,
+        high: nextBlockFee,
+      },
+      estimatedTimes: {
+        low: '~24 hours',
+        medium: '~1 hour',
+        high: 'Next block',
+      },
+      recommendations: nextBlockFee < 2
+        ? 'Fees are low. Good time for transactions.'
+        : nextBlockFee > 10
+          ? 'Fees are high. Consider waiting for non-urgent transactions.'
+          : 'Fees are moderate. Choose priority based on urgency.',
+      trend: trend,
+      lastUpdated: new Date(),
+    };
+  }, [bitcoinFeeData]);
+
+  // Combine real data with sample data
+  const combinedNetworkData: Record<string, NetworkGasData> = {
+    ...sampleGasData,
+    ...(ethereumData ? { ethereum: ethereumData } : {}),
+    ...(bitcoinData ? { bitcoin: bitcoinData } : {}),
+  };
+
   // Get the active network's data
-  const primaryNetworkData = sampleGasData[editSettings.primaryNetwork as keyof typeof sampleGasData];
+  const primaryNetworkData = combinedNetworkData[editSettings.primaryNetwork];
   
   // Get max gas for the progress bars
   const getMaxGasForProgress = (): number => {
@@ -277,9 +452,20 @@ const GasTrackerWidget: React.FC<WidgetProps> = ({ widget, isEditing, onConfigCh
                 variant="ghost" 
                 size="icon" 
                 className="h-7 w-7"
-                onClick={() => {/* Would refresh gas data */}}
+                onClick={() => {
+                  if (editSettings.primaryNetwork === 'ethereum') {
+                    refetchEthereum();
+                  } else if (editSettings.primaryNetwork === 'bitcoin') {
+                    refetchBitcoin();
+                  }
+                }}
               >
-                <RefreshCw className="h-4 w-4" />
+                <RefreshCw className={`h-4 w-4 ${
+                  (editSettings.primaryNetwork === 'ethereum' && isEthereumLoading) ||
+                  (editSettings.primaryNetwork === 'bitcoin' && isBitcoinLoading)
+                    ? 'animate-spin' 
+                    : ''
+                }`} />
               </Button>
             </div>
           )}
