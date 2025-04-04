@@ -4,10 +4,15 @@ import Header from "@/components/layout/Header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Separator } from "../components/ui/separator";
 import { Button } from "../components/ui/button";
-import { Bell, Shield, User } from "lucide-react";
-
+import { Bell, Shield, User, Home, Menu } from "lucide-react";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Link } from 'wouter';
-import { Home } from 'lucide-react';
+import { appRoutes } from '@/lib/routes';
 
 export default function Settings() {
   return (
@@ -74,8 +79,41 @@ export default function Settings() {
         </TabsContent>
       </Tabs>
       
-      {/* Space at the bottom to avoid content being covered by the floating button */}
-      <div className="h-24"></div>
+      {/* Back and Navigation Buttons */}
+      <div className="mt-8 flex justify-between items-center">
+        {/* Back to Home Button */}
+        <Link href="/">
+          <Button
+            variant="secondary"
+            className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 flex items-center gap-2 rounded-full"
+          >
+            <Home className="h-4 w-4" />
+            <span>Back to Home</span>
+          </Button>
+        </Link>
+        
+        {/* Navigation Dropdown */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="flex items-center gap-2">
+              <Menu className="h-4 w-4" />
+              <span>Navigation</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            {appRoutes.map(route => (
+              <DropdownMenuItem key={route.path} asChild>
+                <Link href={route.path}>
+                  {route.label}
+                </Link>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+      
+      {/* Space at the bottom */}
+      <div className="h-16"></div>
     </div>
   );
 }

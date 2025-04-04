@@ -3,6 +3,7 @@ import { useLocation, Link } from 'wouter';
 import GestureNavigation from './GestureNavigation';
 import FloatingNav from './FloatingNav';
 import MobileMenu from './MobileMenu';
+import { MobileNav } from './MobileNav';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useGestureContext } from '@/contexts/gesture-context';
 import { cn } from '@/lib/utils';
@@ -237,8 +238,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, className }) => {
         )}
       </main>
 
-      {/* Floating navigation - now shown on all pages regardless of mobile status */}
-      <FloatingNav routes={appRoutes} />
+      {/* New Mobile Navigation */}
+      {isMobile && <MobileNav />}
 
       {/* Footer with navigation on non-mobile - now using top 6 routes only */}
       {!isMobile && (
