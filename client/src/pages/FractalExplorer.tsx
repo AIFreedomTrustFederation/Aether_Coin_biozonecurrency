@@ -16,9 +16,11 @@ import {
   Hash, 
   GitMerge,
   Share2,
-  BookOpen
+  BookOpen,
+  ShieldCheck
 } from 'lucide-react';
 import Sidebar from '../components/layout/Sidebar';
+import BlockchainSecurityVisualizer from '../components/fractal/BlockchainSecurityVisualizer';
 
 const FractalExplorer = () => {
   const [activeTab, setActiveTab] = useState("mandelbrot");
@@ -661,6 +663,20 @@ const FractalExplorer = () => {
               </Card>
             </div>
           </div>
+          
+          {/* Quantum Security Visualizer Section */}
+          <Separator className="my-6" />
+          
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold tracking-tight mb-1">Quantum-Resistant Security Layer</h2>
+              <p className="text-muted-foreground">
+                Visualize how Aetherion's fractal security model protects cryptocurrency transactions
+              </p>
+            </div>
+          </div>
+          
+          <BlockchainSecurityVisualizer />
         </motion.div>
       </div>
     </div>
