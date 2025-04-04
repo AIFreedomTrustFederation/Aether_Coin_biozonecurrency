@@ -878,9 +878,7 @@ const AdminPortal: React.FC = () => {
           )}
 
           {/* AI System tab */}
-          {activeTab === 'ai-system' && (
-            <AISystem />
-          )}
+          {activeTab === 'ai-system' && <AISystem />}
         </main>
       </div>
     </div>
