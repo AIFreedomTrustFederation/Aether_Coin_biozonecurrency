@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
+import RiskMoodIndicator from '@/components/risk-assessment/RiskMoodIndicator';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -36,7 +37,8 @@ import singularityCoin, {
   QuantumWrappedAsset, 
   SingularityNetworkStats, 
   SingularityTransaction, 
-  StakingInfo
+  StakingInfo,
+  RiskAssessment
 } from '../lib/singularity-coin';
 
 const SingularityCoinPage: React.FC = () => {
@@ -54,6 +56,7 @@ const SingularityCoinPage: React.FC = () => {
     zkStarks: 0, 
     lastUpdate: new Date() 
   });
+  const [riskAssessment, setRiskAssessment] = useState<RiskAssessment | null>(null);
   
   // Load data on component mount
   useEffect(() => {
@@ -79,6 +82,9 @@ const SingularityCoinPage: React.FC = () => {
     
     // Get security status
     setSecurityStatus(singularityCoin.getQuantumSecurityStatus());
+    
+    // Get risk assessment
+    setRiskAssessment(singularityCoin.getRiskAssessment());
   }, []);
   
   return (
@@ -220,6 +226,13 @@ const SingularityCoinPage: React.FC = () => {
               </div>
             </CardContent>
           </Card>
+        </div>
+        
+        {/* Risk Mood Indicator */}
+        <div className="mt-6 mb-6">
+          {riskAssessment && (
+            <RiskMoodIndicator riskAssessment={riskAssessment} />
+          )}
         </div>
         
         <Tabs defaultValue="wrapped" className="mt-6">

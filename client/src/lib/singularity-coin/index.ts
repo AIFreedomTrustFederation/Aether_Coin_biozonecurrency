@@ -22,6 +22,24 @@ export interface SingularityNetworkStats {
   lastBlockTime: Date;
 }
 
+export type RiskLevel = 'Low' | 'Moderate' | 'Elevated' | 'High' | 'Critical';
+
+export interface RiskAssessment {
+  overallRisk: RiskLevel;
+  mood: 'Calm' | 'Cautious' | 'Nervous' | 'Alarmed' | 'Panicked';
+  securityScore: number; // 0-100
+  marketRisk: RiskLevel;
+  securityRisk: RiskLevel;
+  quantumThreatLevel: RiskLevel;
+  riskFactors: {
+    name: string;
+    value: number; // 0-100
+    impact: 'Low' | 'Medium' | 'High';
+    description: string;
+  }[];
+  lastUpdated: Date;
+}
+
 export interface WrappedAsset {
   id: string;
   originalAsset: string;
@@ -345,6 +363,106 @@ export class SingularityCoin {
       sphincsPlus: 94,
       zkStarks: 92,
       lastUpdate: new Date(Date.now() - 2 * 60 * 60 * 1000) // 2 hours ago
+    };
+  }
+
+  /**
+   * Get the current risk assessment for the user's wallet and the overall network
+   * This provides a dynamic mood indicator to help users understand their current risk level
+   */
+  public getRiskAssessment(): RiskAssessment {
+    // In a real implementation, this would analyze on-chain activity, market conditions,
+    // quantum computing advancements, and security metrics
+    
+    // Generate pseudorandom values for dynamic risk assessment
+    // These would be based on real metrics in production
+    const timestamp = Date.now();
+    const day = new Date().getDate();
+    
+    // Use timestamp to create some variability in the security score
+    const securityScore = 85 + (Math.sin(timestamp / 10000000) * 10);
+    
+    // Calculate different risk factors with some variability
+    const marketVolatility = 45 + (Math.cos(timestamp / 15000000) * 20);
+    const quantumProgressRisk = 30 + (Math.sin((timestamp + day) / 20000000) * 15);
+    const networkCongestion = 25 + (Math.sin((timestamp + day * 2) / 10000000) * 15);
+    const protocolVulnerabilities = 15 + (Math.cos((timestamp + day * 3) / 25000000) * 10);
+    const regulatoryRisk = 40 + (Math.sin((timestamp + day * 4) / 18000000) * 20);
+    
+    // Determine overall risk level based on security score
+    let overallRisk: RiskLevel;
+    let mood: 'Calm' | 'Cautious' | 'Nervous' | 'Alarmed' | 'Panicked';
+    
+    if (securityScore >= 90) {
+      overallRisk = 'Low';
+      mood = 'Calm';
+    } else if (securityScore >= 75) {
+      overallRisk = 'Moderate';
+      mood = 'Cautious';
+    } else if (securityScore >= 60) {
+      overallRisk = 'Elevated';
+      mood = 'Nervous';
+    } else if (securityScore >= 40) {
+      overallRisk = 'High';
+      mood = 'Alarmed';
+    } else {
+      overallRisk = 'Critical';
+      mood = 'Panicked';
+    }
+    
+    // Determine individual risk categories
+    const marketRisk: RiskLevel = marketVolatility > 60 ? 'High' : 
+                                 marketVolatility > 40 ? 'Elevated' : 
+                                 marketVolatility > 20 ? 'Moderate' : 'Low';
+                                 
+    const securityRisk: RiskLevel = protocolVulnerabilities > 30 ? 'High' : 
+                                   protocolVulnerabilities > 20 ? 'Elevated' : 
+                                   protocolVulnerabilities > 10 ? 'Moderate' : 'Low';
+                                   
+    const quantumThreatLevel: RiskLevel = quantumProgressRisk > 40 ? 'High' : 
+                                         quantumProgressRisk > 30 ? 'Elevated' : 
+                                         quantumProgressRisk > 20 ? 'Moderate' : 'Low';
+    
+    return {
+      overallRisk,
+      mood,
+      securityScore,
+      marketRisk,
+      securityRisk,
+      quantumThreatLevel,
+      riskFactors: [
+        {
+          name: 'Market Volatility',
+          value: marketVolatility,
+          impact: marketVolatility > 60 ? 'High' : marketVolatility > 30 ? 'Medium' : 'Low',
+          description: 'Current cryptocurrency market stability assessment'
+        },
+        {
+          name: 'Quantum Computing Progress',
+          value: quantumProgressRisk,
+          impact: quantumProgressRisk > 40 ? 'High' : quantumProgressRisk > 25 ? 'Medium' : 'Low',
+          description: 'Risk from advances in quantum computing capability'
+        },
+        {
+          name: 'Network Congestion',
+          value: networkCongestion,
+          impact: networkCongestion > 50 ? 'High' : networkCongestion > 30 ? 'Medium' : 'Low',
+          description: 'Current blockchain network traffic and transaction processing times'
+        },
+        {
+          name: 'Protocol Vulnerabilities',
+          value: protocolVulnerabilities,
+          impact: protocolVulnerabilities > 30 ? 'High' : protocolVulnerabilities > 15 ? 'Medium' : 'Low',
+          description: 'Known security vulnerabilities in the blockchain protocol'
+        },
+        {
+          name: 'Regulatory Uncertainty',
+          value: regulatoryRisk,
+          impact: regulatoryRisk > 60 ? 'High' : regulatoryRisk > 30 ? 'Medium' : 'Low',
+          description: 'Current regulatory landscape for digital assets'
+        }
+      ],
+      lastUpdated: new Date()
     };
   }
 }

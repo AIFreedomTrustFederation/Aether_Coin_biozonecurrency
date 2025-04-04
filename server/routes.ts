@@ -95,9 +95,19 @@ async function sendTransactionNotification(
 }
 
 // Initialize Stripe with the secret key from environment variables
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2023-10-16' as any, // Use the latest stable version
-});
+let stripe: Stripe | undefined;
+try {
+  if (process.env.STRIPE_SECRET_KEY) {
+    stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: '2023-10-16' as any, // Use the latest stable version
+    });
+    console.log('Stripe initialized successfully');
+  } else {
+    console.log('Stripe secret key not provided. Payment functionality will be disabled.');
+  }
+} catch (error) {
+  console.error('Failed to initialize Stripe:', error);
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Register the API gateway for modular widget system and other modular services
@@ -484,6 +494,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Handle Stripe webhook events
   app.post("/api/webhooks/stripe", async (req, res) => {
+    if (!stripe) {
+      return res.status(503).json({ message: "Stripe service is not available" });
+    }
+    
     const signature = req.headers['stripe-signature'] as string;
     
     if (!signature) {
