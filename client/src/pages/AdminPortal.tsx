@@ -29,7 +29,7 @@ import {
   Users, Wallet, BarChart2, Settings, ShieldAlert, DollarSign, 
   ArrowUpRight, ArrowDownRight, Plus, Edit, Trash2, ChevronRight, 
   Loader2, LockIcon, Shield, ChevronDown, Filter, Search, RefreshCw,
-  LogOut
+  LogOut, Cpu, Network, Bot, GitBranch, Terminal, GitFork, AlertTriangle
 } from 'lucide-react';
 
 // Login schema for admin
@@ -373,6 +373,16 @@ const AdminPortal: React.FC = () => {
                 Settings
               </Button>
             </li>
+            <li>
+              <Button 
+                variant={activeTab === 'ai-system' ? 'secondary' : 'ghost'} 
+                className="w-full justify-start" 
+                onClick={() => setActiveTab('ai-system')}
+              >
+                <Cpu className="mr-2 h-4 w-4" />
+                AI System
+              </Button>
+            </li>
           </ul>
         </nav>
         <div className="border-t border-slate-200 dark:border-slate-700 p-4">
@@ -385,7 +395,7 @@ const AdminPortal: React.FC = () => {
 
       {/* Mobile menu */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 z-10 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700">
-        <div className="grid grid-cols-5 h-16">
+        <div className="grid grid-cols-6 h-16">
           <Button variant="ghost" className="flex flex-col items-center justify-center rounded-none h-full" onClick={() => setActiveTab('dashboard')}>
             <BarChart2 className="h-4 w-4" />
             <span className="text-xs mt-1">Dashboard</span>
@@ -406,6 +416,10 @@ const AdminPortal: React.FC = () => {
             <Shield className="h-4 w-4" />
             <span className="text-xs mt-1">Security</span>
           </Button>
+          <Button variant="ghost" className="flex flex-col items-center justify-center rounded-none h-full" onClick={() => setActiveTab('ai-system')}>
+            <Cpu className="h-4 w-4" />
+            <span className="text-xs mt-1">AI System</span>
+          </Button>
         </div>
       </div>
 
@@ -420,6 +434,7 @@ const AdminPortal: React.FC = () => {
               {activeTab === 'users' && 'User Management'}
               {activeTab === 'security' && 'Security'}
               {activeTab === 'settings' && 'Settings'}
+              {activeTab === 'ai-system' && 'AI System'}
             </h1>
           </div>
           <div className="ml-auto flex items-center gap-4">
@@ -930,6 +945,290 @@ const AdminPortal: React.FC = () => {
                   Settings configuration will be available in the next release.
                 </AlertDescription>
               </Alert>
+            </div>
+          )}
+
+          {/* AI System tab */}
+          {activeTab === 'ai-system' && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h1 className="text-2xl font-bold">Admin Singularity AI System</h1>
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" className="flex items-center gap-2">
+                    <RefreshCw className="h-4 w-4" />
+                    Synchronize
+                  </Button>
+                </div>
+              </div>
+
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium flex items-center gap-2">
+                      <Cpu className="h-4 w-4 text-primary" />
+                      Quantum Processing
+                    </CardTitle>
+                    <CardDescription>AI processing across fractal networks</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm">Active Nodes</p>
+                        <p className="text-sm font-medium">256</p>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm">Processing Qubits</p>
+                        <p className="text-sm font-medium">1,024</p>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm">Recursive Depth</p>
+                        <p className="text-sm font-medium">16 layers</p>
+                      </div>
+                      <div className="h-2 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden mt-2">
+                        <div className="h-full bg-primary rounded-full" style={{ width: '84%' }} />
+                      </div>
+                      <p className="text-xs text-muted-foreground text-right">84% capacity</p>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium flex items-center gap-2">
+                      <GitFork className="h-4 w-4 text-primary" />
+                      Node Sharding Status
+                    </CardTitle>
+                    <CardDescription>FractalCoin's distributed file system</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm">Shard Count</p>
+                        <p className="text-sm font-medium">4,096</p>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm">Storage Used</p>
+                        <p className="text-sm font-medium">2.8 TB / 5 TB</p>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm">Fractal Replication</p>
+                        <p className="text-sm font-medium">16x redundancy</p>
+                      </div>
+                      <div className="h-2 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden mt-2">
+                        <div className="h-full bg-primary rounded-full" style={{ width: '56%' }} />
+                      </div>
+                      <p className="text-xs text-muted-foreground text-right">56% utilized</p>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium flex items-center gap-2">
+                      <Network className="h-4 w-4 text-primary" />
+                      System Health
+                    </CardTitle>
+                    <CardDescription>Overall system performance</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm">System Status</p>
+                        <Badge variant="outline" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">Healthy</Badge>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm">Learning Events</p>
+                        <p className="text-sm font-medium">428,952 today</p>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm">Response Time</p>
+                        <p className="text-sm font-medium">13.2 ms avg.</p>
+                      </div>
+                      <div className="h-2 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden mt-2">
+                        <div className="h-full bg-green-500 rounded-full" style={{ width: '95%' }} />
+                      </div>
+                      <p className="text-xs text-muted-foreground text-right">95% efficiency</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="grid gap-6 md:grid-cols-3">
+                <Card className="col-span-full md:col-span-2">
+                  <CardHeader>
+                    <CardTitle>AI Agent Deployment</CardTitle>
+                    <CardDescription>
+                      Deploy quantum-secured smart contract agents for user services
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Agent Type</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Deployments</TableHead>
+                          <TableHead>Resource Usage</TableHead>
+                          <TableHead>Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        <TableRow>
+                          <TableCell className="font-medium">Feature Builder</TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">Active</Badge>
+                          </TableCell>
+                          <TableCell>12 instances</TableCell>
+                          <TableCell>
+                            <div className="h-2 w-24 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                              <div className="h-full bg-primary rounded-full" style={{ width: '65%' }} />
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                              <Plus className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell className="font-medium">Security Monitor</TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">Active</Badge>
+                          </TableCell>
+                          <TableCell>24 instances</TableCell>
+                          <TableCell>
+                            <div className="h-2 w-24 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                              <div className="h-full bg-primary rounded-full" style={{ width: '82%' }} />
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                              <Plus className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell className="font-medium">Transaction Reverser</TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300">Limited</Badge>
+                          </TableCell>
+                          <TableCell>3 instances</TableCell>
+                          <TableCell>
+                            <div className="h-2 w-24 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                              <div className="h-full bg-amber-500 rounded-full" style={{ width: '30%' }} />
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                              <Plus className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+
+                <Card className="col-span-full md:col-span-1">
+                  <CardHeader>
+                    <CardTitle>Learning Statistics</CardTitle>
+                    <CardDescription>
+                      AI system knowledge acquisition metrics
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <p className="text-sm font-medium">Administrative Knowledge</p>
+                          <span className="text-sm text-muted-foreground">89%</span>
+                        </div>
+                        <div className="h-2 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                          <div className="h-full bg-primary rounded-full" style={{ width: '89%' }} />
+                        </div>
+                      </div>
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <p className="text-sm font-medium">Blockchain Operations</p>
+                          <span className="text-sm text-muted-foreground">94%</span>
+                        </div>
+                        <div className="h-2 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                          <div className="h-full bg-primary rounded-full" style={{ width: '94%' }} />
+                        </div>
+                      </div>
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <p className="text-sm font-medium">Security Protocols</p>
+                          <span className="text-sm text-muted-foreground">96%</span>
+                        </div>
+                        <div className="h-2 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                          <div className="h-full bg-primary rounded-full" style={{ width: '96%' }} />
+                        </div>
+                      </div>
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <p className="text-sm font-medium">User Interactions</p>
+                          <span className="text-sm text-muted-foreground">78%</span>
+                        </div>
+                        <div className="h-2 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                          <div className="h-full bg-primary rounded-full" style={{ width: '78%' }} />
+                        </div>
+                      </div>
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <p className="text-sm font-medium">Network Activity</p>
+                          <span className="text-sm text-muted-foreground">83%</span>
+                        </div>
+                        <div className="h-2 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                          <div className="h-full bg-primary rounded-full" style={{ width: '83%' }} />
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Admin AI Terminal</CardTitle>
+                  <CardDescription>
+                    Direct interface with the Admin Singularity AI LLM
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="bg-black text-green-400 font-mono p-4 rounded-md h-64 overflow-y-auto">
+                    <p>$ <span className="text-white">admin-connect --secure</span></p>
+                    <p>Establishing secure connection to Admin Singularity AI...</p>
+                    <p>Quantum handshake complete.</p>
+                    <p>Fractal network synchronized.</p>
+                    <p>Terminal ready.</p>
+                    <p className="mt-2">$ <span className="text-white">system-status</span></p>
+                    <p>All systems operational.</p>
+                    <p>- 256 quantum nodes active</p>
+                    <p>- Fractal recursion depth: 16</p>
+                    <p>- Knowledge database: 89% complete</p>
+                    <p>- Smart contract agents: 39 active deployments</p>
+                    <p className="mt-2">$ <span className="text-white">agent-deploy --type="security" --priority="high"</span></p>
+                    <p>Initiating deployment of security agent...</p>
+                    <p>Creating quantum-secure container...</p>
+                    <p>Sharding agent knowledge base across fractal nodes...</p>
+                    <p>Deployment complete. Agent ID: QSA-2025-0428</p>
+                    <p className="mt-2">$ <span className="animate-pulse">_</span></p>
+                  </div>
+                  <div className="flex mt-4">
+                    <Input 
+                      placeholder="Enter command..."
+                      className="font-mono rounded-r-none focus-visible:ring-0 focus-visible:ring-offset-0" 
+                    />
+                    <Button 
+                      className="rounded-l-none"
+                    >
+                      <Terminal className="mr-2 h-4 w-4" />
+                      Execute
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           )}
         </main>
