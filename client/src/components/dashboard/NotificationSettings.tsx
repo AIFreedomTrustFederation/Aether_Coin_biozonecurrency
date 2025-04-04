@@ -7,14 +7,20 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Switch } from '../ui/switch';
 import { useToast } from '../../hooks/use-toast';
-import { Loader2, CheckCircle, AlertCircle, Send } from 'lucide-react';
+import { Loader2, CheckCircle, AlertCircle, Send, MessageSquare } from 'lucide-react';
 
 interface NotificationPreference {
   id: number;
   userId: number;
+  // Phone notification fields
   phoneNumber: string | null;
   isPhoneVerified: boolean;
   smsEnabled: boolean;
+  // Matrix notification fields
+  matrixId: string | null;
+  isMatrixVerified: boolean;
+  matrixEnabled: boolean;
+  // Alert preferences
   transactionAlerts: boolean;
   securityAlerts: boolean;
   priceAlerts: boolean;
@@ -25,11 +31,15 @@ export function NotificationSettings() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // State for verification code form
+  // State for SMS verification
   const [phoneNumber, setPhoneNumber] = useState('');
   const [verificationCode, setVerificationCode] = useState('');
   const [expectedCode, setExpectedCode] = useState<string | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
+  
+  // State for Matrix settings
+  const [matrixId, setMatrixId] = useState('');
+  const [isConfiguringMatrix, setIsConfiguringMatrix] = useState(false);
 
   // Get notification preferences
   const { data: preferences, isLoading } = useQuery<NotificationPreference | null>({
