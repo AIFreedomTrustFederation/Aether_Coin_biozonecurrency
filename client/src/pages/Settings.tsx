@@ -17,10 +17,22 @@ import { appRoutes } from '@/lib/routes';
 export default function Settings() {
   return (
     <div className="container px-2 py-4 max-w-6xl mx-auto">
-      <Header
-        heading="Settings"
-        subheading="Manage your account settings and preferences"
-      />
+      <div className="flex items-center justify-between mb-4">
+        <Header
+          heading="Settings"
+          subheading="Manage your account settings and preferences"
+        />
+        
+        <Link href="/">
+          <Button
+            variant="default"
+            className="bg-primary hover:bg-primary/90 text-white px-4 py-2 flex items-center gap-2 rounded-full"
+          >
+            <Home className="h-4 w-4" />
+            <span>Home</span>
+          </Button>
+        </Link>
+      </div>
       <Separator className="my-4" />
       
       <Tabs defaultValue="notifications" className="space-y-4">
