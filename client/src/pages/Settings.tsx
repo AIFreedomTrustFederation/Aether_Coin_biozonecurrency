@@ -3,28 +3,32 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
 import Header from "@/components/layout/Header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Separator } from "../components/ui/separator";
+import { Button } from "../components/ui/button";
 import { Bell, Shield, User } from "lucide-react";
+
+import { Link } from 'wouter';
+import { Home } from 'lucide-react';
 
 export default function Settings() {
   return (
-    <div className="container py-4 max-w-6xl mx-auto">
+    <div className="container px-2 py-4 max-w-6xl mx-auto">
       <Header
-        heading="Account Settings"
+        heading="Settings"
         subheading="Manage your account settings and preferences"
       />
-      <Separator className="my-6" />
+      <Separator className="my-4" />
       
-      <Tabs defaultValue="notifications" className="space-y-6">
-        <TabsList className="grid grid-cols-3 w-full max-w-md">
-          <TabsTrigger value="profile" className="flex items-center gap-2">
+      <Tabs defaultValue="notifications" className="space-y-4">
+        <TabsList className="grid grid-cols-3 w-full max-w-full sm:max-w-md">
+          <TabsTrigger value="profile" className="flex items-center justify-center gap-1 px-1 sm:px-3">
             <User className="h-4 w-4" />
             <span className="hidden sm:inline">Profile</span>
           </TabsTrigger>
-          <TabsTrigger value="notifications" className="flex items-center gap-2">
+          <TabsTrigger value="notifications" className="flex items-center justify-center gap-1 px-1 sm:px-3">
             <Bell className="h-4 w-4" />
             <span className="hidden sm:inline">Notifications</span>
           </TabsTrigger>
-          <TabsTrigger value="security" className="flex items-center gap-2">
+          <TabsTrigger value="security" className="flex items-center justify-center gap-1 px-1 sm:px-3">
             <Shield className="h-4 w-4" />
             <span className="hidden sm:inline">Security</span>
           </TabsTrigger>
@@ -69,6 +73,19 @@ export default function Settings() {
           </Card>
         </TabsContent>
       </Tabs>
+      
+      {/* Back to Home Button */}
+      <div className="mt-6 mb-10 flex justify-center">
+        <Link to="/">
+          <Button
+            variant="secondary"
+            className="bg-purple-500 hover:bg-purple-600 text-white py-3 px-6 flex items-center gap-2 rounded-full"
+          >
+            <Home className="h-4 w-4" />
+            Back to Home
+          </Button>
+        </Link>
+      </div>
     </div>
   );
 }

@@ -32,7 +32,7 @@ export function NotificationSettings() {
   const [isVerifying, setIsVerifying] = useState(false);
 
   // Get notification preferences
-  const { data: preferences, isLoading } = useQuery({
+  const { data: preferences, isLoading } = useQuery<NotificationPreference | null>({
     queryKey: ['/api/notification-preferences'],
     retry: false
   });
@@ -61,11 +61,11 @@ export function NotificationSettings() {
   const updatePhoneMutation = useMutation({
     mutationFn: (data: { phoneNumber: string }) => 
       apiRequest('/api/notification-preferences/phone', 'POST', data),
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ['/api/notification-preferences'] });
       setIsVerifying(true);
       // If we got a verification code in the response (demo mode)
-      if (data.verificationCode) {
+      if (data && data.verificationCode) {
         setExpectedCode(data.verificationCode);
       }
       toast({
@@ -199,19 +199,19 @@ export function NotificationSettings() {
 
   return (
     <Card className="w-full">
-      <CardHeader>
+      <CardHeader className="px-3 sm:px-6">
         <CardTitle>Notification Settings</CardTitle>
         <CardDescription>
           Configure how and when you receive notifications about your wallet activity
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-4 px-3 sm:px-6">
         {/* Phone Number Configuration */}
-        <div className="space-y-4">
-          <div className="flex justify-between items-center">
+        <div className="space-y-3">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
             <div>
-              <h3 className="text-lg font-medium">SMS Notifications</h3>
-              <p className="text-sm text-muted-foreground">
+              <h3 className="text-base sm:text-lg font-medium">SMS Notifications</h3>
+              <p className="text-xs sm:text-sm text-muted-foreground">
                 Receive notifications via SMS to your mobile phone
               </p>
             </div>
@@ -223,31 +223,37 @@ export function NotificationSettings() {
           </div>
 
           {isPhoneConfigured && isPhoneVerified ? (
-            <div className="flex items-center space-x-2 text-sm">
-              <CheckCircle className="h-4 w-4 text-green-500" />
-              <span>
-                Phone verified: {preferences?.phoneNumber}
-              </span>
-              <Button
-                onClick={() => setIsVerifying(true)}
-                variant="outline"
-                size="sm"
-              >
-                Change
-              </Button>
-              <Button
-                onClick={() => testSmsMutation.mutate()}
-                variant="outline"
-                size="sm"
-                disabled={testSmsMutation.isPending || !isSMSEnabled}
-              >
-                {testSmsMutation.isPending ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Send className="mr-2 h-4 w-4" />
-                )}
-                Test SMS
-              </Button>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+              <div className="flex items-center gap-1">
+                <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
+                <span className="text-xs sm:text-sm truncate">
+                  Phone verified: {preferences?.phoneNumber}
+                </span>
+              </div>
+              <div className="flex gap-2 mt-1 sm:mt-0">
+                <Button
+                  onClick={() => setIsVerifying(true)}
+                  variant="outline"
+                  size="sm"
+                  className="h-8 px-2 sm:px-3"
+                >
+                  Change
+                </Button>
+                <Button
+                  onClick={() => testSmsMutation.mutate()}
+                  variant="outline"
+                  size="sm"
+                  className="h-8 px-2 sm:px-3"
+                  disabled={testSmsMutation.isPending || !isSMSEnabled}
+                >
+                  {testSmsMutation.isPending ? (
+                    <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                  ) : (
+                    <Send className="mr-1 h-3 w-3" />
+                  )}
+                  Test
+                </Button>
+              </div>
             </div>
           ) : isVerifying ? (
             <form onSubmit={handleVerification} className="space-y-3 border p-3 rounded-md">
@@ -316,11 +322,11 @@ export function NotificationSettings() {
         </div>
 
         {/* Alert Types */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-medium">Alert Types</h3>
-          <div className="space-y-2">
+        <div className="space-y-3">
+          <h3 className="text-base sm:text-lg font-medium">Alert Types</h3>
+          <div className="space-y-3 border p-3 rounded-md">
             <div className="flex justify-between items-center">
-              <Label htmlFor="transaction-alerts">Transaction Alerts</Label>
+              <Label htmlFor="transaction-alerts" className="text-sm">Transaction Alerts</Label>
               <Switch 
                 id="transaction-alerts" 
                 checked={preferences?.transactionAlerts || false} 
@@ -328,7 +334,7 @@ export function NotificationSettings() {
               />
             </div>
             <div className="flex justify-between items-center">
-              <Label htmlFor="security-alerts">Security Alerts</Label>
+              <Label htmlFor="security-alerts" className="text-sm">Security Alerts</Label>
               <Switch 
                 id="security-alerts" 
                 checked={preferences?.securityAlerts || false} 
@@ -336,7 +342,7 @@ export function NotificationSettings() {
               />
             </div>
             <div className="flex justify-between items-center">
-              <Label htmlFor="price-alerts">Price Alerts</Label>
+              <Label htmlFor="price-alerts" className="text-sm">Price Alerts</Label>
               <Switch 
                 id="price-alerts" 
                 checked={preferences?.priceAlerts || false} 
@@ -344,7 +350,7 @@ export function NotificationSettings() {
               />
             </div>
             <div className="flex justify-between items-center">
-              <Label htmlFor="marketing-updates">Marketing Updates</Label>
+              <Label htmlFor="marketing-updates" className="text-sm">Marketing Updates</Label>
               <Switch 
                 id="marketing-updates" 
                 checked={preferences?.marketingUpdates || false} 
@@ -354,9 +360,9 @@ export function NotificationSettings() {
           </div>
         </div>
       </CardContent>
-      <CardFooter className="flex flex-col items-start">
-        <div className="flex items-center text-sm text-muted-foreground">
-          <AlertCircle className="h-4 w-4 mr-2" />
+      <CardFooter className="flex flex-col items-start px-3 sm:px-6 pb-4">
+        <div className="flex items-start sm:items-center text-xs sm:text-sm text-muted-foreground">
+          <AlertCircle className="h-4 w-4 mr-2 mt-0.5 sm:mt-0 flex-shrink-0" />
           <span>
             {!isPhoneVerified 
               ? "Verify your phone number to enable SMS notifications" 
