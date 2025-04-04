@@ -41,12 +41,25 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   
-  // Scroll to bottom of chat when messages change
+  // Scroll to bottom only when a new message is added, not on initial load
+  const [initialRender, setInitialRender] = useState(true);
+  const prevMessagesLengthRef = useRef<number>(0);
+  
   useEffect(() => {
-    if (endOfMessagesRef.current) {
+    // Skip auto-scrolling on initial render to prevent jumping to bottom of page
+    if (initialRender && messages.length > 0) {
+      setInitialRender(false);
+      prevMessagesLengthRef.current = messages.length;
+      return;
+    }
+    
+    // Only scroll if new messages were added (not on first load)
+    if (messages.length > prevMessagesLengthRef.current && endOfMessagesRef.current) {
       endOfMessagesRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [messages]);
+    
+    prevMessagesLengthRef.current = messages.length;
+  }, [messages, initialRender]);
   
   // Auto focus input if specified
   useEffect(() => {
