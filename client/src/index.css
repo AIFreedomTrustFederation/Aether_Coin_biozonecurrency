@@ -18,12 +18,26 @@
 
 @layer utilities {
   /* Hide scrollbar but keep functionality */
-  .no-scrollbar {
+  .no-scrollbar, .scrollbar-hide {
     -ms-overflow-style: none;  /* Internet Explorer and Edge */
     scrollbar-width: none;  /* Firefox */
   }
-  .no-scrollbar::-webkit-scrollbar {
+  .no-scrollbar::-webkit-scrollbar, 
+  .scrollbar-hide::-webkit-scrollbar {
     display: none;  /* Chrome, Safari and Opera */
+  }
+  
+  /* Custom horizontal scrolling with momentum scrolling for iOS */
+  .scroll-x {
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch; /* Momentum scrolling for iOS */
+    scroll-behavior: smooth;
+    scroll-snap-type: x proximity;
+  }
+  
+  .scroll-item {
+    scroll-snap-align: start;
   }
 }
 

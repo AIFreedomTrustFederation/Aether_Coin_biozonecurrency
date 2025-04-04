@@ -73,22 +73,28 @@ const MobileMenu = ({ isOpen, onClose }: MobileMenuProps) => {
         {/* Horizontal Scrollable Menu for Categories */}
         <div className="border-t border-border py-3">
           <h3 className="px-4 text-sm font-medium text-muted-foreground mb-2">Quick Access</h3>
-          <div className="overflow-x-auto no-scrollbar px-4">
-            <div className="flex space-x-2 min-w-max">
-              {navItems.map((item) => (
-                <div
-                  key={`scroll-${item.path}`}
-                  className={`flex flex-col items-center justify-center p-2 rounded-lg cursor-pointer whitespace-nowrap ${
-                    isActive(item.path)
-                      ? 'bg-primary/10 text-primary'
-                      : 'text-muted-foreground hover:bg-accent/10 hover:text-foreground'
-                  }`}
-                  onClick={() => handleNavigation(item.path)}
-                >
-                  <item.icon className="w-5 h-5 mb-1" />
-                  <span className="text-xs">{item.label}</span>
-                </div>
-              ))}
+          <div className="relative mx-4">
+            {/* Shadow indicators for scroll */}
+            <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none"></div>
+            <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none"></div>
+            
+            <div className="scroll-x scrollbar-hide pb-2 -mx-2 px-2">
+              <div className="flex space-x-3 min-w-max">
+                {navItems.map((item) => (
+                  <div
+                    key={`scroll-${item.path}`}
+                    className={`flex flex-col items-center justify-center p-3 rounded-lg cursor-pointer whitespace-nowrap scroll-item ${
+                      isActive(item.path)
+                        ? 'bg-primary/10 text-primary'
+                        : 'text-muted-foreground hover:bg-accent/10 hover:text-foreground'
+                    }`}
+                    onClick={() => handleNavigation(item.path)}
+                  >
+                    <item.icon className="w-5 h-5 mb-1" />
+                    <span className="text-xs font-medium">{item.label}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>

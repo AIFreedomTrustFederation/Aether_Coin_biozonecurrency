@@ -142,33 +142,40 @@ const FloatingNav: React.FC<FloatingNavProps> = ({ routes, className }) => {
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.8 }}
-              className="fixed bottom-24 left-4 right-4 z-50"
+              className="fixed bottom-24 left-2 right-2 z-50"
             >
-              <div className="overflow-x-auto pb-2 no-scrollbar">
-                <div className="flex space-x-3 min-w-max px-2">
-                  {routes.map((route, index) => (
-                    <motion.div
-                      key={route.path}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 20 }}
-                      transition={{ delay: 0.05 * index }}
-                    >
-                      <Touchable
-                        className={cn(
-                          "flex items-center space-x-2 px-4 py-3 rounded-lg shadow-md whitespace-nowrap",
-                          location === route.path
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-background text-foreground"
-                        )}
-                        onClick={() => navigateTo(route.path)}
-                        scale={0.95}
+              <div className="relative bg-background/50 backdrop-blur-sm rounded-xl p-3 shadow-lg">
+                {/* Shadow indicators for scroll */}
+                <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none"></div>
+                <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none"></div>
+                
+                <div className="scroll-x scrollbar-hide pb-2">
+                  <div className="flex space-x-3 min-w-max px-3">
+                    {routes.map((route, index) => (
+                      <motion.div
+                        key={route.path}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 20 }}
+                        transition={{ delay: 0.05 * index }}
+                        className="scroll-item flex-shrink-0"
                       >
-                        {getRouteIcon(route.path)}
-                        <span className="font-medium">{route.label}</span>
-                      </Touchable>
-                    </motion.div>
-                  ))}
+                        <Touchable
+                          className={cn(
+                            "flex items-center space-x-2 px-4 py-3 rounded-lg shadow-md whitespace-nowrap",
+                            location === route.path
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-background text-foreground"
+                          )}
+                          onClick={() => navigateTo(route.path)}
+                          scale={0.95}
+                        >
+                          {getRouteIcon(route.path)}
+                          <span className="font-medium">{route.label}</span>
+                        </Touchable>
+                      </motion.div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </motion.div>

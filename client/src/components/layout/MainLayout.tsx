@@ -243,24 +243,31 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, className }) => {
       {/* Footer with navigation on non-mobile */}
       {!isMobile && (
         <footer className="bg-background/80 backdrop-blur-sm border-t border-border/40 px-4 py-2">
-          <nav className="overflow-x-auto pb-2 no-scrollbar">
-            <div className="flex min-w-max px-1">
-              {appRoutes.map((route) => (
-                <Link
-                  key={route.path}
-                  href={route.path}
-                  className={cn(
-                    "px-3 py-2 mx-1 text-sm font-medium rounded-md transition-colors whitespace-nowrap",
-                    location === route.path
-                      ? "bg-primary/20 text-primary"
-                      : "text-muted-foreground hover:text-foreground hover:bg-accent/10"
-                  )}
-                >
-                  {route.label}
-                </Link>
-              ))}
-            </div>
-          </nav>
+          <div className="relative">
+            {/* Shadow indicators for scroll */}
+            <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none"></div>
+            <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none"></div>
+            
+            {/* Scrollable navigation */}
+            <nav className="overflow-x-auto pb-2 scrollbar-hide">
+              <div className="flex min-w-max px-1">
+                {appRoutes.map((route) => (
+                  <Link
+                    key={route.path}
+                    href={route.path}
+                    className={cn(
+                      "flex-shrink-0 px-4 py-2 mx-1 text-sm font-medium rounded-md transition-colors whitespace-nowrap",
+                      location === route.path
+                        ? "bg-primary/20 text-primary"
+                        : "text-muted-foreground hover:text-foreground hover:bg-accent/10"
+                    )}
+                  >
+                    {route.label}
+                  </Link>
+                ))}
+              </div>
+            </nav>
+          </div>
         </footer>
       )}
     </div>
