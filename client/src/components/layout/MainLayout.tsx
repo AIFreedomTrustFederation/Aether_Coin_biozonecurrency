@@ -240,34 +240,50 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, className }) => {
       {/* Floating navigation on mobile */}
       {isMobile && <FloatingNav routes={appRoutes} />}
 
-      {/* Footer with navigation on non-mobile */}
+      {/* Footer with navigation on non-mobile - now using top 6 routes only */}
       {!isMobile && (
         <footer className="bg-background/80 backdrop-blur-sm border-t border-border/40 px-4 py-2">
-          <div className="relative">
-            {/* Shadow indicators for scroll */}
-            <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none"></div>
-            <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none"></div>
+          <nav className="flex justify-around items-center">
+            {appRoutes.slice(0, 5).map((route) => (
+              <Link
+                key={route.path}
+                href={route.path}
+                className={cn(
+                  "px-3 py-2 text-sm font-medium rounded-md transition-colors",
+                  location === route.path
+                    ? "bg-primary/20 text-primary"
+                    : "text-muted-foreground hover:text-foreground hover:bg-accent/10"
+                )}
+              >
+                {route.label}
+              </Link>
+            ))}
             
-            {/* Scrollable navigation */}
-            <nav className="overflow-x-auto pb-2 scrollbar-hide">
-              <div className="flex min-w-max px-1">
-                {appRoutes.map((route) => (
-                  <Link
-                    key={route.path}
-                    href={route.path}
-                    className={cn(
-                      "flex-shrink-0 px-4 py-2 mx-1 text-sm font-medium rounded-md transition-colors whitespace-nowrap",
-                      location === route.path
-                        ? "bg-primary/20 text-primary"
-                        : "text-muted-foreground hover:text-foreground hover:bg-accent/10"
-                    )}
-                  >
-                    {route.label}
-                  </Link>
+            {/* Menu dropdown for more items */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="px-3 py-2">
+                  <Menu className="h-4 w-4 mr-1" />
+                  <span className="text-sm font-medium">More</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                {appRoutes.slice(5).map((route) => (
+                  <DropdownMenuItem key={route.path} asChild>
+                    <Link 
+                      href={route.path}
+                      className={cn(
+                        "w-full",
+                        location === route.path ? "bg-accent text-accent-foreground" : ""
+                      )}
+                    >
+                      {route.label}
+                    </Link>
+                  </DropdownMenuItem>
                 ))}
-              </div>
-            </nav>
-          </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </nav>
         </footer>
       )}
     </div>
