@@ -37,11 +37,14 @@ interface SecurityLayer {
   color: string;
 }
 
+// Define cryptocurrency types
+type CryptoCurrency = 'bitcoin' | 'ethereum' | 'solana' | 'singularity';
+
 const BlockchainSecurityVisualizer: React.FC = () => {
   // State for controlling the visualization
   const [activeTab, setActiveTab] = useState("transaction");
   const [securityLayers, setSecurityLayers] = useState<number>(3);
-  const [selectedCurrency, setSelectedCurrency] = useState("bitcoin");
+  const [selectedCurrency, setSelectedCurrency] = useState<CryptoCurrency>("bitcoin");
   const [animationSpeed, setAnimationSpeed] = useState(1);
   const [isAnimating, setIsAnimating] = useState(false);
   const [showDetails, setShowDetails] = useState(true);
@@ -100,7 +103,12 @@ const BlockchainSecurityVisualizer: React.FC = () => {
   ];
   
   // Cryptocurrency data
-  const cryptoData = {
+  const cryptoData: Record<CryptoCurrency, {
+    name: string;
+    color: string;
+    algorithm: string;
+    bitStrength: number;
+  }> = {
     bitcoin: {
       name: "Bitcoin",
       color: "#f7931a",
@@ -202,7 +210,7 @@ const BlockchainSecurityVisualizer: React.FC = () => {
     }
     
     // Draw transaction block
-    ctx.fillStyle = cryptoData[selectedCurrency as keyof typeof cryptoData].color;
+    ctx.fillStyle = cryptoData[selectedCurrency].color;
     ctx.fillRect(centerX - blockSize/2, centerY - blockSize/2, blockSize, blockSize);
     
     // Draw Bitcoin symbol in the center
@@ -368,7 +376,7 @@ const BlockchainSecurityVisualizer: React.FC = () => {
             Quantum-Resistant Security Model
           </CardTitle>
           <CardDescription>
-            Visualize how {cryptoData[selectedCurrency as keyof typeof cryptoData].name} transactions are protected by fractal quantum security
+            Visualize how {cryptoData[selectedCurrency].name} transactions are protected by fractal quantum security
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -382,7 +390,7 @@ const BlockchainSecurityVisualizer: React.FC = () => {
             <div className="flex mb-4">
               <Select
                 value={selectedCurrency}
-                onValueChange={setSelectedCurrency}
+                onValueChange={(value: CryptoCurrency) => setSelectedCurrency(value)}
               >
                 <SelectTrigger className="w-[180px] mr-4">
                   <SelectValue placeholder="Select Cryptocurrency" />
