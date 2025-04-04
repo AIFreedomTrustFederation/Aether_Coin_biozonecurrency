@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { 
   Menu, X, Home, Layout, Wallet, Lock, Shield, Settings, AlertTriangle, ChevronRight, 
-  BarChart3, Eye, Cpu, Bell
+  BarChart3, Eye, Cpu, Bell, Zap
 } from "lucide-react";
 
 // Import existing pages for now
@@ -15,11 +15,13 @@ import AIAssistantDemo from "./pages/AIAssistantDemo";
 import LandingPage from "./pages/LandingPage";
 import Dashboard from "@/components/Dashboard";
 import { SecurityPage } from "./pages/SecurityPage";
+import SingularityCoinPage from "./pages/SingularityCoinPage";
 
 // Define navigation items for both mobile and desktop
 const navigationItems = [
   { name: "Dashboard", path: "/dashboard", icon: <Layout className="h-5 w-5" /> },
   { name: "Wallet", path: "/wallet", icon: <Wallet className="h-5 w-5" /> },
+  { name: "Singularity", path: "/singularity", icon: <Zap className="h-5 w-5" /> },
   { name: "Fractal Explorer", path: "/fractal-explorer", icon: <Cpu className="h-5 w-5" /> },
   { name: "AI Assistant", path: "/ai-assistant", icon: <AlertTriangle className="h-5 w-5" /> },
   { name: "Security", path: "/security", icon: <Shield className="h-5 w-5" /> },
@@ -420,6 +422,7 @@ function App() {
             <Route path="/wallet" component={SimpleWallet} />
             <Route path="/fractal-explorer" component={SimpleFractalExplorer} />
             <Route path="/security" component={SecurityPage} />
+            <Route path="/singularity" component={SingularityCoinPage} />
             <Route path="/settings" component={SimpleSettings} />
             <Route path="/ai-assistant" component={AIAssistantDemo} />
             <Route component={SimpleNotFound} />
