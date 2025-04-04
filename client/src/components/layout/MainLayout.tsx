@@ -238,8 +238,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, className }) => {
         )}
       </main>
 
-      {/* New Mobile Navigation */}
-      {isMobile && <MobileNav />}
+      {/* Mobile Navigation - always showing for now */}
+      <MobileNav />
 
       {/* Footer with navigation on non-mobile - now using top 6 routes only */}
       {!isMobile && (
