@@ -8,16 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Seven modular widget components for Dashboard:
-  - MarketOverviewWidget: Real-time cryptocurrency market data
-  - PortfolioWidget: Interactive portfolio visualization
-  - TransactionListWidget: Recent transaction history
-  - NewsWidget: Latest blockchain and cryptocurrency news
-  - PriceAlertWidget: Customizable price thresholds for alerts
-  - GasTrackerWidget: Ethereum gas prices and Bitcoin network fees
-  - TrendingCoinsWidget: Popular/trending cryptocurrency metrics
 - AI Assistant module with contextual chat interface
-- Automatic refresh functionality for widgets with configurable intervals
 - Secure credential storage with AES-256 encryption
 - Transaction verification and risk assessment system
 - Phishing detection for URLs and content analysis
@@ -28,12 +19,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Custom security levels (standard, high, paranoid)
 - Escrow templates for common transaction types
 - Open-source Matrix protocol integration for secure notifications
-- API services for multiple data providers:
-  - CoinGecko service for cryptocurrency price data
-  - Blockstream service for Bitcoin blockchain data
-  - Etherscan service for Ethereum blockchain data
-  - CryptoCompare service for market aggregation
-  - Matrix service for decentralized messaging
 - SMS notification support through Twilio integration
 - Quantum-resistant API validation layer between frontend and backend
 - Feature flag system for enabling/disabling notification channels
@@ -51,19 +36,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Replaced complex animations with standard navigation patterns
 - Restructured application layout for better performance
 - Improved error handling for API requests
-- Enhanced mobile responsiveness in dashboard and settings views
+- Enhanced mobile responsiveness in dashboard views
 - Modular architecture with isolated component APIs
 - Enhanced transaction security with multiple validation layers
-- Added fallback content for widgets when API calls fail
 
 ### Fixed
 - UI rendering issues causing white screens
+- Navigation problems in mobile view
 - Portfolio chart rendering inconsistencies
 - SMS notification delivery reliability
 - Database connection stability
-- Mobile responsiveness in the Settings page
-- NotificationSettings component layout on smaller screens
-- ChatInterface automatic scrolling behavior on initial render
 
 ## [0.2.0] - 2025-04-03
 
