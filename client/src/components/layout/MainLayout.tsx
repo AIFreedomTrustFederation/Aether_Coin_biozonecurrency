@@ -237,8 +237,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, className }) => {
         )}
       </main>
 
-      {/* Floating navigation on mobile */}
-      {isMobile && <FloatingNav routes={appRoutes} />}
+      {/* Floating navigation - now shown on all pages regardless of mobile status */}
+      <FloatingNav routes={appRoutes} />
 
       {/* Footer with navigation on non-mobile - now using top 6 routes only */}
       {!isMobile && (

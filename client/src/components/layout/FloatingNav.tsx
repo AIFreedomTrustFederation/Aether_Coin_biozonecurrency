@@ -57,28 +57,28 @@ const FloatingNav: React.FC<FloatingNavProps> = ({ routes, className }) => {
   };
 
   return (
-    <div className={cn("fixed bottom-6 right-6 z-50", className)}>
+    <div className={cn("fixed bottom-6 right-6 z-[9999]", className)}>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button 
             size="icon" 
-            className="w-14 h-14 rounded-full shadow-lg"
+            className="h-14 w-14 rounded-full shadow-lg bg-primary hover:bg-primary/90"
             aria-label="Navigation menu"
           >
-            <Menu className="h-6 w-6" />
+            <Menu className="h-6 w-6 text-primary-foreground" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-56 mb-2">
+        <DropdownMenuContent align="end" side="top" sideOffset={16} className="w-56">
           {routes.map((route) => (
             <DropdownMenuItem 
               key={route.path} 
               asChild
               className={cn(
-                "cursor-pointer py-2",
-                location === route.path && "bg-primary/10 text-primary"
+                "cursor-pointer py-3 px-4",
+                location === route.path && "bg-primary/10 text-primary font-medium"
               )}
             >
-              <Link href={route.path} className="flex items-center gap-2">
+              <Link href={route.path} className="flex items-center gap-3 w-full">
                 {getRouteIcon(route.path)}
                 <span>{route.label}</span>
               </Link>

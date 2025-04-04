@@ -74,18 +74,8 @@ export default function Settings() {
         </TabsContent>
       </Tabs>
       
-      {/* Back to Home Button */}
-      <div className="mt-6 mb-10 flex justify-center">
-        <Link to="/">
-          <Button
-            variant="secondary"
-            className="bg-purple-500 hover:bg-purple-600 text-white py-3 px-6 flex items-center gap-2 rounded-full"
-          >
-            <Home className="h-4 w-4" />
-            Back to Home
-          </Button>
-        </Link>
-      </div>
+      {/* Space at the bottom to avoid content being covered by the floating button */}
+      <div className="h-24"></div>
     </div>
   );
 }
