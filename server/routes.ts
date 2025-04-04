@@ -1,4 +1,4 @@
-import type { Express, Request } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { 
@@ -20,6 +20,79 @@ import { z } from "zod";
 import Stripe from "stripe";
 import apiGateway from "../api-gateway";
 import apiServicesRouter from "./routes/api-services";
+
+/**
+ * Utility function to send notifications through available channels
+ * This function will send notifications to a user through all enabled channels
+ * (SMS via Twilio and/or Matrix) based on their preferences
+ * 
+ * @param userId User ID to send notification to
+ * @param message Plain text message (required for both channels)
+ * @param htmlMessage HTML formatted message (optional, for Matrix only)
+ * @returns Object with status of each notification channel
+ */
+async function sendUserNotifications(
+  userId: number,
+  message: string,
+  htmlMessage?: string
+): Promise<{sms: boolean, matrix: boolean}> {
+  const results = {
+    sms: false,
+    matrix: false
+  };
+  
+  try {
+    // Try SMS notification
+    const smsSid = await twilioService.sendSmsNotification(userId, message);
+    results.sms = !!smsSid;
+  } catch (error) {
+    console.error('Error sending SMS notification:', error);
+  }
+  
+  try {
+    // Try Matrix notification
+    const eventId = await matrixService.sendUserNotification(userId, message, htmlMessage);
+    results.matrix = !!eventId;
+  } catch (error) {
+    console.error('Error sending Matrix notification:', error);
+  }
+  
+  return results;
+}
+
+/**
+ * Utility for transaction notifications
+ * Sends to both channels if available
+ */
+async function sendTransactionNotification(
+  userId: number,
+  transactionType: string,
+  amount: string,
+  tokenSymbol: string
+): Promise<{sms: boolean, matrix: boolean}> {
+  const results = {
+    sms: false,
+    matrix: false
+  };
+  
+  try {
+    // Try SMS notification
+    const smsSid = await twilioService.sendTransactionNotification(userId, transactionType, amount, tokenSymbol);
+    results.sms = !!smsSid;
+  } catch (error) {
+    console.error('Error sending SMS transaction notification:', error);
+  }
+  
+  try {
+    // Try Matrix notification
+    const eventId = await matrixService.sendTransactionNotification(userId, transactionType, amount, tokenSymbol);
+    results.matrix = !!eventId;
+  } catch (error) {
+    console.error('Error sending Matrix transaction notification:', error);
+  }
+  
+  return results;
+}
 
 // Initialize Stripe with the secret key from environment variables
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -79,6 +152,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const transactionData = insertTransactionSchema.parse(req.body);
       const transaction = await storage.createTransaction(transactionData);
+      
+      // Get wallet to determine user
+      const wallet = await storage.getWallet(transaction.walletId);
+      
+      if (wallet) {
+        // Determine transaction type based on positive or negative amount
+        const transactionType = parseFloat(transaction.amount) >= 0 ? 'receive' : 'send';
+        const amount = Math.abs(parseFloat(transaction.amount)).toString();
+        
+        // Send transaction notification through both Matrix and SMS if enabled
+        try {
+          const notificationResults = await sendTransactionNotification(
+            wallet.userId, 
+            transactionType, 
+            amount, 
+            transaction.symbol || 'SING' // Default to SING if no symbol provided
+          );
+          
+          console.log(`Transaction notification results:`, notificationResults);
+        } catch (notificationError) {
+          console.error('Failed to send transaction notification:', notificationError);
+          // Non-blocking: we don't fail the transaction if notification fails
+        }
+      }
+      
       res.status(201).json(transaction);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -532,7 +630,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Notification preferences not found" });
       }
       
-      res.json(preferences);
+      // Add status of notification services
+      const notificationServices = {
+        smsAvailable: twilioService.isTwilioConfigured(),
+        matrixAvailable: matrixService.isMatrixConfigured()
+      };
+      
+      res.json({
+        ...preferences,
+        notificationServices
+      });
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch notification preferences" });
     }
@@ -736,8 +843,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
+      // Check if Matrix service is properly configured
+      const isMatrixConfigured = matrixService.isMatrixConfigured();
+      
       // If Matrix service is not configured, we'll update without verification
-      if (!process.env.MATRIX_USER || !process.env.MATRIX_HOME_SERVER) {
+      if (!isMatrixConfigured) {
         await storage.updateMatrixId(userId, matrixId, true);
         return res.json({ 
           success: true, 
@@ -747,6 +857,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       try {
+        // Initialize Matrix client if not already done
+        await matrixService.initialize();
+        
         // Check if the Matrix ID exists
         const isValid = await matrixService.verifyMatrixId(matrixId);
         
@@ -813,8 +926,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // Check if Matrix is configured
-      if (!process.env.MATRIX_USER || !process.env.MATRIX_HOME_SERVER) {
+      // Check if Matrix service is properly configured
+      if (!matrixService.isMatrixConfigured()) {
         return res.status(503).json({ 
           message: "Matrix service not configured", 
           needsConfiguration: true 
@@ -822,13 +935,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       try {
-        // Send a test message
+        // Initialize Matrix client if needed
+        await matrixService.initialize();
+        
+        // Send a test message using the user notification method
         const message = "This is a test message from Aetherion Wallet. Your Matrix notifications are working correctly!";
-        const eventId = await matrixService.sendNotification(
-          preferences.matrixId,
-          message,
-          "<b>This is a test message from Aetherion Wallet.</b> Your Matrix notifications are working correctly!"
-        );
+        const htmlMessage = "<b>This is a test message from Aetherion Wallet.</b> Your Matrix notifications are working correctly!";
+        
+        const eventId = await matrixService.sendUserNotification(userId, message, htmlMessage);
+        
+        if (!eventId) {
+          return res.status(500).json({ message: "Failed to send Matrix notification" });
+        }
         
         res.json({ 
           success: true, 
@@ -850,6 +968,82 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Unified test notification endpoint (tests both SMS and Matrix or specified channel)
+  app.post("/api/notification-preferences/test", async (req, res) => {
+    try {
+      const userId = 1; // For demo purposes
+      const { channel } = req.body; // 'sms', 'matrix', or undefined (both)
+      
+      // Get user's notification preferences
+      const preferences = await storage.getNotificationPreferenceByUserId(userId);
+      
+      if (!preferences) {
+        return res.status(404).json({ message: "Notification preferences not found" });
+      }
+      
+      const results = {
+        sms: false,
+        matrix: false,
+        errors: [] as string[]
+      };
+      
+      // Test SMS if requested or if no specific channel requested
+      if (!channel || channel === 'sms') {
+        if (twilioService.isTwilioConfigured()) {
+          if (preferences.phoneNumber && preferences.isPhoneVerified && preferences.smsEnabled) {
+            try {
+              const message = "This is a unified test message from Aetherion Wallet. Your SMS notifications are working correctly!";
+              const smsSid = await twilioService.sendSmsNotification(userId, message);
+              results.sms = !!smsSid;
+            } catch (error) {
+              console.error('SMS test error:', error);
+              results.errors.push(`SMS error: ${error instanceof Error ? error.message : String(error)}`);
+            }
+          } else {
+            results.errors.push('SMS notifications are disabled or phone number is not verified');
+          }
+        } else {
+          results.errors.push('SMS service not configured');
+        }
+      }
+      
+      // Test Matrix if requested or if no specific channel requested
+      if (!channel || channel === 'matrix') {
+        if (matrixService.isMatrixConfigured()) {
+          if (preferences.matrixId && preferences.isMatrixVerified && preferences.matrixEnabled) {
+            try {
+              await matrixService.initialize();
+              const message = "This is a unified test message from Aetherion Wallet. Your Matrix notifications are working correctly!";
+              const htmlMessage = "<b>This is a unified test message from Aetherion Wallet.</b> Your Matrix notifications are working correctly!";
+              const eventId = await matrixService.sendUserNotification(userId, message, htmlMessage);
+              results.matrix = !!eventId;
+            } catch (error) {
+              console.error('Matrix test error:', error);
+              results.errors.push(`Matrix error: ${error instanceof Error ? error.message : String(error)}`);
+            }
+          } else {
+            results.errors.push('Matrix notifications are disabled or Matrix ID is not verified');
+          }
+        } else {
+          results.errors.push('Matrix service not configured');
+        }
+      }
+      
+      const success = results.sms || results.matrix;
+      
+      res.json({
+        success,
+        results,
+        message: success ? "Test notification(s) sent successfully" : "Failed to send test notification(s)"
+      });
+    } catch (error) {
+      res.status(500).json({ 
+        message: "Failed to send test notification", 
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
   const httpServer = createServer(app);
   return httpServer;
 }

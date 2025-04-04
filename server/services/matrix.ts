@@ -1,5 +1,7 @@
 import * as sdk from 'matrix-js-sdk';
 import dotenv from 'dotenv';
+import { storage } from '../storage';
+import { NotificationPreference } from '@shared/schema';
 
 dotenv.config();
 
@@ -191,9 +193,146 @@ export class MatrixService {
       this.roomsByUser = {};
     }
   }
+  
+  /**
+   * Check if Matrix is properly configured
+   * @returns Boolean indicating if Matrix client is configured
+   */
+  isMatrixConfigured(): boolean {
+    return this.client !== null || !!(MATRIX_USER && (MATRIX_PASSWORD || MATRIX_ACCESS_TOKEN));
+  }
+  
+  /**
+   * Send notification to a user by userId
+   * @param userId User ID to send notification to
+   * @param message Message content
+   * @param htmlMessage Optional HTML-formatted message
+   * @returns Event ID of sent message or null if failed
+   */
+  async sendUserNotification(userId: number, message: string, htmlMessage?: string): Promise<string | null> {
+    try {
+      // Get user's notification preferences
+      const notificationPreference = await storage.getNotificationPreferenceByUserId(userId);
+      
+      if (!notificationPreference) {
+        console.error(`Cannot send Matrix notification: No notification preferences found for user ${userId}`);
+        return null;
+      }
+      
+      // Check if user has Matrix notifications enabled and a verified Matrix ID
+      if (!notificationPreference.matrixEnabled || !notificationPreference.isMatrixVerified) {
+        console.log(`Matrix notifications disabled or Matrix ID not verified for user ${userId}`);
+        return null;
+      }
+      
+      // Check if Matrix ID exists
+      if (!notificationPreference.matrixId) {
+        console.error(`Cannot send Matrix notification: No Matrix ID for user ${userId}`);
+        return null;
+      }
+      
+      // Send notification via Matrix
+      const eventId = await this.sendNotification(
+        notificationPreference.matrixId,
+        message,
+        htmlMessage
+      );
+      
+      console.log(`Matrix notification sent to user ${userId}, event ID: ${eventId}`);
+      return eventId;
+    } catch (error) {
+      console.error('Error sending Matrix notification:', error);
+      return null;
+    }
+  }
+  
+  /**
+   * Send a transaction notification
+   * @param userId User ID to notify
+   * @param transactionType Type of transaction (send/receive)
+   * @param amount Amount involved
+   * @param tokenSymbol Token symbol (BTC, ETH, etc.)
+   * @returns Event ID of sent message or null if failed
+   */
+  async sendTransactionNotification(
+    userId: number, 
+    transactionType: string, 
+    amount: string, 
+    tokenSymbol: string
+  ): Promise<string | null> {
+    const notificationPreference = await storage.getNotificationPreferenceByUserId(userId);
+    
+    if (!notificationPreference?.transactionAlerts) {
+      return null; // Transaction alerts disabled
+    }
+    
+    const message = `Aetherion Wallet: ${transactionType.toUpperCase()} transaction of ${amount} ${tokenSymbol} has been ${transactionType === 'receive' ? 'received' : 'sent'}.`;
+    
+    const htmlMessage = `<b>Aetherion Wallet</b>: ${transactionType.toUpperCase()} transaction of <b>${amount} ${tokenSymbol}</b> has been ${transactionType === 'receive' ? 'received' : 'sent'}.`;
+    
+    return this.sendUserNotification(userId, message, htmlMessage);
+  }
+  
+  /**
+   * Send a security notification
+   * @param userId User ID to notify
+   * @param securityEvent Type of security event
+   * @param details Additional details
+   * @returns Event ID of sent message or null if failed
+   */
+  async sendSecurityNotification(
+    userId: number,
+    securityEvent: string,
+    details: string
+  ): Promise<string | null> {
+    const notificationPreference = await storage.getNotificationPreferenceByUserId(userId);
+    
+    if (!notificationPreference?.securityAlerts) {
+      return null; // Security alerts disabled
+    }
+    
+    const message = `Aetherion Wallet SECURITY ALERT: ${securityEvent}. ${details}`;
+    
+    const htmlMessage = `<b>Aetherion Wallet SECURITY ALERT</b>: ${securityEvent}. <i>${details}</i>`;
+    
+    return this.sendUserNotification(userId, message, htmlMessage);
+  }
+  
+  /**
+   * Send a price alert notification
+   * @param userId User ID to notify
+   * @param tokenSymbol Token symbol (BTC, ETH, etc.)
+   * @param price Current price
+   * @param changePercent Percent change
+   * @returns Event ID of sent message or null if failed
+   */
+  async sendPriceAlertNotification(
+    userId: number,
+    tokenSymbol: string,
+    price: string,
+    changePercent: string
+  ): Promise<string | null> {
+    const notificationPreference = await storage.getNotificationPreferenceByUserId(userId);
+    
+    if (!notificationPreference?.priceAlerts) {
+      return null; // Price alerts disabled
+    }
+    
+    const direction = parseFloat(changePercent) >= 0 ? 'up' : 'down';
+    const message = `Aetherion Wallet PRICE ALERT: ${tokenSymbol} is ${direction} ${Math.abs(parseFloat(changePercent))}% at $${price}.`;
+    
+    const htmlMessage = `<b>Aetherion Wallet PRICE ALERT</b>: ${tokenSymbol} is ${direction} <span style="color:${parseFloat(changePercent) >= 0 ? 'green' : 'red'}">${Math.abs(parseFloat(changePercent))}%</span> at $${price}.`;
+    
+    return this.sendUserNotification(userId, message, htmlMessage);
+  }
 }
 
 // Singleton instance
 export const matrixService = new MatrixService();
+
+// Initialize on startup
+matrixService.initialize().catch(err => {
+  console.error('Failed to initialize Matrix service on startup:', err);
+});
 
 export default matrixService;
