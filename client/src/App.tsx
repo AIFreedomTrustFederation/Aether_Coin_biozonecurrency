@@ -14,6 +14,7 @@ import {
 import AIAssistantDemo from "./pages/AIAssistantDemo";
 import LandingPage from "./pages/LandingPage";
 import Dashboard from "@/components/Dashboard";
+import { SecurityPage } from "./pages/SecurityPage";
 
 // Define navigation items for both mobile and desktop
 const navigationItems = [
@@ -21,6 +22,7 @@ const navigationItems = [
   { name: "Wallet", path: "/wallet", icon: <Wallet className="h-5 w-5" /> },
   { name: "Fractal Explorer", path: "/fractal-explorer", icon: <Cpu className="h-5 w-5" /> },
   { name: "AI Assistant", path: "/ai-assistant", icon: <AlertTriangle className="h-5 w-5" /> },
+  { name: "Security", path: "/security", icon: <Shield className="h-5 w-5" /> },
   { name: "Settings", path: "/settings", icon: <Settings className="h-5 w-5" /> },
 ];
 
@@ -417,6 +419,7 @@ function App() {
             <Route path="/dashboard" component={Dashboard} />
             <Route path="/wallet" component={SimpleWallet} />
             <Route path="/fractal-explorer" component={SimpleFractalExplorer} />
+            <Route path="/security" component={SecurityPage} />
             <Route path="/settings" component={SimpleSettings} />
             <Route path="/ai-assistant" component={AIAssistantDemo} />
             <Route component={SimpleNotFound} />
