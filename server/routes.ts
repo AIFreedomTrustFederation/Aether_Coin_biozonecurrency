@@ -15,6 +15,7 @@ import {
 } from "@shared/schema";
 import { stripeService } from "./services/stripe";
 import * as twilioService from "./services/twilio";
+import { matrixService } from "./services/matrix";
 import { z } from "zod";
 import Stripe from "stripe";
 import apiGateway from "../api-gateway";
@@ -710,6 +711,137 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: "Test message sent successfully",
         messageSid
       });
+    } catch (error) {
+      res.status(500).json({ 
+        message: "Failed to send test message", 
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
+  // Update Matrix ID for notification preferences
+  app.post("/api/notification-preferences/matrix", async (req, res) => {
+    try {
+      const userId = 1; // For demo purposes
+      const { matrixId } = req.body;
+      
+      if (!matrixId || typeof matrixId !== 'string') {
+        return res.status(400).json({ message: "Invalid Matrix ID" });
+      }
+      
+      // Basic format validation for Matrix ID (@username:homeserver.org)
+      if (!matrixId.startsWith('@') || !matrixId.includes(':')) {
+        return res.status(400).json({ 
+          message: "Invalid Matrix ID format. Must be in the format @username:homeserver.org" 
+        });
+      }
+      
+      // If Matrix service is not configured, we'll update without verification
+      if (!process.env.MATRIX_USER || !process.env.MATRIX_HOME_SERVER) {
+        await storage.updateMatrixId(userId, matrixId, true);
+        return res.json({ 
+          success: true, 
+          message: "Matrix ID updated (no verification in testing mode)",
+          verificationNeeded: false
+        });
+      }
+      
+      try {
+        // Check if the Matrix ID exists
+        const isValid = await matrixService.verifyMatrixId(matrixId);
+        
+        if (!isValid) {
+          return res.status(400).json({ 
+            message: "Could not verify Matrix ID. Please check the ID and try again." 
+          });
+        }
+        
+        // Save Matrix ID (unverified - will be verified after first message)
+        await storage.updateMatrixId(userId, matrixId, false);
+        
+        // For the demo, we'll mark as verified immediately
+        // In a real app, we'd have a verification flow similar to SMS
+        await storage.verifyMatrixId(userId, true);
+        
+        res.json({ 
+          success: true, 
+          message: "Matrix ID verified successfully",
+          verificationNeeded: false
+        });
+      } catch (matrixError) {
+        console.error('Matrix verification error:', matrixError);
+        // If Matrix verification fails, we still update but mark as unverified
+        await storage.updateMatrixId(userId, matrixId, false);
+        
+        res.json({ 
+          success: true, 
+          message: "Matrix ID saved but verification service unavailable",
+          verificationNeeded: true
+        });
+      }
+    } catch (error) {
+      res.status(500).json({ 
+        message: "Failed to update Matrix ID", 
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
+  // Test Matrix notification
+  app.post("/api/notification-preferences/test-matrix", async (req, res) => {
+    try {
+      const userId = 1; // For demo purposes
+      
+      // Get user's notification preferences
+      const preferences = await storage.getNotificationPreferenceByUserId(userId);
+      
+      if (!preferences) {
+        return res.status(404).json({ message: "Notification preferences not found" });
+      }
+      
+      if (!preferences.matrixId || !preferences.isMatrixVerified) {
+        return res.status(400).json({ 
+          message: "Matrix ID not verified", 
+          needsVerification: true 
+        });
+      }
+      
+      if (!preferences.matrixEnabled) {
+        return res.status(400).json({ 
+          message: "Matrix notifications are disabled", 
+          matrixDisabled: true 
+        });
+      }
+      
+      // Check if Matrix is configured
+      if (!process.env.MATRIX_USER || !process.env.MATRIX_HOME_SERVER) {
+        return res.status(503).json({ 
+          message: "Matrix service not configured", 
+          needsConfiguration: true 
+        });
+      }
+      
+      try {
+        // Send a test message
+        const message = "This is a test message from Aetherion Wallet. Your Matrix notifications are working correctly!";
+        const eventId = await matrixService.sendNotification(
+          preferences.matrixId,
+          message,
+          "<b>This is a test message from Aetherion Wallet.</b> Your Matrix notifications are working correctly!"
+        );
+        
+        res.json({ 
+          success: true, 
+          message: "Test message sent successfully",
+          eventId
+        });
+      } catch (matrixError) {
+        console.error('Matrix send error:', matrixError);
+        return res.status(503).json({ 
+          message: "Failed to send Matrix notification", 
+          error: matrixError instanceof Error ? matrixError.message : String(matrixError)
+        });
+      }
     } catch (error) {
       res.status(500).json({ 
         message: "Failed to send test message", 
