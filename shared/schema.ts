@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, jsonb, decimal, primaryKey } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, jsonb, decimal, primaryKey, uniqueIndex } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
@@ -9,7 +9,11 @@ export const users = pgTable("users", {
   username: text("username").notNull().unique(),
   email: text("email").notNull().unique(),
   passwordHash: text("password_hash").notNull(),
+  role: text("role").notNull().default("user"), // 'user', 'admin', 'super_admin'
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  lastLogin: timestamp("last_login"),
+  isActive: boolean("is_active").default(true),
 });
 
 export const usersRelations = relations(users, ({ many, one }) => ({
@@ -29,6 +33,9 @@ export const usersRelations = relations(users, ({ many, one }) => ({
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   createdAt: true,
+  updatedAt: true,
+  lastLogin: true,
+  isActive: true,
 });
 
 // Wallets schema
@@ -512,6 +519,256 @@ export const insertNotificationPreferenceSchema = createInsertSchema(notificatio
 export type NotificationPreference = typeof notificationPreferences.$inferSelect;
 export type InsertNotificationPreference = z.infer<typeof insertNotificationPreferenceSchema>;
 
+// Admin Action Logs
+export const adminActions = pgTable("admin_actions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id), // Admin who performed the action
+  actionType: text("action_type").notNull(), // 'user_management', 'fund_allocation', 'tokenomics_update', 'system_config'
+  action: text("action").notNull(), // Detailed action e.g. 'update_user_role', 'allocate_funds'
+  targetId: integer("target_id"), // ID of the entity being acted upon (if applicable)
+  targetType: text("target_type"), // Type of entity e.g. 'user', 'wallet', 'fund'
+  details: jsonb("details"), // Additional details about the action
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  timestamp: timestamp("timestamp").defaultNow(),
+});
+
+export const adminActionsRelations = relations(adminActions, ({ one }) => ({
+  user: one(users, {
+    fields: [adminActions.userId],
+    references: [users.id],
+  }),
+}));
+
+export const insertAdminActionSchema = createInsertSchema(adminActions).omit({
+  id: true,
+  timestamp: true,
+});
+
+// Admin Permissions
+export const adminPermissions = pgTable("admin_permissions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  permissionName: text("permission_name").notNull(), // 'manage_users', 'manage_funds', 'view_reports', etc.
+  permissionLevel: text("permission_level").notNull(), // 'read', 'write', 'admin'
+  grantedBy: integer("granted_by").references(() => users.id), // Admin who granted this permission
+  grantedAt: timestamp("granted_at").defaultNow(),
+  expiresAt: timestamp("expires_at"),
+  isActive: boolean("is_active").default(true),
+});
+
+export const adminPermissionsRelations = relations(adminPermissions, ({ one }) => ({
+  user: one(users, {
+    fields: [adminPermissions.userId],
+    references: [users.id],
+  }),
+  grantor: one(users, {
+    fields: [adminPermissions.grantedBy],
+    references: [users.id],
+    relationName: "permission_grantor",
+  }),
+}));
+
+export const insertAdminPermissionSchema = createInsertSchema(adminPermissions).omit({
+  id: true,
+  grantedAt: true,
+});
+
+// Fund Management
+export const funds = pgTable("funds", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  amount: decimal("amount").notNull(),
+  currency: text("currency").notNull().default("USD"),
+  fundType: text("fund_type").notNull(), // 'operational', 'development', 'marketing', 'reserve'
+  status: text("status").notNull().default("active"), // 'active', 'depleted', 'locked'
+  createdBy: integer("created_by").notNull().references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const fundsRelations = relations(funds, ({ one, many }) => ({
+  creator: one(users, {
+    fields: [funds.createdBy],
+    references: [users.id],
+  }),
+  allocations: many(fundAllocations),
+  transactions: many(fundTransactions),
+}));
+
+export const insertFundSchema = createInsertSchema(funds).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// Fund Allocations
+export const fundAllocations = pgTable("fund_allocations", {
+  id: serial("id").primaryKey(),
+  fundId: integer("fund_id").notNull().references(() => funds.id),
+  amount: decimal("amount").notNull(),
+  purpose: text("purpose").notNull(),
+  status: text("status").notNull().default("pending"), // 'pending', 'approved', 'rejected', 'completed'
+  approvedBy: integer("approved_by").references(() => users.id),
+  requestedBy: integer("requested_by").notNull().references(() => users.id),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  completedAt: timestamp("completed_at"),
+});
+
+export const fundAllocationsRelations = relations(fundAllocations, ({ one, many }) => ({
+  fund: one(funds, {
+    fields: [fundAllocations.fundId],
+    references: [funds.id],
+  }),
+  approver: one(users, {
+    fields: [fundAllocations.approvedBy],
+    references: [users.id],
+    relationName: "allocation_approver",
+  }),
+  requester: one(users, {
+    fields: [fundAllocations.requestedBy],
+    references: [users.id],
+    relationName: "allocation_requester",
+  }),
+  transactions: many(fundTransactions),
+}));
+
+export const insertFundAllocationSchema = createInsertSchema(fundAllocations).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  completedAt: true,
+});
+
+// Fund Transactions
+export const fundTransactions = pgTable("fund_transactions", {
+  id: serial("id").primaryKey(),
+  fundId: integer("fund_id").notNull().references(() => funds.id),
+  allocationId: integer("allocation_id").references(() => fundAllocations.id),
+  amount: decimal("amount").notNull(),
+  transactionType: text("transaction_type").notNull(), // 'deposit', 'withdrawal', 'transfer'
+  description: text("description").notNull(),
+  executedBy: integer("executed_by").notNull().references(() => users.id),
+  recipientType: text("recipient_type"), // 'vendor', 'employee', 'partner', 'project'
+  recipientId: text("recipient_id"), // External ID or identifier
+  recipientDetails: jsonb("recipient_details"), // Additional details about the recipient
+  timestamp: timestamp("timestamp").defaultNow(),
+  reference: text("reference"), // Invoice number, PO number, etc.
+  status: text("status").notNull().default("completed"), // 'pending', 'completed', 'failed', 'reversed'
+  metadata: jsonb("metadata"),
+});
+
+export const fundTransactionsRelations = relations(fundTransactions, ({ one }) => ({
+  fund: one(funds, {
+    fields: [fundTransactions.fundId],
+    references: [funds.id],
+  }),
+  allocation: one(fundAllocations, {
+    fields: [fundTransactions.allocationId],
+    references: [fundAllocations.id],
+  }),
+  executor: one(users, {
+    fields: [fundTransactions.executedBy],
+    references: [users.id],
+  }),
+}));
+
+export const insertFundTransactionSchema = createInsertSchema(fundTransactions).omit({
+  id: true,
+  timestamp: true,
+});
+
+// Forward declaration for token distributions
+const tokenDistributionsRef = () => tokenDistributions;
+
+// Tokenomics Management
+export const tokenomicsConfig = pgTable("tokenomics_config", {
+  id: serial("id").primaryKey(),
+  totalSupply: decimal("total_supply").notNull(),
+  circulatingSupply: decimal("circulating_supply").notNull(),
+  symbol: text("symbol").notNull(),
+  name: text("name").notNull(),
+  decimals: integer("decimals").notNull(),
+  initialPrice: decimal("initial_price").notNull(),
+  currentPrice: decimal("current_price").notNull(),
+  marketCap: decimal("market_cap").notNull(),
+  lastUpdated: timestamp("last_updated").defaultNow(),
+  updatedBy: integer("updated_by").notNull().references(() => users.id),
+  status: text("status").notNull().default("active"), // 'planned', 'active', 'deprecated'
+  version: integer("version").notNull().default(1),
+  metadata: jsonb("metadata"),
+});
+
+export const insertTokenomicsConfigSchema = createInsertSchema(tokenomicsConfig).omit({
+  id: true,
+  lastUpdated: true,
+});
+
+// Token Distribution
+export const tokenDistributions = pgTable("token_distributions", {
+  id: serial("id").primaryKey(),
+  configId: integer("config_id").notNull().references(() => tokenomicsConfig.id),
+  name: text("name").notNull(), // 'ICO', 'Team', 'Foundation', 'Ecosystem', 'Development'
+  percentage: decimal("percentage").notNull(),
+  amount: decimal("amount").notNull(),
+  lockupPeriodDays: integer("lockup_period_days"),
+  vestingPeriodDays: integer("vesting_period_days"),
+  vestingSchedule: jsonb("vesting_schedule"), // Detailed vesting schedule
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  createdBy: integer("created_by").notNull().references(() => users.id),
+});
+
+export const tokenomicsConfigRelations = relations(tokenomicsConfig, ({ one, many }) => ({
+  updater: one(users, {
+    fields: [tokenomicsConfig.updatedBy],
+    references: [users.id],
+  }),
+  distributions: many(tokenDistributionsRef),
+}));
+
+export const tokenDistributionsRelations = relations(tokenDistributions, ({ one }) => ({
+  config: one(tokenomicsConfig, {
+    fields: [tokenDistributions.configId],
+    references: [tokenomicsConfig.id],
+  }),
+  creator: one(users, {
+    fields: [tokenDistributions.createdBy],
+    references: [users.id],
+  }),
+}));
+
+export const insertTokenDistributionSchema = createInsertSchema(tokenDistributions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// Export admin types
+export type AdminAction = typeof adminActions.$inferSelect;
+export type InsertAdminAction = z.infer<typeof insertAdminActionSchema>;
+
+export type AdminPermission = typeof adminPermissions.$inferSelect;
+export type InsertAdminPermission = z.infer<typeof insertAdminPermissionSchema>;
+
+export type Fund = typeof funds.$inferSelect;
+export type InsertFund = z.infer<typeof insertFundSchema>;
+
+export type FundAllocation = typeof fundAllocations.$inferSelect;
+export type InsertFundAllocation = z.infer<typeof insertFundAllocationSchema>;
+
+export type FundTransaction = typeof fundTransactions.$inferSelect;
+export type InsertFundTransaction = z.infer<typeof insertFundTransactionSchema>;
+
+export type TokenomicsConfig = typeof tokenomicsConfig.$inferSelect;
+export type InsertTokenomicsConfig = z.infer<typeof insertTokenomicsConfigSchema>;
+
+export type TokenDistribution = typeof tokenDistributions.$inferSelect;
+export type InsertTokenDistribution = z.infer<typeof insertTokenDistributionSchema>;
+
 // Widget schema imports
 import { 
   widgets, 
@@ -579,4 +836,11 @@ export const schema = {
   widgets,
   widgetTemplates,
   dashboards,
+  adminActions,
+  adminPermissions,
+  funds,
+  fundAllocations,
+  fundTransactions,
+  tokenomicsConfig,
+  tokenDistributions,
 };

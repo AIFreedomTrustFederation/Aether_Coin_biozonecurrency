@@ -18,6 +18,7 @@ import { SecurityPage } from "./pages/SecurityPage";
 import SingularityCoinPage from "./pages/SingularityCoinPage";
 import ICOPage from "./pages/ICOPage";
 import WhitepaperPage from "./pages/WhitepaperPage";
+import AdminPortal from "./pages/AdminPortal";
 
 // Define navigation items for both mobile and desktop
 const navigationItems = [
@@ -431,6 +432,7 @@ function App() {
             <Route path="/whitepaper" component={WhitepaperPage} />
             <Route path="/settings" component={SimpleSettings} />
             <Route path="/ai-assistant" component={AIAssistantDemo} />
+            <Route path="/admin" component={AdminPortal} />
             <Route component={SimpleNotFound} />
           </Switch>
         </main>
