@@ -20,6 +20,10 @@ import ICOPage from "./pages/ICOPage";
 import WhitepaperPage from "./pages/WhitepaperPage";
 import AdminPortal from "./pages/AdminPortal";
 
+// Import new personalization pages
+import DashboardPage from "./pages/DashboardPage";
+import SettingsPage from "./pages/SettingsPage";
+
 // Define navigation items for both mobile and desktop
 const navigationItems = [
   { name: "Dashboard", path: "/dashboard", icon: <Layout className="h-5 w-5" /> },
@@ -423,16 +427,17 @@ function App() {
         <main className="pt-[60px] min-h-[calc(100%-60px)] overflow-auto">
           <Switch>
             <Route path="/" component={LandingPage} />
-            <Route path="/dashboard" component={Dashboard} />
+            <Route path="/dashboard" component={DashboardPage} />
             <Route path="/wallet" component={SimpleWallet} />
             <Route path="/fractal-explorer" component={SimpleFractalExplorer} />
             <Route path="/security" component={SecurityPage} />
             <Route path="/singularity" component={SingularityCoinPage} />
             <Route path="/ico" component={ICOPage} />
             <Route path="/whitepaper" component={WhitepaperPage} />
-            <Route path="/settings" component={SimpleSettings} />
+            <Route path="/settings" component={SettingsPage} />
             <Route path="/ai-assistant" component={AIAssistantDemo} />
             <Route path="/admin" component={AdminPortal} />
+            <Route path="/legacy-dashboard" component={Dashboard} />
             <Route component={SimpleNotFound} />
           </Switch>
         </main>

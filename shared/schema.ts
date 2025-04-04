@@ -24,6 +24,8 @@ export const usersRelations = relations(users, ({ many, one }) => ({
   paymentMethods: many(paymentMethods),
   payments: many(payments),
   stakingPositions: many(stakingPositions),
+  stakingRecords: many(stakingRecords),
+  icoParticipations: many(icoParticipations),
   createdProposals: many(proposals, { relationName: "createdProposals" }),
   votes: many(votes),
   governanceRewards: many(governanceRewards),
@@ -60,6 +62,7 @@ export const walletsRelations = relations(wallets, ({ one, many }) => ({
   }),
   transactions: many(transactions),
   stakingPositions: many(stakingPositions),
+  stakingRecords: many(stakingRecords),
   votes: many(votes),
 }));
 
@@ -815,6 +818,103 @@ export type InsertWidgetTemplate = z.infer<typeof insertWidgetTemplateSchema>;
 export type Dashboard = typeof dashboards.$inferSelect;
 export type InsertDashboard = z.infer<typeof insertDashboardSchema>;
 
+// ICO Participation schema
+export const icoParticipations = pgTable('ico_participations', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').references(() => users.id),
+  transactionHash: text('transaction_hash').notNull(),
+  amountContributed: text('amount_contributed').notNull(), // In source currency
+  tokensAllocated: text('tokens_allocated').notNull(),
+  purchaseTimestamp: timestamp('purchase_timestamp').defaultNow(),
+  phase: text('phase').notNull(), // 'seed', 'private', 'public'
+  status: text('status').notNull().default('pending'), // 'pending', 'confirmed', 'distributed'
+  sourceWalletAddress: text('source_wallet_address').notNull(),
+  destinationWalletAddress: text('destination_wallet_address').notNull(),
+  networkFee: text('network_fee'),
+  conversionRate: text('conversion_rate'),
+  ipAddress: text('ip_address'),
+  userAgent: text('user_agent'),
+  referralCode: text('referral_code'),
+});
+
+export const icoParticipationsRelations = relations(icoParticipations, ({ one }) => ({
+  user: one(users, {
+    fields: [icoParticipations.userId],
+    references: [users.id],
+  }),
+}));
+
+export const insertIcoParticipationSchema = createInsertSchema(icoParticipations).omit({
+  id: true,
+  purchaseTimestamp: true,
+});
+
+// ICO Phases schema
+export const icoPhases = pgTable('ico_phases', {
+  id: serial('id').primaryKey(),
+  name: text('name').notNull(),
+  description: text('description'),
+  startDate: timestamp('start_date').notNull(),
+  endDate: timestamp('end_date').notNull(),
+  hardCap: text('hard_cap').notNull(),
+  softCap: text('soft_cap').notNull(),
+  tokenPrice: text('token_price').notNull(),
+  minContribution: text('min_contribution'),
+  maxContribution: text('max_contribution'),
+  totalRaised: text('total_raised').default('0'),
+  totalParticipants: integer('total_participants').default(0),
+  status: text('status').notNull().default('upcoming'), // 'upcoming', 'active', 'completed', 'cancelled'
+  bonusPercentage: integer('bonus_percentage').default(0),
+});
+
+export const insertIcoPhaseSchema = createInsertSchema(icoPhases).omit({
+  id: true,
+});
+
+// Enhanced Staking Records schema
+export const stakingRecords = pgTable('staking_records', {
+  id: serial('id').primaryKey(), 
+  userId: integer('user_id').references(() => users.id),
+  walletId: integer('wallet_id').references(() => wallets.id),
+  amount: text('amount').notNull(),
+  startTime: timestamp('start_time').defaultNow(),
+  endTime: timestamp('end_time'),
+  rewardRate: decimal('reward_rate').notNull(),
+  totalReward: text('total_reward').default('0'),
+  status: text('status').notNull().default('active'), // 'active', 'completed', 'cancelled'
+  lastRewardCalculation: timestamp('last_reward_calculation').defaultNow(),
+  nodeContribution: text('node_contribution').default('0'),
+  validatorStatus: boolean('validator_status').default(false),
+  fractalShardingParticipation: boolean('fractal_sharding_participation').default(false),
+});
+
+export const stakingRecordsRelations = relations(stakingRecords, ({ one }) => ({
+  user: one(users, {
+    fields: [stakingRecords.userId],
+    references: [users.id],
+  }),
+  wallet: one(wallets, {
+    fields: [stakingRecords.walletId],
+    references: [wallets.id],
+  }),
+}));
+
+export const insertStakingRecordSchema = createInsertSchema(stakingRecords).omit({
+  id: true,
+  startTime: true,
+  lastRewardCalculation: true,
+});
+
+// Export the new types
+export type IcoParticipation = typeof icoParticipations.$inferSelect;
+export type InsertIcoParticipation = z.infer<typeof insertIcoParticipationSchema>;
+
+export type IcoPhase = typeof icoPhases.$inferSelect;
+export type InsertIcoPhase = z.infer<typeof insertIcoPhaseSchema>;
+
+export type StakingRecord = typeof stakingRecords.$inferSelect;
+export type InsertStakingRecord = z.infer<typeof insertStakingRecordSchema>;
+
 // Combine all schemas for export
 export const schema = {
   users,
@@ -843,4 +943,7 @@ export const schema = {
   fundTransactions,
   tokenomicsConfig,
   tokenDistributions,
+  icoParticipations,
+  icoPhases,
+  stakingRecords,
 };
