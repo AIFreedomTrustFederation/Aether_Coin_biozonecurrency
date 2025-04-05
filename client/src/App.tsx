@@ -24,6 +24,7 @@ import AdminPortal from "./pages/AdminPortal";
 import DashboardPage from "./pages/DashboardPage";
 import SettingsPage from "./pages/SettingsPage";
 import BlockchainVisualizerPage from "./pages/BlockchainVisualizerPage";
+import WalletPage from "./pages/WalletPage";
 
 // Define navigation items for both mobile and desktop
 const navigationItems = [
@@ -430,7 +431,7 @@ function App() {
           <Switch>
             <Route path="/" component={LandingPage} />
             <Route path="/dashboard" component={DashboardPage} />
-            <Route path="/wallet" component={SimpleWallet} />
+            <Route path="/wallet" component={WalletPage} />
             <Route path="/fractal-explorer" component={SimpleFractalExplorer} />
             <Route path="/security" component={SecurityPage} />
             <Route path="/singularity" component={SingularityCoinPage} />
