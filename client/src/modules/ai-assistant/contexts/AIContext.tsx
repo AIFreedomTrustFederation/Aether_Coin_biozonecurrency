@@ -1,15 +1,21 @@
 import React, { createContext, useContext, useReducer, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-
 import { 
-  AIState, AIAction, AIConfig, AIProviderProps,
-  AIContextType, ChatMessage, Transaction,
-  SecurityScan, SecurityIssue, SecurityCategory, SecuritySeverity
+  AIState, 
+  AIAction, 
+  AIContextType, 
+  ChatMessage, 
+  Transaction, 
+  SecurityScan,
+  SecurityCategory, 
+  SecurityIssue,
+  AIProviderProps
 } from '../types';
-import { secureStorage } from '../utils/SecureStorage';
 import { transactionVerifier } from '../utils/TransactionVerifier';
+import { secureStorage } from '../utils/SecureStorage';
+import { formatTimestamp } from '../utils/formatters';
 
-// Initial state
+// Initial AI state
 const initialState: AIState = {
   isEnabled: true,
   isProcessing: false,
@@ -20,381 +26,379 @@ const initialState: AIState = {
   config: {
     automaticScanning: true,
     transactionVerification: true,
-    maxStoredMessages: 50,
+    maxStoredMessages: 100,
     matrixNotifications: false,
     notificationThreshold: 'medium'
   }
 };
 
-// Context
+// Create context
 const AIContext = createContext<AIContextType | null>(null);
 
-// Reducer
+// Reducer for handling state updates
 function aiReducer(state: AIState, action: AIAction): AIState {
   switch (action.type) {
     case 'TOGGLE_AI':
-      return { ...state, isEnabled: action.payload };
-      
-    case 'SET_PROCESSING':
-      return { ...state, isProcessing: action.payload };
-      
-    case 'ADD_MESSAGE': {
-      const messages = [...state.messages, action.payload];
-      // Keep only the most recent messages up to maxStoredMessages
-      if (messages.length > state.config.maxStoredMessages) {
-        messages.shift(); // Remove oldest message
-      }
-      return { ...state, messages };
-    }
-    
-    case 'CLEAR_MESSAGES':
-      return { ...state, messages: [] };
-      
-    case 'ADD_SCAN':
-      return { 
-        ...state, 
-        securityScans: [action.payload, ...state.securityScans].slice(0, 20) // Keep most recent 20
+      return {
+        ...state,
+        isEnabled: action.payload
       };
-      
+    case 'SET_PROCESSING':
+      return {
+        ...state,
+        isProcessing: action.payload
+      };
+    case 'ADD_MESSAGE':
+      const messages = [...state.messages, action.payload];
+      // Limit stored messages according to config
+      if (messages.length > state.config.maxStoredMessages) {
+        messages.splice(0, messages.length - state.config.maxStoredMessages);
+      }
+      return {
+        ...state,
+        messages
+      };
+    case 'CLEAR_MESSAGES':
+      return {
+        ...state,
+        messages: []
+      };
+    case 'ADD_SCAN':
+      return {
+        ...state,
+        securityScans: [action.payload, ...state.securityScans]
+      };
     case 'RESOLVE_ISSUE': {
       const { scanId, issueId } = action.payload;
-      const updatedScans = state.securityScans.map(scan => {
+      const securityScans = state.securityScans.map(scan => {
         if (scan.id === scanId) {
-          const updatedIssues = scan.issues.map(issue => 
-            issue.id === issueId ? { ...issue, resolved: true } : issue
-          );
-          return { ...scan, issues: updatedIssues };
+          const issues = scan.issues.map(issue => {
+            if (issue.id === issueId) {
+              return { ...issue, resolved: true };
+            }
+            return issue;
+          });
+          return { ...scan, issues };
         }
         return scan;
       });
-      return { ...state, securityScans: updatedScans };
+      return {
+        ...state,
+        securityScans
+      };
     }
-    
     case 'SAVE_CREDENTIAL':
-      return { 
-        ...state, 
-        credentials: [...state.credentials, action.payload] 
+      return {
+        ...state,
+        credentials: [...state.credentials, action.payload]
       };
-      
     case 'REMOVE_CREDENTIAL':
-      return { 
-        ...state, 
-        credentials: state.credentials.filter(cred => cred.id !== action.payload) 
+      return {
+        ...state,
+        credentials: state.credentials.filter(cred => cred.id !== action.payload)
       };
-      
     case 'HOLD_TRANSACTION':
-      return { 
-        ...state, 
-        heldTransactions: [...state.heldTransactions, action.payload] 
+      return {
+        ...state,
+        heldTransactions: [...state.heldTransactions, action.payload]
       };
-      
-    case 'RELEASE_TRANSACTION':
-      return { 
-        ...state, 
-        heldTransactions: state.heldTransactions.filter(tx => tx.id !== action.payload) 
+    case 'RELEASE_TRANSACTION': {
+      const txId = action.payload;
+      return {
+        ...state,
+        heldTransactions: state.heldTransactions.filter(tx => 
+          tx.id !== txId && tx.id !== txId.toString()
+        )
       };
-      
+    }
     case 'UPDATE_CONFIG':
-      return { 
-        ...state, 
-        config: { ...state.config, ...action.payload } 
+      return {
+        ...state,
+        config: {
+          ...state.config,
+          ...action.payload
+        }
       };
-      
     default:
       return state;
   }
 }
 
-// Provider
-export function AIProvider({ children, initialState: customInitialState }: AIProviderProps) {
+// Provider component
+export function AIProvider({ children, userId, initialState: customInitialState }: AIProviderProps) {
   const [state, dispatch] = useReducer(aiReducer, { ...initialState, ...customInitialState });
-  
-  // Utility functions
-  const getIssuesByCategory = useCallback((scan: SecurityScan) => {
-    return scan.issues.reduce((result, issue) => {
-      if (!result[issue.category]) {
-        result[issue.category] = [];
-      }
-      result[issue.category].push(issue);
-      return result;
-    }, {} as Record<SecurityCategory, SecurityIssue[]>);
-  }, []);
-  
-  const getRiskScore = useCallback((scan: SecurityScan) => {
-    return transactionVerifier.calculateRiskScore(scan);
-  }, []);
-  
-  // Transaction verification
+
+  // Initialize secure storage
+  React.useEffect(() => {
+    if (userId) {
+      secureStorage.initialize(`aetherion-${userId}`);
+    }
+  }, [userId]);
+
+  // Verify a transaction for security issues
   const verifyTransaction = useCallback(async (tx: Transaction): Promise<SecurityScan> => {
     if (!state.isEnabled || !state.config.transactionVerification) {
-      // Return an empty scan if AI is disabled or verification is turned off
+      // Return empty scan if AI is disabled
       return {
         id: uuidv4(),
         timestamp: new Date(),
         type: 'transaction_verification',
         status: 'skipped',
-        focus: tx.txHash,
+        focus: tx.txHash || '',
         durationMs: 0,
         issues: []
       };
     }
-    
+
     dispatch({ type: 'SET_PROCESSING', payload: true });
     
     try {
-      // Perform transaction verification
+      // Create loading message
+      const loadingMessageId = uuidv4();
+      dispatch({
+        type: 'ADD_MESSAGE',
+        payload: {
+          id: loadingMessageId,
+          sender: 'ai',
+          content: 'Analyzing transaction security...',
+          timestamp: new Date().toISOString(),
+          isLoading: true
+        }
+      });
+
+      // Verify transaction
       const scan = await transactionVerifier.verifyTransaction(tx);
       
       // Add scan to history
       dispatch({ type: 'ADD_SCAN', payload: scan });
       
-      // If issues detected and they're serious enough, add a message
-      if (scan.issues.length > 0) {
-        const riskScore = getRiskScore(scan);
-        const shouldNotify = shouldNotifyUser(scan);
+      // Add result message
+      const riskScore = getRiskScore(scan);
+      let messageContent = '';
+      
+      if (scan.issues.length === 0) {
+        messageContent = `Transaction verification complete. No issues detected.`;
+      } else {
+        const severityCount = {
+          critical: scan.issues.filter(i => i.severity === 'critical').length,
+          high: scan.issues.filter(i => i.severity === 'high').length,
+          medium: scan.issues.filter(i => i.severity === 'medium').length,
+          low: scan.issues.filter(i => i.severity === 'low').length,
+          info: scan.issues.filter(i => i.severity === 'info').length
+        };
         
-        if (shouldNotify) {
-          const message: ChatMessage = {
-            id: uuidv4(),
-            sender: 'ai',
-            content: generateSecurityAlertMessage(scan, riskScore),
-            timestamp: new Date().toISOString(),
-            type: 'security_alert',
-            actionData: { scanId: scan.id }
-          };
-          
-          dispatch({ type: 'ADD_MESSAGE', payload: message });
+        messageContent = `Transaction verification complete. Found ${scan.issues.length} issue${scan.issues.length === 1 ? '' : 's'}.\n\n`;
+        if (severityCount.critical > 0) {
+          messageContent += `⚠️ Critical issues: ${severityCount.critical}\n`;
         }
+        if (severityCount.high > 0) {
+          messageContent += `⚠️ High severity: ${severityCount.high}\n`;
+        }
+        if (severityCount.medium > 0) {
+          messageContent += `⚠️ Medium severity: ${severityCount.medium}\n`;
+        }
+        if (severityCount.low > 0) {
+          messageContent += `ℹ️ Low severity: ${severityCount.low}\n`;
+        }
+        if (severityCount.info > 0) {
+          messageContent += `ℹ️ Info: ${severityCount.info}\n`;
+        }
+        
+        messageContent += `\nRisk score: ${riskScore}/100\n`;
+        messageContent += shouldHoldTransaction(scan) ? 
+          '\n⛔ This transaction has been put on hold for your safety. You can review details and release it if desired.' : 
+          '\n✅ Transaction can proceed, but review any warnings before confirming.';
       }
+      
+      // Update loading message with result
+      dispatch({
+        type: 'ADD_MESSAGE',
+        payload: {
+          id: loadingMessageId,
+          sender: 'ai',
+          content: messageContent,
+          timestamp: new Date().toISOString(),
+          isLoading: false,
+          actionData: { scan }
+        }
+      });
       
       return scan;
     } catch (error) {
-      console.error('Transaction verification error:', error);
+      console.error('Error verifying transaction:', error);
       
-      // Add error message
-      const message: ChatMessage = {
-        id: uuidv4(),
-        sender: 'system',
-        content: `Error verifying transaction: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        timestamp: new Date().toISOString(),
-        type: 'system'
-      };
-      
-      dispatch({ type: 'ADD_MESSAGE', payload: message });
-      
-      // Return a basic error scan
-      return {
+      // Create error scan
+      const errorScan: SecurityScan = {
         id: uuidv4(),
         timestamp: new Date(),
         type: 'transaction_verification',
         status: 'error',
-        focus: tx.txHash,
+        focus: tx.txHash || '',
         durationMs: 0,
         issues: []
       };
-    } finally {
-      dispatch({ type: 'SET_PROCESSING', payload: false });
-    }
-  }, [state.isEnabled, state.config.transactionVerification, getRiskScore]);
-  
-  // Chat handling
-  const handleChatMessage = useCallback((message: string) => {
-    if (!state.isEnabled) return;
-    
-    // Add user message
-    const userMessage: ChatMessage = {
-      id: uuidv4(),
-      sender: 'user',
-      content: message,
-      timestamp: new Date().toISOString()
-    };
-    
-    dispatch({ type: 'ADD_MESSAGE', payload: userMessage });
-    dispatch({ type: 'SET_PROCESSING', payload: true });
-    
-    // Add AI typing indicator
-    const typingMessage: ChatMessage = {
-      id: uuidv4(),
-      sender: 'ai',
-      content: '',
-      timestamp: new Date().toISOString(),
-      isLoading: true
-    };
-    
-    dispatch({ type: 'ADD_MESSAGE', payload: typingMessage });
-    
-    // Simulate AI response (would connect to backend in real implementation)
-    setTimeout(() => {
-      // Remove typing indicator
+      
+      // Add error message
       dispatch({
         type: 'ADD_MESSAGE',
         payload: {
-          id: typingMessage.id,
+          id: uuidv4(),
           sender: 'ai',
-          content: generateAIResponse(message),
-          timestamp: new Date().toISOString(),
-          isLoading: false
+          content: 'There was an error verifying your transaction. Please try again.',
+          timestamp: new Date().toISOString()
+        }
+      });
+      
+      return errorScan;
+    } finally {
+      dispatch({ type: 'SET_PROCESSING', payload: false });
+    }
+  }, [state.isEnabled, state.config.transactionVerification]);
+
+  // Group issues by category
+  const getIssuesByCategory = useCallback((scan: SecurityScan): Record<SecurityCategory, SecurityIssue[]> => {
+    const result = {} as Record<SecurityCategory, SecurityIssue[]>;
+    
+    // Initialize categories
+    const categories: SecurityCategory[] = [
+      'phishing', 'smart_contract', 'transaction', 
+      'gas_optimization', 'privacy', 'general'
+    ];
+    categories.forEach(category => {
+      result[category] = [];
+    });
+    
+    // Group issues
+    scan.issues.forEach(issue => {
+      const category = issue.category as SecurityCategory;
+      if (result[category]) {
+        result[category].push(issue);
+      } else {
+        result.general.push(issue);
+      }
+    });
+    
+    return result;
+  }, []);
+
+  // Calculate risk score
+  const getRiskScore = useCallback((scan: SecurityScan): number => {
+    return transactionVerifier.calculateRiskScore(scan);
+  }, []);
+
+  // Should transaction be held
+  const shouldHoldTransaction = useCallback((scan: SecurityScan): boolean => {
+    return transactionVerifier.shouldHoldTransaction(scan);
+  }, []);
+
+  // Get reason for transaction hold
+  const getHoldReason = useCallback((scan: SecurityScan): string => {
+    return transactionVerifier.getHoldReason(scan);
+  }, []);
+
+  // Save a credential securely
+  const saveCredential = useCallback(async (credential: any) => {
+    const savedCredential = await secureStorage.storeCredential(credential);
+    dispatch({ type: 'SAVE_CREDENTIAL', payload: savedCredential });
+    return savedCredential;
+  }, []);
+
+  // Retrieve a credential
+  const getCredential = useCallback(async (id: string) => {
+    return secureStorage.getCredential(id);
+  }, []);
+
+  // Handle chat message from user
+  const handleChatMessage = useCallback((message: string) => {
+    // Add user message
+    dispatch({
+      type: 'ADD_MESSAGE',
+      payload: {
+        id: uuidv4(),
+        sender: 'user',
+        content: message,
+        timestamp: new Date().toISOString()
+      }
+    });
+
+    // Process message (would connect to backend AI in real implementation)
+    dispatch({ type: 'SET_PROCESSING', payload: true });
+    
+    // Simulate AI response
+    setTimeout(() => {
+      // Simple response for demo
+      const responses = [
+        "I'm Mysterion, your AI assistant. I can help with blockchain questions and security concerns.",
+        "I've analyzed your message. How else can I assist you with your blockchain needs?",
+        "I'm here to help with all your Aetherion-related questions and security concerns.",
+        "I'm monitoring your wallet for security issues. Is there anything specific you'd like to know?",
+        "Let me look into that for you. Is there anything else you're wondering about the Aetherion platform?"
+      ];
+      
+      const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+      
+      dispatch({
+        type: 'ADD_MESSAGE',
+        payload: {
+          id: uuidv4(),
+          sender: 'ai',
+          content: randomResponse,
+          timestamp: new Date().toISOString()
         }
       });
       
       dispatch({ type: 'SET_PROCESSING', payload: false });
-    }, 1500);
-  }, [state.isEnabled]);
-  
-  // Transaction holding
-  const shouldHoldTransaction = useCallback((scan: SecurityScan): boolean => {
-    if (!state.isEnabled || !state.config.transactionVerification) {
-      return false;
-    }
-    
-    return transactionVerifier.shouldHoldTransaction(scan);
-  }, [state.isEnabled, state.config.transactionVerification]);
-  
-  const getHoldReason = useCallback((scan: SecurityScan): string => {
-    return transactionVerifier.getHoldReason(scan);
+    }, 1000);
   }, []);
-  
-  const holdTransaction = useCallback((tx: Transaction, reason: string, duration: number = 24): Transaction => {
-    // Calculate hold until time (default 24 hours)
-    const holdUntil = new Date();
-    holdUntil.setHours(holdUntil.getHours() + duration);
-    
+
+  // Put a transaction on hold
+  const holdTransaction = useCallback((tx: Transaction, reason: string, duration = 24): Transaction => {
     const heldTx: Transaction = {
       ...tx,
+      id: tx.id || uuidv4(),
       status: 'held',
       holdReason: reason,
-      holdUntil: holdUntil.toISOString()
+      holdUntil: new Date(Date.now() + duration * 60 * 60 * 1000).toISOString()
     };
     
     dispatch({ type: 'HOLD_TRANSACTION', payload: heldTx });
     
-    // Add message about holding
-    const message: ChatMessage = {
-      id: uuidv4(),
-      sender: 'ai',
-      content: `I've placed a hold on transaction ${tx.txHash.substring(0, 8)}... for your protection: ${reason}. You can review and release it in the Transactions section.`,
-      timestamp: new Date().toISOString(),
-      type: 'notification'
-    };
-    
-    dispatch({ type: 'ADD_MESSAGE', payload: message });
+    // Add system message
+    dispatch({
+      type: 'ADD_MESSAGE',
+      payload: {
+        id: uuidv4(),
+        sender: 'system',
+        content: `Transaction has been placed on hold: ${reason}`,
+        timestamp: new Date().toISOString()
+      }
+    });
     
     return heldTx;
   }, []);
-  
+
+  // Release a transaction from hold
   const releaseTransaction = useCallback((txId: number) => {
     dispatch({ type: 'RELEASE_TRANSACTION', payload: txId });
     
-    // Add message about release
-    const message: ChatMessage = {
-      id: uuidv4(),
-      sender: 'ai',
-      content: `Transaction has been released and is now being processed.`,
-      timestamp: new Date().toISOString(),
-      type: 'notification'
-    };
-    
-    dispatch({ type: 'ADD_MESSAGE', payload: message });
+    // Add system message
+    dispatch({
+      type: 'ADD_MESSAGE',
+      payload: {
+        id: uuidv4(),
+        sender: 'system',
+        content: `Transaction has been released from hold.`,
+        timestamp: new Date().toISOString()
+      }
+    });
   }, []);
-  
-  // Secure credential management
-  const saveCredential = useCallback(async (credential: any) => {
-    try {
-      const savedCredential = await secureStorage.storeCredential(credential);
-      dispatch({ type: 'SAVE_CREDENTIAL', payload: savedCredential });
-      return savedCredential;
-    } catch (error) {
-      console.error('Error storing credential:', error);
-      throw error;
-    }
-  }, []);
-  
-  const getCredential = useCallback(async (id: string) => {
-    try {
-      return await secureStorage.getCredential(id);
-    } catch (error) {
-      console.error('Error retrieving credential:', error);
-      return null;
-    }
-  }, []);
-  
-  // Clear chat
+
+  // Clear chat history
   const clearChat = useCallback(() => {
     dispatch({ type: 'CLEAR_MESSAGES' });
   }, []);
-  
-  // Helper functions
-  const shouldNotifyUser = (scan: SecurityScan): boolean => {
-    const thresholds: Record<SecurityThreshold, SecuritySeverity[]> = {
-      high: ['critical', 'high'],
-      medium: ['critical', 'high', 'medium'],
-      low: ['critical', 'high', 'medium', 'low'],
-      info: ['critical', 'high', 'medium', 'low', 'info']
-    };
-    
-    const notifyFor = thresholds[state.config.notificationThreshold];
-    return scan.issues.some(issue => notifyFor.includes(issue.severity));
-  };
-  
-  const generateSecurityAlertMessage = (scan: SecurityScan, riskScore: number): string => {
-    const criticalCount = scan.issues.filter(issue => issue.severity === 'critical').length;
-    const highCount = scan.issues.filter(issue => issue.severity === 'high').length;
-    const mediumCount = scan.issues.filter(issue => issue.severity === 'medium').length;
-    
-    let message = `⚠️ **Security Alert for Transaction ${scan.focus.substring(0, 8)}...**\n\n`;
-    
-    message += `Risk Score: ${riskScore}/100\n\n`;
-    
-    if (criticalCount > 0) {
-      message += `🚨 **${criticalCount} Critical Issue${criticalCount > 1 ? 's' : ''}**\n`;
-    }
-    
-    if (highCount > 0) {
-      message += `⚠️ **${highCount} High Severity Issue${highCount > 1 ? 's' : ''}**\n`;
-    }
-    
-    if (mediumCount > 0) {
-      message += `⚠ **${mediumCount} Medium Severity Issue${mediumCount > 1 ? 's' : ''}**\n`;
-    }
-    
-    message += `\nTop concern: ${scan.issues[0]?.title || 'Unknown'}\n\n`;
-    
-    message += 'Review the Security tab for details.';
-    
-    return message;
-  };
-  
-  const generateAIResponse = (userMessage: string): string => {
-    // This would connect to a real AI or backend in production
-    // For now, we'll use a simple response system
-    
-    const lowerMessage = userMessage.toLowerCase();
-    
-    if (lowerMessage.includes('hello') || lowerMessage.includes('hi ')) {
-      return "Hello! I'm your AI assistant for Aetherion. I can help you with transaction security, wallet management, and answer questions about blockchain.";
-    }
-    
-    if (lowerMessage.includes('help') || lowerMessage.includes('can you')) {
-      return "I can help you with:\n\n• Analyzing transaction security\n• Detecting phishing attempts\n• Monitoring smart contracts\n• Setting up secure credentials\n• Optimizing gas fees\n\nJust let me know what you need assistance with!";
-    }
-    
-    if (lowerMessage.includes('transaction') || lowerMessage.includes('transfer')) {
-      return "I can analyze your transactions for security issues. If you're about to send funds, I'll automatically check for potential scams, unusual activity, and contract vulnerabilities.";
-    }
-    
-    if (lowerMessage.includes('security') || lowerMessage.includes('safe')) {
-      return "Your security is my top priority. I use advanced analysis to detect phishing attempts, screen smart contracts for vulnerabilities, and alert you to unusual activity. You can adjust my security settings in the AI Settings tab.";
-    }
-    
-    if (lowerMessage.includes('credential') || lowerMessage.includes('api') || lowerMessage.includes('key')) {
-      return "I can securely store your credentials like API keys and wallet access tokens. All data is encrypted locally on your device, and I can help you manage them in the Settings tab.";
-    }
-    
-    // Default response
-    return "I'm here to help protect your transactions and assets. You can ask me about blockchain security, transaction analysis, or managing your encrypted credentials. Is there something specific you'd like assistance with?";
-  };
-  
-  const contextValue: AIContextType = {
+
+  const contextValue = {
     state,
     dispatch,
     verifyTransaction,
@@ -409,7 +413,7 @@ export function AIProvider({ children, initialState: customInitialState }: AIPro
     releaseTransaction,
     clearChat
   };
-  
+
   return (
     <AIContext.Provider value={contextValue}>
       {children}
@@ -417,11 +421,13 @@ export function AIProvider({ children, initialState: customInitialState }: AIPro
   );
 }
 
-// Hook
-export function useAI(): AIContextType {
+// Custom hook for using AI context
+export function useAI() {
   const context = useContext(AIContext);
   if (!context) {
     throw new Error('useAI must be used within an AIProvider');
   }
   return context;
 }
+
+export default AIContext;

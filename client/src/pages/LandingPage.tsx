@@ -1,7 +1,91 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, FormEvent } from 'react';
 import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
-import { ChatInterface } from '../modules/ai-assistant';
+import { Input } from '@/components/ui/input';
+import { Send } from 'lucide-react';
+// Import AIAssistant for the floating AI assistant button
+import { AIAssistant } from '../modules/ai-assistant/components/AIAssistant';
+
+// Simple ChatInterface component for the landing page
+interface ChatInterfaceProps {
+  messages: {
+    id: string;
+    role: 'user' | 'assistant' | 'system';
+    content: string;
+    timestamp: Date;
+  }[];
+  onSendMessage: (message: string) => void;
+  isProcessing: boolean;
+  autoFocus?: boolean;
+  placeholder?: string;
+  className?: string;
+}
+
+const ChatInterface: React.FC<ChatInterfaceProps> = ({ 
+  messages, 
+  onSendMessage, 
+  isProcessing, 
+  autoFocus = false,
+  placeholder = "Type a message...", 
+  className = "" 
+}) => {
+  const [inputValue, setInputValue] = useState('');
+  
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    if (inputValue.trim() && !isProcessing) {
+      onSendMessage(inputValue.trim());
+      setInputValue('');
+    }
+  };
+  
+  return (
+    <div className="flex flex-col h-full">
+      <div className="flex-1 overflow-y-auto mb-4 space-y-4">
+        {messages.map((message) => (
+          <div 
+            key={message.id}
+            className={`${
+              message.role === 'user' 
+                ? 'ml-auto bg-blue-600 text-white' 
+                : 'mr-auto bg-white/10 text-white'
+            } rounded-lg px-4 py-2 max-w-[80%]`}
+          >
+            {message.content}
+          </div>
+        ))}
+        {isProcessing && (
+          <div className="mr-auto bg-white/10 text-white rounded-lg px-4 py-2 max-w-[80%]">
+            <div className="flex space-x-1">
+              <div className="w-2 h-2 bg-white/40 rounded-full animate-bounce"></div>
+              <div className="w-2 h-2 bg-white/40 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+              <div className="w-2 h-2 bg-white/40 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+            </div>
+          </div>
+        )}
+      </div>
+      
+      <form onSubmit={handleSubmit} className="flex space-x-2">
+        <Input
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          placeholder={placeholder}
+          disabled={isProcessing}
+          autoFocus={autoFocus}
+          className={`flex-1 bg-white/10 border-white/20 text-white placeholder:text-white/50 ${className}`}
+        />
+        <Button 
+          type="submit" 
+          disabled={isProcessing || !inputValue.trim()} 
+          size="icon"
+          className="bg-blue-600 hover:bg-blue-700 text-white"
+        >
+          <Send className="h-4 w-4" />
+        </Button>
+      </form>
+    </div>
+  );
+};
 
 const LandingPage: React.FC = () => {
   const [messages, setMessages] = useState<{
@@ -143,6 +227,9 @@ const LandingPage: React.FC = () => {
           <p className="mt-2 text-sm">© {new Date().getFullYear()} Aetherion. All rights reserved.</p>
         </div>
       </footer>
+      
+      {/* Add floating AI Assistant */}
+      <AIAssistant userId={1} />
     </div>
   );
 };

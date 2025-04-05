@@ -7,11 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { 
   Menu, X, Home, Layout, Wallet, Lock, Shield, Settings, AlertTriangle, ChevronRight, 
-  BarChart3, Eye, Cpu, Bell, Zap, Coins, FileText, Database
+  BarChart3, Eye, Cpu, Bell, Zap, Coins, FileText, Database, Bot
 } from "lucide-react";
 
 // Import existing pages for now
-import AIAssistantDemo from "./pages/AIAssistantDemo";
+import AIAssistant from "./modules/ai-assistant/components/AIAssistant";
 import LandingPage from "./pages/LandingPage";
 import Dashboard from "@/components/Dashboard";
 import { SecurityPage } from "./pages/SecurityPage";
@@ -25,6 +25,7 @@ import DashboardPage from "./pages/DashboardPage";
 import SettingsPage from "./pages/SettingsPage";
 import BlockchainVisualizerPage from "./pages/BlockchainVisualizerPage";
 import WalletPage from "./pages/WalletPage";
+import MysterionAIPage from "./pages/MysterionAIPage";
 
 // Define navigation items for both mobile and desktop
 const navigationItems = [
@@ -35,7 +36,7 @@ const navigationItems = [
   { name: "Whitepaper", path: "/whitepaper", icon: <FileText className="h-5 w-5" /> },
   { name: "Fractal Explorer", path: "/fractal-explorer", icon: <Cpu className="h-5 w-5" /> },
   { name: "Blockchain Visualizer", path: "/blockchain-visualizer", icon: <Database className="h-5 w-5" /> },
-  { name: "AI Assistant", path: "/ai-assistant", icon: <AlertTriangle className="h-5 w-5" /> },
+  { name: "Mysterion AI", path: "/ai-assistant", icon: <Bot className="h-5 w-5" /> },
   { name: "Security", path: "/security", icon: <Shield className="h-5 w-5" /> },
   { name: "Settings", path: "/settings", icon: <Settings className="h-5 w-5" /> },
 ];
@@ -439,7 +440,7 @@ function App() {
             <Route path="/whitepaper" component={WhitepaperPage} />
             <Route path="/blockchain-visualizer" component={BlockchainVisualizerPage} />
             <Route path="/settings" component={SettingsPage} />
-            <Route path="/ai-assistant" component={AIAssistantDemo} />
+            <Route path="/ai-assistant" component={MysterionAIPage} />
             <Route path="/admin" component={AdminPortal} />
             <Route path="/legacy-dashboard" component={Dashboard} />
             <Route component={SimpleNotFound} />
@@ -447,6 +448,11 @@ function App() {
         </main>
         
         <Toaster />
+        
+        {/* Add floating Mysterion AI Assistant to all pages except the AI Assistant page itself */}
+        {location !== '/ai-assistant' && (
+          <AIAssistant userId={1} />
+        )}
       </div>
     </QueryClientProvider>
   );

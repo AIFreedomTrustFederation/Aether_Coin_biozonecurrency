@@ -1,204 +1,158 @@
 /**
- * Format a timestamp as a relative time (e.g., "2 hours ago")
+ * Utility functions for formatting and displaying data
  */
-export function formatRelativeTime(timestamp: Date | string | number): string {
-  const date = timestamp instanceof Date ? timestamp : new Date(timestamp);
+
+/**
+ * Format a timestamp in a human-readable way
+ * 
+ * @param date The date or timestamp to format
+ * @returns A human-readable string representation
+ */
+export function formatTimestamp(date: Date | string): string {
+  const timestamp = typeof date === 'string' ? new Date(date) : date;
+  
+  // Use relative time for recent dates
   const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
+  const diffMs = now.getTime() - timestamp.getTime();
+  const diffSecs = Math.floor(diffMs / 1000);
+  const diffMins = Math.floor(diffSecs / 60);
+  const diffHours = Math.floor(diffMins / 60);
+  const diffDays = Math.floor(diffHours / 24);
   
-  const seconds = Math.floor(diffMs / 1000);
-  const minutes = Math.floor(seconds / 60);
-  const hours = Math.floor(minutes / 60);
-  const days = Math.floor(hours / 24);
-  const weeks = Math.floor(days / 7);
-  const months = Math.floor(days / 30);
-  const years = Math.floor(days / 365);
-  
-  if (seconds < 60) {
-    return seconds <= 10 ? 'just now' : `${seconds} seconds ago`;
-  } else if (minutes < 60) {
-    return `${minutes} ${minutes === 1 ? 'minute' : 'minutes'} ago`;
-  } else if (hours < 24) {
-    return `${hours} ${hours === 1 ? 'hour' : 'hours'} ago`;
-  } else if (days < 7) {
-    return `${days} ${days === 1 ? 'day' : 'days'} ago`;
-  } else if (weeks < 4) {
-    return `${weeks} ${weeks === 1 ? 'week' : 'weeks'} ago`;
-  } else if (months < 12) {
-    return `${months} ${months === 1 ? 'month' : 'months'} ago`;
-  } else {
-    return `${years} ${years === 1 ? 'year' : 'years'} ago`;
+  if (diffSecs < 60) {
+    return 'just now';
+  } else if (diffMins < 60) {
+    return `${diffMins} minute${diffMins === 1 ? '' : 's'} ago`;
+  } else if (diffHours < 24) {
+    return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
+  } else if (diffDays < 7) {
+    return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
   }
-}
-
-/**
- * Format a date as a string (e.g., "Apr 3, 2025")
- */
-export function formatDate(timestamp: Date | string | number): string {
-  const date = timestamp instanceof Date ? timestamp : new Date(timestamp);
-  return date.toLocaleDateString('en-US', {
+  
+  // Use formatted date for older timestamps
+  return timestamp.toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
-    year: 'numeric'
+    year: now.getFullYear() !== timestamp.getFullYear() ? 'numeric' : undefined
   });
 }
 
 /**
- * Format a time as a string (e.g., "14:32:45")
+ * Format a cryptocurrency amount
+ * 
+ * @param amount The amount as a string or number
+ * @param symbol Optional cryptocurrency symbol
+ * @param showSymbol Whether to include the symbol in the output
+ * @returns Formatted cryptocurrency amount
  */
-export function formatTime(timestamp: Date | string | number): string {
-  const date = timestamp instanceof Date ? timestamp : new Date(timestamp);
-  return date.toLocaleTimeString('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false
-  });
-}
-
-/**
- * Format a date and time together (e.g., "Apr 3, 2025 at 14:32")
- */
-export function formatDateTime(timestamp: Date | string | number): string {
-  const date = timestamp instanceof Date ? timestamp : new Date(timestamp);
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true
-  });
-}
-
-/**
- * Format a duration in milliseconds (e.g., "2m 32s")
- */
-export function formatDuration(durationMs: number): string {
-  if (durationMs < 1000) {
-    return `${durationMs}ms`;
+export function formatCryptoAmount(amount: string | number, symbol?: string, showSymbol = true): string {
+  const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+  
+  if (isNaN(numAmount)) {
+    return '0';
   }
   
-  const seconds = Math.floor((durationMs / 1000) % 60);
-  const minutes = Math.floor((durationMs / (1000 * 60)) % 60);
-  const hours = Math.floor(durationMs / (1000 * 60 * 60));
-  
-  const parts = [];
-  
-  if (hours > 0) {
-    parts.push(`${hours}h`);
-  }
-  
-  if (minutes > 0 || hours > 0) {
-    parts.push(`${minutes}m`);
-  }
-  
-  if (seconds > 0 || parts.length === 0) {
-    parts.push(`${seconds}s`);
-  }
-  
-  return parts.join(' ');
-}
-
-/**
- * Format remaining time in seconds (e.g., "2:32" or "00:02:32")
- */
-export function formatTimeRemaining(timeRemainingSeconds: number): string {
-  if (timeRemainingSeconds <= 0) {
-    return '0:00';
-  }
-  
-  const seconds = Math.floor(timeRemainingSeconds % 60);
-  const minutes = Math.floor((timeRemainingSeconds / 60) % 60);
-  const hours = Math.floor(timeRemainingSeconds / 3600);
-  
-  if (hours > 0) {
-    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  // Format with appropriate precision based on amount
+  let formatted: string;
+  if (numAmount === 0) {
+    formatted = '0';
+  } else if (numAmount < 0.001) {
+    formatted = numAmount.toExponential(4);
+  } else if (numAmount < 1) {
+    formatted = numAmount.toFixed(4);
+  } else if (numAmount < 1000) {
+    formatted = numAmount.toFixed(2);
   } else {
-    return `${minutes}:${String(seconds).padStart(2, '0')}`;
+    formatted = numAmount.toLocaleString(undefined, { 
+      maximumFractionDigits: 2 
+    });
+  }
+  
+  // Add symbol if available and requested
+  return showSymbol && symbol ? `${formatted} ${symbol}` : formatted;
+}
+
+/**
+ * Format a fiat currency amount
+ * 
+ * @param amount The amount as a string or number
+ * @param currency The currency code (USD, EUR, etc.)
+ * @returns Formatted currency amount
+ */
+export function formatFiatAmount(amount: string | number, currency: string = 'USD'): string {
+  const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+  
+  if (isNaN(numAmount)) {
+    return '$0.00';
+  }
+  
+  try {
+    return new Intl.NumberFormat('en-US', { 
+      style: 'currency', 
+      currency 
+    }).format(numAmount);
+  } catch (error) {
+    // Fallback if Intl is not supported
+    return `$${numAmount.toFixed(2)}`;
   }
 }
 
 /**
- * Format a file size (e.g., "1.5 MB")
+ * Truncate a string to a maximum length with ellipsis
+ * 
+ * @param str The string to truncate
+ * @param maxLength Maximum length before truncation
+ * @returns Truncated string with ellipsis if needed
  */
-export function formatFileSize(bytes: number): string {
-  if (bytes === 0) return '0 Bytes';
-  
-  const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-}
-
-/**
- * Format a currency amount (e.g., "$1,234.56")
- */
-export function formatCurrency(amount: number, currency: string = 'USD'): string {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency
-  }).format(amount);
-}
-
-/**
- * Format a percentage (e.g., "42.5%")
- */
-export function formatPercentage(value: number, decimalPlaces: number = 1): string {
-  return `${value.toFixed(decimalPlaces)}%`;
-}
-
-/**
- * Format a blockchain address with ellipsis (e.g., "0x1234...5678")
- */
-export function formatAddress(address: string, startChars: number = 6, endChars: number = 4): string {
-  if (!address) return '';
-  if (address.length <= startChars + endChars) return address;
-  
-  return `${address.substring(0, startChars)}...${address.substring(address.length - endChars)}`;
-}
-
-/**
- * Format a transaction hash with ellipsis (e.g., "0x1234...5678")
- */
-export function formatTransactionHash(hash: string): string {
-  return formatAddress(hash, 6, 6);
-}
-
-/**
- * Format a large number with commas (e.g., "1,234,567")
- */
-export function formatNumber(num: number): string {
-  return num.toLocaleString('en-US');
-}
-
-/**
- * Truncate text with ellipsis if it exceeds the maximum length
- */
-export function truncateText(text: string, maxLength: number): string {
-  if (!text) return '';
-  if (text.length <= maxLength) return text;
-  
-  return text.substring(0, maxLength) + '...';
-}
-
-/**
- * Format a token amount with proper decimal display
- */
-export function formatTokenAmount(amount: string | number, decimals: number = 18, displayDecimals: number = 6): string {
-  if (typeof amount === 'string') {
-    amount = parseFloat(amount);
+export function truncateString(str: string, maxLength: number): string {
+  if (!str || str.length <= maxLength) {
+    return str;
   }
   
-  if (isNaN(amount)) return '0';
+  return `${str.substring(0, maxLength)}...`;
+}
+
+/**
+ * Format a blockchain address for display
+ * Shortens the address by showing first and last few characters
+ * 
+ * @param address The blockchain address to format
+ * @param prefixLength Number of prefix characters to show
+ * @param suffixLength Number of suffix characters to show
+ * @returns Formatted address with ellipsis
+ */
+export function formatAddress(address: string, prefixLength: number = 6, suffixLength: number = 4): string {
+  if (!address || address.length <= prefixLength + suffixLength + 3) {
+    return address;
+  }
   
-  // Convert from raw amount to decimal representation
-  const adjustedAmount = amount / Math.pow(10, decimals);
+  const prefix = address.substring(0, prefixLength);
+  const suffix = address.substring(address.length - suffixLength);
   
-  // Format the number with the specified display decimals
-  return adjustedAmount.toLocaleString('en-US', {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: displayDecimals
-  });
+  return `${prefix}...${suffix}`;
+}
+
+/**
+ * Format a time duration in hours to a human-readable format
+ * 
+ * @param hours Number of hours to format
+ * @returns Human-readable time remaining string
+ */
+export function formatTimeRemaining(hours: number): string {
+  if (hours <= 0) {
+    return 'Available now';
+  }
+  
+  if (hours < 1) {
+    const minutes = Math.ceil(hours * 60);
+    return `${minutes} minute${minutes === 1 ? '' : 's'} remaining`;
+  }
+  
+  if (hours < 24) {
+    const roundedHours = Math.ceil(hours);
+    return `${roundedHours} hour${roundedHours === 1 ? '' : 's'} remaining`;
+  }
+  
+  const days = Math.ceil(hours / 24);
+  return `${days} day${days === 1 ? '' : 's'} remaining`;
 }
