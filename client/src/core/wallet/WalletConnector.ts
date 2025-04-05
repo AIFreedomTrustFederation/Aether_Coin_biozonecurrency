@@ -7,6 +7,7 @@
 
 import { EventEmitter } from 'events';
 import CryptoJS from 'crypto-js';
+import { enc, SHA256 } from 'crypto-js';
 import * as ethers from 'ethers';
 import { formatEther } from '@ethersproject/units';
 
@@ -89,7 +90,8 @@ class WalletConnector extends EventEmitter {
     if (this.initialized) return;
     
     // Set encryption key (hash it for security)
-    this.encryptionKey = CryptoJS.SHA256(encryptionKey).toString(CryptoJS.enc.Hex);
+    const hash = SHA256(encryptionKey);
+    this.encryptionKey = hash.toString();
     
     // Initialize storage metrics for test mode
     this.storageMetrics = {
@@ -405,6 +407,35 @@ class WalletConnector extends EventEmitter {
   public getConnectedWallets(): ConnectedWallet[] {
     this.checkInitialized();
     return [...this.connectedWallets];
+  }
+  
+  /**
+   * Add a wallet that's been verified with a passphrase
+   * This bypasses the normal connection flow since the wallet has already been verified
+   * @param wallet - The verified wallet to add
+   */
+  public addVerifiedWallet(wallet: ConnectedWallet): void {
+    this.checkInitialized();
+    
+    // Remove any existing wallet with the same ID or address to prevent duplicates
+    this.connectedWallets = this.connectedWallets.filter(
+      w => w.id !== wallet.id && w.address !== wallet.address
+    );
+    
+    // Add the wallet
+    this.connectedWallets.push(wallet);
+    
+    // Update metrics based on wallet type
+    if (wallet.type === 'ethereum') this.storageMetrics.ethereumWallets++;
+    if (wallet.type === 'bitcoin') this.storageMetrics.bitcoinWallets++;
+    if (wallet.type === 'coinbase') this.storageMetrics.coinbaseWallets++;
+    if (wallet.type === 'plaid') this.storageMetrics.plaidConnections++;
+    
+    // Update storage metrics
+    this.updateStorageMetrics();
+    
+    // Emit wallet connected event
+    this.emit('walletConnected', wallet);
   }
 
   /**
