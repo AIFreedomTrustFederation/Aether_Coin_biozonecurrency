@@ -22,11 +22,11 @@ const WalletOption: React.FC<WalletOptionProps> = ({ type, name, icon, onClick, 
     className={`cursor-pointer hover:border-primary transition-all duration-200 ${disabled ? 'opacity-50' : ''}`}
     onClick={() => !disabled && onClick(type)}
   >
-    <CardContent className="flex items-center p-4 gap-3">
-      <div className="text-3xl text-primary">{icon}</div>
+    <CardContent className="flex items-center p-3 sm:p-4 gap-2 sm:gap-3">
+      <div className="text-2xl sm:text-3xl text-primary">{icon}</div>
       <div>
-        <h3 className="font-medium">{name}</h3>
-        {disabled && <p className="text-sm text-muted-foreground">Not detected</p>}
+        <h3 className="font-medium text-sm sm:text-base">{name}</h3>
+        {disabled && <p className="text-xs sm:text-sm text-muted-foreground">Not detected</p>}
       </div>
     </CardContent>
   </Card>
@@ -43,7 +43,9 @@ const WalletConnector: React.FC = () => {
     try {
       const result = await connect(walletType);
       if (result && 'status' in result && result.status === 'error') {
-        setError(`Failed to connect to ${walletType}: ${result.error}`);
+        // Type guard to ensure we can access the error property
+        const errorResult = result as WalletConnectError;
+        setError(`Failed to connect to ${walletType}: ${errorResult.error}`);
         return;
       }
       setOpen(false);
@@ -97,15 +99,15 @@ const WalletConnector: React.FC = () => {
   return (
     <div>
       {wallet ? (
-        <div className="flex items-center gap-2">
-          <Button variant="outline" className="gap-2">
+        <div className="flex items-center gap-1 sm:gap-2">
+          <Button variant="outline" className="gap-1 sm:gap-2 text-xs sm:text-sm py-1 px-2 sm:py-2 sm:px-3 h-auto">
             {getWalletIcon(wallet.type)}
-            <span>{formatAddress(wallet.address)}</span>
-            <span className="text-xs bg-primary/10 px-2 py-1 rounded-full">
+            <span className="hidden xs:inline">{formatAddress(wallet.address)}</span>
+            <span className="text-xs bg-primary/10 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full">
               {wallet.balance.slice(0, 6)} {wallet.nativeToken}
             </span>
           </Button>
-          <Button variant="ghost" size="icon" onClick={() => disconnect()}>
+          <Button variant="ghost" size="sm" className="h-8 w-8 sm:h-9 sm:w-9 p-0" onClick={() => disconnect()}>
             <span className="sr-only">Disconnect wallet</span>
             ×
           </Button>

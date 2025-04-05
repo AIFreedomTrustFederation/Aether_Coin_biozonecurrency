@@ -382,7 +382,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <div className="app-container w-full h-full">
         {/* Top Navigation Bar */}
-        <header className="flex justify-between items-center p-4 bg-background border-b fixed top-0 left-0 right-0 z-30">
+        <header className="flex justify-between items-center p-2 sm:p-4 bg-background border-b fixed top-0 left-0 right-0 z-30">
           <div className="flex items-center">
             {/* Mobile menu button */}
             {isMobile && (
