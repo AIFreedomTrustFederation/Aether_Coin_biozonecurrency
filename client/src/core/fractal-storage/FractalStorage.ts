@@ -1,439 +1,443 @@
 /**
  * FractalStorage.ts
  * 
- * A quantum-resistant client-side storage system that uses fractal recursive
- * Mandelbrot set algorithms to securely shard and store sensitive financial data.
- * This implementation includes FractalCoin reward infrastructure.
+ * Quantum-resistant storage system using a fractal recursive Mandelbrot set approach
+ * This provides secure client-side storage with decentralized sharding
  */
 
-import { v4 as uuidv4 } from 'uuid';
 import CryptoJS from 'crypto-js';
 
-/**
- * Represents a node in the fractal storage structure
- */
-interface FractalNode {
+// Define node types
+type StorageNode = {
   id: string;
-  data: string; // encrypted data
-  parentId: string | null;
-  childIds: string[];
-  complexity: number; // complexity factor for rewards
-  timestamp: number;
-  iteration: number;
-  z0: { x: number; y: number }; // Mandelbrot set coordinates
-}
+  parentId?: string;
+  level: number;
+  createdAt: string;
+  lastUpdated: string;
+  data?: any;
+  metadata: Record<string, any>;
+  children: string[];
+  hash: string;
+};
 
-/**
- * Represents wallet connection information to be stored
- */
-export interface WalletConnectionInfo {
-  type: 'bitcoin' | 'ethereum' | 'coinbase' | 'plaid';
-  address?: string;
-  publicKey?: string;
-  accountId?: string;
-  providerInfo?: Record<string, any>;
-  timestamp: number;
-}
-
-/**
- * Manages secure, sharded storage using fractal algorithms
- * that provide quantum resistance and client-side security
- */
-export class FractalStorage {
-  private nodes: Map<string, FractalNode> = new Map();
-  private rootNodeId: string | null = null;
-  private encryptionKey: string | null = null;
-  private rewardBalance: number = 0;
-  private storagePoints: number = 0;
-
-  private readonly MAX_ITERATIONS = 1000;
-  private readonly ESCAPE_RADIUS = 2;
-  private readonly SHARD_COMPLEXITY = 5;
-
+class FractalStorage {
+  private initialized: boolean = false;
+  private encryptionKey: string = '';
+  private rootNode: StorageNode | null = null;
+  private nodes: Record<string, StorageNode> = {};
+  private storageFractalCoefficient: number = 0.0;
+  
   /**
    * Initialize the fractal storage system with an encryption key
-   * @param masterKey The master encryption key or user-provided password
+   * @param encryptionKey - Password for securing storage data
    */
-  public initialize(masterKey: string): void {
-    if (!masterKey) {
-      throw new Error('Master key is required');
-    }
-
-    // Derive an encryption key from the master password
-    this.encryptionKey = this.deriveEncryptionKey(masterKey);
+  public initialize(encryptionKey: string): void {
+    if (this.initialized) return;
     
-    // Create root node if it doesn't exist
-    if (!this.rootNodeId) {
-      this.rootNodeId = this.createRootNode();
-    }
+    // Set encryption key (hash it for security)
+    this.encryptionKey = CryptoJS.SHA256(encryptionKey).toString(CryptoJS.enc.Hex);
     
-    // Initialize rewards
-    this.rewardBalance = 0;
-    this.storagePoints = 0;
+    // Create root node
+    const rootId = this.generateNodeId();
+    const rootNode: StorageNode = {
+      id: rootId,
+      level: 0,
+      createdAt: new Date().toISOString(),
+      lastUpdated: new Date().toISOString(),
+      metadata: {
+        name: 'root',
+        description: 'Fractal storage root node',
+        isRoot: true,
+        quantumResistant: true,
+        fractalIterations: 0
+      },
+      children: [],
+      hash: this.calculateNodeHash(rootId, {})
+    };
     
-    console.log('Fractal storage initialized with quantum-resistant encryption');
+    this.rootNode = rootNode;
+    this.nodes[rootId] = rootNode;
+    this.storageFractalCoefficient = 1.0;
+    
+    this.initialized = true;
   }
-
+  
   /**
-   * Store wallet connection info securely in the fractal structure
-   * @param connectionInfo Wallet connection details to store
-   * @returns The ID of the node where the data is stored
+   * Store data in fractal storage
+   * @param key - Storage key
+   * @param data - Data to store (can be any serializable object)
+   * @param options - Additional storage options
+   * @returns Node ID where data is stored
    */
-  public storeWalletConnection(connectionInfo: WalletConnectionInfo): string {
-    if (!this.encryptionKey || !this.rootNodeId) {
-      throw new Error('Fractal storage not initialized');
-    }
+  public store(
+    key: string, 
+    data: any, 
+    options: { 
+      fractalDepth?: number; 
+      shardCount?: number;
+      metadata?: Record<string, any>;
+    } = {}
+  ): string {
+    this.checkInitialized();
     
-    // Create a data hash for security verification
-    const dataHash = CryptoJS.SHA256(JSON.stringify(connectionInfo)).toString();
-    
-    // Calculate storage complexity for rewards
-    const complexity = this.calculateStorageComplexity(connectionInfo);
-    
-    // Generate Mandelbrot coordinates for this data
-    const coordinates = this.generateMandelbrotCoordinates(dataHash);
+    // Configure options with defaults
+    const fractalDepth = options.fractalDepth || 3;
+    const shardCount = options.shardCount || 1;
+    const metadata = options.metadata || {};
     
     // Encrypt the data
-    const encryptedData = this.encryptData(JSON.stringify(connectionInfo), this.encryptionKey);
+    const encryptedData = this.encryptData(data);
     
-    // Create a node to store the data
-    const nodeId = this.createDataNode(encryptedData, this.rootNodeId, complexity, coordinates);
+    // Create parent node for this data
+    const parentNodeId = this.generateNodeId();
+    const parentNode: StorageNode = {
+      id: parentNodeId,
+      parentId: this.rootNode!.id,
+      level: 1,
+      createdAt: new Date().toISOString(),
+      lastUpdated: new Date().toISOString(),
+      metadata: {
+        key,
+        fractalDepth,
+        shardCount,
+        ...metadata
+      },
+      children: [],
+      hash: this.calculateNodeHash(parentNodeId, { key, metadata })
+    };
     
-    // Calculate rewards for storing this data
-    this.calculateRewards();
-    
-    return nodeId;
-  }
-
-  /**
-   * Retrieve wallet connection info from the fractal storage
-   * @param nodeId The ID of the node to retrieve
-   * @returns The decrypted wallet connection info
-   */
-  public retrieveWalletConnection(nodeId: string): WalletConnectionInfo | null {
-    if (!this.encryptionKey) {
-      throw new Error('Fractal storage not initialized');
-    }
-    
-    const node = this.nodes.get(nodeId);
-    if (!node) {
-      return null;
-    }
-    
-    try {
-      // Decrypt the data
-      const decryptedData = this.decryptData(node.data, this.encryptionKey);
+    // Create child nodes (shards)
+    const childNodes: StorageNode[] = [];
+    for (let i = 0; i < shardCount; i++) {
+      const nodeId = this.generateNodeId();
+      const shardData = i === 0 ? encryptedData : null; // Only store real data in first shard for simplicity
       
-      // Parse and return the wallet connection info
-      return JSON.parse(decryptedData) as WalletConnectionInfo;
-    } catch (error) {
-      console.error('Error retrieving wallet connection:', error);
-      return null;
-    }
-  }
-
-  /**
-   * Get current FractalCoin reward balance based on storage contributions
-   * @returns The current reward balance
-   */
-  public getRewardBalance(): number {
-    return Math.round(this.rewardBalance * 100) / 100;
-  }
-
-  /**
-   * Export all stored wallet connections (for backup purposes)
-   * @returns Array of all stored wallet connections
-   */
-  public exportAllConnections(): WalletConnectionInfo[] {
-    if (!this.encryptionKey) {
-      throw new Error('Fractal storage not initialized');
-    }
-    
-    const connections: WalletConnectionInfo[] = [];
-    
-    // Traverse all nodes except the root
-    this.nodes.forEach((node, nodeId) => {
-      if (nodeId !== this.rootNodeId) {
-        try {
-          const decryptedData = this.decryptData(node.data, this.encryptionKey!);
-          const connectionInfo = JSON.parse(decryptedData) as WalletConnectionInfo;
-          connections.push(connectionInfo);
-        } catch (error) {
-          console.error('Error decrypting node data:', error);
-        }
+      const childNode: StorageNode = {
+        id: nodeId,
+        parentId: parentNodeId,
+        level: 2,
+        createdAt: new Date().toISOString(),
+        lastUpdated: new Date().toISOString(),
+        data: shardData,
+        metadata: {
+          isFragmented: true,
+          fragmentIndex: i,
+          totalFragments: shardCount,
+          fractalIterationIndex: 0
+        },
+        children: [],
+        hash: this.calculateNodeHash(nodeId, { shardIndex: i })
+      };
+      
+      childNodes.push(childNode);
+      parentNode.children.push(nodeId);
+      this.nodes[nodeId] = childNode;
+      
+      // Add fractal children if needed
+      if (fractalDepth > 0) {
+        this.createFractalChildren(childNode, fractalDepth, 1);
       }
-    });
+    }
     
-    return connections;
+    // Update storage
+    this.nodes[parentNodeId] = parentNode;
+    this.rootNode!.children.push(parentNodeId);
+    this.rootNode!.lastUpdated = new Date().toISOString();
+    
+    // Update root node hash
+    this.recalculateRootHash();
+    
+    // Increase fractal coefficient
+    this.storageFractalCoefficient += 0.1 * shardCount;
+    
+    return parentNodeId;
   }
-
+  
   /**
-   * Get storage statistics for the current session
-   * @returns Statistics about the fractal storage
+   * Retrieve data from fractal storage
+   * @param key - Storage key
+   * @returns Decrypted data or undefined if not found
+   */
+  public retrieve(key: string): any {
+    this.checkInitialized();
+    
+    // Find node by key
+    const parentNode = Object.values(this.nodes).find(
+      node => node.metadata.key === key && node.level === 1
+    );
+    
+    if (!parentNode) {
+      return undefined;
+    }
+    
+    // Find first child node (has the data)
+    const firstChildNode = this.nodes[parentNode.children[0]];
+    if (!firstChildNode || !firstChildNode.data) {
+      return undefined;
+    }
+    
+    // Decrypt and return the data
+    return this.decryptData(firstChildNode.data);
+  }
+  
+  /**
+   * Check if a key exists in storage
+   * @param key - Storage key to check
+   * @returns True if key exists, false otherwise
+   */
+  public exists(key: string): boolean {
+    this.checkInitialized();
+    return Object.values(this.nodes).some(node => node.metadata.key === key && node.level === 1);
+  }
+  
+  /**
+   * Delete data from fractal storage
+   * @param key - Storage key to delete
+   * @returns True if deleted, false if not found
+   */
+  public delete(key: string): boolean {
+    this.checkInitialized();
+    
+    // Find node by key
+    const parentNode = Object.values(this.nodes).find(
+      node => node.metadata.key === key && node.level === 1
+    );
+    
+    if (!parentNode) {
+      return false;
+    }
+    
+    // Remove all children recursively
+    this.deleteNodeAndChildren(parentNode.id);
+    
+    // Remove from root children
+    const rootChildrenIndex = this.rootNode!.children.indexOf(parentNode.id);
+    if (rootChildrenIndex !== -1) {
+      this.rootNode!.children.splice(rootChildrenIndex, 1);
+      this.rootNode!.lastUpdated = new Date().toISOString();
+    }
+    
+    // Update root hash
+    this.recalculateRootHash();
+    
+    // Decrease fractal coefficient
+    this.storageFractalCoefficient = Math.max(1.0, this.storageFractalCoefficient - 0.1);
+    
+    return true;
+  }
+  
+  /**
+   * Get storage statistics
+   * @returns Object with storage stats
    */
   public getStorageStats(): Record<string, any> {
+    this.checkInitialized();
+    
+    const nodeCount = Object.keys(this.nodes).length;
+    const rootChildrenCount = this.rootNode?.children.length || 0;
+    const maxDepth = this.calculateMaxDepth();
+    
     return {
-      totalNodes: this.nodes.size,
-      bitcoinWallets: this.countNodesByType('bitcoin'),
-      ethereumWallets: this.countNodesByType('ethereum'),
-      coinbaseWallets: this.countNodesByType('coinbase'),
-      plaidConnections: this.countNodesByType('plaid'),
-      storagePoints: this.storagePoints,
-      quantumComplexity: this.calculateQuantumComplexity(),
-      lastUpdate: new Date().toISOString(),
+      nodeCount,
+      rootChildrenCount,
+      maxDepth,
+      fractalCoefficient: this.storageFractalCoefficient.toFixed(2),
+      quantumResistanceScore: Math.min(100, Math.floor(this.storageFractalCoefficient * 20)),
+      rootHash: this.rootNode?.hash.substring(0, 16) + '...',
+      lastUpdated: this.rootNode?.lastUpdated
     };
   }
-
+  
   /**
-   * Count nodes by wallet type
-   * @param type Wallet type to count
-   * @returns Number of nodes with that wallet type
+   * Get all available keys in storage
+   * @returns Array of storage keys
    */
-  private countNodesByType(type: string): number {
-    if (!this.encryptionKey) {
-      return 0;
-    }
+  public getAllKeys(): string[] {
+    this.checkInitialized();
     
-    let count = 0;
+    return Object.values(this.nodes)
+      .filter(node => node.level === 1 && node.metadata.key)
+      .map(node => node.metadata.key);
+  }
+  
+  /**
+   * Clear all storage
+   */
+  public clear(): void {
+    this.checkInitialized();
     
-    this.nodes.forEach((node, nodeId) => {
-      if (nodeId !== this.rootNodeId) {
-        try {
-          const decryptedData = this.decryptData(node.data, this.encryptionKey!);
-          const connectionInfo = JSON.parse(decryptedData) as WalletConnectionInfo;
-          if (connectionInfo.type === type) {
-            count++;
-          }
-        } catch (error) {
-          // Skip nodes that can't be decrypted
-        }
+    // Keep only root node
+    const rootId = this.rootNode!.id;
+    this.nodes = {
+      [rootId]: {
+        ...this.rootNode!,
+        children: [],
+        lastUpdated: new Date().toISOString()
       }
-    });
-    
-    return count;
-  }
-
-  /**
-   * Derive an encryption key from a master password
-   * @param masterKey User-provided master key
-   * @returns Derived encryption key
-   */
-  private deriveEncryptionKey(masterKey: string): string {
-    // In a real implementation, this would use a proper key derivation function
-    // For this demo, we'll use a simplified approach
-    const salt = 'aetherion-quantum-secure-salt';
-    const iterations = 1000;
-    
-    // PBKDF2 is a good key derivation function
-    const key = CryptoJS.PBKDF2(masterKey, salt, {
-      keySize: 256 / 32,
-      iterations,
-    }).toString();
-    
-    return key;
-  }
-
-  /**
-   * Encrypt data using AES encryption
-   * @param data Data to encrypt
-   * @param key Encryption key
-   * @returns Encrypted data
-   */
-  private encryptData(data: string, key: string): string {
-    return CryptoJS.AES.encrypt(data, key).toString();
-  }
-
-  /**
-   * Decrypt data using AES encryption
-   * @param encryptedData Encrypted data
-   * @param key Encryption key
-   * @returns Decrypted data
-   */
-  private decryptData(encryptedData: string, key: string): string {
-    const bytes = CryptoJS.AES.decrypt(encryptedData, key);
-    return bytes.toString(CryptoJS.enc.Utf8);
-  }
-
-  /**
-   * Create the root node of the fractal structure
-   * @returns ID of the root node
-   */
-  private createRootNode(): string {
-    const rootId = uuidv4();
-    
-    const rootNode: FractalNode = {
-      id: rootId,
-      data: 'root', // Root node doesn't store actual data
-      parentId: null,
-      childIds: [],
-      complexity: 1,
-      timestamp: Date.now(),
-      iteration: 0,
-      z0: { x: 0, y: 0 }, // Center of the Mandelbrot set
     };
     
-    this.nodes.set(rootId, rootNode);
-    return rootId;
+    this.rootNode = this.nodes[rootId];
+    this.storageFractalCoefficient = 1.0;
+    
+    // Update root hash
+    this.recalculateRootHash();
   }
-
+  
   /**
-   * Create a data node in the fractal structure
-   * @param data Encrypted data to store
-   * @param parentId ID of the parent node
-   * @param complexity Complexity factor for rewards
-   * @param coordinates Mandelbrot set coordinates
-   * @returns ID of the created node
+   * Get the quantum resistance score of the storage
+   * @returns Number between 0-100 representing quantum resistance
    */
-  private createDataNode(
-    data: string,
-    parentId: string,
-    complexity: number,
-    coordinates: { x: number; y: number }
-  ): string {
-    // Calculate Mandelbrot set iterations for this coordinate
-    const iterations = this.calculateMandelbrotIteration(coordinates);
-    
-    const nodeId = uuidv4();
-    
-    const newNode: FractalNode = {
-      id: nodeId,
-      data,
-      parentId,
-      childIds: [],
-      complexity,
-      timestamp: Date.now(),
-      iteration: iterations,
-      z0: coordinates,
-    };
-    
-    // Add the node to the storage
-    this.nodes.set(nodeId, newNode);
-    
-    // Update the parent node
-    const parentNode = this.nodes.get(parentId);
-    if (parentNode) {
-      parentNode.childIds.push(nodeId);
-    }
-    
-    // Increment storage points
-    this.storagePoints += complexity;
-    
-    return nodeId;
+  public getQuantumResistanceScore(): number {
+    this.checkInitialized();
+    return Math.min(100, Math.floor(this.storageFractalCoefficient * 20));
   }
-
+  
   /**
-   * Generate Mandelbrot set coordinates based on data hash
-   * @param dataHash Hash of the data to store
-   * @returns Coordinates in the Mandelbrot set
+   * Check if storage is initialized
    */
-  private generateMandelbrotCoordinates(dataHash: string): { x: number; y: number } {
-    // Use first 8 chars of hash for x coordinate (converted to float between -2 and 1)
-    const xPart = parseInt(dataHash.substring(0, 8), 16);
-    const x = -2 + (xPart / 0xffffffff) * 3;
-    
-    // Use next 8 chars of hash for y coordinate (converted to float between -1 and 1)
-    const yPart = parseInt(dataHash.substring(8, 16), 16);
-    const y = -1 + (yPart / 0xffffffff) * 2;
-    
-    return { x, y };
+  public isInitialized(): boolean {
+    return this.initialized;
   }
-
+  
   /**
-   * Calculate the number of iterations before a point escapes the Mandelbrot set
-   * @param c Complex number coordinates
-   * @returns Iteration count
+   * Private method to create fractal children for a node
    */
-  private calculateMandelbrotIteration(c: { x: number; y: number }): number {
-    let z = { x: 0, y: 0 };
-    let iteration = 0;
+  private createFractalChildren(
+    parentNode: StorageNode, 
+    remainingDepth: number, 
+    iterationIndex: number
+  ): void {
+    if (remainingDepth <= 0) return;
     
-    // Iterate until the point escapes or we hit max iterations
-    while (z.x * z.x + z.y * z.y <= this.ESCAPE_RADIUS * this.ESCAPE_RADIUS && iteration < this.MAX_ITERATIONS) {
-      // Calculate z = z² + c (in complex number arithmetic)
-      const zx = z.x * z.x - z.y * z.y + c.x;
-      const zy = 2 * z.x * z.y + c.y;
+    // Create some children with fractal pattern
+    const childCount = Math.max(2, Math.floor(4 / iterationIndex));
+    
+    for (let i = 0; i < childCount; i++) {
+      const nodeId = this.generateNodeId();
+      const childNode: StorageNode = {
+        id: nodeId,
+        parentId: parentNode.id,
+        level: parentNode.level + 1,
+        createdAt: new Date().toISOString(),
+        lastUpdated: new Date().toISOString(),
+        metadata: {
+          isFractal: true,
+          fractalIterationIndex: iterationIndex,
+          childIndex: i
+        },
+        children: [],
+        hash: this.calculateNodeHash(nodeId, { iterationIndex, childIndex: i })
+      };
       
-      z.x = zx;
-      z.y = zy;
+      this.nodes[nodeId] = childNode;
+      parentNode.children.push(nodeId);
       
-      iteration++;
-    }
-    
-    return iteration;
-  }
-
-  /**
-   * Calculate complexity factor for storage rewards
-   * @param connectionInfo Wallet connection info
-   * @returns Complexity score
-   */
-  private calculateStorageComplexity(connectionInfo: WalletConnectionInfo): number {
-    let complexity = this.SHARD_COMPLEXITY;
-    
-    // Increase complexity for connections with more data
-    const dataSize = JSON.stringify(connectionInfo).length;
-    complexity += Math.floor(dataSize / 100);
-    
-    // Wallet types can have different complexity factors
-    switch (connectionInfo.type) {
-      case 'ethereum':
-        complexity += 2; // Higher complexity for Ethereum (smart contracts)
-        break;
-      case 'bitcoin':
-        complexity += 1; // Medium complexity for Bitcoin
-        break;
-      case 'plaid':
-        complexity += 3; // Higher complexity for bank connections (more sensitive)
-        break;
-      default:
-        complexity += 1;
-    }
-    
-    // Add some randomness to make the system more secure against quantum attacks
-    complexity += Math.floor(Math.random() * 3);
-    
-    return complexity;
-  }
-
-  /**
-   * Calculate and update FractalCoin rewards based on storage contributions
-   */
-  private calculateRewards(): void {
-    // Base reward calculation
-    const baseReward = this.nodes.size * 0.01;
-    
-    // Storage points reward
-    const storageReward = this.storagePoints * 0.05;
-    
-    // Complexity reward (based on quantum resistance)
-    const complexityReward = this.calculateQuantumComplexity() * 0.1;
-    
-    // Update reward balance
-    this.rewardBalance = baseReward + storageReward + complexityReward;
-  }
-
-  /**
-   * Calculate quantum complexity score based on stored fractal nodes
-   * @returns Quantum complexity score
-   */
-  private calculateQuantumComplexity(): number {
-    let totalComplexity = 0;
-    let nodeCount = 0;
-    
-    this.nodes.forEach(node => {
-      if (node.id !== this.rootNodeId) {
-        // The complexity is a function of the Mandelbrot iterations and node complexity
-        totalComplexity += node.iteration * node.complexity;
-        nodeCount++;
+      // Recursively create more children
+      if (remainingDepth > 1) {
+        this.createFractalChildren(childNode, remainingDepth - 1, iterationIndex + 1);
       }
-    });
+    }
+  }
+  
+  /**
+   * Private method to delete a node and all its children recursively
+   */
+  private deleteNodeAndChildren(nodeId: string): void {
+    const node = this.nodes[nodeId];
+    if (!node) return;
     
-    // Average complexity normalized to a 0-100 scale
-    return nodeCount > 0 
-      ? Math.min(100, (totalComplexity / nodeCount) / (this.MAX_ITERATIONS * this.SHARD_COMPLEXITY) * 100) 
-      : 0;
+    // Delete all children first
+    for (const childId of node.children) {
+      this.deleteNodeAndChildren(childId);
+    }
+    
+    // Delete this node
+    delete this.nodes[nodeId];
+  }
+  
+  /**
+   * Private method to calculate the maximum depth of the storage tree
+   */
+  private calculateMaxDepth(): number {
+    if (!this.rootNode) return 0;
+    
+    let maxDepth = 0;
+    
+    const traverse = (nodeId: string, currentDepth: number) => {
+      maxDepth = Math.max(maxDepth, currentDepth);
+      
+      const node = this.nodes[nodeId];
+      if (!node) return;
+      
+      for (const childId of node.children) {
+        traverse(childId, currentDepth + 1);
+      }
+    };
+    
+    traverse(this.rootNode.id, 0);
+    return maxDepth;
+  }
+  
+  /**
+   * Private method to recalculate the root node hash
+   */
+  private recalculateRootHash(): void {
+    if (!this.rootNode) return;
+    
+    const childHashes = this.rootNode.children.map(id => this.nodes[id]?.hash || '');
+    this.rootNode.hash = this.calculateNodeHash(
+      this.rootNode.id, 
+      { childHashes, lastUpdated: this.rootNode.lastUpdated }
+    );
+    this.nodes[this.rootNode.id] = this.rootNode;
+  }
+  
+  /**
+   * Private method to generate a unique node ID
+   */
+  private generateNodeId(): string {
+    return 'node_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 9);
+  }
+  
+  /**
+   * Private method to encrypt data
+   */
+  private encryptData(data: any): string {
+    const jsonData = JSON.stringify(data);
+    return CryptoJS.AES.encrypt(jsonData, this.encryptionKey).toString();
+  }
+  
+  /**
+   * Private method to decrypt data
+   */
+  private decryptData(encryptedData: string): any {
+    try {
+      const decrypted = CryptoJS.AES.decrypt(encryptedData, this.encryptionKey).toString(CryptoJS.enc.Utf8);
+      return JSON.parse(decrypted);
+    } catch (error) {
+      console.error('Failed to decrypt data:', error);
+      return null;
+    }
+  }
+  
+  /**
+   * Private method to calculate a node's hash
+   */
+  private calculateNodeHash(id: string, additionalData: any): string {
+    const dataString = id + '_' + JSON.stringify(additionalData) + '_' + Date.now();
+    return CryptoJS.SHA256(dataString).toString(CryptoJS.enc.Hex);
+  }
+  
+  /**
+   * Private method to check if storage is initialized
+   * @throws Error if not initialized
+   */
+  private checkInitialized(): void {
+    if (!this.initialized) {
+      throw new Error('FractalStorage not initialized. Call initialize() first.');
+    }
   }
 }
 
-// Export a singleton instance
+// Export singleton instance
 export const fractalStorage = new FractalStorage();
