@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { 
   Menu, X, Home, Layout, Wallet, Lock, Shield, Settings, AlertTriangle, ChevronRight, 
-  BarChart3, Eye, Cpu, Bell, Zap, Coins, FileText, Database, Bot, TestTube
+  BarChart3, Eye, Cpu, Bell, Zap, Coins, FileText, Database, Bot, TestTube, Blocks
 } from "lucide-react";
 
 // Import existing pages for now
@@ -24,6 +24,7 @@ import AdminPortal from "./pages/AdminPortal";
 import DashboardPage from "./pages/DashboardPage";
 import SettingsPage from "./pages/SettingsPage";
 import BlockchainVisualizerPage from "./pages/BlockchainVisualizerPage";
+import BlockchainDashboardPage from "./pages/BlockchainDashboardPage";
 import WalletPage from "./pages/WalletPage";
 import MysterionAIPage from "./pages/MysterionAIPage";
 import OnboardingPage from "./pages/Onboarding";
@@ -33,6 +34,7 @@ import TestPage from "./pages/TestPage";
 const navigationItems = [
   { name: "Dashboard", path: "/dashboard", icon: <Layout className="h-5 w-5" /> },
   { name: "Wallet", path: "/wallet", icon: <Wallet className="h-5 w-5" /> },
+  { name: "Blockchain Dashboard", path: "/blockchain-dashboard", icon: <Blocks className="h-5 w-5" /> },
   { name: "Singularity", path: "/singularity", icon: <Zap className="h-5 w-5" /> },
   { name: "ICO", path: "/ico", icon: <Coins className="h-5 w-5" /> },
   { name: "Whitepaper", path: "/whitepaper", icon: <FileText className="h-5 w-5" /> },
@@ -442,6 +444,7 @@ function App() {
             <Route path="/ico" component={ICOPage} />
             <Route path="/whitepaper" component={WhitepaperPage} />
             <Route path="/blockchain-visualizer" component={BlockchainVisualizerPage} />
+            <Route path="/blockchain-dashboard" component={BlockchainDashboardPage} />
             <Route path="/settings" component={SettingsPage} />
             <Route path="/ai-assistant" component={MysterionAIPage} />
             <Route path="/admin" component={AdminPortal} />
