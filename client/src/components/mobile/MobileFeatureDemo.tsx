@@ -14,6 +14,10 @@ import { LiveModeIndicator } from "@/components/ui/LiveModeIndicator";
 import { useLiveMode } from '../../contexts/LiveModeContext';
 import { useToast } from '@/hooks/use-toast';
 
+// Import new feature components
+import MobileOneTapPay from './MobileOneTapPay';
+import MobileChainActivity from './MobileChainActivity';
+
 export default function MobileFeatureDemo() {
   const isMobile = useMediaQuery('(max-width: 640px)');
   const [nfcEnabled, setNfcEnabled] = useState(false);
@@ -246,10 +250,12 @@ export default function MobileFeatureDemo() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="qr-pairing">
-              <TabsList className="grid grid-cols-2 md:grid-cols-4 mb-4">
+            <Tabs defaultValue="one-tap-pay">
+              <TabsList className="grid grid-cols-3 md:grid-cols-6 mb-4">
                 <TabsTrigger value="qr-pairing">QR & Pairing</TabsTrigger>
                 <TabsTrigger value="payments">Payments</TabsTrigger>
+                <TabsTrigger value="one-tap-pay">One-Tap Pay</TabsTrigger>
+                <TabsTrigger value="chain-activity">Chain Activity</TabsTrigger>
                 <TabsTrigger value="mining">Mobile Mining</TabsTrigger>
                 <TabsTrigger value="ar-viz">AR Visualization</TabsTrigger>
               </TabsList>
@@ -367,6 +373,14 @@ export default function MobileFeatureDemo() {
                     </div>
                   </div>
                 </div>
+              </TabsContent>
+              
+              <TabsContent value="one-tap-pay" className="space-y-4">
+                <MobileOneTapPay />
+              </TabsContent>
+              
+              <TabsContent value="chain-activity" className="space-y-4">
+                <MobileChainActivity />
               </TabsContent>
               
               <TabsContent value="ar-viz" className="space-y-4">
