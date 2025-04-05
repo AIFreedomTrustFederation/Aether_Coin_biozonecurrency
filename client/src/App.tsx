@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { 
   Menu, X, Home, Layout, Wallet, Lock, Shield, Settings, AlertTriangle, ChevronRight, 
-  BarChart3, Eye, Cpu, Bell, Zap, Coins, FileText, Database, Bot, TestTube, Blocks
+  BarChart3, Eye, Cpu, Bell, Zap, Coins, FileText, Database, Bot, TestTube, Blocks,
+  Smartphone
 } from "lucide-react";
 
 // Import existing pages for now
@@ -30,6 +31,9 @@ import MysterionAIPage from "./pages/MysterionAIPage";
 import OnboardingPage from "./pages/Onboarding";
 import TestPage from "./pages/TestPage";
 
+// Import Mobile Features Demo
+import MobileFeatureDemo from "@/components/mobile/MobileFeatureDemo";
+
 // Define navigation items for both mobile and desktop
 const navigationItems = [
   { name: "Dashboard", path: "/dashboard", icon: <Layout className="h-5 w-5" /> },
@@ -41,6 +45,7 @@ const navigationItems = [
   { name: "Fractal Explorer", path: "/fractal-explorer", icon: <Cpu className="h-5 w-5" /> },
   { name: "Blockchain Visualizer", path: "/blockchain-visualizer", icon: <Database className="h-5 w-5" /> },
   { name: "Mysterion AI", path: "/ai-assistant", icon: <Bot className="h-5 w-5" /> },
+  { name: "Mobile Features", path: "/mobile-features", icon: <Smartphone className="h-5 w-5" /> },
   { name: "Security", path: "/security", icon: <Shield className="h-5 w-5" /> },
   { name: "Settings", path: "/settings", icon: <Settings className="h-5 w-5" /> },
   { name: "Test Mode", path: "/test", icon: <TestTube className="h-5 w-5" /> },
@@ -447,6 +452,7 @@ function App() {
             <Route path="/blockchain-dashboard" component={BlockchainDashboardPage} />
             <Route path="/settings" component={SettingsPage} />
             <Route path="/ai-assistant" component={MysterionAIPage} />
+            <Route path="/mobile-features" component={MobileFeatureDemo} />
             <Route path="/admin" component={AdminPortal} />
             <Route path="/legacy-dashboard" component={Dashboard} />
             <Route path="/onboarding" component={OnboardingPage} />
