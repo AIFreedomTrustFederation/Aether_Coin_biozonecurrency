@@ -227,19 +227,19 @@ export default function TestMode() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <div className="mb-8 text-center">
-        <h1 className="text-3xl font-bold tracking-tight">Aetherion Test Mode</h1>
-        <p className="text-muted-foreground mt-2">
+      <div className="mb-6 text-center">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Aetherion Test Mode</h1>
+        <p className="text-sm sm:text-base text-muted-foreground mt-2 mx-auto max-w-2xl">
           Test the quantum-resistant storage, wallet connections, and KYC verification functionality
         </p>
       </div>
 
       <Tabs defaultValue="initialization" className="space-y-6">
-        <TabsList className="grid grid-cols-4">
-          <TabsTrigger value="initialization">Initialization</TabsTrigger>
-          <TabsTrigger value="wallets">Wallets</TabsTrigger>
-          <TabsTrigger value="kyc">KYC Verification</TabsTrigger>
-          <TabsTrigger value="storage">Storage Stats</TabsTrigger>
+        <TabsList className="grid grid-cols-4 gap-1">
+          <TabsTrigger value="initialization" className="px-1 sm:px-3 text-xs sm:text-sm">Initialization</TabsTrigger>
+          <TabsTrigger value="wallets" className="px-1 sm:px-3 text-xs sm:text-sm">Wallets</TabsTrigger>
+          <TabsTrigger value="kyc" className="px-1 sm:px-3 text-xs sm:text-sm">KYC</TabsTrigger>
+          <TabsTrigger value="storage" className="px-1 sm:px-3 text-xs sm:text-sm">Storage</TabsTrigger>
         </TabsList>
 
         {/* Initialization Tab */}
