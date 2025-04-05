@@ -30,14 +30,19 @@ const SimpleChatInterface: React.FC<SimpleChatInterfaceProps> = ({
   const chatContainerRef = useRef<HTMLDivElement>(null);
   
   const scrollToBottom = () => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    // Use the container ref to scroll instead of scrollIntoView
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
   };
   
-  // Scroll to bottom when messages change
+  // Scroll to bottom when messages change (with a slight delay to ensure DOM is updated)
   useEffect(() => {
-    scrollToBottom();
+    // Use a small timeout to ensure DOM is updated before scrolling
+    const timer = setTimeout(() => {
+      scrollToBottom();
+    }, 100);
+    return () => clearTimeout(timer);
   }, [messages, isProcessing]);
   
   const handleSubmit = (e: FormEvent) => {

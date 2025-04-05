@@ -25,6 +25,9 @@ const LandingPage: React.FC = () => {
     };
     
     setMessages([welcomeMessage]);
+    
+    // Ensure page starts at the top
+    window.scrollTo(0, 0);
   }, []);
   
   const handleSendMessage = (message: string) => {
