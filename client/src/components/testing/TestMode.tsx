@@ -186,6 +186,11 @@ export default function TestMode() {
 
       addLog(`Connected ${selectedWalletType} wallet: ${wallet.name}`);
       
+      // Manually update UI state after connection
+      setConnectedWallets(walletConnector.getConnectedWallets());
+      setFractalCoinBalance(walletConnector.getFractalCoinBalance());
+      setStorageStats(walletConnector.getStorageMetrics());
+      
       toast({
         title: 'Wallet Connected',
         description: `Successfully connected ${wallet.name}`
@@ -210,6 +215,12 @@ export default function TestMode() {
     try {
       walletConnector.disconnectWallet(walletId);
       addLog(`Disconnected wallet: ${walletId}`);
+      
+      // Manually update UI state after disconnection
+      setConnectedWallets(walletConnector.getConnectedWallets());
+      setFractalCoinBalance(walletConnector.getFractalCoinBalance());
+      setStorageStats(walletConnector.getStorageMetrics());
+      
       toast({
         title: 'Wallet Disconnected',
         description: 'Wallet has been disconnected'
