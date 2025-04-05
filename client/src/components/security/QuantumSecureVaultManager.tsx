@@ -500,7 +500,10 @@ export function QuantumSecureVaultManager() {
                 <Switch 
                   id="fractal-sharding" 
                   checked={enableFractalSharding} 
-                  onCheckedChange={setEnableFractalSharding}
+                  onCheckedChange={(checked) => {
+                    setEnableFractalSharding(checked);
+                    setTimeout(() => handleUpdateSettings(), 0);
+                  }}
                 />
               </div>
               
@@ -514,7 +517,10 @@ export function QuantumSecureVaultManager() {
                 <Switch 
                   id="bitcoin-security" 
                   checked={enableBitcoinSecurity} 
-                  onCheckedChange={setEnableBitcoinSecurity}
+                  onCheckedChange={(checked) => {
+                    setEnableBitcoinSecurity(checked);
+                    setTimeout(() => handleUpdateSettings(), 0);
+                  }}
                 />
               </div>
               
@@ -528,7 +534,10 @@ export function QuantumSecureVaultManager() {
                 <Switch 
                   id="smart-contracts" 
                   checked={enableSmartContracts} 
-                  onCheckedChange={setEnableSmartContracts}
+                  onCheckedChange={(checked) => {
+                    setEnableSmartContracts(checked);
+                    setTimeout(() => handleUpdateSettings(), 0);
+                  }}
                 />
               </div>
             </div>
@@ -767,7 +776,10 @@ export function QuantumSecureVaultManager() {
                   <Switch 
                     id="fractal-sharding" 
                     checked={enableFractalSharding} 
-                    onCheckedChange={setEnableFractalSharding}
+                    onCheckedChange={(checked) => {
+                      setEnableFractalSharding(checked);
+                      setTimeout(() => handleUpdateSettings(), 0);
+                    }}
                   />
                 </div>
                 
@@ -781,7 +793,10 @@ export function QuantumSecureVaultManager() {
                   <Switch 
                     id="bitcoin-security" 
                     checked={enableBitcoinSecurity} 
-                    onCheckedChange={setEnableBitcoinSecurity}
+                    onCheckedChange={(checked) => {
+                      setEnableBitcoinSecurity(checked);
+                      setTimeout(() => handleUpdateSettings(), 0);
+                    }}
                   />
                 </div>
                 
@@ -795,7 +810,10 @@ export function QuantumSecureVaultManager() {
                   <Switch 
                     id="smart-contracts" 
                     checked={enableSmartContracts} 
-                    onCheckedChange={setEnableSmartContracts}
+                    onCheckedChange={(checked) => {
+                      setEnableSmartContracts(checked);
+                      setTimeout(() => handleUpdateSettings(), 0);
+                    }}
                   />
                 </div>
               </div>
