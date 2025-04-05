@@ -8,6 +8,7 @@
 // Define KYC verification status types
 export interface KycVerification {
   verificationId: string;
+  userId: string;
   status: 'pending' | 'in_progress' | 'completed' | 'failed';
   kycLevel: 'basic' | 'intermediate' | 'advanced' | 'enhanced';
   identityVerified: boolean;
@@ -56,6 +57,7 @@ class PlaidConnector {
     // Create a new verification record
     this.verifications[verificationId] = {
       verificationId,
+      userId: userId,
       status: 'pending',
       kycLevel: requiredLevel,
       identityVerified: false,
@@ -63,7 +65,6 @@ class PlaidConnector {
       documentVerified: false,
       timestamp: new Date().toISOString(),
       metadata: {
-        userId,
         requiredLevel,
         initiatedAt: new Date().toISOString()
       }

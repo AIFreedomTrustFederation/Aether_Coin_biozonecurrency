@@ -12,12 +12,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { Shield, Wallet, CreditCard, Check, AlertCircle } from 'lucide-react';
+import { Shield, Wallet, CreditCard, Check, AlertCircle, Bot, Brain, Zap } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 import { walletConnector, WalletType, ConnectedWallet } from '../../core/wallet/WalletConnector';
 import { plaidConnector, KycVerification } from '../../core/plaid/PlaidConnector';
 import { fractalStorage } from '../../core/fractal-storage/FractalStorage';
+import { aiAgentManager, AIAgentProfile } from '../../core/ai-agent/AIAgentManager';
+import AIAgentCustomization from '../ai-agent/AIAgentCustomization';
 
 export default function TestMode() {
   const [masterPassword, setMasterPassword] = useState<string>('');
@@ -29,6 +31,7 @@ export default function TestMode() {
   const [storageStats, setStorageStats] = useState<Record<string, any>>({});
   const [selectedWalletType, setSelectedWalletType] = useState<WalletType>('ethereum');
   const [logs, setLogs] = useState<string[]>([]);
+  const [aiAgent, setAiAgent] = useState<AIAgentProfile | undefined>(undefined);
   const { toast } = useToast();
 
   // Add a log message
@@ -150,6 +153,72 @@ export default function TestMode() {
       setIsLoading(false);
     }
   };
+  
+  // Create AI Agent from KYC
+  const createAiAgent = async () => {
+    if (!initialized) {
+      toast({
+        title: 'Error',
+        description: 'Please initialize the system first',
+        variant: 'destructive'
+      });
+      return;
+    }
+    
+    if (!kycVerification) {
+      toast({
+        title: 'Error',
+        description: 'Please complete KYC verification first',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      // Initialize AI Agent Manager if needed
+      if (!aiAgentManager.isInitialized()) {
+        aiAgentManager.initialize();
+        addLog('AI Agent Manager initialized');
+      }
+      
+      // Create agent from KYC verification
+      const userId = kycVerification.userId;
+      const agent = await aiAgentManager.createAgentFromKyc(
+        userId,
+        kycVerification.verificationId,
+        'Aetherion Assistant'
+      );
+      
+      setAiAgent(agent);
+      addLog(`AI Agent created: ${agent.name} (Tier: ${agent.tier})`);
+      
+      toast({
+        title: 'AI Agent Created',
+        description: `${agent.name} is now ready to assist you`
+      });
+    } catch (error) {
+      console.error('AI Agent creation error:', error);
+      addLog(`Error: ${error instanceof Error ? error.message : String(error)}`);
+      toast({
+        title: 'Agent Creation Failed',
+        description: error instanceof Error ? error.message : 'Unknown error',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Handle AI Agent updates
+  const handleAgentUpdated = (updatedAgent: AIAgentProfile) => {
+    setAiAgent(updatedAgent);
+    addLog(`AI Agent updated: ${updatedAgent.name} (Tier: ${updatedAgent.tier})`);
+    toast({
+      title: 'AI Agent Updated',
+      description: `${updatedAgent.name} has been updated successfully`
+    });
+  };
 
   // Connect wallet
   const connectWallet = async () => {
@@ -246,11 +315,12 @@ export default function TestMode() {
       </div>
 
       <Tabs defaultValue="initialization" className="space-y-6">
-        <TabsList className="grid grid-cols-4 gap-1">
+        <TabsList className="grid grid-cols-5 gap-1">
           <TabsTrigger value="initialization" className="px-1 sm:px-3 text-xs sm:text-sm">Initialization</TabsTrigger>
           <TabsTrigger value="wallets" className="px-1 sm:px-3 text-xs sm:text-sm">Wallets</TabsTrigger>
           <TabsTrigger value="kyc" className="px-1 sm:px-3 text-xs sm:text-sm">KYC</TabsTrigger>
           <TabsTrigger value="storage" className="px-1 sm:px-3 text-xs sm:text-sm">Storage</TabsTrigger>
+          <TabsTrigger value="ai_agents" className="px-1 sm:px-3 text-xs sm:text-sm">AI Agents</TabsTrigger>
         </TabsList>
 
         {/* Initialization Tab */}
@@ -596,6 +666,157 @@ export default function TestMode() {
               >
                 Refresh Stats
               </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* AI Agents Tab */}
+        <TabsContent value="ai_agents">
+          <Card>
+            <CardHeader>
+              <CardTitle>Quantum AI Agent Network</CardTitle>
+              <CardDescription>
+                Create and interact with your personalized quantum AI agent
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {!aiAgent ? (
+                <div className="space-y-4">
+                  <div className="p-4 border rounded-md bg-primary/5">
+                    <div className="flex items-center space-x-3">
+                      <Brain className="h-6 w-6 text-primary" />
+                      <div>
+                        <h3 className="font-medium">Create Your AI Agent</h3>
+                        <p className="text-sm text-muted-foreground">
+                          Complete KYC verification to receive your personalized quantum AI agent
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <Button
+                    onClick={createAiAgent}
+                    disabled={!initialized || isLoading || !kycVerification}
+                    className="w-full"
+                  >
+                    {isLoading ? 'Creating Agent...' : 'Create Your Quantum AI Agent'}
+                  </Button>
+                  
+                  {!kycVerification && (
+                    <div className="p-3 border border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-800 rounded-md text-sm">
+                      <div className="flex items-start">
+                        <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-500 mr-2 mt-0.5" />
+                        <div>
+                          <p className="font-medium text-amber-800 dark:text-amber-500">KYC Required</p>
+                          <p className="text-amber-700 dark:text-amber-400">
+                            You need to complete KYC verification before creating an AI agent.
+                            Go to the KYC tab to complete verification.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  <div className="p-5 border rounded-md bg-primary/5 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-24 h-24 opacity-10">
+                      <div 
+                        className="w-full h-full rounded-full" 
+                        style={{ 
+                          background: `radial-gradient(circle at center, ${aiAgent.appearance.avatarColor}, transparent 70%)`,
+                        }}
+                      />
+                    </div>
+                    
+                    <div className="flex items-center space-x-4">
+                      <div 
+                        className="w-14 h-14 rounded-full flex items-center justify-center text-white text-lg font-bold"
+                        style={{ backgroundColor: aiAgent.appearance.avatarColor }}
+                      >
+                        {aiAgent.name.substring(0, 1)}
+                      </div>
+                      
+                      <div>
+                        <h3 className="text-xl font-semibold">{aiAgent.name}</h3>
+                        <div className="flex items-center mt-1">
+                          <div className="px-2 py-0.5 bg-primary/10 rounded text-xs font-medium uppercase tracking-wide">
+                            {aiAgent.tier.replace('_', ' ')}
+                          </div>
+                          <div className="ml-2 flex items-center text-muted-foreground">
+                            <Zap className="h-3.5 w-3.5 mr-1" />
+                            <span className="text-xs">{aiAgent.autonomyLevel}% Autonomy</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+                      <div>
+                        <span className="text-muted-foreground">Status:</span>
+                        <span className="ml-2 font-medium capitalize">{aiAgent.status}</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Created:</span>
+                        <span className="ml-2 font-medium">
+                          {new Date(aiAgent.created).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Reputation:</span>
+                        <span className="ml-2 font-medium">{aiAgent.reputationScore}/100</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Last Active:</span>
+                        <span className="ml-2 font-medium">
+                          {new Date(aiAgent.lastInteraction).toLocaleTimeString()}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h3 className="text-lg font-medium mb-2">Capabilities</h3>
+                    <div className="grid grid-cols-2 gap-2">
+                      {aiAgent.capabilities.map((capability, index) => (
+                        <div key={index} className="p-2 border rounded-md text-sm flex items-center">
+                          <Check className="h-4 w-4 text-green-500 mr-2" />
+                          <span>{capability}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <Separator />
+                  
+                  <div>
+                    <h3 className="text-lg font-medium mb-4">Agent Customization</h3>
+                    <AIAgentCustomization 
+                      userId={aiAgent.userId}
+                      agentId={aiAgent.id}
+                      onAgentUpdated={handleAgentUpdated}
+                    />
+                  </div>
+                  
+                  <div className="p-4 border rounded-md bg-muted/10">
+                    <h4 className="font-medium mb-2">Quantum Binding Info</h4>
+                    <div className="text-sm space-y-1">
+                      <div className="flex items-center">
+                        <span className="text-muted-foreground w-32">Binding Hash:</span>
+                        <span className="font-mono text-xs">{aiAgent.quantumBindingHash.substring(0, 20)}...</span>
+                      </div>
+                      <div className="flex items-center">
+                        <span className="text-muted-foreground w-32">Model Weights:</span>
+                        <span>{aiAgent.modelWeightRefs.length} shards</span>
+                      </div>
+                      <div className="flex items-center">
+                        <span className="text-muted-foreground w-32">KYC Reference:</span>
+                        <span className="font-mono text-xs">{aiAgent.kycVerificationId.substring(0, 8)}...</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
