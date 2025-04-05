@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { 
   Menu, X, Home, Layout, Wallet, Lock, Shield, Settings, AlertTriangle, ChevronRight, 
-  BarChart3, Eye, Cpu, Bell, Zap, Coins, FileText
+  BarChart3, Eye, Cpu, Bell, Zap, Coins, FileText, Database
 } from "lucide-react";
 
 // Import existing pages for now
@@ -23,6 +23,7 @@ import AdminPortal from "./pages/AdminPortal";
 // Import new personalization pages
 import DashboardPage from "./pages/DashboardPage";
 import SettingsPage from "./pages/SettingsPage";
+import BlockchainVisualizerPage from "./pages/BlockchainVisualizerPage";
 
 // Define navigation items for both mobile and desktop
 const navigationItems = [
@@ -32,6 +33,7 @@ const navigationItems = [
   { name: "ICO", path: "/ico", icon: <Coins className="h-5 w-5" /> },
   { name: "Whitepaper", path: "/whitepaper", icon: <FileText className="h-5 w-5" /> },
   { name: "Fractal Explorer", path: "/fractal-explorer", icon: <Cpu className="h-5 w-5" /> },
+  { name: "Blockchain Visualizer", path: "/blockchain-visualizer", icon: <Database className="h-5 w-5" /> },
   { name: "AI Assistant", path: "/ai-assistant", icon: <AlertTriangle className="h-5 w-5" /> },
   { name: "Security", path: "/security", icon: <Shield className="h-5 w-5" /> },
   { name: "Settings", path: "/settings", icon: <Settings className="h-5 w-5" /> },
@@ -434,6 +436,7 @@ function App() {
             <Route path="/singularity" component={SingularityCoinPage} />
             <Route path="/ico" component={ICOPage} />
             <Route path="/whitepaper" component={WhitepaperPage} />
+            <Route path="/blockchain-visualizer" component={BlockchainVisualizerPage} />
             <Route path="/settings" component={SettingsPage} />
             <Route path="/ai-assistant" component={AIAssistantDemo} />
             <Route path="/admin" component={AdminPortal} />
