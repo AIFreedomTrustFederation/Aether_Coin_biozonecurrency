@@ -14,6 +14,7 @@ import {
 import { transactionVerifier } from '../utils/TransactionVerifier';
 import { secureStorage } from '../utils/SecureStorage';
 import { formatTimestamp } from '../utils/formatters';
+import { trainingData } from '../data/training-data';
 
 // Initial AI state
 const initialState: AIState = {
@@ -324,25 +325,82 @@ export function AIProvider({ children, userId, initialState: customInitialState 
     // Process message (would connect to backend AI in real implementation)
     dispatch({ type: 'SET_PROCESSING', payload: true });
     
-    // Simulate AI response
+    // Search for related training data
+    const findBestResponse = (userMessage: string) => {
+      userMessage = userMessage.toLowerCase();
+      let bestMatch = null;
+      let highestScore = 0;
+      
+      // Flatten all training data categories into a single array
+      const allTrainingData = Object.values(trainingData).flat();
+      
+      for (const item of allTrainingData) {
+        // Simple keyword matching - in a real implementation this would use more sophisticated NLP
+        let score = 0;
+        const queryKeywords = item.query.toLowerCase().split(' ');
+        const responseKeywords = item.response.toLowerCase().split(' ');
+        
+        // Check how many keywords from the training data match the user message
+        [...queryKeywords, ...responseKeywords].forEach(keyword => {
+          if (keyword.length > 3 && userMessage.includes(keyword)) {
+            score += 1;
+          }
+        });
+        
+        // Exact matches for key phrases get a higher score
+        if (userMessage.includes(item.query.toLowerCase())) {
+          score += 10;
+        }
+        
+        if (score > highestScore) {
+          highestScore = score;
+          bestMatch = item;
+        }
+      }
+      
+      // If we have a good match, return it
+      if (bestMatch && highestScore > 0) {
+        return bestMatch.response;
+      }
+      
+      return null;
+    };
+    
+    // Simulate AI response with a delay
     setTimeout(() => {
-      // Simple response for demo
-      const responses = [
-        "I'm Mysterion, your AI assistant. I can help with blockchain questions and security concerns.",
-        "I've analyzed your message. How else can I assist you with your blockchain needs?",
-        "I'm here to help with all your Aetherion-related questions and security concerns.",
-        "I'm monitoring your wallet for security issues. Is there anything specific you'd like to know?",
-        "Let me look into that for you. Is there anything else you're wondering about the Aetherion platform?"
+      // Try to find a response from training data
+      const trainedResponse = findBestResponse(message);
+      
+      // Default fallback responses if no trained response found
+      const fallbackResponses = [
+        "I'm Mysterion, your AI assistant for Aetherion. I can help with blockchain questions and security concerns.",
+        "I'm monitoring your Aetherion wallet for security issues. Is there anything specific you'd like to know?",
+        "How else can I assist you with your Aetherion blockchain needs?",
+        "I'm here to help with any questions about quantum security, Singularity Coin, or the Aetherion platform."
       ];
       
-      const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+      // Determine the specific response for greeting messages
+      let responseContent = trainedResponse;
+      if (!responseContent) {
+        const lowercaseMessage = message.toLowerCase();
+        if (lowercaseMessage.includes('hello') || lowercaseMessage.includes('hi') || lowercaseMessage.includes('hey')) {
+          responseContent = "Hello! I'm Mysterion, your AI assistant for the Aetherion platform. I can help with questions about quantum security, blockchain features, and much more. How can I assist you today?";
+        } else if (lowercaseMessage.includes('help') || lowercaseMessage.includes('assist')) {
+          responseContent = "I can help with various topics related to Aetherion, including quantum security features, wallet management, Singularity Coin details, and transaction verification. What would you like to know more about?";
+        } else if (lowercaseMessage.includes('thank')) {
+          responseContent = "You're welcome! I'm here to assist with any other questions you might have about Aetherion's features and capabilities.";
+        } else {
+          // Use random fallback response for unrecognized queries
+          responseContent = fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)];
+        }
+      }
       
       dispatch({
         type: 'ADD_MESSAGE',
         payload: {
           id: uuidv4(),
           sender: 'ai',
-          content: randomResponse,
+          content: responseContent,
           timestamp: new Date().toISOString()
         }
       });
