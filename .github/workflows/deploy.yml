@@ -1,0 +1,30 @@
+name: Deploy Aetherion
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - run: npm ci
+      - run: npm run build
+      - name: Deploy to IPFS/Filecoin
+        run: node scripts/deploy-to-web3.js
+        env:
+          WEB3_STORAGE_TOKEN: ${{ secrets.WEB3_STORAGE_TOKEN }}
+          ENS_PRIVATE_KEY: ${{ secrets.ENS_PRIVATE_KEY }}
+          ENS_DOMAIN: ${{ secrets.ENS_DOMAIN }}
+      - name: Setup FractalCoin Integration
+        if: ${{ secrets.SETUP_FILECOIN_INTEGRATION == 'true' }}
+        run: node scripts/fractalcoin-filecoin-bridge.js
+        env:
+          FRACTALCOIN_API_KEY: ${{ secrets.FRACTALCOIN_API_KEY }}
+          FRACTALCOIN_API_ENDPOINT: ${{ secrets.FRACTALCOIN_API_ENDPOINT }}

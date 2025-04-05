@@ -1,0 +1,93 @@
+name: Deploy to IPFS/Filecoin via Web3.Storage
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build application
+        run: npm run build
+        env:
+          NODE_ENV: production
+      
+      - name: Install Web3.Storage dependencies
+        run: npm install --no-save web3.storage ethers dotenv
+      
+      - name: Deploy to Web3.Storage
+        id: web3-deploy
+        run: node scripts/deploy-to-web3.js
+        env:
+          WEB3_STORAGE_TOKEN: ${{ secrets.WEB3_STORAGE_TOKEN }}
+          ENS_PRIVATE_KEY: ${{ secrets.ENS_PRIVATE_KEY }}
+          ENS_DOMAIN: ${{ github.event.inputs.environment == 'production' && 'aifreedomtrust.eth' || 'staging.aifreedomtrust.eth' }}
+          UPDATE_ENS: 'true'
+      
+      - name: Setup Filecoin-FractalCoin integration
+        if: github.event.inputs.environment == 'production'
+        run: |
+          npm install --no-save @filecoin-shipyard/lotus-client-rpc @filecoin-shipyard/lotus-client-provider-nodejs @filecoin-shipyard/lotus-client-schema ipfs-http-client
+          node scripts/fractalcoin-filecoin-bridge.js
+        env:
+          FRACTALCOIN_API_KEY: ${{ secrets.FRACTALCOIN_API_KEY }}
+          FRACTALCOIN_API_ENDPOINT: ${{ secrets.FRACTALCOIN_API_ENDPOINT }}
+          LOTUS_API_TOKEN: ${{ secrets.LOTUS_API_TOKEN }}
+          LOTUS_API_ENDPOINT: ${{ secrets.LOTUS_API_ENDPOINT || 'https://api.node.glif.io/rpc/v0' }}
+          FRACTALCOIN_FILECOIN_ALLOCATION: '20'
+          PREFERRED_MINER_ID: ${{ secrets.PREFERRED_MINER_ID }}
+          DEAL_PRICE_PER_EPOCH: '500000000'
+      
+      - name: Create deployment summary
+        if: success()
+        run: |
+          echo "## Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Environment: ${{ github.event.inputs.environment || 'staging' }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### IPFS/Web3.Storage" >> $GITHUB_STEP_SUMMARY
+          echo "- CID: $(cat latest-deployment.json | jq -r .cid)" >> $GITHUB_STEP_SUMMARY
+          echo "- Gateway URL: $(cat latest-deployment.json | jq -r .gateway)" >> $GITHUB_STEP_SUMMARY
+          echo "- ENS Domain: ${{ github.event.inputs.environment == 'production' && 'aifreedomtrust.eth' || 'staging.aifreedomtrust.eth' }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ -f "fractalcoin-filecoin-allocation.json" ]; then
+            echo "### FractalCoin-Filecoin Integration" >> $GITHUB_STEP_SUMMARY
+            echo "- Allocated Storage: $(cat fractalcoin-filecoin-allocation.json | jq -r .totalAllocatedBytes) bytes" >> $GITHUB_STEP_SUMMARY
+            echo "- Node Count: $(cat fractalcoin-filecoin-allocation.json | jq -r '.nodes | length') nodes" >> $GITHUB_STEP_SUMMARY
+            echo "- Deal CID: $(cat filecoin-deal-info.json | jq -r .dealCid)" >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      - name: Notify deployment
+        if: success()
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_TITLE: "🚀 New Deployment"
+          SLACK_MESSAGE: "Aetherion has been deployed to IPFS/Filecoin network."
+          SLACK_COLOR: "#00AA00"
+          SLACK_FOOTER: "Deployment to ${{ github.event.inputs.environment || 'staging' }}"

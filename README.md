@@ -56,6 +56,10 @@ A cutting-edge blockchain wallet platform that delivers a secure and engaging cr
 - **Charts**: Recharts for data visualization
 - **State Management**: React Query + Context
 - **Routing**: Wouter for lightweight client-side routing
+- **Decentralized Storage**:
+  - IPFS/Filecoin via Web3.Storage
+  - ENS domain integration
+  - FractalCoin sharded storage network
 
 ## Getting Started
 
@@ -63,6 +67,10 @@ A cutting-edge blockchain wallet platform that delivers a secure and engaging cr
 
 - Node.js (v18+)
 - PostgreSQL database
+- For decentralized deployment (optional):
+  - Web3.Storage account
+  - Ethereum wallet for ENS domain (optional)
+  - Filecoin API access (optional)
 - For notifications (at least one of):
   - Twilio account for SMS notifications
   - Matrix homeserver access for open-source notifications
@@ -193,9 +201,11 @@ npx drizzle-kit studio
 
 ## Deployment
 
-The application is configured for deployment on Replit, but can be deployed to any Node.js hosting platform.
+The application supports both traditional and decentralized deployment methods.
 
-For production deployment:
+### Traditional Deployment
+
+The application can be deployed to any Node.js hosting platform:
 
 1. Build the application:
    ```bash
@@ -206,6 +216,46 @@ For production deployment:
    ```bash
    npm start
    ```
+
+### Decentralized Deployment (IPFS/Filecoin)
+
+For censorship-resistant, decentralized deployment:
+
+1. Configure environment variables in your `.env` file:
+   ```
+   # Web3.Storage (IPFS gateway)
+   WEB3_STORAGE_TOKEN=your_web3_storage_token
+   
+   # ENS domain (optional)
+   ENS_PRIVATE_KEY=your_ethereum_private_key
+   ENS_DOMAIN=your_ens_domain.eth
+   
+   # FractalCoin-Filecoin integration (optional)
+   SETUP_FILECOIN_INTEGRATION=true
+   FRACTALCOIN_API_KEY=your_fractalcoin_api_key
+   FRACTALCOIN_API_ENDPOINT=https://api.fractalcoin.network/v1
+   ```
+
+2. Run the deployment script:
+   ```bash
+   ./deploy-decentralized.sh
+   ```
+
+3. Access your deployment via:
+   - IPFS Gateway: `https://<CID>.ipfs.dweb.link/`
+   - ENS Domain: `https://<your-domain>.eth.limo/`
+
+For detailed deployment instructions, see [DEPLOYMENT.md](./DEPLOYMENT.md).
+
+### GitHub Actions Automated Deployments
+
+The repository includes GitHub Actions workflows for automating deployments:
+
+1. Push to the `main` branch to deploy to staging
+2. Manually trigger the production deployment from the Actions tab
+3. Both workflows handle the IPFS/Filecoin integration automatically
+
+See `.github/workflows/deploy.yml` for workflow configuration details.
 
 ## Contributing
 
@@ -232,3 +282,7 @@ This project is licensed under the MIT License - see the [LICENSE](./LICENSE) fi
 - The secure-web-storage team for their encrypted storage solution
 - The DOMPurify team for their HTML sanitization library
 - The react-markdown team for their Markdown rendering capabilities
+- The Web3.Storage team for their IPFS/Filecoin storage service
+- The ENS team for their decentralized naming system
+- The Web3.Storage team for their IPFS/Filecoin storage service
+- The ENS team for their decentralized naming system
