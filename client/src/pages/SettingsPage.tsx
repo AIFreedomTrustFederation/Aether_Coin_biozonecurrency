@@ -4,13 +4,22 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertCircle } from 'lucide-react';
 import CustomThemeCreator from '@/components/settings/CustomThemeCreator';
-import { Palette, Bell, Shield, ArrowLeft, Zap, Eye } from 'lucide-react';
+import { 
+  Palette, Bell, Shield, ArrowLeft, Zap, Eye, 
+  Banknote, AlertTriangle 
+} from 'lucide-react';
 import { useThemeStore } from '@/lib/theme';
 import { Link } from 'wouter';
+import { useLiveMode } from '../contexts/LiveModeContext';
+import { LiveModeIndicator } from '@/components/ui/LiveModeIndicator';
 
 const SettingsPage: React.FC = () => {
   const { theme, availableThemes } = useThemeStore();
+  const { isLiveMode, toggleLiveMode } = useLiveMode();
   
   return (
     <>
@@ -200,7 +209,62 @@ const SettingsPage: React.FC = () => {
             </Card>
           </TabsContent>
           
-          <TabsContent value="security">
+          <TabsContent value="security" className="space-y-6">
+            {/* Trading Mode Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Banknote className="h-5 w-5 text-primary" />
+                    <span>Trading Mode</span>
+                  </div>
+                  <LiveModeIndicator variant="badge" />
+                </CardTitle>
+                <CardDescription>
+                  Switch between paper trading (simulated coins) and live trading modes
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between rounded-lg border p-4">
+                  <div>
+                    <h3 className="text-lg font-medium">Trading Mode</h3>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {isLiveMode 
+                        ? "Live Mode: Trading with real coins" 
+                        : "Test Mode: Trading with simulated coins"}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">{isLiveMode ? 'Live' : 'Test'}</span>
+                    <Switch 
+                      id="trading-mode-switch"
+                      checked={isLiveMode}
+                      onCheckedChange={toggleLiveMode}
+                    />
+                  </div>
+                </div>
+
+                {isLiveMode ? (
+                  <Alert variant="destructive" className="mt-2">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertTitle>Live Trading Mode Enabled</AlertTitle>
+                    <AlertDescription>
+                      You are now trading with real coins. All transactions will use actual funds from your wallet.
+                    </AlertDescription>
+                  </Alert>
+                ) : (
+                  <Alert className="mt-2">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertTitle>Test Trading Mode Enabled</AlertTitle>
+                    <AlertDescription>
+                      You are using simulated coins for practice. No real funds will be used in transactions.
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Original Quantum Security Card */}
             <Card>
               <CardHeader>
                 <CardTitle>Quantum Security Settings</CardTitle>
