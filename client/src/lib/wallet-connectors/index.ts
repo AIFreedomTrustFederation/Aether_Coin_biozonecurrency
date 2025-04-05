@@ -11,7 +11,7 @@
  * It supports interaction with different blockchains for the Singularity Coin ICO and token swaps.
  */
 
-import { ethers } from 'ethers';
+import * as ethers from 'ethers';
 import type { ExternalProvider } from '@ethersproject/providers';
 import WalletConnectProvider from '@walletconnect/web3-provider';
 import { InjectedConnector } from '@web3-react/injected-connector';
@@ -44,6 +44,8 @@ const WALLET_CONNECT_OPTIONS = {
     42161: 'https://arb1.arbitrum.io/rpc',
     10: 'https://mainnet.optimism.io'
   },
+  // Bridge URL for WalletConnect v1
+  bridge: 'https://bridge.walletconnect.org',
   qrcodeModalOptions: {
     mobileLinks: ['metamask', 'trust', 'rainbow', 'argent', 'imtoken', 'pillar']
   }
@@ -293,25 +295,30 @@ export async function connectWallet(walletType: WalletType): Promise<WalletInfo>
     const chainIdHex = await provider.request({ method: 'eth_chainId' });
     chainId = parseInt(chainIdHex as string, 16);
     
-    // Get balance
-    // Note: We need to handle ethers v5/v6 differences
-    let ethersProvider;
-    let balanceWei;
-    
-    // For ethers v6
-    if (typeof ethers.BrowserProvider === 'function') {
-      ethersProvider = new ethers.BrowserProvider(provider as ExternalProvider);
-      balanceWei = await ethersProvider.getBalance(address);
-      balance = ethers.formatEther(balanceWei);
-    } 
-    // For ethers v5
-    else if (ethers.providers && ethers.utils) {
-      ethersProvider = new ethers.providers.Web3Provider(provider as ExternalProvider);
-      balanceWei = await ethersProvider.getBalance(address);
-      balance = ethers.utils.formatEther(balanceWei);
-    }
-    else {
-      console.warn('Ethers version not fully supported, using default balance');
+    // Get balance using window.ethers (injected by polyfills)
+    try {
+      // Use window.ethers which should be properly polyfilled
+      if (typeof (window as any).ethers !== 'undefined') {
+        const ethersProvider = new (window as any).ethers.providers.Web3Provider(provider);
+        const balanceWei = await ethersProvider.getBalance(address);
+        balance = (window as any).ethers.utils.formatEther(balanceWei);
+      } else {
+        // Fallback if ethers not available globally
+        console.log('Attempting to get balance using provider directly');
+        const balanceHex = await provider.request({
+          method: 'eth_getBalance',
+          params: [address, 'latest'],
+        });
+        
+        // Convert hex balance to decimal string
+        const balanceWei = parseInt(balanceHex as string, 16).toString();
+        
+        // Convert from wei to ether (divide by 10^18)
+        const balanceInEther = (Number(balanceWei) / 1e18).toFixed(6);
+        balance = balanceInEther;
+      }
+    } catch (balanceError) {
+      console.error('Failed to fetch balance:', balanceError);
       balance = '0';
     }
     

@@ -11,6 +11,12 @@ import walletConnectors, {
   getICODetails
 } from '@/lib/wallet-connectors';
 
+// Type for error response from wallet connection
+export interface WalletConnectError {
+  status: 'error';
+  error: string;
+}
+
 interface WalletContextProps {
   wallet: WalletInfo | null;
   availableWallets: WalletType[];
@@ -21,7 +27,7 @@ interface WalletContextProps {
     formattedPrice: string;
   };
   isConnecting: boolean;
-  connect: (walletType: WalletType) => Promise<void>;
+  connect: (walletType: WalletType) => Promise<WalletInfo | WalletConnectError | undefined>;
   disconnect: () => Promise<void>;
   switchChain: (chainId: number) => Promise<boolean>;
   purchase: (amountInUSD: string, paymentToken?: string) => Promise<{ success: boolean; txHash?: string; error?: string }>;
@@ -34,7 +40,7 @@ const WalletContext = createContext<WalletContextProps>({
   availableWallets: [],
   icoDetails: getICODetails(),
   isConnecting: false,
-  connect: async () => {},
+  connect: async () => undefined,
   disconnect: async () => {},
   switchChain: async () => false,
   purchase: async () => ({ success: false }),
@@ -80,11 +86,22 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setWallet(walletInfo);
         // Save connected wallet type to local storage
         localStorage.setItem('connectedWallet', JSON.stringify({ type: walletType }));
+        return walletInfo;
       } else {
         console.error('Failed to connect wallet:', walletInfo);
+        const result: WalletConnectError = {
+          status: 'error',
+          error: 'Failed to connect wallet'
+        };
+        return result;
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Wallet connection error:', error);
+      const result: WalletConnectError = {
+        status: 'error',
+        error: error?.message || 'Unknown error connecting wallet'
+      };
+      return result;
     } finally {
       setIsConnecting(false);
     }
