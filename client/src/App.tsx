@@ -307,11 +307,11 @@ const MobileNav = ({ isOpen, onClose, currentPath }: {
       
       {/* Mobile menu panel */}
       <div 
-        className={`fixed top-0 left-0 bottom-0 w-[280px] bg-background z-50 shadow-lg transform transition-transform duration-300 ease-in-out ${
+        className={`fixed top-0 left-0 bottom-0 w-[280px] bg-background z-50 shadow-lg transform transition-transform duration-300 ease-in-out flex flex-col ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="flex justify-between items-center p-4 border-b">
+        <div className="flex justify-between items-center p-4 border-b shrink-0">
           <Link href="/" onClick={onClose}>
             <h1 className="font-bold text-xl">Aetherion</h1>
           </Link>
@@ -320,7 +320,7 @@ const MobileNav = ({ isOpen, onClose, currentPath }: {
           </Button>
         </div>
         
-        <nav className="p-3">
+        <nav className="p-3 overflow-y-auto flex-grow">
           <Link href="/" onClick={onClose}>
             <div className={`flex items-center gap-3 p-3 rounded-md mb-1 ${
               currentPath === '/' ? 'bg-muted font-medium' : 'hover:bg-muted/50'
@@ -346,7 +346,7 @@ const MobileNav = ({ isOpen, onClose, currentPath }: {
           ))}
         </nav>
         
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t">
+        <div className="p-4 border-t shrink-0">
           <div className="flex items-center gap-3 text-sm text-muted-foreground">
             <Lock className="h-4 w-4" />
             <span>Quantum-Secured</span>
