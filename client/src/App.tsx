@@ -47,7 +47,7 @@ const navigationItems = [
   { name: "Fractal Explorer", path: "/fractal-explorer", icon: <Cpu className="h-5 w-5" /> },
   { name: "Blockchain Visualizer", path: "/blockchain-visualizer", icon: <Database className="h-5 w-5" /> },
   { name: "Mysterion AI", path: "/ai-assistant", icon: <Bot className="h-5 w-5" /> },
-  { name: "Mobile Features", path: "/mobile-features", icon: <Smartphone className="h-5 w-5" /> },
+  { name: "Mobile Features", path: "/mobile-feature", icon: <Smartphone className="h-5 w-5" /> },
   { name: "Security", path: "/security", icon: <Shield className="h-5 w-5" /> },
   { name: "Settings", path: "/settings", icon: <Settings className="h-5 w-5" /> },
   { name: "Test Mode", path: "/test", icon: <TestTube className="h-5 w-5" /> },
@@ -460,6 +460,7 @@ function App() {
             <Route path="/settings" component={SettingsPage} />
             <Route path="/ai-assistant" component={MysterionAIPage} />
             <Route path="/mobile-features" component={MobileFeatureDemo} />
+            <Route path="/mobile-feature" component={MobileFeatureDemo} />
             <Route path="/admin" component={AdminPortal} />
             <Route path="/legacy-dashboard" component={Dashboard} />
             <Route path="/onboarding" component={OnboardingPage} />
