@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Smartphone, Nfc, Zap, QrCode, Fingerprint, Bell, 
   CreditCard, Coins, ArrowUpDown, Terminal, Eye
@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { LiveModeIndicator } from "@/components/ui/LiveModeIndicator";
 import { useLiveMode } from '../../contexts/LiveModeContext';
+import { useToast } from '@/hooks/use-toast';
 
 export default function MobileFeatureDemo() {
   const isMobile = useMediaQuery('(max-width: 640px)');
@@ -20,7 +21,74 @@ export default function MobileFeatureDemo() {
   const [pushEnabled, setPushEnabled] = useState(true);
   const [offlineSigningEnabled, setOfflineSigningEnabled] = useState(true);
   const [arEnabled, setArEnabled] = useState(false);
+  const [isMining, setIsMining] = useState(false);
+  const [miningStats, setMiningStats] = useState({
+    hashRate: 2.4,
+    earnings: 0.05,
+    hashRatePercent: 45,
+    earningsPercent: 15
+  });
   const { isLiveMode } = useLiveMode();
+  const { toast } = useToast();
+  
+  // Simulate mining activity when mining is active
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
+    
+    if (isMining) {
+      interval = setInterval(() => {
+        // Simulate some randomness in hash rate and earnings
+        setMiningStats(prevStats => {
+          const hashRateChange = Math.random() * 0.2 - 0.1; // -0.1 to +0.1
+          const earningsChange = Math.random() * 0.01 - 0.005; // -0.005 to +0.005
+          
+          const newHashRate = Math.max(0.1, Math.min(5.0, prevStats.hashRate + hashRateChange));
+          const newEarnings = Math.max(0.01, Math.min(0.2, prevStats.earnings + earningsChange));
+          
+          return {
+            hashRate: parseFloat(newHashRate.toFixed(2)),
+            earnings: parseFloat(newEarnings.toFixed(2)),
+            hashRatePercent: Math.min(100, Math.max(5, Math.floor(newHashRate / 5 * 100))),
+            earningsPercent: Math.min(100, Math.max(5, Math.floor(newEarnings / 0.2 * 100)))
+          };
+        });
+      }, 2000);
+    } else {
+      // Reset stats when not mining
+      setMiningStats({
+        hashRate: 2.4,
+        earnings: 0.05,
+        hashRatePercent: 45,
+        earningsPercent: 15
+      });
+    }
+    
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [isMining]);
+  
+  const handleStartMining = () => {
+    if (isMining) return;
+    setIsMining(true);
+    toast({
+      title: "Mining Started",
+      description: "Your device is now mining Aetherion coins.",
+      variant: "default"
+    });
+  };
+  
+  const handleStopMining = () => {
+    if (!isMining) return;
+    setIsMining(false);
+    toast({
+      title: "Mining Stopped",
+      description: "Mining operations have been halted.",
+      variant: "default"
+    });
+  };
 
   return (
     <div className="container max-w-6xl mx-auto p-4">
@@ -241,8 +309,22 @@ export default function MobileFeatureDemo() {
                       Control your mining operations from your mobile device
                     </p>
                     <div className="flex gap-2">
-                      <Button variant="outline" size="sm">Start Mining</Button>
-                      <Button variant="outline" size="sm">Stop Mining</Button>
+                      <Button 
+                        variant={isMining ? "outline" : "default"} 
+                        size="sm"
+                        onClick={handleStartMining}
+                        disabled={isMining}
+                      >
+                        Start Mining
+                      </Button>
+                      <Button 
+                        variant={!isMining ? "outline" : "secondary"} 
+                        size="sm"
+                        onClick={handleStopMining}
+                        disabled={!isMining}
+                      >
+                        Stop Mining
+                      </Button>
                     </div>
                   </div>
                   
@@ -253,20 +335,34 @@ export default function MobileFeatureDemo() {
                       View your mining performance and earnings
                     </p>
                     <div className="w-full max-w-xs">
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-sm">Mining Status:</span>
+                        <Badge variant={isMining ? "default" : "outline"} className="capitalize">
+                          {isMining ? 'Active' : 'Inactive'}
+                        </Badge>
+                      </div>
+                      <div className="mb-3"></div>
+                      
                       <div className="flex justify-between mb-1">
                         <span className="text-sm">Hashrate:</span>
-                        <span className="text-sm font-medium">2.4 MH/s</span>
+                        <span className="text-sm font-medium">{miningStats.hashRate} MH/s</span>
                       </div>
                       <div className="w-full bg-muted rounded-full h-2 mb-3">
-                        <div className="bg-primary h-2 rounded-full" style={{ width: '45%' }}></div>
+                        <div 
+                          className="bg-primary h-2 rounded-full" 
+                          style={{ width: `${miningStats.hashRatePercent}%` }}
+                        ></div>
                       </div>
                       
                       <div className="flex justify-between mb-1">
                         <span className="text-sm">Earnings (24h):</span>
-                        <span className="text-sm font-medium">0.05 SING</span>
+                        <span className="text-sm font-medium">{miningStats.earnings} SING</span>
                       </div>
                       <div className="w-full bg-muted rounded-full h-2">
-                        <div className="bg-primary h-2 rounded-full" style={{ width: '15%' }}></div>
+                        <div 
+                          className="bg-primary h-2 rounded-full" 
+                          style={{ width: `${miningStats.earningsPercent}%` }}
+                        ></div>
                       </div>
                     </div>
                   </div>
