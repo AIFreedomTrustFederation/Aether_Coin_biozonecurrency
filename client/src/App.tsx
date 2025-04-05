@@ -3,6 +3,8 @@ import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
+import { LiveModeProvider } from "./contexts/LiveModeContext";
+import { LiveModeIndicator } from "@/components/ui/LiveModeIndicator";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { 
@@ -390,7 +392,8 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="app-container w-full h-full">
+      <LiveModeProvider>
+        <div className="app-container w-full h-full">
         {/* Top Navigation Bar */}
         <header className="flex justify-between items-center p-2 sm:p-4 bg-background border-b fixed top-0 left-0 right-0 z-30">
           <div className="flex items-center">
@@ -409,6 +412,10 @@ function App() {
             <Link href="/">
               <h1 className="font-bold text-xl cursor-pointer">Aetherion</h1>
             </Link>
+            
+            <div className="ml-4">
+              <LiveModeIndicator variant="button" showToggle={true} />
+            </div>
           </div>
           
           {/* Desktop Navigation */}
@@ -468,6 +475,7 @@ function App() {
           <AIAssistant userId={1} />
         )}
       </div>
+      </LiveModeProvider>
     </QueryClientProvider>
   );
 }
