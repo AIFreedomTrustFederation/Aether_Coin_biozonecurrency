@@ -1,0 +1,629 @@
+/**
+ * TestMode.tsx
+ * 
+ * A simple UI for testing the KYC onboarding, wallet connections,
+ * and fractal storage functionality without going through the full onboarding flow.
+ */
+
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
+import { Shield, Wallet, CreditCard, Check, AlertCircle } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+
+import { walletConnector, WalletType, ConnectedWallet } from '../../core/wallet/WalletConnector';
+import { plaidConnector, KycVerification } from '../../core/plaid/PlaidConnector';
+import { fractalStorage } from '../../core/fractal-storage/FractalStorage';
+
+export default function TestMode() {
+  const [masterPassword, setMasterPassword] = useState<string>('');
+  const [initialized, setInitialized] = useState<boolean>(false);
+  const [connectedWallets, setConnectedWallets] = useState<ConnectedWallet[]>([]);
+  const [kycVerification, setKycVerification] = useState<KycVerification | undefined>(undefined);
+  const [fractalCoinBalance, setFractalCoinBalance] = useState<number>(0);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [storageStats, setStorageStats] = useState<Record<string, any>>({});
+  const [selectedWalletType, setSelectedWalletType] = useState<WalletType>('ethereum');
+  const [logs, setLogs] = useState<string[]>([]);
+  const { toast } = useToast();
+
+  // Add a log message
+  const addLog = (message: string) => {
+    setLogs(prev => [...prev, `${new Date().toLocaleTimeString()}: ${message}`]);
+  };
+
+  // Initialize the connectors
+  const initialize = () => {
+    if (!masterPassword) {
+      toast({
+        title: 'Error',
+        description: 'Please enter a master password',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      // Initialize fractal storage
+      fractalStorage.initialize(masterPassword);
+      addLog('Fractal storage initialized with quantum-resistant encryption');
+
+      // Initialize wallet connector
+      walletConnector.initialize(masterPassword);
+      addLog('Wallet connector initialized');
+
+      // Initialize Plaid connector
+      plaidConnector.initialize();
+      addLog('Plaid connector initialized');
+
+      // Set up wallet connected listener
+      walletConnector.onWalletConnected(wallet => {
+        setConnectedWallets(prev => [...prev.filter(w => w.id !== wallet.id), wallet]);
+        addLog(`Wallet connected: ${wallet.name}`);
+        updateStats();
+      });
+
+      // Set up wallet disconnected listener
+      walletConnector.onWalletDisconnected(walletId => {
+        setConnectedWallets(prev => prev.filter(w => w.id !== walletId));
+        addLog(`Wallet disconnected: ${walletId}`);
+        updateStats();
+      });
+
+      // Get initial stats
+      updateStats();
+
+      setInitialized(true);
+      toast({
+        title: 'Initialized',
+        description: 'All systems initialized successfully'
+      });
+    } catch (error) {
+      console.error('Initialization error:', error);
+      addLog(`Error: ${error instanceof Error ? error.message : String(error)}`);
+      toast({
+        title: 'Initialization Failed',
+        description: error instanceof Error ? error.message : 'Unknown error',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Update storage stats
+  const updateStats = () => {
+    if (initialized) {
+      setFractalCoinBalance(walletConnector.getFractalCoinBalance());
+      setConnectedWallets(walletConnector.getConnectedWallets());
+      setStorageStats(walletConnector.getStorageMetrics());
+    }
+  };
+
+  // Create KYC verification
+  const createKycVerification = async () => {
+    if (!initialized) {
+      toast({
+        title: 'Error',
+        description: 'Please initialize the system first',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      // Create KYC verification
+      const userId = `user-${Date.now()}`;
+      const verificationId = await plaidConnector.initiateKycVerification(userId, 'basic');
+      addLog(`KYC verification initiated: ${verificationId}`);
+
+      // Submit KYC information
+      const verification = await plaidConnector.submitKycInformation(verificationId, {
+        fullName: 'Test User',
+        address: '123 Test St, Test City, Test Country, 12345',
+        dateOfBirth: '1990-01-01',
+        socialSecurityNumber: '123-45-6789'
+      });
+
+      setKycVerification(verification);
+      addLog(`KYC verification status: ${verification.status}`);
+
+      toast({
+        title: 'KYC Verification',
+        description: `Verification status: ${verification.status}`
+      });
+    } catch (error) {
+      console.error('KYC verification error:', error);
+      addLog(`Error: ${error instanceof Error ? error.message : String(error)}`);
+      toast({
+        title: 'KYC Verification Failed',
+        description: error instanceof Error ? error.message : 'Unknown error',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Connect wallet
+  const connectWallet = async () => {
+    if (!initialized) {
+      toast({
+        title: 'Error',
+        description: 'Please initialize the system first',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      let wallet: ConnectedWallet;
+
+      // Connect selected wallet type
+      switch (selectedWalletType) {
+        case 'ethereum':
+          wallet = await walletConnector.connectEthereumWallet();
+          break;
+        case 'bitcoin':
+          wallet = await walletConnector.connectBitcoinWallet();
+          break;
+        case 'coinbase':
+          wallet = await walletConnector.connectCoinbaseWallet();
+          break;
+        case 'plaid':
+          wallet = await walletConnector.connectPlaidBankAccount();
+          break;
+        default:
+          throw new Error('Invalid wallet type');
+      }
+
+      addLog(`Connected ${selectedWalletType} wallet: ${wallet.name}`);
+      
+      toast({
+        title: 'Wallet Connected',
+        description: `Successfully connected ${wallet.name}`
+      });
+    } catch (error) {
+      console.error('Wallet connection error:', error);
+      addLog(`Error: ${error instanceof Error ? error.message : String(error)}`);
+      toast({
+        title: 'Connection Failed',
+        description: error instanceof Error ? error.message : 'Unknown error',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Disconnect wallet
+  const disconnectWallet = (walletId: string) => {
+    if (!initialized) return;
+    
+    try {
+      walletConnector.disconnectWallet(walletId);
+      addLog(`Disconnected wallet: ${walletId}`);
+      toast({
+        title: 'Wallet Disconnected',
+        description: 'Wallet has been disconnected'
+      });
+    } catch (error) {
+      console.error('Wallet disconnection error:', error);
+      addLog(`Error: ${error instanceof Error ? error.message : String(error)}`);
+      toast({
+        title: 'Disconnection Failed',
+        description: error instanceof Error ? error.message : 'Unknown error',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  return (
+    <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <div className="mb-8 text-center">
+        <h1 className="text-3xl font-bold tracking-tight">Aetherion Test Mode</h1>
+        <p className="text-muted-foreground mt-2">
+          Test the quantum-resistant storage, wallet connections, and KYC verification functionality
+        </p>
+      </div>
+
+      <Tabs defaultValue="initialization" className="space-y-6">
+        <TabsList className="grid grid-cols-4">
+          <TabsTrigger value="initialization">Initialization</TabsTrigger>
+          <TabsTrigger value="wallets">Wallets</TabsTrigger>
+          <TabsTrigger value="kyc">KYC Verification</TabsTrigger>
+          <TabsTrigger value="storage">Storage Stats</TabsTrigger>
+        </TabsList>
+
+        {/* Initialization Tab */}
+        <TabsContent value="initialization">
+          <Card>
+            <CardHeader>
+              <CardTitle>System Initialization</CardTitle>
+              <CardDescription>
+                Initialize the quantum-resistant storage system with a master password
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="master-password">Master Password</Label>
+                <Input
+                  id="master-password"
+                  type="password"
+                  placeholder="Enter a secure master password"
+                  value={masterPassword}
+                  onChange={(e) => setMasterPassword(e.target.value)}
+                  disabled={initialized || isLoading}
+                />
+                <p className="text-sm text-muted-foreground">
+                  This password will be used to secure your wallet connections with quantum-resistant encryption
+                </p>
+              </div>
+
+              <Button 
+                onClick={initialize} 
+                disabled={initialized || isLoading || !masterPassword}
+                className="w-full"
+              >
+                {isLoading ? 'Initializing...' : initialized ? 'Initialized' : 'Initialize'}
+              </Button>
+
+              {initialized && (
+                <div className="p-4 border rounded-md bg-green-50 dark:bg-green-900/20">
+                  <div className="flex items-center">
+                    <Check className="h-5 w-5 text-green-600 dark:text-green-400 mr-2" />
+                    <p className="text-green-600 dark:text-green-400 font-medium">
+                      System initialized successfully
+                    </p>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Wallets Tab */}
+        <TabsContent value="wallets">
+          <Card>
+            <CardHeader>
+              <CardTitle>Wallet Management</CardTitle>
+              <CardDescription>
+                Connect and manage cryptocurrency wallets and bank accounts
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Connected wallets */}
+              <div>
+                <h3 className="text-lg font-medium mb-2">Connected Wallets</h3>
+                {connectedWallets.length === 0 ? (
+                  <div className="p-4 border rounded-md bg-muted/10 text-center">
+                    <p className="text-muted-foreground">No wallets connected yet</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {connectedWallets.map(wallet => (
+                      <div key={wallet.id} className="p-4 border rounded-md flex justify-between items-center">
+                        <div>
+                          <div className="font-medium">{wallet.name}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {wallet.type === 'plaid' ? 'Bank Account' : wallet.address?.substring(0, 10) + '...'}
+                            {wallet.balance && ` • Balance: ${wallet.balance}`}
+                          </div>
+                        </div>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => disconnectWallet(wallet.id)}
+                        >
+                          Disconnect
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <Separator />
+
+              {/* Connect new wallet */}
+              <div>
+                <h3 className="text-lg font-medium mb-4">Connect New Wallet</h3>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div
+                      className={`border rounded-md p-4 cursor-pointer transition-colors ${
+                        selectedWalletType === 'ethereum' ? 'border-primary bg-primary/5' : 'border-muted'
+                      }`}
+                      onClick={() => setSelectedWalletType('ethereum')}
+                    >
+                      <div className="flex flex-col items-center text-center">
+                        <Wallet className="h-6 w-6 mb-2" />
+                        <span className="text-sm font-medium">Ethereum</span>
+                      </div>
+                    </div>
+                    
+                    <div
+                      className={`border rounded-md p-4 cursor-pointer transition-colors ${
+                        selectedWalletType === 'bitcoin' ? 'border-primary bg-primary/5' : 'border-muted'
+                      }`}
+                      onClick={() => setSelectedWalletType('bitcoin')}
+                    >
+                      <div className="flex flex-col items-center text-center">
+                        <Wallet className="h-6 w-6 mb-2" />
+                        <span className="text-sm font-medium">Bitcoin</span>
+                      </div>
+                    </div>
+                    
+                    <div
+                      className={`border rounded-md p-4 cursor-pointer transition-colors ${
+                        selectedWalletType === 'coinbase' ? 'border-primary bg-primary/5' : 'border-muted'
+                      }`}
+                      onClick={() => setSelectedWalletType('coinbase')}
+                    >
+                      <div className="flex flex-col items-center text-center">
+                        <Wallet className="h-6 w-6 mb-2" />
+                        <span className="text-sm font-medium">Coinbase</span>
+                      </div>
+                    </div>
+                    
+                    <div
+                      className={`border rounded-md p-4 cursor-pointer transition-colors ${
+                        selectedWalletType === 'plaid' ? 'border-primary bg-primary/5' : 'border-muted'
+                      }`}
+                      onClick={() => setSelectedWalletType('plaid')}
+                    >
+                      <div className="flex flex-col items-center text-center">
+                        <CreditCard className="h-6 w-6 mb-2" />
+                        <span className="text-sm font-medium">Bank</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Button
+                    onClick={connectWallet}
+                    disabled={!initialized || isLoading}
+                    className="w-full"
+                  >
+                    {isLoading ? 'Connecting...' : 'Connect Wallet'}
+                  </Button>
+                </div>
+              </div>
+
+              {fractalCoinBalance > 0 && (
+                <div className="p-4 border rounded-md bg-primary/5">
+                  <h4 className="font-medium mb-1 flex items-center">
+                    <Shield className="h-4 w-4 mr-2" />
+                    FractalCoin Rewards
+                  </h4>
+                  <p className="text-sm text-muted-foreground">
+                    You've earned {fractalCoinBalance.toFixed(2)} FractalCoins for your quantum-secured storage contributions.
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* KYC Tab */}
+        <TabsContent value="kyc">
+          <Card>
+            <CardHeader>
+              <CardTitle>KYC Verification</CardTitle>
+              <CardDescription>
+                Test the Know Your Customer verification process
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <Button
+                onClick={createKycVerification}
+                disabled={!initialized || isLoading}
+                className="w-full"
+              >
+                {isLoading ? 'Verifying...' : 'Create Test KYC Verification'}
+              </Button>
+
+              {kycVerification && (
+                <div className="space-y-4 mt-4">
+                  <h3 className="text-lg font-medium">Verification Status</h3>
+                  
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-2">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                        kycVerification.identityVerified ? 'bg-green-500' : 'bg-amber-500'
+                      } text-white`}>
+                        {kycVerification.identityVerified ? <Check className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
+                      </div>
+                      <div>
+                        <h4 className="font-medium">Identity Verification</h4>
+                        <p className="text-sm text-muted-foreground">
+                          {kycVerification.identityVerified ? 'Verified' : 'Pending verification'}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                        kycVerification.addressVerified ? 'bg-green-500' : 'bg-amber-500'
+                      } text-white`}>
+                        {kycVerification.addressVerified ? <Check className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
+                      </div>
+                      <div>
+                        <h4 className="font-medium">Address Verification</h4>
+                        <p className="text-sm text-muted-foreground">
+                          {kycVerification.addressVerified ? 'Verified' : 'Pending verification'}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                        kycVerification.documentVerified ? 'bg-green-500' : 'bg-amber-500'
+                      } text-white`}>
+                        {kycVerification.documentVerified ? <Check className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
+                      </div>
+                      <div>
+                        <h4 className="font-medium">Document Verification</h4>
+                        <p className="text-sm text-muted-foreground">
+                          {kycVerification.documentVerified ? 'Verified' : 'Pending verification'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-4 border rounded-md bg-muted/10">
+                    <h4 className="font-medium mb-1">KYC Level</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Verification level: <span className="font-medium">{kycVerification.kycLevel}</span>
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Verification ID: <span className="font-medium">{kycVerification.verificationId}</span>
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Status: <span className="font-medium">{kycVerification.status}</span>
+                    </p>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Storage Stats Tab */}
+        <TabsContent value="storage">
+          <Card>
+            <CardHeader>
+              <CardTitle>Quantum-Resistant Storage</CardTitle>
+              <CardDescription>
+                View statistics about the fractal storage system
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {Object.keys(storageStats).length === 0 ? (
+                <div className="p-4 border rounded-md bg-muted/10 text-center">
+                  <p className="text-muted-foreground">No storage stats available</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-4 border rounded-md">
+                      <h4 className="font-medium mb-1">Total Nodes</h4>
+                      <p className="text-2xl font-bold">{storageStats.totalNodes || 0}</p>
+                    </div>
+                    <div className="p-4 border rounded-md">
+                      <h4 className="font-medium mb-1">FractalCoin Balance</h4>
+                      <p className="text-2xl font-bold">{fractalCoinBalance.toFixed(2)}</p>
+                    </div>
+                  </div>
+
+                  <div className="p-4 border rounded-md">
+                    <h4 className="font-medium mb-2">Wallet Distribution</h4>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span>Ethereum Wallets</span>
+                        <span className="font-medium">{storageStats.ethereumWallets || 0}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Bitcoin Wallets</span>
+                        <span className="font-medium">{storageStats.bitcoinWallets || 0}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Coinbase Wallets</span>
+                        <span className="font-medium">{storageStats.coinbaseWallets || 0}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Plaid Connections</span>
+                        <span className="font-medium">{storageStats.plaidConnections || 0}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-4 border rounded-md">
+                    <h4 className="font-medium mb-2">Quantum Security</h4>
+                    <div className="space-y-4">
+                      <div>
+                        <div className="flex justify-between mb-1">
+                          <span>Storage Points</span>
+                          <span className="font-medium">{storageStats.storagePoints || 0}</span>
+                        </div>
+                      </div>
+                      <div>
+                        <div className="flex justify-between mb-1">
+                          <span>Quantum Complexity</span>
+                          <span className="font-medium">{(storageStats.quantumComplexity || 0).toFixed(2)}%</span>
+                        </div>
+                        <div className="w-full bg-muted rounded-full h-2">
+                          <div 
+                            className="bg-primary h-2 rounded-full" 
+                            style={{ width: `${storageStats.quantumComplexity || 0}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-4 border rounded-md">
+                    <h4 className="font-medium mb-1">Last Update</h4>
+                    <p className="text-sm text-muted-foreground">
+                      {storageStats.lastUpdate ? new Date(storageStats.lastUpdate).toLocaleString() : 'Never'}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              <Button
+                onClick={updateStats}
+                disabled={!initialized}
+                variant="outline"
+                className="w-full"
+              >
+                Refresh Stats
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      {/* System Logs */}
+      <Card className="mt-8">
+        <CardHeader>
+          <CardTitle>System Logs</CardTitle>
+          <CardDescription>
+            View system events and error messages
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="bg-muted/20 rounded-md p-4 h-60 overflow-y-auto font-mono text-sm">
+            {logs.length === 0 ? (
+              <div className="text-center text-muted-foreground">No logs available</div>
+            ) : (
+              <div className="space-y-1">
+                {logs.map((log, index) => (
+                  <div key={index} className="whitespace-pre-wrap break-all">
+                    {log}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </CardContent>
+        <CardFooter>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => setLogs([])}
+            disabled={logs.length === 0}
+          >
+            Clear Logs
+          </Button>
+        </CardFooter>
+      </Card>
+    </div>
+  );
+}

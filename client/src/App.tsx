@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { 
   Menu, X, Home, Layout, Wallet, Lock, Shield, Settings, AlertTriangle, ChevronRight, 
-  BarChart3, Eye, Cpu, Bell, Zap, Coins, FileText, Database, Bot
+  BarChart3, Eye, Cpu, Bell, Zap, Coins, FileText, Database, Bot, TestTube
 } from "lucide-react";
 
 // Import existing pages for now
@@ -27,6 +27,7 @@ import BlockchainVisualizerPage from "./pages/BlockchainVisualizerPage";
 import WalletPage from "./pages/WalletPage";
 import MysterionAIPage from "./pages/MysterionAIPage";
 import OnboardingPage from "./pages/Onboarding";
+import TestPage from "./pages/TestPage";
 
 // Define navigation items for both mobile and desktop
 const navigationItems = [
@@ -40,6 +41,7 @@ const navigationItems = [
   { name: "Mysterion AI", path: "/ai-assistant", icon: <Bot className="h-5 w-5" /> },
   { name: "Security", path: "/security", icon: <Shield className="h-5 w-5" /> },
   { name: "Settings", path: "/settings", icon: <Settings className="h-5 w-5" /> },
+  { name: "Test Mode", path: "/test", icon: <TestTube className="h-5 w-5" /> },
 ];
 
 // Simple page components for now
@@ -445,6 +447,7 @@ function App() {
             <Route path="/admin" component={AdminPortal} />
             <Route path="/legacy-dashboard" component={Dashboard} />
             <Route path="/onboarding" component={OnboardingPage} />
+            <Route path="/test" component={TestPage} />
             <Route component={SimpleNotFound} />
           </Switch>
         </main>

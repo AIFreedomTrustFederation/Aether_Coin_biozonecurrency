@@ -1,439 +1,350 @@
 /**
  * WalletConnector.ts
  * 
- * Provides integration with various Web3 wallets and traditional banking
- * through Plaid. This service stores connection data in the fractal storage
- * system for quantum-resistant security.
+ * Module for connecting to different types of cryptocurrency wallets and bank accounts
+ * Provides a unified interface for wallet management
  */
 
-import { fractalStorage, WalletConnectionInfo as FractalWalletInfo } from '../fractal-storage/FractalStorage';
-import { plaidConnector } from '../plaid/PlaidConnector';
+import { EventEmitter } from 'events';
+import CryptoJS from 'crypto-js';
 
-export type WalletType = 'bitcoin' | 'ethereum' | 'coinbase' | 'plaid';
+// Define wallet types
+export type WalletType = 'ethereum' | 'bitcoin' | 'coinbase' | 'plaid';
 
-/**
- * Information stored about a wallet connection
- */
-export interface WalletConnectionInfo {
-  type: WalletType;
-  address?: string;
-  publicKey?: string;
-  accountId?: string;
-  providerInfo?: Record<string, any>;
-  timestamp: number;
-}
-
-/**
- * Connected wallet representation for the application
- */
+// Interface for a connected wallet
 export interface ConnectedWallet {
   id: string;
   type: WalletType;
-  address?: string;
   name: string;
+  address?: string;
   balance?: string;
-  connected: boolean;
-  provider?: any;
-  accountId?: string; // For Plaid bank accounts
+  metadata?: Record<string, any>;
 }
 
-/**
- * WalletConnector service that handles integration with various
- * cryptocurrency wallets and traditional banking through Plaid
- */
-export class WalletConnector {
-  private connections: Map<string, ConnectedWallet> = new Map();
-  private initialized: boolean = false;
-  private masterPassword: string | null = null;
-
-  private walletConnectedListeners: ((wallet: ConnectedWallet) => void)[] = [];
-  private walletDisconnectedListeners: ((walletId: string) => void)[] = [];
-
-  /**
-   * Initialize the wallet connector with a master password for secure storage
-   * @param masterPassword Master password for encryption
-   */
-  public initialize(masterPassword: string): void {
-    if (!masterPassword) {
-      throw new Error('Master password is required');
+// Mock data for demonstration purposes in test mode
+const MOCK_WALLETS: Record<WalletType, Partial<ConnectedWallet>> = {
+  ethereum: {
+    type: 'ethereum',
+    name: 'Ethereum Wallet',
+    address: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e'
+  },
+  bitcoin: {
+    type: 'bitcoin',
+    name: 'Bitcoin Wallet',
+    address: 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh'
+  },
+  coinbase: {
+    type: 'coinbase',
+    name: 'Coinbase Wallet',
+    address: '0x89205A3A3b2A69De6Dbf7f01ED13B2108B2c43e7'
+  },
+  plaid: {
+    type: 'plaid',
+    name: 'Bank Account',
+    metadata: {
+      accountNumber: 'XXXX1234',
+      bankName: 'Virtual Bank'
     }
-    
-    this.masterPassword = masterPassword;
-    this.initialized = true;
-    
-    // Initialize the fractal storage
-    fractalStorage.initialize(masterPassword);
-    
-    // Initialize Plaid connector
-    plaidConnector.initialize();
-    
-    // Load any existing connections from storage
-    const existingConnections = fractalStorage.exportAllConnections();
-    existingConnections.forEach(connection => {
-      const { type, address, publicKey, accountId, timestamp } = connection;
-      
-      // Create a wallet object for each connection
-      const wallet: ConnectedWallet = {
-        id: address || accountId || `wallet-${Date.now()}`,
-        type,
-        address,
-        name: this.getDefaultWalletName(type, address),
-        connected: true,
-        accountId,
-      };
-      
-      this.connections.set(wallet.id, wallet);
-    });
-    
-    console.log('Wallet connector initialized with quantum-secure storage');
+  }
+};
+
+// Balances for mock wallets
+const MOCK_BALANCES: Record<WalletType, string> = {
+  ethereum: '1.245 ETH',
+  bitcoin: '0.0351 BTC',
+  coinbase: '2,400 USDC',
+  plaid: '$4,532.78'
+};
+
+class WalletConnector extends EventEmitter {
+  private initialized: boolean = false;
+  private encryptionKey: string = '';
+  private connectedWallets: ConnectedWallet[] = [];
+  private fractalCoinBalance: number = 0;
+  private storageMetrics: Record<string, any> = {};
+
+  constructor() {
+    super();
+    // Set max listeners to avoid memory leak warnings
+    this.setMaxListeners(20);
   }
 
   /**
-   * Connect to an Ethereum wallet (Metamask, etc.)
-   * @returns Connected wallet information
+   * Initialize the wallet connector with an encryption key
+   * @param encryptionKey - Master password for securing wallet data
+   */
+  public initialize(encryptionKey: string): void {
+    if (this.initialized) return;
+    
+    // Set encryption key (hash it for security)
+    this.encryptionKey = CryptoJS.SHA256(encryptionKey).toString(CryptoJS.enc.Hex);
+    
+    // Initialize storage metrics for test mode
+    this.storageMetrics = {
+      totalNodes: 0,
+      ethereumWallets: 0,
+      bitcoinWallets: 0,
+      coinbaseWallets: 0,
+      plaidConnections: 0,
+      storagePoints: 0,
+      quantumComplexity: 0,
+      lastUpdate: new Date().toISOString()
+    };
+    
+    // Start with some initial FractalCoin balance
+    this.fractalCoinBalance = 25.0;
+    
+    this.initialized = true;
+  }
+
+  /**
+   * Connect an Ethereum wallet
+   * @returns Promise that resolves to a connected wallet object
    */
   public async connectEthereumWallet(): Promise<ConnectedWallet> {
-    this.ensureInitialized();
-
+    this.checkInitialized();
+    
     try {
-      // In a real implementation, this would connect to Metamask or another Web3 provider
-      console.log('Connecting to Ethereum wallet...');
+      // In test mode, simulate connecting to an Ethereum wallet
+      await this.simulateConnection(800);
       
-      // Mock a successful connection
-      const mockAddress = `0x${Math.random().toString(36).substring(2, 10)}${Math.random().toString(36).substring(2, 10)}`;
-      
-      const wallet: ConnectedWallet = {
-        id: mockAddress,
-        type: 'ethereum',
-        address: mockAddress,
-        name: this.getDefaultWalletName('ethereum', mockAddress),
-        balance: '1.245',
-        connected: true,
-      };
-      
-      // Store the connection securely in fractal storage
-      const connectionInfo: WalletConnectionInfo = {
-        type: 'ethereum',
-        address: mockAddress,
-        timestamp: Date.now(),
-        providerInfo: {
-          chainId: '1',
-          networkName: 'Ethereum Mainnet',
-        },
-      };
-      
-      fractalStorage.storeWalletConnection(connectionInfo as FractalWalletInfo);
-      
-      // Add to connections map
-      this.connections.set(wallet.id, wallet);
-      
-      // Notify listeners
-      this.notifyWalletConnected(wallet);
-      
-      return wallet;
-    } catch (error) {
-      console.error('Error connecting to Ethereum wallet:', error);
-      throw new Error('Failed to connect Ethereum wallet');
-    }
-  }
-
-  /**
-   * Connect to a Coinbase wallet
-   * @returns Connected wallet information
-   */
-  public async connectCoinbaseWallet(): Promise<ConnectedWallet> {
-    this.ensureInitialized();
-
-    try {
-      // In a real implementation, this would connect to Coinbase wallet
-      console.log('Connecting to Coinbase wallet...');
-      
-      // Mock a successful connection
-      const mockAddress = `0x${Math.random().toString(36).substring(2, 10)}${Math.random().toString(36).substring(2, 10)}`;
-      
-      const wallet: ConnectedWallet = {
-        id: mockAddress,
-        type: 'coinbase',
-        address: mockAddress,
-        name: this.getDefaultWalletName('coinbase', mockAddress),
-        balance: '2.78',
-        connected: true,
-      };
-      
-      // Store the connection securely in fractal storage
-      const connectionInfo: WalletConnectionInfo = {
-        type: 'coinbase',
-        address: mockAddress,
-        timestamp: Date.now(),
-        providerInfo: {
-          chainId: '1',
-          networkName: 'Ethereum Mainnet',
-          walletProvider: 'Coinbase',
-        },
-      };
-      
-      fractalStorage.storeWalletConnection(connectionInfo as FractalWalletInfo);
-      
-      // Add to connections map
-      this.connections.set(wallet.id, wallet);
-      
-      // Notify listeners
-      this.notifyWalletConnected(wallet);
-      
-      return wallet;
-    } catch (error) {
-      console.error('Error connecting to Coinbase wallet:', error);
-      throw new Error('Failed to connect Coinbase wallet');
-    }
-  }
-
-  /**
-   * Connect to a Bitcoin wallet
-   * @returns Connected wallet information
-   */
-  public async connectBitcoinWallet(): Promise<ConnectedWallet> {
-    this.ensureInitialized();
-
-    try {
-      // In a real implementation, this would connect to a Bitcoin wallet
-      console.log('Connecting to Bitcoin wallet...');
-      
-      // Mock a successful connection
-      const mockAddress = `bc1${Math.random().toString(36).substring(2, 10)}${Math.random().toString(36).substring(2, 10)}`;
-      
-      const wallet: ConnectedWallet = {
-        id: mockAddress,
-        type: 'bitcoin',
-        address: mockAddress,
-        name: this.getDefaultWalletName('bitcoin', mockAddress),
-        balance: '0.0324',
-        connected: true,
-      };
-      
-      // Store the connection securely in fractal storage
-      const connectionInfo: WalletConnectionInfo = {
-        type: 'bitcoin',
-        address: mockAddress,
-        timestamp: Date.now(),
-        providerInfo: {
-          network: 'mainnet',
-          walletType: 'segwit',
-        },
-      };
-      
-      fractalStorage.storeWalletConnection(connectionInfo as FractalWalletInfo);
-      
-      // Add to connections map
-      this.connections.set(wallet.id, wallet);
-      
-      // Notify listeners
-      this.notifyWalletConnected(wallet);
-      
-      return wallet;
-    } catch (error) {
-      console.error('Error connecting to Bitcoin wallet:', error);
-      throw new Error('Failed to connect Bitcoin wallet');
-    }
-  }
-
-  /**
-   * Connect a bank account via Plaid
-   * @returns Connected wallet information representing the bank account
-   */
-  public async connectPlaidBankAccount(): Promise<ConnectedWallet> {
-    this.ensureInitialized();
-
-    try {
-      // Use PlaidConnector to establish a connection
-      console.log('Connecting bank account via Plaid...');
-      
-      // Create a Link token (in a real app, this would come from the backend)
-      const userId = `user-${Math.random().toString(36).substring(2, 10)}`;
-      const linkToken = await plaidConnector.createLinkToken(userId);
-      
-      // Open Plaid Link (in a real app, this would open a UI component)
-      const { publicToken, accountId } = await plaidConnector.openPlaidLink(linkToken);
-      
-      // Exchange the public token for an access token
-      const walletId = await plaidConnector.exchangePublicToken({ publicToken, accountId });
-      
-      // Get account info
-      const bankAccount = await plaidConnector.getBankAccountInfo(walletId);
-      
-      // Create a wallet object for the bank account
+      const walletId = `eth-${Date.now()}`;
       const wallet: ConnectedWallet = {
         id: walletId,
-        type: 'plaid',
-        name: `${bankAccount.bankName} - ${bankAccount.name}`,
-        balance: bankAccount.balance.available.toString(),
-        connected: true,
-        accountId: accountId,
+        ...MOCK_WALLETS.ethereum as ConnectedWallet,
+        balance: MOCK_BALANCES.ethereum
       };
       
-      // Store the connection securely in fractal storage
-      const connectionInfo: WalletConnectionInfo = {
-        type: 'plaid',
-        accountId: accountId,
-        timestamp: Date.now(),
-        providerInfo: {
-          bankName: bankAccount.bankName,
-          accountType: bankAccount.type,
-          accountSubtype: bankAccount.subtype,
-          mask: bankAccount.mask,
-        },
-      };
+      this.connectedWallets.push(wallet);
+      this.storageMetrics.ethereumWallets++;
+      this.updateStorageMetrics();
       
-      fractalStorage.storeWalletConnection(connectionInfo as FractalWalletInfo);
-      
-      // Add to connections map
-      this.connections.set(wallet.id, wallet);
-      
-      // Notify listeners
-      this.notifyWalletConnected(wallet);
+      // Emit wallet connected event
+      this.emit('walletConnected', wallet);
       
       return wallet;
     } catch (error) {
-      console.error('Error connecting bank account via Plaid:', error);
-      throw new Error('Failed to connect bank account');
+      console.error('Error connecting Ethereum wallet:', error);
+      throw new Error('Failed to connect Ethereum wallet. ' + (error instanceof Error ? error.message : ''));
+    }
+  }
+
+  /**
+   * Connect a Bitcoin wallet
+   * @returns Promise that resolves to a connected wallet object
+   */
+  public async connectBitcoinWallet(): Promise<ConnectedWallet> {
+    this.checkInitialized();
+    
+    try {
+      // In test mode, simulate connecting to a Bitcoin wallet
+      await this.simulateConnection(1200);
+      
+      const walletId = `btc-${Date.now()}`;
+      const wallet: ConnectedWallet = {
+        id: walletId,
+        ...MOCK_WALLETS.bitcoin as ConnectedWallet,
+        balance: MOCK_BALANCES.bitcoin
+      };
+      
+      this.connectedWallets.push(wallet);
+      this.storageMetrics.bitcoinWallets++;
+      this.updateStorageMetrics();
+      
+      // Emit wallet connected event
+      this.emit('walletConnected', wallet);
+      
+      return wallet;
+    } catch (error) {
+      console.error('Error connecting Bitcoin wallet:', error);
+      throw new Error('Failed to connect Bitcoin wallet. ' + (error instanceof Error ? error.message : ''));
+    }
+  }
+
+  /**
+   * Connect a Coinbase wallet
+   * @returns Promise that resolves to a connected wallet object
+   */
+  public async connectCoinbaseWallet(): Promise<ConnectedWallet> {
+    this.checkInitialized();
+    
+    try {
+      // In test mode, simulate connecting to a Coinbase wallet
+      await this.simulateConnection(1000);
+      
+      const walletId = `cb-${Date.now()}`;
+      const wallet: ConnectedWallet = {
+        id: walletId,
+        ...MOCK_WALLETS.coinbase as ConnectedWallet,
+        balance: MOCK_BALANCES.coinbase
+      };
+      
+      this.connectedWallets.push(wallet);
+      this.storageMetrics.coinbaseWallets++;
+      this.updateStorageMetrics();
+      
+      // Emit wallet connected event
+      this.emit('walletConnected', wallet);
+      
+      return wallet;
+    } catch (error) {
+      console.error('Error connecting Coinbase wallet:', error);
+      throw new Error('Failed to connect Coinbase wallet. ' + (error instanceof Error ? error.message : ''));
+    }
+  }
+
+  /**
+   * Connect a Plaid bank account
+   * @returns Promise that resolves to a connected wallet object
+   */
+  public async connectPlaidBankAccount(): Promise<ConnectedWallet> {
+    this.checkInitialized();
+    
+    try {
+      // In test mode, simulate connecting to a Plaid bank account
+      await this.simulateConnection(1500);
+      
+      const walletId = `plaid-${Date.now()}`;
+      const wallet: ConnectedWallet = {
+        id: walletId,
+        ...MOCK_WALLETS.plaid as ConnectedWallet,
+        balance: MOCK_BALANCES.plaid
+      };
+      
+      this.connectedWallets.push(wallet);
+      this.storageMetrics.plaidConnections++;
+      this.updateStorageMetrics();
+      
+      // Emit wallet connected event
+      this.emit('walletConnected', wallet);
+      
+      return wallet;
+    } catch (error) {
+      console.error('Error connecting Plaid bank account:', error);
+      throw new Error('Failed to connect Plaid bank account. ' + (error instanceof Error ? error.message : ''));
     }
   }
 
   /**
    * Disconnect a wallet
-   * @param walletId ID of the wallet to disconnect
+   * @param walletId - ID of the wallet to disconnect
    */
   public disconnectWallet(walletId: string): void {
-    this.ensureInitialized();
+    this.checkInitialized();
     
-    const wallet = this.connections.get(walletId);
-    if (wallet) {
-      this.connections.delete(walletId);
-      this.notifyWalletDisconnected(walletId);
-      console.log(`Wallet ${walletId} disconnected`);
+    const walletIndex = this.connectedWallets.findIndex(w => w.id === walletId);
+    if (walletIndex === -1) {
+      throw new Error(`Wallet with ID ${walletId} not found`);
     }
+    
+    const wallet = this.connectedWallets[walletIndex];
+    
+    // Update metrics
+    if (wallet.type === 'ethereum') this.storageMetrics.ethereumWallets--;
+    if (wallet.type === 'bitcoin') this.storageMetrics.bitcoinWallets--;
+    if (wallet.type === 'coinbase') this.storageMetrics.coinbaseWallets--;
+    if (wallet.type === 'plaid') this.storageMetrics.plaidConnections--;
+    
+    // Remove wallet from connected wallets
+    this.connectedWallets.splice(walletIndex, 1);
+    
+    // Update storage metrics
+    this.updateStorageMetrics();
+    
+    // Emit wallet disconnected event
+    this.emit('walletDisconnected', walletId);
   }
 
   /**
    * Get all connected wallets
-   * @returns List of all connected wallets
+   * @returns Array of connected wallet objects
    */
   public getConnectedWallets(): ConnectedWallet[] {
-    this.ensureInitialized();
-    return Array.from(this.connections.values());
+    this.checkInitialized();
+    return [...this.connectedWallets];
   }
 
   /**
-   * Get a connected wallet by ID
-   * @param walletId ID of the wallet to retrieve
-   * @returns Connected wallet or undefined if not found
-   */
-  public getWallet(walletId: string): ConnectedWallet | undefined {
-    this.ensureInitialized();
-    return this.connections.get(walletId);
-  }
-
-  /**
-   * Add a wallet connected event listener
-   * @param listener Function to call when a wallet is connected
-   */
-  public onWalletConnected(listener: (wallet: ConnectedWallet) => void): void {
-    this.walletConnectedListeners.push(listener);
-  }
-
-  /**
-   * Add a wallet disconnected event listener
-   * @param listener Function to call when a wallet is disconnected
-   */
-  public onWalletDisconnected(listener: (walletId: string) => void): void {
-    this.walletDisconnectedListeners.push(listener);
-  }
-
-  /**
-   * Get the current reward balance for FractalCoin
-   * @returns Current reward balance
+   * Get FractalCoin balance
+   * @returns Current FractalCoin balance
    */
   public getFractalCoinBalance(): number {
-    this.ensureInitialized();
-    return fractalStorage.getRewardBalance();
+    this.checkInitialized();
+    return this.fractalCoinBalance;
   }
 
   /**
-   * Export all wallet connections for backup
-   * @returns Array of all wallet connections
-   */
-  public exportWalletConnections(): WalletConnectionInfo[] {
-    this.ensureInitialized();
-    return fractalStorage.exportAllConnections() as WalletConnectionInfo[];
-  }
-
-  /**
-   * Get storage metrics for the quantum-secure storage system
-   * @returns Storage statistics
+   * Get storage metrics
+   * @returns Object containing storage metrics
    */
   public getStorageMetrics(): Record<string, any> {
-    this.ensureInitialized();
-    return fractalStorage.getStorageStats();
+    this.checkInitialized();
+    return { ...this.storageMetrics };
   }
 
   /**
-   * Ensure that the wallet connector is initialized
+   * Add wallet connected event listener
+   * @param listener - Callback function that will be called when a wallet is connected
+   */
+  public onWalletConnected(listener: (wallet: ConnectedWallet) => void): void {
+    this.on('walletConnected', listener);
+  }
+
+  /**
+   * Add wallet disconnected event listener
+   * @param listener - Callback function that will be called when a wallet is disconnected
+   */
+  public onWalletDisconnected(listener: (walletId: string) => void): void {
+    this.on('walletDisconnected', listener);
+  }
+
+  /**
+   * Determine if wallet connector is initialized
+   * @returns True if initialized, false otherwise
+   */
+  public isInitialized(): boolean {
+    return this.initialized;
+  }
+
+  /**
+   * Private method to check if wallet connector is initialized
    * @throws Error if not initialized
    */
-  private ensureInitialized(): void {
+  private checkInitialized(): void {
     if (!this.initialized) {
-      throw new Error('Wallet connector not initialized');
+      throw new Error('WalletConnector not initialized. Call initialize() first.');
     }
   }
 
   /**
-   * Notify wallet connected listeners
-   * @param wallet Connected wallet
+   * Simulate a connection delay
+   * @param ms - Milliseconds to delay
+   * @returns Promise that resolves after the delay
    */
-  private notifyWalletConnected(wallet: ConnectedWallet): void {
-    this.walletConnectedListeners.forEach(listener => {
-      try {
-        listener(wallet);
-      } catch (error) {
-        console.error('Error in wallet connected listener:', error);
-      }
+  private simulateConnection(ms: number): Promise<void> {
+    return new Promise((resolve) => {
+      setTimeout(resolve, ms);
     });
   }
 
   /**
-   * Notify wallet disconnected listeners
-   * @param walletId ID of the disconnected wallet
+   * Update storage metrics
    */
-  private notifyWalletDisconnected(walletId: string): void {
-    this.walletDisconnectedListeners.forEach(listener => {
-      try {
-        listener(walletId);
-      } catch (error) {
-        console.error('Error in wallet disconnected listener:', error);
-      }
-    });
-  }
-
-  /**
-   * Get a default wallet name based on type and address
-   * @param type Wallet type
-   * @param address Wallet address
-   * @returns Default wallet name
-   */
-  private getDefaultWalletName(type: WalletType, address?: string): string {
-    switch (type) {
-      case 'ethereum':
-        return `Ethereum Wallet ${address ? address.substring(0, 6) : ''}`;
-      case 'bitcoin':
-        return `Bitcoin Wallet ${address ? address.substring(0, 6) : ''}`;
-      case 'coinbase':
-        return `Coinbase Wallet ${address ? address.substring(0, 6) : ''}`;
-      case 'plaid':
-        return 'Bank Account';
-      default:
-        return `Wallet ${address ? address.substring(0, 6) : ''}`;
-    }
+  private updateStorageMetrics(): void {
+    const totalWallets = this.storageMetrics.ethereumWallets +
+      this.storageMetrics.bitcoinWallets +
+      this.storageMetrics.coinbaseWallets +
+      this.storageMetrics.plaidConnections;
+    
+    this.storageMetrics.totalNodes = totalWallets * 3;
+    this.storageMetrics.storagePoints = totalWallets * 150;
+    this.storageMetrics.quantumComplexity = Math.min(totalWallets * 25, 100);
+    this.storageMetrics.lastUpdate = new Date().toISOString();
+    
+    // Increase FractalCoin balance based on contributions
+    this.fractalCoinBalance += totalWallets * 5;
   }
 }
 
-// Export a singleton instance
+// Export singleton instance
 export const walletConnector = new WalletConnector();
