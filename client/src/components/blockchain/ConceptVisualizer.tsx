@@ -155,7 +155,7 @@ const ConceptVisualizer: React.FC = () => {
         <div className="text-center mb-4">
           <h3 className="text-xl font-medium">Blockchain Structure</h3>
           <p className="text-muted-foreground">
-            A blockchain is a distributed, immutable ledger that records transactions across multiple computers
+            A blockchain is a distributed, immutable ledger that records transactions across multiple computers.
           </p>
         </div>
         
@@ -233,7 +233,7 @@ const ConceptVisualizer: React.FC = () => {
         <div className="text-center mb-4">
           <h3 className="text-xl font-medium">Consensus Mechanism</h3>
           <p className="text-muted-foreground">
-            How the network agrees on which transactions are valid without a central authority
+            How the network agrees on which transactions are valid without a central authority.
           </p>
         </div>
         
@@ -369,7 +369,7 @@ const ConceptVisualizer: React.FC = () => {
         <div className="text-center mb-4">
           <h3 className="text-xl font-medium">Smart Contracts</h3>
           <p className="text-muted-foreground">
-            Self-executing contracts with the terms directly written into code
+            Self-executing contracts with the terms directly written into code.
           </p>
         </div>
         
@@ -534,7 +534,7 @@ const ConceptVisualizer: React.FC = () => {
         <div className="text-center mb-4">
           <h3 className="text-xl font-medium">Quantum Security</h3>
           <p className="text-muted-foreground">
-            How Singularity Coin protects against quantum computing threats
+            How Singularity Coin protects against quantum computing threats.
           </p>
         </div>
         
@@ -799,7 +799,7 @@ const ConceptVisualizer: React.FC = () => {
         <div className="text-center mb-4">
           <h3 className="text-xl font-medium">Fractal Sharding</h3>
           <p className="text-muted-foreground">
-            How Singularity Coin scales through recursive fractal-pattern sharding
+            How Singularity Coin scales through recursive fractal-pattern sharding.
           </p>
         </div>
         
@@ -1088,7 +1088,7 @@ const ConceptVisualizer: React.FC = () => {
       <CardHeader>
         <CardTitle>Interactive Blockchain Concept Visualizer</CardTitle>
         <CardDescription>
-          Explore key blockchain concepts in Singularity Coin with interactive visualizations
+          Explore key blockchain concepts in Singularity Coin with interactive visualizations.
         </CardDescription>
       </CardHeader>
       
