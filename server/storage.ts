@@ -62,6 +62,7 @@ export interface IStorage {
   // Payments methods
   getPayment(id: number): Promise<Payment | undefined>;
   getPaymentsByUserId(userId: number): Promise<Payment[]>;
+  getPaymentsByProviderPaymentId(providerPaymentId: string): Promise<Payment[]>;
   createPayment(payment: InsertPayment): Promise<Payment>;
   updatePaymentStatus(id: number, status: string, processedAt?: Date): Promise<Payment | undefined>;
   
@@ -423,6 +424,12 @@ export class MemStorage implements IStorage {
   async getPaymentsByUserId(userId: number): Promise<Payment[]> {
     return Array.from(this.payments.values())
       .filter(payment => payment.userId === userId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+  
+  async getPaymentsByProviderPaymentId(providerPaymentId: string): Promise<Payment[]> {
+    return Array.from(this.payments.values())
+      .filter(payment => payment.providerPaymentId === providerPaymentId)
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   }
   

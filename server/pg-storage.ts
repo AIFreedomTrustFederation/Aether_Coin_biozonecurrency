@@ -268,6 +268,16 @@ export class PgStorage implements IStorage {
     
     return result;
   }
+  
+  async getPaymentsByProviderPaymentId(providerPaymentId: string): Promise<Payment[]> {
+    const result = await db
+      .select()
+      .from(payments)
+      .where(eq(payments.providerPaymentId, providerPaymentId))
+      .orderBy(desc(payments.createdAt));
+    
+    return result;
+  }
 
   async createPayment(payment: InsertPayment): Promise<Payment> {
     const result = await db.insert(payments).values(payment).returning();

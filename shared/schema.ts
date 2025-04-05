@@ -216,7 +216,8 @@ export const payments = pgTable("payments", {
   amount: decimal("amount").notNull(),
   currency: text("currency").notNull(),
   status: text("status").notNull(), // 'pending', 'completed', 'failed', 'refunded'
-  providerPaymentId: text("provider_payment_id"), // Stripe payment intent ID
+  provider: text("provider").notNull().default('stripe'), // 'stripe', 'open_collective', etc.
+  providerPaymentId: text("provider_payment_id"), // Stripe payment intent ID or other provider's ID
   description: text("description"),
   metadata: jsonb("metadata"),
   createdAt: timestamp("created_at").defaultNow(),
@@ -242,6 +243,9 @@ export const insertPaymentSchema = createInsertSchema(payments).omit({
   id: true,
   createdAt: true,
   processedAt: true,
+}).extend({
+  // We need to extend this because the provider field is added to the schema
+  provider: z.string().default('stripe'),
 });
 
 export type CidEntry = typeof cidEntries.$inferSelect;

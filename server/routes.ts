@@ -20,6 +20,7 @@ import { z } from "zod";
 import Stripe from "stripe";
 import apiGateway from "../api-gateway";
 import apiServicesRouter from "./routes/api-services";
+import { openSourcePaymentService } from "./services/openSourcePayment";
 
 /**
  * Utility function to send notifications through available channels
@@ -421,9 +422,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Create a payment intent
-  app.post("/api/payments/intent", async (req, res) => {
+  // Create a Stripe payment intent
+  app.post("/api/payments/stripe/create-intent", async (req, res) => {
     try {
-      const { amount, currency, metadata } = req.body;
+      const { amount, currency, description, walletId, metadata } = req.body;
+      const userId = 1; // For demo purposes, ideally this would come from auth
       
       if (!amount || isNaN(parseInt(amount))) {
         return res.status(400).json({ message: "Invalid amount" });
@@ -434,27 +437,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const paymentIntent = await stripeService.createPaymentIntent(
+        userId,
         parseInt(amount), 
         currency,
-        metadata || {}
+        description || "Wallet funding",
+        metadata || {},
+        walletId ? parseInt(walletId) : undefined
       );
       
       res.json({
-        clientSecret: paymentIntent.client_secret,
-        id: paymentIntent.id
+        clientSecret: paymentIntent.clientSecret,
+        paymentIntentId: paymentIntent.paymentIntentId
       });
     } catch (error) {
       res.status(500).json({ 
-        message: "Failed to create payment intent",
+        message: "Failed to create Stripe payment intent",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
+  // Process an OpenCollective/open-source payment
+  app.post("/api/payments/open-source", async (req, res) => {
+    try {
+      const { amount, currency, description, paymentMethod, walletId, metadata } = req.body;
+      const userId = 1; // For demo purposes, ideally this would come from auth
+      
+      if (!amount || isNaN(parseInt(amount))) {
+        return res.status(400).json({ message: "Invalid amount" });
+      }
+      
+      if (!currency || typeof currency !== 'string') {
+        return res.status(400).json({ message: "Invalid currency" });
+      }
+      
+      if (!paymentMethod || typeof paymentMethod !== 'string') {
+        return res.status(400).json({ message: "Invalid payment method" });
+      }
+      
+      const paymentResponse = await openSourcePaymentService.processPayment({
+        userId,
+        amount: parseInt(amount),
+        currency,
+        description: description || "Wallet funding",
+        paymentMethod,
+        walletId,
+        metadata
+      });
+      
+      res.json(paymentResponse);
+    } catch (error) {
+      res.status(500).json({ 
+        message: "Failed to process open-source payment",
         error: error instanceof Error ? error.message : String(error)
       });
     }
   });
   
-  // Process a payment
+  // Legacy payment processing endpoint (kept for backwards compatibility)
   app.post("/api/payments/process", async (req, res) => {
     try {
       const { paymentMethodId, amount, currency, description, walletId } = req.body;
+      const userId = 1; // For demo purposes
       
       if (!paymentMethodId || isNaN(parseInt(paymentMethodId))) {
         return res.status(400).json({ message: "Invalid payment method ID" });
@@ -472,18 +516,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid description" });
       }
       
-      const userId = 1; // For demo purposes
-      
-      const payment = await stripeService.processPayment(
+      // Create payment intent with Stripe as the default
+      const paymentIntent = await stripeService.createPaymentIntent(
         userId,
-        parseInt(paymentMethodId),
         parseInt(amount),
         currency,
         description,
+        { paymentMethodId },
         walletId ? parseInt(walletId) : undefined
       );
       
-      res.status(201).json(payment);
+      res.status(201).json({
+        clientSecret: paymentIntent.clientSecret,
+        paymentIntentId: paymentIntent.paymentIntentId
+      });
     } catch (error) {
       res.status(500).json({ 
         message: "Failed to process payment",
@@ -492,6 +538,85 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Process open-source payment
+  app.post("/api/payments/open-source/process", async (req, res) => {
+    try {
+      const { amount, currency, description, paymentMethod, walletId, metadata } = req.body;
+      
+      if (!amount || isNaN(parseFloat(amount))) {
+        return res.status(400).json({ message: "Invalid amount" });
+      }
+      
+      if (!currency || typeof currency !== 'string') {
+        return res.status(400).json({ message: "Invalid currency" });
+      }
+      
+      if (!paymentMethod || typeof paymentMethod !== 'string') {
+        return res.status(400).json({ message: "Invalid payment method" });
+      }
+      
+      const userId = 1; // For demo purposes
+      
+      const paymentResult = await openSourcePaymentService.processPayment({
+        userId,
+        amount: parseFloat(amount),
+        currency,
+        description: description || 'Open-source payment',
+        paymentMethod,
+        walletId: walletId ? parseInt(walletId) : undefined,
+        metadata
+      });
+      
+      res.status(201).json(paymentResult);
+    } catch (error) {
+      res.status(500).json({ 
+        message: "Failed to process open-source payment",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
+  // Check status of an open-source payment
+  app.get("/api/payments/open-source/:paymentId/status", async (req, res) => {
+    try {
+      const { paymentId } = req.params;
+      
+      if (!paymentId) {
+        return res.status(400).json({ message: "Missing payment ID" });
+      }
+      
+      const paymentStatus = await openSourcePaymentService.checkPaymentStatus(paymentId);
+      res.json(paymentStatus);
+    } catch (error) {
+      res.status(500).json({ 
+        message: "Failed to check payment status",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
+  // Handle open-source payment webhooks
+  app.post("/api/webhooks/open-source", async (req, res) => {
+    const signature = req.headers['x-webhook-signature'] as string;
+    
+    if (!signature) {
+      return res.status(400).json({ message: "Missing webhook signature" });
+    }
+    
+    try {
+      // Raw body needed for webhook signature verification
+      const rawBody = (req as any).rawBody || JSON.stringify(req.body);
+      
+      const result = await openSourcePaymentService.handleWebhookEvent(rawBody, signature);
+      res.json(result);
+    } catch (error) {
+      res.status(500).json({ 
+        message: "Failed to process webhook",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
   // Handle Stripe webhook events
   app.post("/api/webhooks/stripe", async (req, res) => {
     if (!stripe) {
@@ -1053,6 +1178,182 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       res.status(500).json({ 
         message: "Failed to send test notification", 
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
+  // PAYMENT RELATED ROUTES
+  
+  // Create a Stripe payment intent
+  app.post("/api/payments/stripe/create-intent", async (req, res) => {
+    try {
+      const userId = 1; // For demo purposes
+      const { amount, currency, description, metadata, walletId } = req.body;
+      
+      if (!amount || !currency) {
+        return res.status(400).json({ message: "Amount and currency are required" });
+      }
+      
+      // Convert amount to cents (Stripe uses cents for all currencies)
+      const amountInCents = Math.round(parseFloat(amount) * 100);
+      
+      const result = await stripeService.createPaymentIntent(
+        userId,
+        amountInCents,
+        currency,
+        description || "Payment to Aetherion Wallet",
+        metadata || {},
+        walletId
+      );
+      
+      res.json({ 
+        success: true, 
+        clientSecret: result.clientSecret,
+        paymentIntentId: result.paymentIntentId 
+      });
+    } catch (error) {
+      console.error('Stripe payment intent error:', error);
+      res.status(500).json({ 
+        message: "Failed to create payment intent", 
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
+  // Check status of a Stripe payment
+  app.get("/api/payments/stripe/status/:paymentIntentId", async (req, res) => {
+    try {
+      const { paymentIntentId } = req.params;
+      
+      if (!paymentIntentId) {
+        return res.status(400).json({ message: "Payment intent ID is required" });
+      }
+      
+      const status = await stripeService.checkPaymentStatus(paymentIntentId);
+      
+      res.json({ 
+        success: true, 
+        status 
+      });
+    } catch (error) {
+      console.error('Stripe payment status check error:', error);
+      res.status(500).json({ 
+        message: "Failed to check payment status", 
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
+  // Process a Stripe webhook
+  app.post("/api/payments/stripe/webhook", async (req, res) => {
+    try {
+      const signature = req.headers['stripe-signature'] as string;
+      
+      if (!signature) {
+        return res.status(400).json({ message: "Stripe signature is required" });
+      }
+      
+      const payload = req.body;
+      const event = await stripeService.handleWebhookEvent(payload, signature);
+      
+      res.json({ received: true, event });
+    } catch (error) {
+      console.error('Stripe webhook error:', error);
+      res.status(400).json({
+        message: "Webhook error",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
+  // Process an open-source payment
+  app.post("/api/payments/open-source/process", async (req, res) => {
+    try {
+      const userId = 1; // For demo purposes
+      const { 
+        amount, 
+        currency, 
+        description, 
+        metadata, 
+        walletId, 
+        paymentMethod 
+      } = req.body;
+      
+      if (!amount || !currency) {
+        return res.status(400).json({ message: "Amount and currency are required" });
+      }
+      
+      // Make sure payment method is valid
+      if (paymentMethod && !['credit_card', 'bank_transfer', 'crypto'].includes(paymentMethod)) {
+        return res.status(400).json({ message: "Invalid payment method" });
+      }
+      
+      const amountValue = parseFloat(amount);
+      
+      const payment = await openSourcePaymentService.processPayment(
+        userId,
+        amountValue,
+        currency,
+        description || "Open Source Payment to Aetherion Wallet",
+        metadata || {},
+        walletId,
+        paymentMethod
+      );
+      
+      res.json({ 
+        success: true, 
+        payment,
+        message: "Payment processed successfully"
+      });
+    } catch (error) {
+      console.error('Open source payment error:', error);
+      res.status(500).json({ 
+        message: "Failed to process payment", 
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
+  // Verify an open-source payment
+  app.get("/api/payments/open-source/verify/:paymentId", async (req, res) => {
+    try {
+      const { paymentId } = req.params;
+      
+      if (!paymentId) {
+        return res.status(400).json({ message: "Payment ID is required" });
+      }
+      
+      const isValid = await openSourcePaymentService.verifyPayment(paymentId);
+      
+      res.json({ 
+        success: true, 
+        valid: isValid
+      });
+    } catch (error) {
+      console.error('Open source payment verification error:', error);
+      res.status(500).json({ 
+        message: "Failed to verify payment", 
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
+  // Get all payments for a user
+  app.get("/api/payments", async (req, res) => {
+    try {
+      const userId = 1; // For demo purposes
+      
+      const payments = await storage.getPaymentsByUserId(userId);
+      
+      res.json({ 
+        success: true, 
+        payments 
+      });
+    } catch (error) {
+      console.error('Get payments error:', error);
+      res.status(500).json({ 
+        message: "Failed to get payments", 
         error: error instanceof Error ? error.message : String(error)
       });
     }
