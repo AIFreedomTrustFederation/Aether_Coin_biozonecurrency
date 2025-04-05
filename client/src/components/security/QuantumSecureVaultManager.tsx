@@ -633,11 +633,11 @@ export function QuantumSecureVaultManager() {
       </CardHeader>
       <CardContent className="space-y-6">
         <Tabs defaultValue="dashboard" className="w-full">
-          <TabsList className="grid grid-cols-4 w-full mb-4">
-            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-            <TabsTrigger value="settings">Security Settings</TabsTrigger>
-            <TabsTrigger value="data">Storage Settings</TabsTrigger>
-            <TabsTrigger value="contracts">Smart Contracts</TabsTrigger>
+          <TabsList className="grid grid-cols-4 w-full mb-4 gap-1">
+            <TabsTrigger value="dashboard" className="px-1 md:px-2">Dashboard</TabsTrigger>
+            <TabsTrigger value="settings" className="px-1 md:px-2">Security</TabsTrigger>
+            <TabsTrigger value="data" className="px-1 md:px-2">Storage</TabsTrigger>
+            <TabsTrigger value="contracts" className="px-1 md:px-2">Contracts</TabsTrigger>
           </TabsList>
           
           {/* Dashboard Tab */}
