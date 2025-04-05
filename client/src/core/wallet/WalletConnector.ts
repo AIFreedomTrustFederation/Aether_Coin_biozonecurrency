@@ -2,11 +2,24 @@
  * WalletConnector.ts
  * 
  * Module for connecting to different types of cryptocurrency wallets and bank accounts
- * Provides a unified interface for wallet management
+ * Provides a unified interface for wallet management with real Web3 connections
  */
 
 import { EventEmitter } from 'events';
 import CryptoJS from 'crypto-js';
+import * as ethers from 'ethers';
+import { formatEther } from '@ethersproject/units';
+
+// Mock data for Plaid integration (until we implement real Plaid API)
+const MOCK_PLAID = {
+  type: 'plaid' as WalletType,
+  name: 'Bank Account',
+  metadata: {
+    accountNumber: 'XXXX1234',
+    bankName: 'Virtual Bank'
+  },
+  balance: '$4,532.78'
+};
 
 // Define wallet types
 export type WalletType = 'ethereum' | 'bitcoin' | 'coinbase' | 'plaid';
@@ -18,42 +31,41 @@ export interface ConnectedWallet {
   name: string;
   address?: string;
   balance?: string;
+  chainId?: number;
+  provider?: any;
   metadata?: Record<string, any>;
 }
 
-// Mock data for demonstration purposes in test mode
-const MOCK_WALLETS: Record<WalletType, Partial<ConnectedWallet>> = {
-  ethereum: {
-    type: 'ethereum',
-    name: 'Ethereum Wallet',
-    address: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e'
-  },
-  bitcoin: {
-    type: 'bitcoin',
-    name: 'Bitcoin Wallet',
-    address: 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh'
-  },
-  coinbase: {
-    type: 'coinbase',
-    name: 'Coinbase Wallet',
-    address: '0x89205A3A3b2A69De6Dbf7f01ED13B2108B2c43e7'
-  },
-  plaid: {
-    type: 'plaid',
-    name: 'Bank Account',
-    metadata: {
-      accountNumber: 'XXXX1234',
-      bankName: 'Virtual Bank'
-    }
+// Web3 Provider types
+declare global {
+  interface Window {
+    ethereum?: {
+      isMetaMask?: boolean;
+      isCoinbaseWallet?: boolean;
+      request: (args: any) => Promise<any>;
+      on: (event: string, handler: (...args: any[]) => void) => void;
+      removeListener: (event: string, handler: (...args: any[]) => void) => void;
+    };
+    coinbaseWalletExtension?: any;
+    BinanceChain?: {
+      request: (args: any) => Promise<any>;
+      on: (event: string, handler: (...args: any[]) => void) => void;
+      removeListener: (event: string, handler: (...args: any[]) => void) => void;
+    };
+    bitcoin?: any;
   }
-};
+}
 
-// Balances for mock wallets
-const MOCK_BALANCES: Record<WalletType, string> = {
-  ethereum: '1.245 ETH',
-  bitcoin: '0.0351 BTC',
-  coinbase: '2,400 USDC',
-  plaid: '$4,532.78'
+// Network mapping for chain IDs
+const NETWORKS: Record<number, { name: string, symbol: string }> = {
+  1: { name: 'Ethereum Mainnet', symbol: 'ETH' },
+  56: { name: 'BNB Smart Chain', symbol: 'BNB' },
+  137: { name: 'Polygon', symbol: 'MATIC' },
+  43114: { name: 'Avalanche', symbol: 'AVAX' },
+  42161: { name: 'Arbitrum One', symbol: 'ETH' },
+  10: { name: 'Optimism', symbol: 'ETH' },
+  5: { name: 'Goerli Testnet', symbol: 'ETH' },
+  80001: { name: 'Mumbai Testnet', symbol: 'MATIC' }
 };
 
 class WalletConnector extends EventEmitter {
@@ -98,23 +110,92 @@ class WalletConnector extends EventEmitter {
   }
 
   /**
-   * Connect an Ethereum wallet
+   * Connect an Ethereum wallet (MetaMask)
    * @returns Promise that resolves to a connected wallet object
    */
   public async connectEthereumWallet(): Promise<ConnectedWallet> {
     this.checkInitialized();
     
     try {
-      // In test mode, simulate connecting to an Ethereum wallet
-      await this.simulateConnection(800);
+      if (!window.ethereum) {
+        throw new Error('MetaMask not installed. Please install MetaMask to connect your Ethereum wallet.');
+      }
       
+      // Request account access from MetaMask
+      const accounts = await window.ethereum.request({ 
+        method: 'eth_requestAccounts' 
+      });
+      
+      if (!accounts || accounts.length === 0) {
+        throw new Error('No Ethereum accounts found. Please check your MetaMask extension.');
+      }
+      
+      // Get the connected account
+      const address = accounts[0];
+      
+      // Get the chain ID
+      const chainIdHex = await window.ethereum.request({ 
+        method: 'eth_chainId' 
+      });
+      const chainId = parseInt(chainIdHex, 16);
+      
+      // Create a Web3Provider from MetaMask
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      
+      // Get the wallet balance
+      const balanceWei = await provider.getBalance(address);
+      const balanceEth = formatEther(balanceWei);
+      
+      // Format the balance with network symbol
+      const networkInfo = NETWORKS[chainId] || { name: 'Unknown Network', symbol: 'ETH' };
+      const formattedBalance = `${parseFloat(balanceEth).toFixed(4)} ${networkInfo.symbol}`;
+      
+      // Create wallet object
       const walletId = `eth-${Date.now()}`;
       const wallet: ConnectedWallet = {
         id: walletId,
-        ...MOCK_WALLETS.ethereum as ConnectedWallet,
-        balance: MOCK_BALANCES.ethereum
+        type: 'ethereum',
+        name: window.ethereum.isMetaMask ? 'MetaMask' : 'Ethereum Wallet',
+        address: address,
+        balance: formattedBalance,
+        chainId: chainId,
+        provider: provider
       };
       
+      // Register event handler for account changes
+      const accountsChangedHandler = (newAccounts: string[]) => {
+        // If the user switches accounts, update the wallet
+        if (newAccounts.length === 0) {
+          // User disconnected their wallet
+          this.disconnectWallet(walletId);
+        } else if (newAccounts[0] !== address) {
+          // Account changed, update the wallet
+          this.disconnectWallet(walletId);
+          this.connectEthereumWallet();
+        }
+      };
+      
+      // Register event handler for chain changes
+      const chainChangedHandler = () => {
+        // Chain changed, reconnect
+        this.disconnectWallet(walletId);
+        this.connectEthereumWallet();
+      };
+      
+      // Add event listeners
+      window.ethereum.on('accountsChanged', accountsChangedHandler);
+      window.ethereum.on('chainChanged', chainChangedHandler);
+      
+      // Store event handlers for cleanup during disconnect
+      wallet.metadata = {
+        ...wallet.metadata,
+        eventHandlers: {
+          accountsChanged: accountsChangedHandler,
+          chainChanged: chainChangedHandler
+        }
+      };
+      
+      // Save the wallet
       this.connectedWallets.push(wallet);
       this.storageMetrics.ethereumWallets++;
       this.updateStorageMetrics();
@@ -137,24 +218,11 @@ class WalletConnector extends EventEmitter {
     this.checkInitialized();
     
     try {
-      // In test mode, simulate connecting to a Bitcoin wallet
-      await this.simulateConnection(1200);
+      // Currently, there's no standardized Bitcoin wallet API for browsers like MetaMask
+      // We could integrate with specific Bitcoin wallets in the future
       
-      const walletId = `btc-${Date.now()}`;
-      const wallet: ConnectedWallet = {
-        id: walletId,
-        ...MOCK_WALLETS.bitcoin as ConnectedWallet,
-        balance: MOCK_BALANCES.bitcoin
-      };
-      
-      this.connectedWallets.push(wallet);
-      this.storageMetrics.bitcoinWallets++;
-      this.updateStorageMetrics();
-      
-      // Emit wallet connected event
-      this.emit('walletConnected', wallet);
-      
-      return wallet;
+      // For now, inform the user this functionality is not implemented yet
+      throw new Error('Bitcoin wallet connection is not implemented yet. Please use Ethereum or Coinbase wallets for now.');
     } catch (error) {
       console.error('Error connecting Bitcoin wallet:', error);
       throw new Error('Failed to connect Bitcoin wallet. ' + (error instanceof Error ? error.message : ''));
@@ -169,16 +237,88 @@ class WalletConnector extends EventEmitter {
     this.checkInitialized();
     
     try {
-      // In test mode, simulate connecting to a Coinbase wallet
-      await this.simulateConnection(1000);
+      // Check if the Coinbase wallet extension is available
+      if (!window.ethereum?.isCoinbaseWallet && !window.coinbaseWalletExtension) {
+        throw new Error('Coinbase Wallet not installed. Please install Coinbase Wallet to connect.');
+      }
       
+      // Determine which provider to use
+      const provider = window.ethereum?.isCoinbaseWallet ? window.ethereum : window.coinbaseWalletExtension;
+      
+      // Request account access
+      const accounts = await provider.request({
+        method: 'eth_requestAccounts'
+      });
+      
+      if (!accounts || accounts.length === 0) {
+        throw new Error('No Coinbase Wallet accounts found.');
+      }
+      
+      // Get the connected account
+      const address = accounts[0];
+      
+      // Get the chain ID
+      const chainIdHex = await provider.request({
+        method: 'eth_chainId'
+      });
+      const chainId = parseInt(chainIdHex, 16);
+      
+      // Create an ethers provider
+      const ethersProvider = new ethers.BrowserProvider(provider);
+      
+      // Get the wallet balance
+      const balanceWei = await ethersProvider.getBalance(address);
+      const balanceEth = formatEther(balanceWei);
+      
+      // Format the balance with network symbol
+      const networkInfo = NETWORKS[chainId] || { name: 'Unknown Network', symbol: 'ETH' };
+      const formattedBalance = `${parseFloat(balanceEth).toFixed(4)} ${networkInfo.symbol}`;
+      
+      // Create wallet object
       const walletId = `cb-${Date.now()}`;
       const wallet: ConnectedWallet = {
         id: walletId,
-        ...MOCK_WALLETS.coinbase as ConnectedWallet,
-        balance: MOCK_BALANCES.coinbase
+        type: 'coinbase',
+        name: 'Coinbase Wallet',
+        address: address,
+        balance: formattedBalance,
+        chainId: chainId,
+        provider: ethersProvider
       };
       
+      // Register event handler for account changes
+      const accountsChangedHandler = (newAccounts: string[]) => {
+        if (newAccounts.length === 0) {
+          // User disconnected their wallet
+          this.disconnectWallet(walletId);
+        } else if (newAccounts[0] !== address) {
+          // Account changed, update the wallet
+          this.disconnectWallet(walletId);
+          this.connectCoinbaseWallet();
+        }
+      };
+      
+      // Register event handler for chain changes
+      const chainChangedHandler = () => {
+        // Chain changed, reconnect
+        this.disconnectWallet(walletId);
+        this.connectCoinbaseWallet();
+      };
+      
+      // Add event listeners
+      provider.on('accountsChanged', accountsChangedHandler);
+      provider.on('chainChanged', chainChangedHandler);
+      
+      // Store event handlers for cleanup during disconnect
+      wallet.metadata = {
+        ...wallet.metadata,
+        eventHandlers: {
+          accountsChanged: accountsChangedHandler,
+          chainChanged: chainChangedHandler
+        }
+      };
+      
+      // Save the wallet
       this.connectedWallets.push(wallet);
       this.storageMetrics.coinbaseWallets++;
       this.updateStorageMetrics();
@@ -201,14 +341,17 @@ class WalletConnector extends EventEmitter {
     this.checkInitialized();
     
     try {
-      // In test mode, simulate connecting to a Plaid bank account
+      // For Plaid integration, we would normally use their Link SDK
+      // As we don't have a Plaid API key in this environment, simulate the connection
       await this.simulateConnection(1500);
       
       const walletId = `plaid-${Date.now()}`;
       const wallet: ConnectedWallet = {
         id: walletId,
-        ...MOCK_WALLETS.plaid as ConnectedWallet,
-        balance: MOCK_BALANCES.plaid
+        type: 'plaid',
+        name: MOCK_PLAID.name,
+        balance: MOCK_PLAID.balance,
+        metadata: MOCK_PLAID.metadata
       };
       
       this.connectedWallets.push(wallet);
