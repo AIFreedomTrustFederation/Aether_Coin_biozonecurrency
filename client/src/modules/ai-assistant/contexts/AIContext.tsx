@@ -10,7 +10,7 @@ import {
   SecurityCategory, 
   SecurityIssue,
   AIProviderProps
-} from '../types';
+} from '../types/index';
 import { transactionVerifier } from '../utils/TransactionVerifier';
 import { secureStorage } from '../utils/SecureStorage';
 import { formatTimestamp } from '../utils/formatters';

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAI } from '../contexts/AIContext';
-import { ChatMessage } from '../types';
+import { ChatMessage } from '../types/index';
 import { formatTimestamp } from '../utils/formatters';
 import { Send, Loader2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
