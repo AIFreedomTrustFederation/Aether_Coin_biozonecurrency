@@ -1100,11 +1100,21 @@ const ConceptVisualizer: React.FC = () => {
           className="w-full"
         >
           <TabsList className="grid grid-cols-2 md:grid-cols-5 w-full">
-            <TabsTrigger value="blockchain-basics">Blockchain Basics</TabsTrigger>
-            <TabsTrigger value="consensus">Consensus</TabsTrigger>
-            <TabsTrigger value="smart-contracts">Smart Contracts</TabsTrigger>
-            <TabsTrigger value="quantum-security">Quantum Security</TabsTrigger>
-            <TabsTrigger value="fractal-sharding">Fractal Sharding</TabsTrigger>
+            <TabsTrigger value="blockchain-basics" className="px-2 py-1 text-xs md:text-sm">
+              Blockchain Basics
+            </TabsTrigger>
+            <TabsTrigger value="consensus" className="px-2 py-1 text-xs md:text-sm">
+              Consensus
+            </TabsTrigger>
+            <TabsTrigger value="smart-contracts" className="px-2 py-1 text-xs md:text-sm">
+              Smart Contracts
+            </TabsTrigger>
+            <TabsTrigger value="quantum-security" className="px-2 py-1 text-xs md:text-sm">
+              Quantum Security
+            </TabsTrigger>
+            <TabsTrigger value="fractal-sharding" className="px-2 py-1 text-xs md:text-sm">
+              Fractal Sharding
+            </TabsTrigger>
           </TabsList>
           
           <TabsContent value={activeConcept} className="mt-4">

@@ -425,9 +425,15 @@ export default function WalletCreation() {
     <div className="w-full max-w-4xl mx-auto p-4">
       <Tabs defaultValue="create" className="w-full">
         <TabsList className="grid grid-cols-3 mb-8">
-          <TabsTrigger value="create">Create Wallet</TabsTrigger>
-          <TabsTrigger value="import">Import Wallet</TabsTrigger>
-          <TabsTrigger value="manage">Manage Wallets</TabsTrigger>
+          <TabsTrigger value="create" className="px-2 py-1 text-sm">
+            Create Wallet
+          </TabsTrigger>
+          <TabsTrigger value="import" className="px-2 py-1 text-sm">
+            Import Wallet
+          </TabsTrigger>
+          <TabsTrigger value="manage" className="px-2 py-1 text-sm">
+            Manage Wallets
+          </TabsTrigger>
         </TabsList>
         
         {/* Create Wallet Tab */}

@@ -1,8 +1,9 @@
-import React from 'react';
-import { AlertCircle, Zap } from 'lucide-react';
+import React, { useEffect } from 'react';
+import { AlertCircle, Zap, Wallet, ExternalLink } from 'lucide-react';
 import { useLiveMode } from '../../contexts/LiveModeContext';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
 
 interface LiveModeIndicatorProps {
   className?: string;
@@ -15,7 +16,43 @@ export function LiveModeIndicator({
   variant = 'badge',
   showToggle = false
 }: LiveModeIndicatorProps) {
-  const { isLiveMode, toggleLiveMode } = useLiveMode();
+  const { 
+    isLiveMode, 
+    toggleLiveMode, 
+    connectToWeb3, 
+    connectedAddress, 
+    isConnecting 
+  } = useLiveMode();
+  
+  const { toast } = useToast();
+  
+  // When switching to Live Mode, attempt to connect to Web3
+  useEffect(() => {
+    const attemptConnection = async () => {
+      if (isLiveMode && !connectedAddress && !isConnecting) {
+        const success = await connectToWeb3();
+        if (!success) {
+          toast({
+            title: "Connection Failed",
+            description: "Could not connect to your Web3 wallet. Please install MetaMask or another compatible wallet.",
+            variant: "destructive"
+          });
+        }
+      }
+    };
+    
+    attemptConnection();
+  }, [isLiveMode, connectedAddress, isConnecting]);
+  
+  // Helper function to truncate address
+  const truncateAddress = (address: string) => {
+    return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
+  };
+  
+  // Open blockchain explorer when clicking on the address
+  const openExplorer = (address: string) => {
+    window.open(`https://etherscan.io/address/${address}`, '_blank');
+  };
 
   // Button variant
   if (variant === 'button') {
@@ -30,6 +67,18 @@ export function LiveModeIndicator({
           <>
             <Zap className="h-4 w-4" />
             <span>Live Mode</span>
+            {connectedAddress && (
+              <div className="flex items-center ml-2 bg-primary-foreground/20 rounded-full px-2 py-0.5 text-xs">
+                <Wallet className="h-3 w-3 mr-1" />
+                <span onClick={(e) => {
+                  e.stopPropagation();
+                  openExplorer(connectedAddress);
+                }} className="cursor-pointer hover:underline flex items-center">
+                  {truncateAddress(connectedAddress)}
+                  <ExternalLink className="h-2.5 w-2.5 ml-1" />
+                </span>
+              </div>
+            )}
           </>
         ) : (
           <>
@@ -44,42 +93,72 @@ export function LiveModeIndicator({
   // Badge variant
   if (variant === 'badge') {
     return (
-      <Badge 
-        variant={isLiveMode ? "default" : "outline"} 
-        className={`gap-1 cursor-${showToggle ? 'pointer' : 'default'} ${className}`}
-        onClick={showToggle ? toggleLiveMode : undefined}
-      >
-        {isLiveMode ? (
-          <>
-            <Zap className="h-3 w-3" />
-            <span>Live</span>
-          </>
-        ) : (
-          <>
-            <AlertCircle className="h-3 w-3" />
-            <span>Test</span>
-          </>
+      <div className="flex items-center gap-2">
+        <Badge 
+          variant={isLiveMode ? "default" : "outline"} 
+          className={`gap-1 cursor-${showToggle ? 'pointer' : 'default'} ${className}`}
+          onClick={showToggle ? toggleLiveMode : undefined}
+        >
+          {isLiveMode ? (
+            <>
+              <Zap className="h-3 w-3" />
+              <span>Live</span>
+            </>
+          ) : (
+            <>
+              <AlertCircle className="h-3 w-3" />
+              <span>Test</span>
+            </>
+          )}
+        </Badge>
+        
+        {isLiveMode && connectedAddress && (
+          <Badge variant="outline" className="gap-1">
+            <Wallet className="h-3 w-3" />
+            <span 
+              onClick={() => openExplorer(connectedAddress)}
+              className="cursor-pointer hover:underline flex items-center"
+            >
+              {truncateAddress(connectedAddress)}
+              <ExternalLink className="h-2.5 w-2.5 ml-1" />
+            </span>
+          </Badge>
         )}
-      </Badge>
+      </div>
     );
   }
 
   // Text variant
   return (
-    <div 
-      className={`flex items-center gap-1 text-sm ${className} cursor-${showToggle ? 'pointer' : 'default'}`}
-      onClick={showToggle ? toggleLiveMode : undefined}
-    >
-      {isLiveMode ? (
-        <>
-          <Zap className="h-4 w-4 text-green-500" />
-          <span className="text-green-500 font-medium">Live Mode</span>
-        </>
-      ) : (
-        <>
-          <AlertCircle className="h-4 w-4 text-amber-500" />
-          <span className="text-amber-500 font-medium">Test Mode</span>
-        </>
+    <div className="flex items-center gap-2">
+      <div 
+        className={`flex items-center gap-1 text-sm ${className} cursor-${showToggle ? 'pointer' : 'default'}`}
+        onClick={showToggle ? toggleLiveMode : undefined}
+      >
+        {isLiveMode ? (
+          <>
+            <Zap className="h-4 w-4 text-green-500" />
+            <span className="text-green-500 font-medium">Live Mode</span>
+          </>
+        ) : (
+          <>
+            <AlertCircle className="h-4 w-4 text-amber-500" />
+            <span className="text-amber-500 font-medium">Test Mode</span>
+          </>
+        )}
+      </div>
+      
+      {isLiveMode && connectedAddress && (
+        <div className="flex items-center text-xs gap-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 px-2 py-1 rounded-full">
+          <Wallet className="h-3 w-3" />
+          <span 
+            onClick={() => openExplorer(connectedAddress)}
+            className="cursor-pointer hover:underline flex items-center"
+          >
+            {truncateAddress(connectedAddress)}
+            <ExternalLink className="h-2.5 w-2.5 ml-1" />
+          </span>
+        </div>
       )}
     </div>
   );
