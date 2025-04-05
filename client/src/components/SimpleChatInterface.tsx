@@ -1,4 +1,4 @@
-import React, { useState, FormEvent } from 'react';
+import React, { useState, useRef, useEffect, FormEvent } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Send } from 'lucide-react';
@@ -26,6 +26,19 @@ const SimpleChatInterface: React.FC<SimpleChatInterfaceProps> = ({
   className = "" 
 }) => {
   const [inputValue, setInputValue] = useState('');
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+  
+  const scrollToBottom = () => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+  
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, isProcessing]);
   
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -37,7 +50,11 @@ const SimpleChatInterface: React.FC<SimpleChatInterfaceProps> = ({
   
   return (
     <div className="flex flex-col h-full">
-      <div className="flex-1 overflow-y-auto mb-4 space-y-4">
+      <div 
+        ref={chatContainerRef}
+        className="flex-1 overflow-y-auto mb-4 space-y-4 h-[300px] max-h-[300px] p-2"
+        style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.2) transparent' }}
+      >
         {messages.map((message) => (
           <div 
             key={message.id}
@@ -59,6 +76,7 @@ const SimpleChatInterface: React.FC<SimpleChatInterfaceProps> = ({
             </div>
           </div>
         )}
+        <div ref={messagesEndRef} /> {/* Empty div to scroll to */}
       </div>
       
       <form onSubmit={handleSubmit} className="flex space-x-2">
