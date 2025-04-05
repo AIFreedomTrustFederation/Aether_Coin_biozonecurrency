@@ -26,6 +26,7 @@ import SettingsPage from "./pages/SettingsPage";
 import BlockchainVisualizerPage from "./pages/BlockchainVisualizerPage";
 import WalletPage from "./pages/WalletPage";
 import MysterionAIPage from "./pages/MysterionAIPage";
+import OnboardingPage from "./pages/Onboarding";
 
 // Define navigation items for both mobile and desktop
 const navigationItems = [
@@ -443,6 +444,7 @@ function App() {
             <Route path="/ai-assistant" component={MysterionAIPage} />
             <Route path="/admin" component={AdminPortal} />
             <Route path="/legacy-dashboard" component={Dashboard} />
+            <Route path="/onboarding" component={OnboardingPage} />
             <Route component={SimpleNotFound} />
           </Switch>
         </main>

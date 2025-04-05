@@ -47,6 +47,7 @@
     "@stripe/stripe-js": "^7.0.0",
     "@tanstack/react-query": "^5.60.5",
     "@types/cors": "^2.8.17",
+    "@types/crypto-js": "^4.2.2",
     "@types/helmet": "^0.0.48",
     "@types/http-proxy-middleware": "^0.19.3",
     "@types/pg": "^8.11.11",
