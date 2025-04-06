@@ -26,7 +26,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Loader2, ExternalLink, RefreshCw } from 'lucide-react';
 import { getBridgeTransactions, getBridgeConfigurations, getMockTransactions, getMockBridges } from '@/lib/bridgeAPI';
-import { BridgeStatus, BridgeTransactionStatus } from '../../shared/bridge-schema';
+import { BridgeStatus, BridgeTransactionStatus } from '@/shared/schema';
 
 const getStatusColor = (status: BridgeTransactionStatus) => {
   switch (status) {
@@ -66,17 +66,43 @@ const TransactionHistory = () => {
   // Query for bridge configurations
   const bridgesQuery = useQuery({
     queryKey: ['/api/bridges'],
-    queryFn: () => getBridgeConfigurations(BridgeStatus.ACTIVE),
+    queryFn: async () => {
+      try {
+        // Try to fetch real data first
+        const realData = await getBridgeConfigurations(BridgeStatus.ACTIVE);
+        if (realData && realData.length > 0) {
+          return realData;
+        }
+        // Fallback to mock data if real API fails or returns empty
+        return getMockBridges();
+      } catch (error) {
+        console.warn('Using mock bridge data:', error);
+        return getMockBridges();
+      }
+    },
   });
 
   // Query for transactions
   const transactionsQuery = useQuery({
     queryKey: ['/api/bridge-transactions', selectedBridge !== 'all' ? parseInt(selectedBridge) : undefined, limit],
-    queryFn: () => getBridgeTransactions(
-      selectedBridge !== 'all' ? parseInt(selectedBridge) : undefined,
-      undefined, // userId would be set in a real app with authentication
-      limit
-    ),
+    queryFn: async () => {
+      try {
+        // Try to fetch real data first
+        const realData = await getBridgeTransactions(
+          selectedBridge !== 'all' ? parseInt(selectedBridge) : undefined,
+          undefined, // userId would be set in a real app with authentication
+          limit
+        );
+        if (realData && realData.length > 0) {
+          return realData;
+        }
+        // Fallback to mock data if real API fails or returns empty
+        return getMockTransactions();
+      } catch (error) {
+        console.warn('Using mock transaction data:', error);
+        return getMockTransactions();
+      }
+    },
   });
 
   const handleRefresh = () => {

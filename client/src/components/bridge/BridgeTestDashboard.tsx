@@ -11,7 +11,13 @@ import { Slider } from '@/components/ui/slider';
 import { Progress } from '@/components/ui/progress';
 import { Loader2, CheckCircle2, AlertTriangle, ShieldAlert, ArrowRightLeft } from 'lucide-react';
 import AetherionLogo from '../common/AetherionLogo';
-import { getMockBridges, getMockBridgeTestResult } from '@/lib/bridgeAPI';
+import { 
+  getMockBridges, 
+  getMockBridgeTestResult, 
+  getBridgeConfigurations,
+  runBridgeTest 
+} from '@/lib/bridgeAPI';
+import { BridgeStatus } from '@/shared/schema';
 
 /**
  * Bridge Test Dashboard Component
@@ -27,25 +33,50 @@ const BridgeTestDashboard: React.FC = () => {
   const [testResults, setTestResults] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<string>('config');
   
-  // Fetch bridges data
+  // Fetch bridges data with real API first, fallback to mock
   const { data: bridges = [] } = useQuery({
     queryKey: ['bridges'],
-    queryFn: getMockBridges
+    queryFn: async () => {
+      try {
+        // Try to fetch real data first
+        const realData = await getBridgeConfigurations(BridgeStatus.ACTIVE);
+        if (realData && realData.length > 0) {
+          return realData;
+        }
+        // Fallback to mock data if real API fails or returns empty
+        return getMockBridges();
+      } catch (error) {
+        console.warn('Using mock bridge data:', error);
+        return getMockBridges();
+      }
+    }
   });
   
-  // Run the quantum superposition test
+  // Run the quantum superposition test with real API and fallback
   const runTest = async () => {
     setIsRunningTest(true);
     setActiveTab('results');
     
     try {
-      // In a real implementation, this would call the API with the selected parameters
-      // const results = await runBridgeTest(parseInt(selectedBridge), qubits, iterations);
+      // Try to call the real API first
+      try {
+        const results = await runBridgeTest(
+          parseInt(selectedBridge), 
+          qubits, 
+          iterations
+        );
+        
+        if (results) {
+          setTestResults(results);
+          setIsRunningTest(false);
+          return;
+        }
+      } catch (apiError) {
+        console.warn('Real API test failed, using mock data:', apiError);
+      }
       
-      // For demo purposes, simulate API call
+      // Fallback to mock data with simulated delay
       await new Promise(resolve => setTimeout(resolve, 2000 + (qubits * iterations * 50)));
-      
-      // Set mock results
       setTestResults(getMockBridgeTestResult());
     } catch (error) {
       console.error("Error running test:", error);

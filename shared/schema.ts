@@ -3,6 +3,44 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
 
+// Import and re-export bridge schemas
+import { 
+  BridgeStatus,
+  BridgeTransactionStatus,
+  BridgeNetwork,
+  BridgeHealth,
+  FeeEstimate,
+  bridgeConfigurations,
+  bridgeValidators,
+  bridgeSupportedTokens,
+  bridgeTransactions,
+  BridgeConfiguration, 
+  InsertBridgeConfiguration,
+  BridgeValidator, 
+  InsertBridgeValidator,
+  BridgeSupportedToken, 
+  InsertBridgeSupportedToken,
+  BridgeTransaction, 
+  InsertBridgeTransaction
+} from "./bridge-schema";
+
+// Re-export bridge types
+export {
+  BridgeConfiguration, 
+  InsertBridgeConfiguration,
+  BridgeValidator, 
+  InsertBridgeValidator,
+  BridgeSupportedToken, 
+  InsertBridgeSupportedToken,
+  BridgeTransaction, 
+  InsertBridgeTransaction,
+  BridgeStatus,
+  BridgeTransactionStatus,
+  BridgeNetwork,
+  BridgeHealth,
+  FeeEstimate
+};
+
 // Import all DApp Builder and Marketplace schema elements
 import {
   dappTemplates,
@@ -20,17 +58,6 @@ import {
   sandboxEnvironments,
   CodeGenResult
 } from './dapp-schema';
-
-// Import Bridge Schema
-import {
-  bridgeConfigurations,
-  bridgeValidators,
-  bridgeSupportedTokens,
-  bridgeTransactions,
-  BridgeNetwork,
-  BridgeStatus,
-  BridgeTransactionStatus
-} from './bridge-schema';
 
 // Escrow system types
 export enum EscrowStatus {
@@ -1453,20 +1480,7 @@ export const insertMysterionTrainingDataSchema = createInsertSchema(mysterionTra
 export type MysterionTrainingData = typeof mysterionTrainingData.$inferSelect;
 export type InsertMysterionTrainingData = z.infer<typeof insertMysterionTrainingDataSchema>;
 
-// Export bridge types
-export {
-  BridgeConfiguration,
-  InsertBridgeConfiguration,
-  BridgeValidator,
-  InsertBridgeValidator,
-  BridgeSupportedToken,
-  InsertBridgeSupportedToken,
-  BridgeTransaction,
-  InsertBridgeTransaction,
-  BridgeNetwork,
-  BridgeStatus,
-  BridgeTransactionStatus
-} from './bridge-schema';
+// Types are now imported at the top of the file
 
 export const schema = {
   users,

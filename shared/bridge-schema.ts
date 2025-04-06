@@ -10,6 +10,9 @@ export enum BridgeStatus {
   DEPRECATED = 'DEPRECATED'
 }
 
+// Export for ESM compatibility
+export const BridgeStatusEnum = BridgeStatus;
+
 export enum BridgeTransactionStatus {
   INITIATED = 'INITIATED',
   PENDING_SOURCE_CONFIRMATION = 'PENDING_SOURCE_CONFIRMATION',
@@ -22,6 +25,9 @@ export enum BridgeTransactionStatus {
   REVERTED = 'REVERTED'
 }
 
+// Export for ESM compatibility
+export const BridgeTransactionStatusEnum = BridgeTransactionStatus;
+
 export enum BridgeNetwork {
   AETHERION = 'aetherion',
   ETHEREUM = 'ethereum',
@@ -33,6 +39,9 @@ export enum BridgeNetwork {
   OPTIMISM = 'optimism',
   ARBITRUM = 'arbitrum'
 }
+
+// Export for ESM compatibility
+export const BridgeNetworkEnum = BridgeNetwork;
 
 // Bridge Configuration
 export const bridgeConfigurations = pgTable('bridge_configurations', {
@@ -61,6 +70,8 @@ export const insertBridgeConfigurationSchema = createInsertSchema(bridgeConfigur
 }).omit({ id: true });
 
 export type BridgeConfiguration = typeof bridgeConfigurations.$inferSelect;
+// Also export these as values to work with ESM imports
+export const BridgeConfigurationType = {} as BridgeConfiguration;
 export type InsertBridgeConfiguration = z.infer<typeof insertBridgeConfigurationSchema>;
 
 // Bridge Validators
@@ -81,6 +92,8 @@ export const bridgeValidators = pgTable('bridge_validators', {
 
 export const insertBridgeValidatorSchema = createInsertSchema(bridgeValidators).omit({ id: true });
 export type BridgeValidator = typeof bridgeValidators.$inferSelect;
+// Also export these as values to work with ESM imports
+export const BridgeValidatorType = {} as BridgeValidator;
 export type InsertBridgeValidator = z.infer<typeof insertBridgeValidatorSchema>;
 
 // Bridge Supported Tokens
@@ -102,6 +115,8 @@ export const bridgeSupportedTokens = pgTable('bridge_supported_tokens', {
 
 export const insertBridgeSupportedTokenSchema = createInsertSchema(bridgeSupportedTokens).omit({ id: true });
 export type BridgeSupportedToken = typeof bridgeSupportedTokens.$inferSelect;
+// Also export these as values to work with ESM imports 
+export const BridgeSupportedTokenType = {} as BridgeSupportedToken;
 export type InsertBridgeSupportedToken = z.infer<typeof insertBridgeSupportedTokenSchema>;
 
 // Bridge Transactions
@@ -136,4 +151,30 @@ export const insertBridgeTransactionSchema = createInsertSchema(bridgeTransactio
 }).omit({ id: true });
 
 export type BridgeTransaction = typeof bridgeTransactions.$inferSelect;
+// Also export these as values to work with ESM imports
+export const BridgeTransactionType = {} as BridgeTransaction;
 export type InsertBridgeTransaction = z.infer<typeof insertBridgeTransactionSchema>;
+
+// Bridge Health Status Type
+export interface BridgeHealth {
+  status: BridgeStatus;
+  activeValidators: number;
+  totalValidators: number;
+  pendingTransactions: number;
+  volumeLast24h: string;
+  averageCompletionTimeSeconds: number;
+}
+
+// Also export as const for ESM compatibility
+export const BridgeHealthType = {} as BridgeHealth;
+
+// Fee Estimate Type
+export interface FeeEstimate {
+  bridgeFee: string;
+  sourceNetworkFee: string;
+  targetNetworkFee: string;
+  estimatedTimeToCompleteSeconds: number;
+}
+
+// Also export as const for ESM compatibility
+export const FeeEstimateType = {} as FeeEstimate;

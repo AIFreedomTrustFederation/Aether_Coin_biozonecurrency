@@ -33,11 +33,12 @@ import {
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
-  getBridges as getBridgeConfigurations, 
-  getSupportedTokensForBridge as getSupportedTokens, 
-  initiateTokenTransfer as initiateBridgeTransfer
-} from '../../lib/bridgeAPI';
-import { BridgeStatus, BridgeNetwork } from '../../shared/bridge-schema';
+  getBridgeConfigurations, 
+  getSupportedTokens, 
+  getBridgeHealth,
+  createBridgeTransaction
+} from '@/lib/bridgeAPI';
+import { BridgeStatus, BridgeNetwork } from '@/shared/schema';
 import { Loader2 } from 'lucide-react';
 
 const formSchema = z.object({
@@ -74,36 +75,25 @@ const Bridge = () => {
     enabled: !!selectedBridge,
   });
   
-  // Mock bridge health data for now
-  const [healthData, setHealthData] = useState<any>(null);
-  
-  // Set mock health data when bridge is selected
-  useEffect(() => {
-    if (selectedBridge) {
-      setHealthData({
-        status: 'ACTIVE',
-        activeValidators: 5,
-        totalValidators: 7,
-        pendingTransactions: 3,
-        volumeLast24h: '24,500 AETH',
-        averageCompletionTimeSeconds: 180,
-      });
-    } else {
-      setHealthData(null);
-    }
-  }, [selectedBridge]);
+  // Query for bridge health status (dependent on selected bridge)
+  const healthQuery = useQuery({
+    queryKey: ['/api/bridges', selectedBridge, 'health'],
+    queryFn: () => selectedBridge ? getBridgeHealth(selectedBridge) : Promise.resolve(null),
+    enabled: !!selectedBridge,
+  });
   
   // Mutation for initiating a transfer
   const transferMutation = useMutation({
     mutationFn: (values: FormValues) => {
-      return initiateBridgeTransfer(
-        values.sourceNetwork as BridgeNetwork,
-        values.targetNetwork as BridgeNetwork,
-        values.sourceAddress,
-        values.targetAddress,
-        values.amount,
-        values.tokenSymbol
-      );
+      return createBridgeTransaction({
+        bridgeId: parseInt(values.bridgeId),
+        sourceNetwork: values.sourceNetwork,
+        targetNetwork: values.targetNetwork,
+        sourceAddress: values.sourceAddress,
+        targetAddress: values.targetAddress,
+        amount: values.amount,
+        tokenSymbol: values.tokenSymbol
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/bridge-transactions'] });
@@ -116,13 +106,14 @@ const Bridge = () => {
   const estimateFeeMutation = useMutation({
     mutationFn: (values: FormValues) => {
       if (!selectedBridge) return Promise.resolve(null);
-      return estimateBridgeFee(
-        selectedBridge,
-        values.amount,
-        values.tokenSymbol,
-        values.sourceAddress,
-        values.targetAddress
-      );
+      
+      // For now, we're using mock fee estimation until the real API is ready
+      return Promise.resolve({
+        bridgeFee: (parseFloat(values.amount) * 0.005).toFixed(6), // 0.5% fee
+        sourceNetworkFee: '0.001 ETH',
+        targetNetworkFee: '0.0005 AETH',
+        estimatedTimeToCompleteSeconds: 180, // 3 minutes
+      });
     },
     onSuccess: (data) => {
       setFeeEstimate(data);
