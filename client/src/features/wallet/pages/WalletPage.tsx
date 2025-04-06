@@ -1,4 +1,4 @@
-import { useState, useCallback, lazy, Suspense } from 'react';
+import { useState, useCallback, lazy, Suspense, useTransition } from 'react';
 import MainLayout from '@/core/layout/MainLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -22,6 +22,7 @@ const WalletPage = () => {
   const [sendAmount, setSendAmount] = useState('');
   const [sendAddress, setSendAddress] = useState('');
   const [showOnboarding, setShowOnboarding] = useState(true);
+  const [isPending, startTransition] = useTransition();
   
   // Simulate loading wallet data
   const { data: walletData, isLoading: isLoadingWallet } = useQuery({
@@ -59,9 +60,12 @@ const WalletPage = () => {
   }, []);
   
   const handleOnboardingComplete = useCallback(() => {
-    setShowOnboarding(false);
-    console.log('Onboarding completed');
-  }, []);
+    // Use startTransition to tell React this state update might cause a Suspense boundary
+    startTransition(() => {
+      setShowOnboarding(false);
+      console.log('Onboarding completed');
+    });
+  }, [startTransition]);
 
   return (
     <MainLayout>
@@ -75,19 +79,27 @@ const WalletPage = () => {
             </div>
           </div>
         }>
-          <WalletOnboarding 
-            userData={userData}
-            walletData={{
-              walletBalances: { 'SING': 1000, 'BTC': 0.35, 'ETH': 1.5 },
-              recentTransactions: [
-                { type: 'received', asset: 'BTC', amount: 0.05, date: '2025-04-03' },
-                { type: 'sent', asset: 'ETH', amount: 0.2, date: '2025-04-02' },
-                { type: 'reward', asset: 'SING', amount: 10, date: '2025-04-01' }
-              ],
-              userPreferences: { theme: 'dark', notifications: true }
-            }}
-            onComplete={handleOnboardingComplete}
-          />
+          {isPending ? (
+            <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-50">
+              <div className="flex flex-col items-center">
+                <p className="mt-4 text-lg font-medium text-primary">Completing onboarding...</p>
+              </div>
+            </div>
+          ) : (
+            <WalletOnboarding 
+              userData={userData}
+              walletData={{
+                walletBalances: { 'SING': 1000, 'BTC': 0.35, 'ETH': 1.5 },
+                recentTransactions: [
+                  { type: 'received', asset: 'BTC', amount: 0.05, date: '2025-04-03' },
+                  { type: 'sent', asset: 'ETH', amount: 0.2, date: '2025-04-02' },
+                  { type: 'reward', asset: 'SING', amount: 10, date: '2025-04-01' }
+                ],
+                userPreferences: { theme: 'dark', notifications: true }
+              }}
+              onComplete={handleOnboardingComplete}
+            />
+          )}
         </Suspense>
       )}
       
@@ -99,7 +111,15 @@ const WalletPage = () => {
           </Button>
         </div>
         
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+        <Tabs 
+          value={activeTab} 
+          onValueChange={(value) => {
+            startTransition(() => {
+              setActiveTab(value);
+            });
+          }} 
+          className="space-y-4"
+        >
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="send">Send</TabsTrigger>
@@ -179,7 +199,14 @@ const WalletPage = () => {
                 </div>
               </CardContent>
               <CardFooter className="flex justify-between">
-                <Button variant="outline" onClick={() => setActiveTab('overview')}>
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    startTransition(() => {
+                      setActiveTab('overview');
+                    });
+                  }}
+                >
                   Cancel
                 </Button>
                 <Button onClick={handleSend} disabled={!sendAmount || !sendAddress}>
