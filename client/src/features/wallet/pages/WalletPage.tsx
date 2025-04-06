@@ -1,4 +1,4 @@
-import { useState, useCallback, lazy, Suspense, useTransition } from 'react';
+import React, { useState, useCallback, lazy, Suspense, useTransition, useEffect } from 'react';
 import MainLayout from '@/core/layout/MainLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -12,7 +12,8 @@ import {
 import { useQuery } from '@tanstack/react-query';
 
 // Lazy load the onboarding component for better performance
-const WalletOnboarding = lazy(() => import('../components/WalletOnboarding'));
+// Use React.memo to prevent unnecessary re-renders
+const WalletOnboarding = React.memo(lazy(() => import('../components/WalletOnboarding')));
 
 /**
  * Wallet page component with all wallet management functionality
@@ -21,7 +22,8 @@ const WalletPage = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [sendAmount, setSendAmount] = useState('');
   const [sendAddress, setSendAddress] = useState('');
-  const [showOnboarding, setShowOnboarding] = useState(true);
+  const [showOnboarding, setShowOnboarding] = useState(false); // Start with false
+  const [readyToShowOnboarding, setReadyToShowOnboarding] = useState(false);
   const [isPending, startTransition] = useTransition();
   
   // Simulate loading wallet data
@@ -29,6 +31,19 @@ const WalletPage = () => {
     queryKey: ['/api/wallet/current'],
     // queryFn is handled by the default fetcher
   });
+  
+  // Defer loading of onboarding component until after initial render
+  useEffect(() => {
+    // Use requestAnimationFrame to ensure we're in a non-blocking cycle
+    const timer = requestAnimationFrame(() => {
+      startTransition(() => {
+        setReadyToShowOnboarding(true);
+        setShowOnboarding(true);
+      });
+    });
+    
+    return () => cancelAnimationFrame(timer);
+  }, []);
 
   // Mock user data for the onboarding flow
   const userData = {
