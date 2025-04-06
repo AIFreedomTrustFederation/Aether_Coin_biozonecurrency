@@ -46,6 +46,8 @@ const MobileWalletConnect: React.FC<MobileWalletConnectProps> = ({
   const [uri, setUri] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>(isMobile ? "mobile" : "qr");
+  const [showPermissionPrompt, setShowPermissionPrompt] = useState(false);
+  const [selectedWallet, setSelectedWallet] = useState<{name: string, id?: string, deepLink?: string} | null>(null);
 
   // Set of popular wallet deep links for iOS and Android
   const mobileWallets = [
@@ -89,8 +91,31 @@ const MobileWalletConnect: React.FC<MobileWalletConnectProps> = ({
   const handleConnect = async () => {
     setError(null);
     try {
+      // Check if permissions were previously granted
+      const permissionsAccepted = localStorage.getItem('walletPermissionsAccepted');
+      
+      if (!permissionsAccepted) {
+        // Set default wallet info for main button click
+        setSelectedWallet({
+          name: 'WalletConnect'
+        });
+        setShowPermissionPrompt(true);
+        return;
+      }
+      
+      // If already accepted, proceed with connection
+      await initiateWalletConnection();
+    } catch (err) {
+      console.error("Wallet connection error:", err);
+      setError(`Connection failed. Please try again.`);
+    }
+  };
+  
+  // Separate function to start the actual connection process
+  const initiateWalletConnection = async () => {
+    try {
       // Connect using WalletConnect
-      const result = await connect('walletconnect');
+      const result = await connect('walletconnect' as any); // Type casting for now
       
       // If we get a URI back, it means we need to show the QR code or deep link
       if (result && 'uri' in result) {
@@ -162,6 +187,48 @@ const MobileWalletConnect: React.FC<MobileWalletConnectProps> = ({
     };
   }, [open, onSuccess, isMobile, refreshWallets]);
 
+  // Handler for permission dialog acceptance
+  const handlePermissionAccept = () => {
+    setShowPermissionPrompt(false);
+    
+    if (!selectedWallet) return;
+    
+    // If wallet name is WalletConnect (selected from main button),
+    // initiate the wallet connection flow
+    if (selectedWallet.name === 'WalletConnect') {
+      initiateWalletConnection();
+      return;
+    }
+    
+    // For detected wallet or specific wallet from the list
+    if (!uri) {
+      // We need to get the URI first
+      initiateWalletConnection().then(() => {
+        // After we have the URI, check if we should handle deep linking
+        if (selectedWallet.deepLink && uri) {
+          window.location.href = selectedWallet.deepLink + encodeURIComponent(uri);
+        } else {
+          // Find the wallet in the predefined list
+          const wallet = mobileWallets.find(w => w.name === selectedWallet.name);
+          if (wallet) {
+            openMobileWallet(wallet);
+          }
+        }
+      });
+    } else {
+      // We already have the URI, proceed with deep linking
+      if (selectedWallet.deepLink) {
+        window.location.href = selectedWallet.deepLink + encodeURIComponent(uri);
+      } else {
+        // Find the wallet in the predefined list
+        const wallet = mobileWallets.find(w => w.name === selectedWallet.name);
+        if (wallet) {
+          openMobileWallet(wallet);
+        }
+      }
+    }
+  };
+
   return (
     <>
       <Button 
@@ -178,6 +245,14 @@ const MobileWalletConnect: React.FC<MobileWalletConnectProps> = ({
           buttonText
         }
       </Button>
+
+      {/* Permission prompt dialog */}
+      <PermissionPrompt
+        isOpen={showPermissionPrompt}
+        onClose={() => setShowPermissionPrompt(false)}
+        onAccept={handlePermissionAccept}
+        walletName={selectedWallet?.name}
+      />
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-md">
@@ -225,13 +300,18 @@ const MobileWalletConnect: React.FC<MobileWalletConnectProps> = ({
                     <button
                       key={wallet.id}
                       onClick={() => {
-                        // Use detected wallet deep link
-                        window.location.href = wallet.deepLink + encodeURIComponent(uri);
+                        // Show permission dialog before connecting
+                        setSelectedWallet({
+                          name: wallet.name,
+                          id: wallet.id,
+                          deepLink: wallet.deepLink
+                        });
+                        setShowPermissionPrompt(true);
                       }}
                       className="flex flex-col items-center p-3 border rounded-lg bg-primary/5 border-primary hover:bg-primary/10 transition-colors"
                     >
                       <WalletIcon 
-                        id={wallet.id} 
+                        type={wallet.id as any} 
                         className="w-12 h-12 mb-2"
                       />
                       <span className="text-sm font-medium">{wallet.name}</span>
@@ -243,7 +323,13 @@ const MobileWalletConnect: React.FC<MobileWalletConnectProps> = ({
                   mobileWallets.map((wallet) => (
                     <button
                       key={wallet.name}
-                      onClick={() => openMobileWallet(wallet)}
+                      onClick={() => {
+                        // Show permission dialog before connecting
+                        setSelectedWallet({
+                          name: wallet.name
+                        });
+                        setShowPermissionPrompt(true);
+                      }}
                       className="flex flex-col items-center p-3 border rounded-lg hover:bg-accent/50 transition-colors"
                     >
                       <img 
