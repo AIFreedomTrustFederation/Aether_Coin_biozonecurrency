@@ -18,6 +18,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Check, Copy, Info, Key, Lock, RefreshCw, Shield, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { walletConnector } from '../../core/wallet/WalletConnector';
+import { FeatureTooltip } from '@/components/ui/feature-tooltip';
+import { 
+  SeedPhraseTooltip, 
+  PassphraseTooltip, 
+  QuantumResistanceTooltip, 
+  PrivateKeyTooltip 
+} from '@/components/ui/guidance-tooltips';
 
 // Entropy levels for generating mnemonic
 const ENTROPY_LEVELS = {
@@ -452,7 +459,10 @@ export default function WalletCreation() {
               {step === 1 && (
                 <>
                   <div className="space-y-1">
-                    <Label htmlFor="passphrase">Secure Passphrase</Label>
+                    <div className="flex items-center">
+                      <Label htmlFor="passphrase">Secure Passphrase</Label>
+                      <PassphraseTooltip />
+                    </div>
                     <Input
                       id="passphrase"
                       type="password"
@@ -497,7 +507,10 @@ export default function WalletCreation() {
                   
                   <div className="space-y-1">
                     <div className="flex justify-between items-center">
-                      <Label htmlFor="mnemonic">Seed Phrase</Label>
+                      <div className="flex items-center gap-2">
+                        <Label htmlFor="mnemonic">Seed Phrase</Label>
+                        <SeedPhraseTooltip />
+                      </div>
                       <Button
                         variant="ghost"
                         size="sm"
@@ -695,7 +708,10 @@ export default function WalletCreation() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-1">
-                <Label htmlFor="import-mnemonic">Seed Phrase</Label>
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="import-mnemonic">Seed Phrase</Label>
+                  <SeedPhraseTooltip />
+                </div>
                 <Textarea
                   id="import-mnemonic"
                   placeholder="Enter your 12, 15, 18, 21, or 24-word seed phrase"
@@ -709,7 +725,10 @@ export default function WalletCreation() {
               </div>
               
               <div className="space-y-1">
-                <Label htmlFor="import-passphrase">New Secure Passphrase</Label>
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="import-passphrase">New Secure Passphrase</Label>
+                  <PassphraseTooltip />
+                </div>
                 <Input
                   id="import-passphrase"
                   type="password"

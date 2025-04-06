@@ -1,14 +1,55 @@
 import React from 'react';
 import { AIProvider } from '../modules/ai-assistant/contexts/AIContext';
-import ChatInterface from '../modules/ai-assistant/components/ChatInterface';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Shield, Brain, Sparkles, Lock } from 'lucide-react';
+import { ChatMessage } from '../modules/ai-assistant/types';
 
 // Mock user ID for demo
 const DEMO_USER_ID = 1;
 
+// Import the ChatInterface in a way that allows us to adapt the message format
+const ChatInterfaceModule = import('../modules/ai-assistant/components/ChatInterface').then(module => {
+  const ChatInterface = module.default;
+  
+  // Create a wrapper component that uses the imported interface
+  return function AdaptedChatInterface({ 
+    messages, 
+    onSendMessage,
+    isProcessing = false
+  }: {
+    messages: ChatMessage[],
+    onSendMessage: (message: string) => void,
+    isProcessing?: boolean
+  }) {
+    // Convert from ChatMessage to the Message format expected by ChatInterface
+    const adaptedMessages = messages.map(message => ({
+      id: message.id,
+      role: message.sender === 'ai' ? 'assistant' : message.sender === 'user' ? 'user' : 'system',
+      content: message.content,
+      timestamp: new Date(message.timestamp)
+    }));
+    
+    return (
+      <ChatInterface
+        messages={adaptedMessages}
+        onSendMessage={onSendMessage}
+        isProcessing={isProcessing}
+      />
+    );
+  };
+});
+
 export function MysterionAIPage() {
+  const [ChatInterface, setChatInterface] = React.useState<React.ComponentType<any> | null>(null);
+  
+  // Load the chat interface component
+  React.useEffect(() => {
+    ChatInterfaceModule.then(component => {
+      setChatInterface(() => component);
+    });
+  }, []);
+  
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
       <h1 className="text-3xl font-bold mb-6">Mysterion AI Assistant</h1>
@@ -26,9 +67,21 @@ export function MysterionAIPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="flex-1 p-0">
-              <AIProvider userId={DEMO_USER_ID}>
-                <ChatInterface />
-              </AIProvider>
+              {ChatInterface ? (
+                <AIProvider userId={DEMO_USER_ID}>
+                  {({ state, handleChatMessage }) => (
+                    <ChatInterface 
+                      messages={state.messages} 
+                      onSendMessage={handleChatMessage} 
+                      isProcessing={state.isProcessing} 
+                    />
+                  )}
+                </AIProvider>
+              ) : (
+                <div className="flex h-full items-center justify-center">
+                  <p className="text-muted-foreground">Loading chat interface...</p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
