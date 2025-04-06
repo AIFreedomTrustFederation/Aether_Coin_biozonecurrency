@@ -2,15 +2,18 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import { useToast } from '@/hooks/use-toast';
 import { walletConnector } from '../core/wallet/WalletConnector';
+import { connectWallet, disconnectWallet, WalletType, getAvailableWallets } from '@/lib/wallet-connectors';
 
 interface LiveModeContextType {
   isLiveMode: boolean;
   toggleLiveMode: () => void;
   web3Provider: ethers.BrowserProvider | null;
-  connectToWeb3: () => Promise<boolean>;
+  connectToWeb3: (walletType?: WalletType) => Promise<boolean>;
   isConnecting: boolean;
   connectedAddress: string | null;
   disconnectWeb3: () => void;
+  availableWallets: WalletType[];
+  currentWalletType: WalletType | null;
 }
 
 const LiveModeContext = createContext<LiveModeContextType>({
@@ -21,6 +24,8 @@ const LiveModeContext = createContext<LiveModeContextType>({
   isConnecting: false,
   connectedAddress: null,
   disconnectWeb3: () => {},
+  availableWallets: [],
+  currentWalletType: null,
 });
 
 export const useLiveMode = () => useContext(LiveModeContext);
@@ -30,6 +35,8 @@ interface LiveModeProviderProps {
 }
 
 export const LiveModeProvider: React.FC<LiveModeProviderProps> = ({ children }) => {
+  const { toast } = useToast();
+  
   // Get the stored mode from localStorage, defaulting to false (test mode)
   const [isLiveMode, setIsLiveMode] = useState<boolean>(() => {
     try {
@@ -44,15 +51,23 @@ export const LiveModeProvider: React.FC<LiveModeProviderProps> = ({ children }) 
   const [web3Provider, setWeb3Provider] = useState<ethers.BrowserProvider | null>(null);
   const [isConnecting, setIsConnecting] = useState<boolean>(false);
   const [connectedAddress, setConnectedAddress] = useState<string | null>(null);
+  const [availableWallets, setAvailableWallets] = useState<WalletType[]>([]);
+  const [currentWalletType, setCurrentWalletType] = useState<WalletType | null>(null);
+
+  // Initialize available wallets
+  useEffect(() => {
+    const wallets = getAvailableWallets();
+    setAvailableWallets(wallets);
+  }, []);
 
   // Update localStorage when mode changes
   useEffect(() => {
     try {
       localStorage.setItem('aetherion-live-mode', JSON.stringify(isLiveMode));
       
-      // When switching to live mode, attempt to connect if ethereum is available
-      if (isLiveMode && !web3Provider && window.ethereum) {
-        connectToWeb3();
+      // When switching to live mode, attempt to reconnect if previously connected
+      if (isLiveMode && !web3Provider && currentWalletType) {
+        connectToWeb3(currentWalletType);
       }
       
       // When switching to test mode, disconnect if connected
@@ -64,46 +79,60 @@ export const LiveModeProvider: React.FC<LiveModeProviderProps> = ({ children }) 
     }
   }, [isLiveMode]);
   
-  // Connect to Web3 provider (Metamask, etc.)
-  const connectToWeb3 = async (): Promise<boolean> => {
-    if (!window.ethereum) {
-      console.error('Web3 provider not found. Please install MetaMask or another compatible wallet.');
-      return false;
-    }
-    
+  // Connect to Web3 provider using selected wallet type
+  const connectToWeb3 = async (walletType?: WalletType): Promise<boolean> => {
     setIsConnecting(true);
     
     try {
-      // Request accounts from the provider
-      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      // If no wallet type specified, try to use previously connected wallet or default to MetaMask
+      const selectedWalletType = walletType || currentWalletType || 'MetaMask';
       
-      // Create an ethers.js provider
-      const provider = new ethers.BrowserProvider(window.ethereum);
+      // Connect to the selected wallet
+      const { provider, accounts, walletProvider } = await connectWallet(selectedWalletType);
       
+      if (!provider || !accounts || accounts.length === 0) {
+        throw new Error(`Failed to connect to ${selectedWalletType}`);
+      }
+
+      // Save the current provider and address
       setWeb3Provider(provider);
       setConnectedAddress(accounts[0]);
+      setCurrentWalletType(selectedWalletType);
       
-      // Connect wallet through our WalletConnector
-      try {
-        // Use the built-in ethereum wallet connection method instead
-        const wallet = await walletConnector.connectEthereumWallet();
-        console.log('Connected wallet through connector:', wallet);
-      } catch (walletError) {
-        console.error('Error connecting wallet through connector:', walletError);
+      // Save wallet type to localStorage for reconnection
+      localStorage.setItem('aetherion-wallet-type', selectedWalletType);
+      
+      // Set up event listeners for the wallet provider
+      if (walletProvider) {
+        // Different wallets might have different event handling
+        if (selectedWalletType === 'MetaMask' && walletProvider.on) {
+          walletProvider.on('accountsChanged', accountsChangedHandler);
+          walletProvider.on('chainChanged', chainChangedHandler);
+        }
       }
       
-      // Listen for account changes
-      window.ethereum.on('accountsChanged', accountsChangedHandler);
-      
-      // Listen for chain changes
-      window.ethereum.on('chainChanged', chainChangedHandler);
+      toast({
+        title: "Wallet Connected",
+        description: `Successfully connected to ${selectedWalletType}`,
+        variant: "default",
+      });
       
       setIsConnecting(false);
       return true;
     } catch (error) {
-      console.error('Failed to connect to Web3 provider:', error);
+      console.error('Failed to connect wallet:', error);
+      
+      toast({
+        title: "Connection Failed",
+        description: walletType 
+          ? `Failed to connect to ${walletType}. Please try another wallet.` 
+          : "Failed to connect to wallet. Please try again.",
+        variant: "destructive",
+      });
+      
       setIsConnecting(false);
-      setIsLiveMode(false); // Revert to test mode if connection fails
+      
+      // Don't revert to test mode automatically - let the user decide
       return false;
     }
   };
@@ -113,26 +142,67 @@ export const LiveModeProvider: React.FC<LiveModeProviderProps> = ({ children }) 
     if (newAccounts.length === 0) {
       // User disconnected their wallet
       disconnectWeb3();
+      
+      toast({
+        title: "Wallet Disconnected",
+        description: "Your wallet has been disconnected.",
+        variant: "default",
+      });
     } else {
       setConnectedAddress(newAccounts[0]);
+      
+      toast({
+        title: "Account Changed",
+        description: "Your connected wallet account has changed.",
+        variant: "default",
+      });
     }
   };
   
   const chainChangedHandler = () => {
-    // Reload the page on chain change as recommended by MetaMask
-    window.location.reload();
+    toast({
+      title: "Network Changed",
+      description: "The blockchain network has changed. Refreshing application...",
+      variant: "default",
+    });
+    
+    // Reload the page on chain change
+    setTimeout(() => {
+      window.location.reload();
+    }, 1500);
   };
   
   // Disconnect from Web3 provider
-  const disconnectWeb3 = () => {
+  const disconnectWeb3 = async () => {
+    // Clean up event listeners based on wallet type
+    if (currentWalletType && web3Provider) {
+      try {
+        // Clean up event listeners for specific wallet types
+        if (currentWalletType === 'MetaMask' && window.ethereum) {
+          window.ethereum.removeListener('accountsChanged', accountsChangedHandler);
+          window.ethereum.removeListener('chainChanged', chainChangedHandler);
+        }
+        
+        // Use our disconnectWallet utility to handle wallet-specific disconnect logic
+        await disconnectWallet(currentWalletType);
+        
+        toast({
+          title: "Wallet Disconnected",
+          description: `Disconnected from ${currentWalletType}`,
+          variant: "default",
+        });
+      } catch (error) {
+        console.error('Error disconnecting wallet:', error);
+      }
+    }
+    
+    // Reset state
     setWeb3Provider(null);
     setConnectedAddress(null);
+    setCurrentWalletType(null);
     
-    // Clean up event listeners
-    if (window.ethereum) {
-      window.ethereum.removeListener('accountsChanged', accountsChangedHandler);
-      window.ethereum.removeListener('chainChanged', chainChangedHandler);
-    }
+    // Clear wallet type from localStorage
+    localStorage.removeItem('aetherion-wallet-type');
   };
 
   const toggleLiveMode = () => {
@@ -147,7 +217,9 @@ export const LiveModeProvider: React.FC<LiveModeProviderProps> = ({ children }) 
       connectToWeb3,
       isConnecting,
       connectedAddress,
-      disconnectWeb3
+      disconnectWeb3,
+      availableWallets,
+      currentWalletType
     }}>
       {children}
     </LiveModeContext.Provider>

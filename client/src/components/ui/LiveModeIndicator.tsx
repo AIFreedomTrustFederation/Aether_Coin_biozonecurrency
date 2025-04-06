@@ -4,6 +4,8 @@ import { useLiveMode } from '../../contexts/LiveModeContext';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import WalletSelector from '@/components/wallet/WalletSelector';
+import { WalletType } from '@/lib/wallet-connectors';
 
 interface LiveModeIndicatorProps {
   className?: string;
@@ -26,17 +28,22 @@ export function LiveModeIndicator({
   
   const { toast } = useToast();
   
-  // When switching to Live Mode, attempt to connect to Web3
+  // When switching to Live Mode, attempt to connect to Web3 if we have a previous wallet type stored
   useEffect(() => {
     const attemptConnection = async () => {
       if (isLiveMode && !connectedAddress && !isConnecting) {
-        const success = await connectToWeb3();
-        if (!success) {
-          toast({
-            title: "Connection Failed",
-            description: "Could not connect to your Web3 wallet. Please install MetaMask or another compatible wallet.",
-            variant: "destructive"
-          });
+        // Check if we have a stored wallet type preference
+        const storedWalletType = localStorage.getItem('aetherion-wallet-type');
+        
+        if (storedWalletType) {
+          const success = await connectToWeb3(storedWalletType as WalletType);
+          if (!success) {
+            toast({
+              title: "Connection Failed",
+              description: "Could not reconnect to your previously used wallet. Please connect manually.",
+              variant: "destructive"
+            });
+          }
         }
       }
     };
@@ -56,6 +63,24 @@ export function LiveModeIndicator({
 
   // Button variant
   if (variant === 'button') {
+    // If in Live Mode but not connected, show WalletSelector
+    if (isLiveMode && !connectedAddress) {
+      return (
+        <div className="flex items-center gap-2">
+          <Button
+            variant="default"
+            size="sm"
+            className={`gap-2 ${className}`}
+            onClick={showToggle ? toggleLiveMode : undefined}
+          >
+            <Zap className="h-4 w-4" />
+            <span>Live Mode</span>
+          </Button>
+          <WalletSelector size="sm" variant="outline" className="h-9" />
+        </div>
+      );
+    }
+    
     return (
       <Button
         variant={isLiveMode ? "default" : "outline"}
@@ -112,6 +137,10 @@ export function LiveModeIndicator({
           )}
         </Badge>
         
+        {isLiveMode && !connectedAddress && (
+          <WalletSelector size="sm" variant="outline" className="h-6 py-0 px-2 text-xs" />
+        )}
+        
         {isLiveMode && connectedAddress && (
           <Badge variant="outline" className="gap-1">
             <Wallet className="h-3 w-3" />
@@ -147,6 +176,10 @@ export function LiveModeIndicator({
           </>
         )}
       </div>
+      
+      {isLiveMode && !connectedAddress && (
+        <WalletSelector size="sm" variant="outline" className="h-6 py-0 px-2 text-xs" />
+      )}
       
       {isLiveMode && connectedAddress && (
         <div className="flex items-center text-xs gap-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 px-2 py-1 rounded-full">
