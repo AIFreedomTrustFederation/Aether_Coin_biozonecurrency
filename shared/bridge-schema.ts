@@ -1,190 +1,139 @@
-import { pgTable, text, serial, integer, boolean, timestamp, jsonb, primaryKey } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
-import { z } from "zod";
-import { relations } from "drizzle-orm";
-import { users, wallets } from "./schema";
+import { z } from 'zod';
+import { createInsertSchema } from 'drizzle-zod';
+import { pgTable, serial, text, timestamp, boolean, integer, varchar, json } from 'drizzle-orm/pg-core';
 
-// Bridge Networks Enum
+// Enums
+export enum BridgeStatus {
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
+  MAINTENANCE = 'MAINTENANCE',
+  DEPRECATED = 'DEPRECATED'
+}
+
+export enum BridgeTransactionStatus {
+  INITIATED = 'INITIATED',
+  PENDING_SOURCE_CONFIRMATION = 'PENDING_SOURCE_CONFIRMATION',
+  SOURCE_CONFIRMED = 'SOURCE_CONFIRMED',
+  PENDING_VALIDATION = 'PENDING_VALIDATION',
+  VALIDATED = 'VALIDATED',
+  PENDING_TARGET_EXECUTION = 'PENDING_TARGET_EXECUTION',
+  COMPLETED = 'COMPLETED',
+  FAILED = 'FAILED',
+  REVERTED = 'REVERTED'
+}
+
 export enum BridgeNetwork {
+  AETHERION = 'aetherion',
   ETHEREUM = 'ethereum',
   SOLANA = 'solana',
+  BINANCE = 'binance',
   POLYGON = 'polygon',
-  BINANCE_SMART_CHAIN = 'binance_smart_chain',
-  NEAR = 'near',
   FILECOIN = 'filecoin',
-  ARBITRUM = 'arbitrum',
-  OPTIMISM = 'optimism',
   AVALANCHE = 'avalanche',
-  POLKADOT = 'polkadot',
-  COSMOS = 'cosmos',
-  AETHERION = 'aetherion'
+  OPTIMISM = 'optimism',
+  ARBITRUM = 'arbitrum'
 }
 
-// Bridge Status Enum
-export enum BridgeStatus {
-  ACTIVE = 'active',
-  INACTIVE = 'inactive',
-  PAUSED = 'paused',
-  UPGRADING = 'upgrading',
-  DEPRECATED = 'deprecated'
-}
-
-// Transaction Status Enum
-export enum BridgeTransactionStatus {
-  INITIATED = 'initiated',
-  PENDING_SOURCE_CONFIRMATION = 'pending_source_confirmation',
-  SOURCE_CONFIRMED = 'source_confirmed',
-  PENDING_VALIDATION = 'pending_validation',
-  VALIDATED = 'validated',
-  PENDING_TARGET_EXECUTION = 'pending_target_execution',
-  COMPLETED = 'completed',
-  FAILED = 'failed',
-  REVERTED = 'reverted'
-}
-
-// Bridge Configuration Table
-export const bridgeConfigurations = pgTable("bridge_configurations", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  sourceNetwork: text("source_network").notNull(),
-  targetNetwork: text("target_network").notNull(),
-  contractAddressSource: text("contract_address_source"),
-  contractAddressTarget: text("contract_address_target"),
-  status: text("status").notNull().default(BridgeStatus.ACTIVE),
-  feePercentage: text("fee_percentage").notNull().default("0.1"),
-  minTransferAmount: text("min_transfer_amount"),
-  maxTransferAmount: text("max_transfer_amount"),
-  requiredConfirmations: integer("required_confirmations").notNull().default(5),
-  validatorThreshold: integer("validator_threshold").notNull().default(3),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-  config: jsonb("config").notNull().default({}), // Specific configuration for this bridge
-  securityLevel: text("security_level").notNull().default("standard"), // low, standard, high
+// Bridge Configuration
+export const bridgeConfigurations = pgTable('bridge_configurations', {
+  id: serial('id').primaryKey(),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+  name: text('name').notNull(),
+  sourceNetwork: text('source_network').notNull(),
+  targetNetwork: text('target_network').notNull(),
+  contractAddress: text('contract_address'),
+  validatorThreshold: integer('validator_threshold').default(3),
+  status: text('status').default(BridgeStatus.ACTIVE),
+  fee: text('fee').default('0.001'),
+  minAmount: text('min_amount').default('0.01'),
+  maxAmount: text('max_amount').default('1000'),
+  processingTime: integer('processing_time').default(60), // in seconds
+  description: text('description'),
+  logoUrl: text('logo_url'),
+  securityLevel: integer('security_level').default(8) // 1-10 scale
 });
 
-export const bridgeConfigurationsRelations = relations(bridgeConfigurations, ({ many }) => ({
-  validators: many(bridgeValidators),
-  transactions: many(bridgeTransactions),
-  supportedTokens: many(bridgeSupportedTokens),
-}));
+export const insertBridgeConfigurationSchema = createInsertSchema(bridgeConfigurations, {
+  sourceNetwork: z.nativeEnum(BridgeNetwork),
+  targetNetwork: z.nativeEnum(BridgeNetwork),
+  status: z.nativeEnum(BridgeStatus)
+}).omit({ id: true });
 
-export const insertBridgeConfigurationSchema = createInsertSchema(bridgeConfigurations).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-// Bridge Validators Table
-export const bridgeValidators = pgTable("bridge_validators", {
-  id: serial("id").primaryKey(),
-  bridgeId: integer("bridge_id").notNull().references(() => bridgeConfigurations.id),
-  name: text("name").notNull(),
-  address: text("address").notNull(),
-  publicKey: text("public_key").notNull(),
-  status: text("status").notNull().default("active"), // active, inactive, suspended
-  lastHeartbeat: timestamp("last_heartbeat"),
-  isActive: boolean("is_active").default(true),
-  reputation: integer("reputation").default(100),
-  network: text("network").notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
-  metadata: jsonb("metadata").default({}),
-});
-
-export const bridgeValidatorsRelations = relations(bridgeValidators, ({ one }) => ({
-  bridge: one(bridgeConfigurations, {
-    fields: [bridgeValidators.bridgeId],
-    references: [bridgeConfigurations.id],
-  }),
-}));
-
-export const insertBridgeValidatorSchema = createInsertSchema(bridgeValidators).omit({
-  id: true,
-  createdAt: true,
-  lastHeartbeat: true,
-  reputation: true,
-});
-
-// Bridge Supported Tokens Table
-export const bridgeSupportedTokens = pgTable("bridge_supported_tokens", {
-  id: serial("id").primaryKey(),
-  bridgeId: integer("bridge_id").notNull().references(() => bridgeConfigurations.id),
-  tokenSymbol: text("token_symbol").notNull(),
-  tokenName: text("token_name").notNull(),
-  sourceTokenAddress: text("source_token_address"),
-  targetTokenAddress: text("target_token_address"),
-  decimals: integer("decimals").notNull().default(18),
-  isEnabled: boolean("is_enabled").default(true),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-  metadata: jsonb("metadata").default({}),
-});
-
-export const bridgeSupportedTokensRelations = relations(bridgeSupportedTokens, ({ one }) => ({
-  bridge: one(bridgeConfigurations, {
-    fields: [bridgeSupportedTokens.bridgeId],
-    references: [bridgeConfigurations.id],
-  }),
-}));
-
-export const insertBridgeSupportedTokenSchema = createInsertSchema(bridgeSupportedTokens).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-// Bridge Transactions Table
-export const bridgeTransactions = pgTable("bridge_transactions", {
-  id: serial("id").primaryKey(),
-  bridgeId: integer("bridge_id").notNull().references(() => bridgeConfigurations.id),
-  userId: integer("user_id").references(() => users.id),
-  walletId: integer("wallet_id").references(() => wallets.id),
-  sourceTransactionHash: text("source_transaction_hash"),
-  targetTransactionHash: text("target_transaction_hash"),
-  sourceNetwork: text("source_network").notNull(),
-  targetNetwork: text("target_network").notNull(),
-  sourceAddress: text("source_address").notNull(),
-  targetAddress: text("target_address").notNull(),
-  amount: text("amount").notNull(),
-  fee: text("fee"),
-  tokenSymbol: text("token_symbol").notNull(),
-  status: text("status").notNull().default(BridgeTransactionStatus.INITIATED),
-  initiatedAt: timestamp("initiated_at").defaultNow(),
-  completedAt: timestamp("completed_at"),
-  validations: jsonb("validations").default([]), // Array of validator signatures
-  metadata: jsonb("metadata").default({}),
-  errorMessage: text("error_message"),
-});
-
-export const bridgeTransactionsRelations = relations(bridgeTransactions, ({ one }) => ({
-  bridge: one(bridgeConfigurations, {
-    fields: [bridgeTransactions.bridgeId],
-    references: [bridgeConfigurations.id],
-  }),
-  user: one(users, {
-    fields: [bridgeTransactions.userId],
-    references: [users.id],
-  }),
-  wallet: one(wallets, {
-    fields: [bridgeTransactions.walletId],
-    references: [wallets.id],
-  }),
-}));
-
-export const insertBridgeTransactionSchema = createInsertSchema(bridgeTransactions).omit({
-  id: true,
-  initiatedAt: true,
-  completedAt: true,
-});
-
-// Type exports
 export type BridgeConfiguration = typeof bridgeConfigurations.$inferSelect;
 export type InsertBridgeConfiguration = z.infer<typeof insertBridgeConfigurationSchema>;
 
+// Bridge Validators
+export const bridgeValidators = pgTable('bridge_validators', {
+  id: serial('id').primaryKey(),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+  bridgeId: integer('bridge_id').notNull(),
+  name: text('name').notNull(),
+  address: text('address').notNull(),
+  publicKey: text('public_key').notNull(),
+  isActive: boolean('is_active').default(true),
+  reputation: integer('reputation').default(100), // 0-100 scale
+  lastSeenAt: timestamp('last_seen_at').defaultNow(),
+  stake: text('stake').default('0'),
+  validatedTransactions: integer('validated_transactions').default(0)
+});
+
+export const insertBridgeValidatorSchema = createInsertSchema(bridgeValidators).omit({ id: true });
 export type BridgeValidator = typeof bridgeValidators.$inferSelect;
 export type InsertBridgeValidator = z.infer<typeof insertBridgeValidatorSchema>;
 
+// Bridge Supported Tokens
+export const bridgeSupportedTokens = pgTable('bridge_supported_tokens', {
+  id: serial('id').primaryKey(),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+  bridgeId: integer('bridge_id').notNull(),
+  symbol: text('symbol').notNull(),
+  name: text('name').notNull(),
+  sourceTokenAddress: text('source_token_address'),
+  targetTokenAddress: text('target_token_address'),
+  decimals: integer('decimals').default(18),
+  isActive: boolean('is_active').default(true),
+  minTransferAmount: text('min_transfer_amount'),
+  maxTransferAmount: text('max_transfer_amount'),
+  logoUrl: text('logo_url')
+});
+
+export const insertBridgeSupportedTokenSchema = createInsertSchema(bridgeSupportedTokens).omit({ id: true });
 export type BridgeSupportedToken = typeof bridgeSupportedTokens.$inferSelect;
 export type InsertBridgeSupportedToken = z.infer<typeof insertBridgeSupportedTokenSchema>;
+
+// Bridge Transactions
+export const bridgeTransactions = pgTable('bridge_transactions', {
+  id: serial('id').primaryKey(),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+  bridgeId: integer('bridge_id').notNull(),
+  userId: integer('user_id'),
+  walletId: integer('wallet_id'),
+  sourceNetwork: text('source_network').notNull(),
+  targetNetwork: text('target_network').notNull(),
+  sourceAddress: text('source_address').notNull(),
+  targetAddress: text('target_address').notNull(),
+  amount: text('amount').notNull(),
+  tokenSymbol: text('token_symbol').notNull(),
+  status: text('status').default(BridgeTransactionStatus.INITIATED),
+  sourceTransactionHash: text('source_transaction_hash'),
+  targetTransactionHash: text('target_transaction_hash'),
+  fee: text('fee'),
+  validations: json('validations').default([]),
+  initiatedAt: timestamp('initiated_at').defaultNow(),
+  completedAt: timestamp('completed_at'),
+  metadata: json('metadata').default({}),
+  errorMessage: text('error_message')
+});
+
+export const insertBridgeTransactionSchema = createInsertSchema(bridgeTransactions, {
+  sourceNetwork: z.nativeEnum(BridgeNetwork),
+  targetNetwork: z.nativeEnum(BridgeNetwork),
+  status: z.nativeEnum(BridgeTransactionStatus)
+}).omit({ id: true });
 
 export type BridgeTransaction = typeof bridgeTransactions.$inferSelect;
 export type InsertBridgeTransaction = z.infer<typeof insertBridgeTransactionSchema>;

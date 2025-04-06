@@ -25,8 +25,8 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Loader2, ExternalLink, RefreshCw } from 'lucide-react';
-import { getBridgeTransactions, getBridgeConfigurations } from '@lib/bridgeAPI';
-import { BridgeStatus, BridgeTransactionStatus } from '@shared/bridge-schema';
+import { getBridgeTransactions, getBridgeConfigurations, getMockTransactions, getMockBridges } from '@/lib/bridgeAPI';
+import { BridgeStatus, BridgeTransactionStatus } from '../../shared/bridge-schema';
 
 const getStatusColor = (status: BridgeTransactionStatus) => {
   switch (status) {
@@ -104,8 +104,8 @@ const TransactionHistory = () => {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 mb-6">
-          <div className="w-full md:w-1/3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+          <div>
             <label className="text-sm font-medium block mb-2">Filter by Bridge</label>
             <Select
               value={selectedBridge}
@@ -125,7 +125,7 @@ const TransactionHistory = () => {
               </SelectContent>
             </Select>
           </div>
-          <div className="w-full md:w-1/3">
+          <div>
             <label className="text-sm font-medium block mb-2">Show Transactions</label>
             <Select
               value={limit.toString()}
@@ -154,84 +154,158 @@ const TransactionHistory = () => {
             No transactions found. Initiate a bridge transfer to get started.
           </div>
         ) : (
-          <div className="rounded-md border overflow-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>ID</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>From</TableHead>
-                  <TableHead>To</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {transactionsQuery.data?.map((transaction) => (
-                  <TableRow key={transaction.id}>
-                    <TableCell className="font-medium">{transaction.id}</TableCell>
-                    <TableCell>{formatDate(transaction.initiatedAt.toString())}</TableCell>
-                    <TableCell>
-                      <div className="flex flex-col">
-                        <span>{shortenAddress(transaction.sourceAddress)}</span>
-                        <span className="text-xs text-muted-foreground">{transaction.sourceNetwork}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-col">
-                        <span>{shortenAddress(transaction.targetAddress)}</span>
-                        <span className="text-xs text-muted-foreground">{transaction.targetNetwork}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-col">
-                        <span>{transaction.amount} {transaction.tokenSymbol}</span>
-                        {transaction.fee && (
-                          <span className="text-xs text-muted-foreground">
-                            Fee: {transaction.fee} {transaction.tokenSymbol}
-                          </span>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={getStatusColor(transaction.status as BridgeTransactionStatus)}>
-                        {transaction.status.replace(/_/g, ' ')}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex space-x-2">
-                        {transaction.sourceTransactionHash && (
-                          <Button variant="ghost" size="sm" asChild>
-                            <a 
-                              href={`https://explorer.${transaction.sourceNetwork}.io/tx/${transaction.sourceTransactionHash}`}
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              title="View source transaction"
-                            >
-                              <ExternalLink className="h-4 w-4" />
-                            </a>
-                          </Button>
-                        )}
-                        {transaction.targetTransactionHash && transaction.status === BridgeTransactionStatus.COMPLETED && (
-                          <Button variant="ghost" size="sm" asChild>
-                            <a 
-                              href={`https://explorer.${transaction.targetNetwork}.io/tx/${transaction.targetTransactionHash}`}
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              title="View target transaction"
-                            >
-                              <ExternalLink className="h-4 w-4" />
-                            </a>
-                          </Button>
-                        )}
-                      </div>
-                    </TableCell>
+          <>
+            {/* Desktop table view */}
+            <div className="rounded-md border overflow-auto hidden md:block">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>ID</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>From</TableHead>
+                    <TableHead>To</TableHead>
+                    <TableHead>Amount</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+                </TableHeader>
+                <TableBody>
+                  {transactionsQuery.data?.map((transaction) => (
+                    <TableRow key={transaction.id}>
+                      <TableCell className="font-medium">{transaction.id}</TableCell>
+                      <TableCell>{formatDate(transaction.initiatedAt.toString())}</TableCell>
+                      <TableCell>
+                        <div className="flex flex-col">
+                          <span>{shortenAddress(transaction.sourceAddress)}</span>
+                          <span className="text-xs text-muted-foreground">{transaction.sourceNetwork}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-col">
+                          <span>{shortenAddress(transaction.targetAddress)}</span>
+                          <span className="text-xs text-muted-foreground">{transaction.targetNetwork}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-col">
+                          <span>{transaction.amount} {transaction.tokenSymbol}</span>
+                          {transaction.fee && (
+                            <span className="text-xs text-muted-foreground">
+                              Fee: {transaction.fee} {transaction.tokenSymbol}
+                            </span>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={getStatusColor(transaction.status as BridgeTransactionStatus)}>
+                          {transaction.status.replace(/_/g, ' ')}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex space-x-2">
+                          {transaction.sourceTransactionHash && (
+                            <Button variant="ghost" size="sm" asChild>
+                              <a 
+                                href={`https://explorer.${transaction.sourceNetwork}.io/tx/${transaction.sourceTransactionHash}`}
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                title="View source transaction"
+                              >
+                                <ExternalLink className="h-4 w-4" />
+                              </a>
+                            </Button>
+                          )}
+                          {transaction.targetTransactionHash && transaction.status === BridgeTransactionStatus.COMPLETED && (
+                            <Button variant="ghost" size="sm" asChild>
+                              <a 
+                                href={`https://explorer.${transaction.targetNetwork}.io/tx/${transaction.targetTransactionHash}`}
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                title="View target transaction"
+                              >
+                                <ExternalLink className="h-4 w-4" />
+                              </a>
+                            </Button>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+            
+            {/* Mobile card view */}
+            <div className="space-y-4 md:hidden">
+              {transactionsQuery.data?.map((transaction) => (
+                <div key={transaction.id} className="border rounded-lg p-4 space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">ID: {transaction.id}</span>
+                    <Badge className={getStatusColor(transaction.status as BridgeTransactionStatus)}>
+                      {transaction.status.replace(/_/g, ' ')}
+                    </Badge>
+                  </div>
+                  
+                  <div className="text-sm">
+                    {formatDate(transaction.initiatedAt.toString())}
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div>
+                      <div className="font-medium">From:</div>
+                      <div>{shortenAddress(transaction.sourceAddress)}</div>
+                      <div className="text-xs text-muted-foreground">{transaction.sourceNetwork}</div>
+                    </div>
+                    
+                    <div>
+                      <div className="font-medium">To:</div>
+                      <div>{shortenAddress(transaction.targetAddress)}</div>
+                      <div className="text-xs text-muted-foreground">{transaction.targetNetwork}</div>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-1">
+                    <div className="font-medium">Amount:</div>
+                    <div>{transaction.amount} {transaction.tokenSymbol}</div>
+                    {transaction.fee && (
+                      <div className="text-xs text-muted-foreground">
+                        Fee: {transaction.fee} {transaction.tokenSymbol}
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="flex justify-end space-x-2 pt-2">
+                    {transaction.sourceTransactionHash && (
+                      <Button variant="ghost" size="sm" asChild>
+                        <a 
+                          href={`https://explorer.${transaction.sourceNetwork}.io/tx/${transaction.sourceTransactionHash}`}
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          title="View source transaction"
+                        >
+                          <span className="text-xs mr-1">Source</span>
+                          <ExternalLink className="h-3 w-3" />
+                        </a>
+                      </Button>
+                    )}
+                    {transaction.targetTransactionHash && transaction.status === BridgeTransactionStatus.COMPLETED && (
+                      <Button variant="ghost" size="sm" asChild>
+                        <a 
+                          href={`https://explorer.${transaction.targetNetwork}.io/tx/${transaction.targetTransactionHash}`}
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          title="View target transaction"
+                        >
+                          <span className="text-xs mr-1">Target</span>
+                          <ExternalLink className="h-3 w-3" />
+                        </a>
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </CardContent>
     </Card>
