@@ -8,6 +8,7 @@ import {
   DialogHeader, 
   DialogTitle 
 } from "@/components/ui/dialog";
+import { useLiveMode } from "@/contexts/LiveModeContext";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { 
@@ -56,15 +57,20 @@ export default function TransactionDetailModal({
   transactionId 
 }: TransactionDetailModalProps) {
   const queryClient = useQueryClient();
+  const { isLiveMode, web3Provider } = useLiveMode();
   
-  // Query transaction details
+  // This state will hold the transaction data in live mode
+  const [web3Transaction, setWeb3Transaction] = React.useState<any>(null);
+  const [isLoadingWeb3, setIsLoadingWeb3] = React.useState(false);
+  
+  // Query transaction details when not in live mode
   const { 
     data: transaction, 
     isLoading,
     error 
   } = useQuery({
     queryKey: ['/api/transactions', transactionId],
-    enabled: !!transactionId && open,
+    enabled: !isLiveMode && !!transactionId && open,
     retry: 1
   });
   
@@ -79,9 +85,40 @@ export default function TransactionDetailModal({
     },
   });
   
-  // Update form values when transaction data changes
+  // Fetch the selected web3 transaction in Live Mode
   React.useEffect(() => {
-    if (transaction) {
+    if (!isLiveMode || !web3Provider || !open || !transactionId) {
+      setWeb3Transaction(null);
+      return;
+    }
+    
+    setIsLoadingWeb3(true);
+    
+    // In a full implementation, we would use the Etherscan API or a similar indexer to get transaction data
+    // For this example, we'll assume that transactionId represents an index in a local array
+    // Similar to how we populated web3Transactions in the TransactionExplorer component
+    
+    // This is a simplified example - in a real app we would store transactionHashes and look them up directly
+    window.web3TransactionCache?.forEach(tx => {
+      if (tx.id === transactionId) {
+        setWeb3Transaction(tx);
+        
+        // Also update the form
+        form.reset({
+          plainDescription: tx.plainDescription || "",
+          isLayer2: tx.isLayer2 || false,
+          layer2Type: tx.layer2Type || undefined,
+          layer2Data: tx.layer2Data || {},
+        });
+      }
+    });
+    
+    setIsLoadingWeb3(false);
+  }, [isLiveMode, web3Provider, transactionId, open, form]);
+  
+  // Update form values when transaction data changes (when not in live mode)
+  React.useEffect(() => {
+    if (!isLiveMode && transaction) {
       form.reset({
         plainDescription: transaction.plainDescription || "",
         isLayer2: transaction.isLayer2 || false,
@@ -89,7 +126,7 @@ export default function TransactionDetailModal({
         layer2Data: transaction.layer2Data || {},
       });
     }
-  }, [transaction, form]);
+  }, [transaction, form, isLiveMode]);
   
   // Mutation to update transaction description
   const descriptionMutation = useMutation({
@@ -143,19 +180,60 @@ export default function TransactionDetailModal({
     onOpenChange(false);
   };
   
+  // Handle form submission
+  const onSubmitWeb3 = async (values: z.infer<typeof formSchema>) => {
+    // Store updates to the transaction description in localStorage
+    if (isLiveMode && web3Transaction) {
+      // We would normally make API calls to Etherscan or similar services
+      // For this demo, we'll just update the local cache
+      if (!window.web3TransactionCache) {
+        window.web3TransactionCache = [];
+      }
+      
+      const updatedCache = window.web3TransactionCache.map(tx => {
+        if (tx.id === transactionId) {
+          return {
+            ...tx,
+            plainDescription: values.plainDescription,
+            isLayer2: values.isLayer2,
+            layer2Type: values.layer2Type,
+            layer2Data: values.layer2Data
+          };
+        }
+        return tx;
+      });
+      
+      window.web3TransactionCache = updatedCache;
+      setWeb3Transaction(prevState => ({
+        ...prevState,
+        plainDescription: values.plainDescription,
+        isLayer2: values.isLayer2,
+        layer2Type: values.layer2Type,
+        layer2Data: values.layer2Data
+      }));
+    }
+    
+    onOpenChange(false);
+  };
+  
+  // Render the active transaction - either from web3 in live mode or from the API
+  const activeTransaction = isLiveMode ? web3Transaction : transaction;
+  const isActiveLoading = isLiveMode ? isLoadingWeb3 : isLoading;
+  const activeSubmitHandler = isLiveMode ? onSubmitWeb3 : onSubmit;
+  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>Transaction Details</DialogTitle>
           <DialogDescription>
-            View and edit transaction details
+            {isLiveMode ? 'View and edit MetaMask transaction details' : 'View and edit transaction details'}
           </DialogDescription>
         </DialogHeader>
         
-        {isLoading ? (
+        {isActiveLoading ? (
           <div className="py-8 text-center">Loading transaction details...</div>
-        ) : error || !transaction ? (
+        ) : (!activeTransaction || (error && !isLiveMode)) ? (
           <div className="py-8 text-center text-red-500">
             Error loading transaction details
           </div>
@@ -165,16 +243,16 @@ export default function TransactionDetailModal({
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Type</p>
                 <p className="text-base">
-                  <Badge variant={transaction.type === 'receive' ? "success" : "default"}>
-                    {transaction.type === 'receive' ? 'Receive' : 'Send'}
+                  <Badge variant={activeTransaction?.type === 'receive' ? "success" : "default"}>
+                    {activeTransaction?.type === 'receive' ? 'Receive' : 'Send'}
                   </Badge>
                 </p>
               </div>
               
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Amount</p>
-                <p className={`text-base font-medium ${transaction.type === 'receive' ? 'text-green-500' : ''}`}>
-                  {transaction.type === 'receive' ? '+' : '-'}{transaction.amount} {transaction.tokenSymbol}
+                <p className={`text-base font-medium ${activeTransaction?.type === 'receive' ? 'text-green-500' : ''}`}>
+                  {activeTransaction?.type === 'receive' ? '+' : '-'}{activeTransaction?.amount} {activeTransaction?.tokenSymbol || 'ETH'}
                 </p>
               </div>
               
@@ -183,13 +261,13 @@ export default function TransactionDetailModal({
                 <p className="text-base">
                   <Badge 
                     variant={
-                      transaction.status === 'completed' ? "success" : 
-                      transaction.status === 'pending' ? "outline" : 
-                      transaction.status === 'failed' ? "destructive" : 
+                      activeTransaction?.status === 'completed' ? "success" : 
+                      activeTransaction?.status === 'pending' ? "outline" : 
+                      activeTransaction?.status === 'failed' ? "destructive" : 
                       "secondary"
                     }
                   >
-                    {transaction.status}
+                    {activeTransaction?.status || 'Unknown'}
                   </Badge>
                 </p>
               </div>
@@ -197,29 +275,29 @@ export default function TransactionDetailModal({
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Transaction Hash</p>
                 <p className="text-base text-sm truncate font-mono">
-                  {transaction.txHash}
+                  {activeTransaction?.txHash || 'N/A'}
                 </p>
               </div>
               
               <div>
                 <p className="text-sm font-medium text-muted-foreground">From</p>
                 <p className="text-base text-sm font-mono">
-                  {transaction.fromAddress || 'N/A'}
+                  {activeTransaction?.fromAddress || 'N/A'}
                 </p>
               </div>
               
               <div>
                 <p className="text-sm font-medium text-muted-foreground">To</p>
                 <p className="text-base text-sm font-mono">
-                  {transaction.toAddress || 'N/A'}
+                  {activeTransaction?.toAddress || 'N/A'}
                 </p>
               </div>
               
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Date</p>
                 <p className="text-base">
-                  {transaction.timestamp 
-                    ? format(new Date(transaction.timestamp), 'MMM dd, yyyy HH:mm:ss') 
+                  {activeTransaction?.timestamp 
+                    ? format(new Date(activeTransaction.timestamp), 'MMM dd, yyyy HH:mm:ss') 
                     : 'Unknown'}
                 </p>
               </div>
@@ -227,7 +305,7 @@ export default function TransactionDetailModal({
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Network</p>
                 <p className="text-base">
-                  {transaction.isLayer2 ? transaction.layer2Type || 'Layer 2' : 'Mainnet'}
+                  {activeTransaction?.isLayer2 ? activeTransaction.layer2Type || 'Layer 2' : 'Mainnet'}
                 </p>
               </div>
             </div>
@@ -235,7 +313,7 @@ export default function TransactionDetailModal({
             <Separator className="my-2" />
             
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <form onSubmit={form.handleSubmit(activeSubmitHandler)} className="space-y-4">
                 <FormField
                   control={form.control}
                   name="plainDescription"
@@ -312,9 +390,10 @@ export default function TransactionDetailModal({
                 <DialogFooter>
                   <Button 
                     type="submit" 
-                    disabled={descriptionMutation.isPending || layer2Mutation.isPending}
+                    disabled={isLiveMode ? false : descriptionMutation.isPending || layer2Mutation.isPending}
                   >
-                    {descriptionMutation.isPending || layer2Mutation.isPending 
+                    {isLiveMode ? 'Save Changes' : 
+                      (descriptionMutation.isPending || layer2Mutation.isPending) 
                       ? "Saving..." 
                       : "Save Changes"}
                   </Button>

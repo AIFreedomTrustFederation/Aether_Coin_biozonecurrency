@@ -22,9 +22,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { InfoIcon, ExternalLinkIcon, LayersIcon } from "lucide-react";
+import { InfoIcon, ExternalLinkIcon, LayersIcon, AlertCircle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import TransactionDetailModal from "./TransactionDetailModal";
+import { useLiveMode } from "@/contexts/LiveModeContext";
+import { walletConnector } from "@/core/wallet/WalletConnector";
+import { ethers } from "ethers";
 
 interface TransactionExplorerProps {
   walletId?: number;
@@ -42,8 +45,12 @@ export default function TransactionExplorer({
   const [activeTab, setActiveTab] = React.useState("all");
   const [selectedTransaction, setSelectedTransaction] = React.useState<number | null>(null);
   const [detailModalOpen, setDetailModalOpen] = React.useState(false);
+  const { isLiveMode, web3Provider, connectedAddress } = useLiveMode();
+  const [web3Transactions, setWeb3Transactions] = React.useState<any[]>([]);
+  const [isLoadingWeb3, setIsLoadingWeb3] = React.useState(false);
+  const [web3Error, setWeb3Error] = React.useState<string | null>(null);
   
-  // Get regular transactions (all or filtered by wallet)
+  // Get regular transactions (all or filtered by wallet) when NOT in live mode
   const { 
     data: transactions = [], 
     isLoading,
@@ -52,33 +59,124 @@ export default function TransactionExplorer({
     queryKey: walletId 
       ? ['/api/transactions/wallet', walletId] 
       : ['/api/transactions/recent', userId || 1, limit],
-    retry: 1
+    retry: 1,
+    enabled: !isLiveMode // Only fetch API data when not in live mode
   });
   
-  // Get Layer 2 transactions
+  // Get Layer 2 transactions when NOT in live mode
   const { 
     data: layer2Transactions = [], 
     isLoading: isLoadingLayer2 
   } = useQuery({
     queryKey: ['/api/transactions/layer2', activeTab !== 'all' ? activeTab : undefined],
-    enabled: activeTab === 'all' || activeTab === 'optimism' || activeTab === 'arbitrum' || activeTab === 'polygon',
+    enabled: (!isLiveMode) && (activeTab === 'all' || activeTab === 'optimism' || activeTab === 'arbitrum' || activeTab === 'polygon'),
     retry: 1
   });
   
-  // Combine and filter transactions based on active tab
-  const displayTransactions = React.useMemo(() => {
-    if (activeTab === 'all') {
-      return [...transactions, ...layer2Transactions]
-        .sort((a, b) => new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime())
-        .slice(0, limit);
-    } else if (activeTab === 'optimism' || activeTab === 'arbitrum' || activeTab === 'polygon') {
-      return layer2Transactions;
-    } else {
-      return transactions;
+  // Fetch transactions directly from Ethereum when in live mode
+  React.useEffect(() => {
+    async function fetchWeb3Transactions() {
+      if (!isLiveMode || !web3Provider || !connectedAddress) {
+        setWeb3Transactions([]);
+        return;
+      }
+      
+      setIsLoadingWeb3(true);
+      setWeb3Error(null);
+      
+      try {
+        // Get transaction history - in a real app, we would use an indexer like Etherscan API
+        // For now, we'll just get the most recent transactions by scanning the last few blocks
+        const currentBlock = await web3Provider.getBlockNumber();
+        const transactionList: any[] = [];
+        
+        // Scan the last 10 blocks (this is simplified, real apps would use APIs)
+        for (let i = 0; i < 10; i++) {
+          if (currentBlock - i < 0) break;
+          
+          const block = await web3Provider.getBlock(currentBlock - i, true);
+          if (block && block.transactions) {
+            for (const tx of block.transactions) {
+              // Filter for transactions involving the current address
+              if (tx.from.toLowerCase() === connectedAddress.toLowerCase() || 
+                  (tx.to && tx.to.toLowerCase() === connectedAddress.toLowerCase())) {
+                
+                // Get full transaction details
+                const fullTx = await web3Provider.getTransaction(tx.hash);
+                const receipt = await web3Provider.getTransactionReceipt(tx.hash);
+                
+                const formattedTx = {
+                  id: transactionList.length + 1, // Local ID for rendering
+                  txHash: tx.hash,
+                  fromAddress: tx.from,
+                  toAddress: tx.to || 'Contract Creation',
+                  amount: ethers.formatEther(tx.value),
+                  tokenSymbol: 'ETH',
+                  timestamp: new Date(Number(block.timestamp) * 1000).toISOString(),
+                  status: receipt?.status ? 'completed' : 'failed',
+                  type: tx.from.toLowerCase() === connectedAddress.toLowerCase() ? 'send' : 'receive',
+                  plainDescription: tx.from.toLowerCase() === connectedAddress.toLowerCase() 
+                    ? `Sent ${ethers.formatEther(tx.value)} ETH to ${tx.to ? tx.to.substring(0, 8) + '...' : 'Contract'}`
+                    : `Received ${ethers.formatEther(tx.value)} ETH from ${tx.from.substring(0, 8) + '...'}`,
+                  isLayer2: false, // Determine based on chainId
+                  blockNumber: tx.blockNumber,
+                  gasUsed: receipt?.gasUsed.toString() || '0',
+                  gasPrice: tx.gasPrice ? ethers.formatUnits(tx.gasPrice, 'gwei') : '0'
+                };
+                
+                transactionList.push(formattedTx);
+              }
+            }
+          }
+        }
+        
+        setWeb3Transactions(transactionList);
+      } catch (err) {
+        console.error('Error fetching web3 transactions:', err);
+        setWeb3Error(err instanceof Error ? err.message : 'Failed to fetch blockchain transactions');
+      } finally {
+        setIsLoadingWeb3(false);
+      }
     }
-  }, [transactions, layer2Transactions, activeTab, limit]);
+    
+    if (isLiveMode && web3Provider && connectedAddress) {
+      fetchWeb3Transactions();
+    }
+  }, [isLiveMode, web3Provider, connectedAddress, activeTab]);
   
-  if (error) {
+  // Combine and filter transactions based on active tab and live mode
+  const displayTransactions = React.useMemo(() => {
+    // If live mode is enabled, use web3 transactions
+    if (isLiveMode) {
+      // Filter based on active tab
+      if (activeTab === 'sends') {
+        return web3Transactions.filter(tx => tx.type === 'send');
+      } else if (activeTab === 'receives') {
+        return web3Transactions.filter(tx => tx.type === 'receive');
+      } else if (activeTab.startsWith('layer')) {
+        // For simplicity, we're not implementing L2 filtering in this demo
+        // In a full implementation, we would check chainId to determine L2 type
+        return [];
+      } else {
+        // 'all' or other tabs
+        return web3Transactions;
+      }
+    } else {
+      // Not in live mode, use API data
+      if (activeTab === 'all') {
+        return [...transactions, ...layer2Transactions]
+          .sort((a, b) => new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime())
+          .slice(0, limit);
+      } else if (activeTab === 'optimism' || activeTab === 'arbitrum' || activeTab === 'polygon') {
+        return layer2Transactions;
+      } else {
+        return transactions;
+      }
+    }
+  }, [isLiveMode, web3Transactions, transactions, layer2Transactions, activeTab, limit]);
+  
+  // Error handling for regular API fetch errors
+  if (error && !isLiveMode) {
     return (
       <Card>
         <CardHeader>
@@ -89,6 +187,56 @@ export default function TransactionExplorer({
           <p className="text-red-500">
             Failed to load transaction data. Please try again later.
           </p>
+        </CardContent>
+      </Card>
+    );
+  }
+  
+  // Show Web3 connection prompt when in live mode but not connected
+  if (isLiveMode && !web3Provider) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Transaction Explorer</CardTitle>
+          <CardDescription>Live Mode Active</CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col items-center justify-center py-8">
+          <AlertCircle className="h-16 w-16 text-amber-500 mb-4" />
+          <h3 className="text-xl font-semibold mb-2">MetaMask Connection Required</h3>
+          <p className="text-center text-muted-foreground mb-6 max-w-md">
+            Live mode requires a connection to MetaMask to display your actual blockchain transactions.
+            No placeholders or demo data will be shown.
+          </p>
+          <Button 
+            onClick={() => window.ethereum ? window.ethereum.request({ method: 'eth_requestAccounts' }) : null}
+            disabled={isLoadingWeb3}
+          >
+            {isLoadingWeb3 ? 'Connecting...' : 'Connect MetaMask'}
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+  
+  // Show web3 error if there was an error fetching transactions in live mode
+  if (isLiveMode && web3Error) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Transaction Explorer</CardTitle>
+          <CardDescription>Error loading blockchain transactions</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-red-500">
+            {web3Error}
+          </p>
+          <Button 
+            variant="outline" 
+            className="mt-4"
+            onClick={() => window.location.reload()}
+          >
+            Retry
+          </Button>
         </CardContent>
       </Card>
     );
