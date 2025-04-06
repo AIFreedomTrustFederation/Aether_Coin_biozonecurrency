@@ -308,10 +308,14 @@ export default function TestMode() {
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <div className="mb-6 text-center">
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Aetherion Test Mode</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Aetherion Development Environment</h1>
         <p className="text-sm sm:text-base text-muted-foreground mt-2 mx-auto max-w-2xl">
-          Test the quantum-resistant storage, wallet connections, and KYC verification functionality
+          This is a simulated environment for testing quantum-resistant storage, wallet connections, and KYC verification functionality with mock data
         </p>
+        <div className="mt-3 inline-flex items-center px-3 py-1 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 text-sm">
+          <AlertCircle className="h-4 w-4 mr-2" />
+          This environment uses simulated data only and does not connect to real blockchain networks
+        </div>
       </div>
 
       <Tabs defaultValue="initialization" className="space-y-6">
