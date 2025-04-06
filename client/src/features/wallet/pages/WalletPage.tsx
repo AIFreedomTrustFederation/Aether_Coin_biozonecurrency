@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, lazy, Suspense } from 'react';
 import MainLayout from '@/core/layout/MainLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -11,6 +11,9 @@ import {
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 
+// Lazy load the onboarding component for better performance
+const WalletOnboarding = lazy(() => import('../components/WalletOnboarding'));
+
 /**
  * Wallet page component with all wallet management functionality
  */
@@ -18,12 +21,21 @@ const WalletPage = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [sendAmount, setSendAmount] = useState('');
   const [sendAddress, setSendAddress] = useState('');
+  const [showOnboarding, setShowOnboarding] = useState(true);
   
   // Simulate loading wallet data
   const { data: walletData, isLoading: isLoadingWallet } = useQuery({
     queryKey: ['/api/wallet/current'],
     // queryFn is handled by the default fetcher
   });
+
+  // Mock user data for the onboarding flow
+  const userData = {
+    id: 'user-1',
+    name: 'Test User',
+    email: 'user@example.com',
+    skillLevel: 'beginner' as const
+  };
   
   // Handlers
   const handleCopyAddress = useCallback(() => {
@@ -45,9 +57,40 @@ const WalletPage = () => {
   const handleRefresh = useCallback(() => {
     // Refresh wallet data logic would go here
   }, []);
+  
+  const handleOnboardingComplete = useCallback(() => {
+    setShowOnboarding(false);
+    console.log('Onboarding completed');
+  }, []);
 
   return (
     <MainLayout>
+      {/* Lazy-loaded onboarding component with Suspense */}
+      {showOnboarding && (
+        <Suspense fallback={
+          <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-50">
+            <div className="flex flex-col items-center">
+              <div className="h-16 w-16 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+              <p className="mt-4 text-lg font-medium text-primary">Loading onboarding experience...</p>
+            </div>
+          </div>
+        }>
+          <WalletOnboarding 
+            userData={userData}
+            walletData={{
+              walletBalances: { 'SING': 1000, 'BTC': 0.35, 'ETH': 1.5 },
+              recentTransactions: [
+                { type: 'received', asset: 'BTC', amount: 0.05, date: '2025-04-03' },
+                { type: 'sent', asset: 'ETH', amount: 0.2, date: '2025-04-02' },
+                { type: 'reward', asset: 'SING', amount: 10, date: '2025-04-01' }
+              ],
+              userPreferences: { theme: 'dark', notifications: true }
+            }}
+            onComplete={handleOnboardingComplete}
+          />
+        </Suspense>
+      )}
+      
       <div className="container mx-auto p-4 md:p-6">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">Quantum Wallet</h1>

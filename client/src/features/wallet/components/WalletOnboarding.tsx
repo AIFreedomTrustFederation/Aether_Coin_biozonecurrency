@@ -1,11 +1,23 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import WalletTour from './WalletTour';
-import AIGuidedTour from './AIGuidedTour';
 import { BrainCircuit, Sparkles, BookOpen } from 'lucide-react';
-import { useLocalStorage } from '@/hooks/use-local-storage';
+import useLocalStorage from '../../../hooks/use-local-storage';
 import { useToast } from '@/hooks/use-toast';
+
+// Lazy load the tour components for better performance
+const WalletTour = lazy(() => import('./WalletTour'));
+const AIGuidedTour = lazy(() => import('./AIGuidedTour'));
+
+// Loading spinner component for Suspense fallback
+const LoadingSpinner = () => (
+  <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-50">
+    <div className="flex flex-col items-center">
+      <div className="h-16 w-16 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+      <p className="mt-4 text-lg font-medium text-primary">Loading tour...</p>
+    </div>
+  </div>
+);
 
 type OnboardingMode = 'tour' | 'ai-guided' | 'skip';
 
@@ -86,17 +98,23 @@ const WalletOnboarding = ({ userData, walletData, onComplete }: WalletOnboarding
   
   // Show tour based on selected mode
   if (onboardingMode === 'tour') {
-    return <WalletTour onComplete={handleOnboardingComplete} onSkip={handleTourSkip} />;
+    return (
+      <Suspense fallback={<LoadingSpinner />}>
+        <WalletTour onComplete={handleOnboardingComplete} onSkip={handleTourSkip} />
+      </Suspense>
+    );
   }
   
   if (onboardingMode === 'ai-guided') {
     return (
-      <AIGuidedTour 
-        onComplete={handleOnboardingComplete} 
-        onSkip={handleTourSkip}
-        userSkillLevel={userData?.skillLevel || 'beginner'}
-        walletData={walletData}
-      />
+      <Suspense fallback={<LoadingSpinner />}>
+        <AIGuidedTour 
+          onComplete={handleOnboardingComplete} 
+          onSkip={handleTourSkip}
+          userSkillLevel={userData?.skillLevel || 'beginner'}
+          walletData={walletData}
+        />
+      </Suspense>
     );
   }
   
