@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Lightbulb, Database, Wallet } from 'lucide-react';
-// Import AIAssistant for the floating AI assistant button
-import { AIAssistant } from '../modules/ai-assistant/components/AIAssistant';
+// Use lightweight logo for fast initial rendering
+import LightweightLogo from '@/components/common/LightweightLogo';
 // Import the SimpleChatInterface component
 import SimpleChatInterface from '../components/SimpleChatInterface';
+// Import AIAssistant directly - we'll make performance improvements elsewhere
+import { AIAssistant } from '../modules/ai-assistant/components/AIAssistant';
 
 const LandingPage: React.FC = () => {
   const [messages, setMessages] = useState<{
@@ -73,10 +75,41 @@ const LandingPage: React.FC = () => {
     }, 1500);
   };
   
+  // Add preloading of important route resources  
+  useEffect(() => {
+    // Preload critical resources for routes users are likely to navigate to
+    const preloadRoutes = () => {
+      // Create link elements for preloading
+      const preloadLinks = [
+        '/dashboard',
+        '/wallet',
+        '/bridge',
+      ].map(route => {
+        const link = document.createElement('link');
+        link.rel = 'prefetch';
+        link.href = route;
+        link.as = 'document';
+        return link;
+      });
+
+      // Append preload links to document head
+      preloadLinks.forEach(link => document.head.appendChild(link));
+    };
+
+    // Preload after a short delay so initial page load isn't affected
+    const timer = setTimeout(preloadRoutes, 2000);
+    return () => clearTimeout(timer);
+  }, []);
+  
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 to-indigo-900 text-white">
       {/* Hero Section */}
       <div className="container mx-auto px-4 py-24 flex flex-col items-center">
+        {/* Use lightweight logo for faster initial render */}
+        <div className="mb-4">
+          <LightweightLogo size="xl" color="#aa00ff" />
+        </div>
+        
         <h1 className="text-5xl md:text-6xl font-bold text-center mb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
           Aetherion
         </h1>

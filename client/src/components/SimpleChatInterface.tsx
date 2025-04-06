@@ -1,106 +1,105 @@
-import React, { useState, useRef, useEffect, FormEvent } from 'react';
-import { Input } from '@/components/ui/input';
+import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Send } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Send, Loader2 } from 'lucide-react';
+
+interface Message {
+  id: string;
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+  timestamp: Date;
+}
 
 interface SimpleChatInterfaceProps {
-  messages: {
-    id: string;
-    role: 'user' | 'assistant' | 'system';
-    content: string;
-    timestamp: Date;
-  }[];
+  messages: Message[];
   onSendMessage: (message: string) => void;
-  isProcessing: boolean;
-  autoFocus?: boolean;
+  isProcessing?: boolean;
   placeholder?: string;
+  autoFocus?: boolean;
   className?: string;
 }
 
-const SimpleChatInterface: React.FC<SimpleChatInterfaceProps> = ({ 
-  messages, 
-  onSendMessage, 
-  isProcessing, 
-  autoFocus = false,
-  placeholder = "Type a message...", 
-  className = "" 
+const SimpleChatInterface: React.FC<SimpleChatInterfaceProps> = ({
+  messages,
+  onSendMessage,
+  isProcessing = false,
+  placeholder = 'Type a message...',
+  autoFocus = true,
+  className = '',
 }) => {
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const chatContainerRef = useRef<HTMLDivElement>(null);
-  
-  const scrollToBottom = () => {
-    // Use the container ref to scroll instead of scrollIntoView
-    if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
-    }
-  };
-  
-  // Scroll to bottom when messages change (with a slight delay to ensure DOM is updated)
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Scroll to bottom of messages when messages change
   useEffect(() => {
-    // Use a small timeout to ensure DOM is updated before scrolling
-    const timer = setTimeout(() => {
-      scrollToBottom();
-    }, 100);
-    return () => clearTimeout(timer);
-  }, [messages, isProcessing]);
-  
-  const handleSubmit = (e: FormEvent) => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  // Auto focus input on mount if autoFocus is true
+  useEffect(() => {
+    if (autoFocus) {
+      inputRef.current?.focus();
+    }
+  }, [autoFocus]);
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (inputValue.trim() && !isProcessing) {
-      onSendMessage(inputValue.trim());
+      onSendMessage(inputValue);
       setInputValue('');
     }
   };
-  
+
   return (
-    <div className="flex flex-col h-full">
-      <div 
-        ref={chatContainerRef}
-        className="flex-1 overflow-y-auto mb-4 space-y-4 h-[300px] max-h-[300px] p-2"
-        style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.2) transparent' }}
-      >
+    <div className="flex flex-col h-[400px]">
+      {/* Messages area */}
+      <div className="flex-1 overflow-y-auto p-3 space-y-3">
         {messages.map((message) => (
-          <div 
+          <div
             key={message.id}
-            className={`${
-              message.role === 'user' 
-                ? 'ml-auto bg-blue-600 text-white' 
-                : 'mr-auto bg-white/10 text-white'
-            } rounded-lg px-4 py-2 max-w-[80%]`}
+            className={`flex ${
+              message.role === 'user' ? 'justify-end' : 'justify-start'
+            }`}
           >
-            {message.content}
-          </div>
-        ))}
-        {isProcessing && (
-          <div className="mr-auto bg-white/10 text-white rounded-lg px-4 py-2 max-w-[80%]">
-            <div className="flex space-x-1">
-              <div className="w-2 h-2 bg-white/40 rounded-full animate-bounce"></div>
-              <div className="w-2 h-2 bg-white/40 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-              <div className="w-2 h-2 bg-white/40 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+            <div
+              className={`rounded-lg px-4 py-2 max-w-[80%] ${
+                message.role === 'user'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-muted text-foreground'
+              }`}
+            >
+              {message.content}
             </div>
           </div>
-        )}
-        <div ref={messagesEndRef} /> {/* Empty div to scroll to */}
+        ))}
+        <div ref={messagesEndRef} />
       </div>
-      
-      <form onSubmit={handleSubmit} className="flex space-x-2">
-        <Input
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          placeholder={placeholder}
-          disabled={isProcessing}
-          autoFocus={autoFocus}
-          className={`flex-1 bg-white/10 border-white/20 text-white placeholder:text-white/50 ${className}`}
-        />
-        <Button 
-          type="submit" 
-          disabled={isProcessing || !inputValue.trim()} 
-          size="icon"
-          className="bg-blue-600 hover:bg-blue-700 text-white"
-        >
-          <Send className="h-4 w-4" />
-        </Button>
+
+      {/* Input area */}
+      <form onSubmit={handleSubmit} className="border-t p-3">
+        <div className="flex gap-2">
+          <Input
+            type="text"
+            placeholder={placeholder}
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            disabled={isProcessing}
+            className={className}
+            ref={inputRef}
+          />
+          <Button
+            type="submit"
+            size="icon"
+            disabled={!inputValue.trim() || isProcessing}
+          >
+            {isProcessing ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Send className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
       </form>
     </div>
   );

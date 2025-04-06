@@ -1,52 +1,65 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { LiveModeProvider } from "./contexts/LiveModeContext";
 import { LiveModeIndicator } from "@/components/ui/LiveModeIndicator";
+import ResourceHints from "./components/ResourceHints";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { 
   Menu, X, Home, Layout, Wallet, Lock, Shield, Settings, AlertTriangle, ChevronRight, 
   BarChart3, Eye, Cpu, Bell, Zap, Coins, FileText, Database, Bot, TestTube, Blocks,
-  Smartphone, Lightbulb, CreditCard, Info, Palette
+  Smartphone, Lightbulb, CreditCard, Info, Palette, Loader2
 } from "lucide-react";
 
-// Import existing pages for now
-import { AIAssistant } from "./modules/ai-assistant/components/AIAssistant";
-import AISettings from "./modules/ai-assistant/components/AISettings";
+// Loading screen component for lazy-loaded routes
+const LoadingScreen = ({ message = "Loading..." }: { message?: string }) => (
+  <div className="flex flex-col items-center justify-center min-h-[70vh]">
+    <div className="flex flex-col items-center gap-3">
+      <Loader2 className="h-10 w-10 animate-spin text-primary" />
+      <p className="text-muted-foreground">{message}</p>
+    </div>
+  </div>
+);
+
+// Import landing page for fast initial load
 import LandingPage from "./pages/LandingPage";
-import Dashboard from "@/components/Dashboard";
-import { SecurityPage } from "./pages/SecurityPage";
-import SingularityCoinPage from "./pages/SingularityCoinPage";
-import ICOPage from "./pages/ICOPage";
-import WhitepaperPage from "./pages/WhitepaperPage";
-import AboutPage from "./pages/AboutPage";
-import AdminPortal from "./pages/AdminPortal";
 
-// Import new personalization pages
-import DashboardPage from "./pages/DashboardPage";
-import SettingsPage from "./pages/SettingsPage";
-import BlockchainVisualizerPage from "./pages/BlockchainVisualizerPage";
-import BlockchainDashboardPage from "./pages/BlockchainDashboardPage";
-import BlockchainExplorer from "./pages/BlockchainExplorer";
-import WalletPage from "./pages/WalletPage";
-import MysterionAIPage from "./pages/MysterionAIPage";
-import AIAssistantOnboarding from "./pages/AIAssistantOnboarding";
-import OnboardingPage from "./pages/Onboarding";
-import TestPage from "./pages/TestPage";
-import DappBuilder from "./pages/DappBuilder";
-import FractalExplorer from "./pages/FractalExplorer";
-import { PaymentPage } from "./pages/PaymentPage";
-import TransactionsPage from "./pages/TransactionsPage";
-import BridgePage from "./pages/BridgePage";
-import BridgeTestPage from "./pages/BridgeTestPage";
+// Lazy load all other components
+const AIAssistant = lazy(() => import("./modules/ai-assistant/components/AIAssistant").then(m => ({ default: m.AIAssistant })));
+const AISettings = lazy(() => import("./modules/ai-assistant/components/AISettings"));
+const Dashboard = lazy(() => import("@/components/Dashboard"));
+const SecurityPage = lazy(() => import("./pages/SecurityPage").then(m => ({ default: m.SecurityPage })));
+const SingularityCoinPage = lazy(() => import("./pages/SingularityCoinPage"));
+const ICOPage = lazy(() => import("./pages/ICOPage"));
+const WhitepaperPage = lazy(() => import("./pages/WhitepaperPage"));
+const AboutPage = lazy(() => import("./pages/AboutPage"));
+const AdminPortal = lazy(() => import("./pages/AdminPortal"));
 
-// Import Mobile Features Demo
-import MobileFeatureDemo from "@/components/mobile/MobileFeatureDemo";
-import EscrowPage from "./pages/Escrow";
-import BottomNavigation from "@/components/mobile/BottomNavigation";
+// Lazy load new personalization pages
+const DashboardPage = lazy(() => import("./pages/DashboardPage"));
+const SettingsPage = lazy(() => import("./pages/SettingsPage"));
+const BlockchainVisualizerPage = lazy(() => import("./pages/BlockchainVisualizerPage"));
+const BlockchainDashboardPage = lazy(() => import("./pages/BlockchainDashboardPage"));
+const BlockchainExplorer = lazy(() => import("./pages/BlockchainExplorer"));
+const WalletPage = lazy(() => import("./pages/WalletPage"));
+const MysterionAIPage = lazy(() => import("./pages/MysterionAIPage"));
+const AIAssistantOnboarding = lazy(() => import("./pages/AIAssistantOnboarding"));
+const OnboardingPage = lazy(() => import("./pages/Onboarding"));
+const TestPage = lazy(() => import("./pages/TestPage"));
+const DappBuilder = lazy(() => import("./pages/DappBuilder"));
+const FractalExplorer = lazy(() => import("./pages/FractalExplorer"));
+const PaymentPage = lazy(() => import("./pages/PaymentPage").then(m => ({ default: m.PaymentPage })));
+const TransactionsPage = lazy(() => import("./pages/TransactionsPage"));
+const BridgePage = lazy(() => import("./pages/BridgePage"));
+const BridgeTestPage = lazy(() => import("./pages/BridgeTestPage"));
+
+// Lazy load Mobile Features Demo
+const MobileFeatureDemo = lazy(() => import("@/components/mobile/MobileFeatureDemo"));
+const EscrowPage = lazy(() => import("./pages/Escrow"));
+const BottomNavigation = lazy(() => import("@/components/mobile/BottomNavigation"));
 
 // Define navigation items for both mobile and desktop
 const navigationItems = [
@@ -415,6 +428,8 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <LiveModeProvider>
+        {/* Add resource hints for faster page loading */}
+        <ResourceHints />
         <div className={`app-container w-full h-full ${isMobile ? 'pb-16' : ''}`}>
         {/* Top Navigation Bar */}
         <header className="flex justify-between items-center p-2 sm:p-4 bg-background border-b fixed top-0 left-0 right-0 z-30">
@@ -469,34 +484,143 @@ function App() {
         {/* Main Content */}
         <main className="pt-[60px] min-h-[calc(100%-60px)] overflow-auto">
           <Switch>
+            {/* Landing page loads directly (not lazy-loaded) for fast initial display */}
             <Route path="/" component={LandingPage} />
-            <Route path="/dashboard" component={DashboardPage} />
-            <Route path="/wallet" component={WalletPage} />
-            <Route path="/fractal-explorer" component={FractalExplorer} />
-            <Route path="/blockchain-explorer" component={BlockchainExplorer} />
-            <Route path="/ai-assistant-onboarding" component={AIAssistantOnboarding} />
-            <Route path="/security" component={SecurityPage} />
-            <Route path="/singularity" component={SingularityCoinPage} />
-            <Route path="/ico" component={ICOPage} />
-            <Route path="/whitepaper" component={WhitepaperPage} />
-            <Route path="/about" component={AboutPage} />
-            <Route path="/blockchain-visualizer" component={BlockchainVisualizerPage} />
-            <Route path="/blockchain-dashboard" component={BlockchainDashboardPage} />
-            <Route path="/settings" component={SettingsPage} />
-            <Route path="/ai-assistant" component={MysterionAIPage} />
-            <Route path="/ai/settings" component={AISettings} />
-            <Route path="/mobile-features" component={MobileFeatureDemo} />
-            <Route path="/mobile-feature" component={MobileFeatureDemo} />
-            <Route path="/admin" component={AdminPortal} />
-            <Route path="/legacy-dashboard" component={Dashboard} />
-            <Route path="/onboarding" component={OnboardingPage} />
-            <Route path="/test" component={TestPage} />
-            <Route path="/escrow" component={EscrowPage} />
-            <Route path="/payment" component={PaymentPage} />
-            <Route path="/transactions" component={TransactionsPage} />
-            <Route path="/bridge" component={BridgePage} />
-            <Route path="/bridge-test" component={BridgeTestPage} />
-            <Route component={SimpleNotFound} />
+            
+            {/* All other routes use Suspense with lazy loading for better performance */}
+            <Route path="/dashboard">
+              <Suspense fallback={<LoadingScreen message="Loading dashboard..." />}>
+                <DashboardPage />
+              </Suspense>
+            </Route>
+            <Route path="/wallet">
+              <Suspense fallback={<LoadingScreen message="Loading wallet..." />}>
+                <WalletPage />
+              </Suspense>
+            </Route>
+            <Route path="/fractal-explorer">
+              <Suspense fallback={<LoadingScreen message="Loading fractal explorer..." />}>
+                <FractalExplorer />
+              </Suspense>
+            </Route>
+            <Route path="/blockchain-explorer">
+              <Suspense fallback={<LoadingScreen message="Loading blockchain explorer..." />}>
+                <BlockchainExplorer />
+              </Suspense>
+            </Route>
+            <Route path="/ai-assistant-onboarding">
+              <Suspense fallback={<LoadingScreen message="Loading AI assistant onboarding..." />}>
+                <AIAssistantOnboarding />
+              </Suspense>
+            </Route>
+            <Route path="/security">
+              <Suspense fallback={<LoadingScreen message="Loading security page..." />}>
+                <SecurityPage />
+              </Suspense>
+            </Route>
+            <Route path="/singularity">
+              <Suspense fallback={<LoadingScreen message="Loading singularity coin..." />}>
+                <SingularityCoinPage />
+              </Suspense>
+            </Route>
+            <Route path="/ico">
+              <Suspense fallback={<LoadingScreen message="Loading ICO page..." />}>
+                <ICOPage />
+              </Suspense>
+            </Route>
+            <Route path="/whitepaper">
+              <Suspense fallback={<LoadingScreen message="Loading whitepaper..." />}>
+                <WhitepaperPage />
+              </Suspense>
+            </Route>
+            <Route path="/about">
+              <Suspense fallback={<LoadingScreen message="Loading about page..." />}>
+                <AboutPage />
+              </Suspense>
+            </Route>
+            <Route path="/blockchain-visualizer">
+              <Suspense fallback={<LoadingScreen message="Loading blockchain visualizer..." />}>
+                <BlockchainVisualizerPage />
+              </Suspense>
+            </Route>
+            <Route path="/blockchain-dashboard">
+              <Suspense fallback={<LoadingScreen message="Loading blockchain dashboard..." />}>
+                <BlockchainDashboardPage />
+              </Suspense>
+            </Route>
+            <Route path="/settings">
+              <Suspense fallback={<LoadingScreen message="Loading settings..." />}>
+                <SettingsPage />
+              </Suspense>
+            </Route>
+            <Route path="/ai-assistant">
+              <Suspense fallback={<LoadingScreen message="Loading AI assistant..." />}>
+                <MysterionAIPage />
+              </Suspense>
+            </Route>
+            <Route path="/ai/settings">
+              <Suspense fallback={<LoadingScreen message="Loading AI settings..." />}>
+                <AISettings />
+              </Suspense>
+            </Route>
+            <Route path="/mobile-features">
+              <Suspense fallback={<LoadingScreen message="Loading mobile features..." />}>
+                <MobileFeatureDemo />
+              </Suspense>
+            </Route>
+            <Route path="/mobile-feature">
+              <Suspense fallback={<LoadingScreen message="Loading mobile features..." />}>
+                <MobileFeatureDemo />
+              </Suspense>
+            </Route>
+            <Route path="/admin">
+              <Suspense fallback={<LoadingScreen message="Loading admin portal..." />}>
+                <AdminPortal />
+              </Suspense>
+            </Route>
+            <Route path="/legacy-dashboard">
+              <Suspense fallback={<LoadingScreen message="Loading legacy dashboard..." />}>
+                <Dashboard />
+              </Suspense>
+            </Route>
+            <Route path="/onboarding">
+              <Suspense fallback={<LoadingScreen message="Loading onboarding..." />}>
+                <OnboardingPage />
+              </Suspense>
+            </Route>
+            <Route path="/test">
+              <Suspense fallback={<LoadingScreen message="Loading test page..." />}>
+                <TestPage />
+              </Suspense>
+            </Route>
+            <Route path="/escrow">
+              <Suspense fallback={<LoadingScreen message="Loading escrow page..." />}>
+                <EscrowPage />
+              </Suspense>
+            </Route>
+            <Route path="/payment">
+              <Suspense fallback={<LoadingScreen message="Loading payment page..." />}>
+                <PaymentPage />
+              </Suspense>
+            </Route>
+            <Route path="/transactions">
+              <Suspense fallback={<LoadingScreen message="Loading transactions..." />}>
+                <TransactionsPage />
+              </Suspense>
+            </Route>
+            <Route path="/bridge">
+              <Suspense fallback={<LoadingScreen message="Loading bridge..." />}>
+                <BridgePage />
+              </Suspense>
+            </Route>
+            <Route path="/bridge-test">
+              <Suspense fallback={<LoadingScreen message="Loading bridge test..." />}>
+                <BridgeTestPage />
+              </Suspense>
+            </Route>
+            <Route>
+              <SimpleNotFound />
+            </Route>
           </Switch>
         </main>
         
