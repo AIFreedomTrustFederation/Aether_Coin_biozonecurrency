@@ -14,6 +14,8 @@ import { Wallet, LineChart, Activity, Send, Layers, Lock, Cpu, Settings, Refresh
 import mobileFeatures from '@/core/mobile/MobileFeatures';
 import biometricAuth from '@/core/mobile/BiometricAuth';
 import offlineTransactionSigner from '@/core/mobile/OfflineTransactionSigner';
+import { LiveModeIndicator } from '@/components/ui/LiveModeIndicator';
+import { useLiveMode } from '@/contexts/LiveModeContext';
 
 // Import from your existing wallet context
 import { useWallet } from '@/context/WalletContext';
@@ -29,6 +31,7 @@ interface MobileDashboardProps {
 const MobileDashboard: React.FC<MobileDashboardProps> = ({ className = '' }) => {
   const { toast } = useToast();
   const { wallets, balance, transactions } = useWallet();
+  const { isLiveMode, toggleLiveMode } = useLiveMode();
   
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [deviceInfo, setDeviceInfo] = useState(mobileFeatures.getDeviceInfo());
@@ -202,7 +205,10 @@ const MobileDashboard: React.FC<MobileDashboardProps> = ({ className = '' }) => 
     <div className={`${className} pb-16`}>
       {/* Dashboard header with refresh and offline toggle */}
       <div className="flex items-center justify-between px-4 py-2 bg-background sticky top-0 z-10 border-b">
-        <h1 className="text-xl font-bold">Aetherion Mobile</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="text-xl font-bold">Aetherion Mobile</h1>
+          <LiveModeIndicator variant="badge" className="mt-1" />
+        </div>
         <div className="flex items-center space-x-2">
           <Button 
             variant="ghost" 
@@ -479,6 +485,26 @@ const MobileDashboard: React.FC<MobileDashboardProps> = ({ className = '' }) => 
                     Configure
                   </Button>
                 </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium">Operating Mode</p>
+                    <p className="text-xs text-muted-foreground">
+                      {isLiveMode 
+                        ? 'Live Mode uses real blockchain transactions via your Web3 wallet' 
+                        : 'Test Mode uses simulated blockchain transactions for testing'
+                      }
+                    </p>
+                  </div>
+                  <Button
+                    variant={isLiveMode ? "default" : "outline"}
+                    size="sm"
+                    onClick={toggleLiveMode}
+                    className="min-w-[100px]"
+                  >
+                    {isLiveMode ? 'Live Mode' : 'Test Mode'}
+                  </Button>
+                </div>
                 
                 <div className="pt-4 border-t">
                   <h3 className="text-sm font-semibold mb-2">Device Information</h3>
@@ -497,19 +523,24 @@ const MobileDashboard: React.FC<MobileDashboardProps> = ({ className = '' }) => 
       </Tabs>
       
       {/* Mobile navigation bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-background border-t flex items-center justify-around p-2">
-        <Button variant="ghost" size="icon">
-          <Wallet className="h-5 w-5" />
-        </Button>
-        <Button variant="ghost" size="icon">
-          <Cpu className="h-5 w-5" />
-        </Button>
-        <Button variant="ghost" size="icon">
-          <Activity className="h-5 w-5" />
-        </Button>
-        <Button variant="ghost" size="icon">
-          <Settings className="h-5 w-5" />
-        </Button>
+      <div className="fixed bottom-0 left-0 right-0 bg-background border-t">
+        <div className="flex justify-center py-1" onClick={toggleLiveMode}>
+          <LiveModeIndicator variant="text" className="text-xs cursor-pointer" showToggle={true} />
+        </div>
+        <div className="flex items-center justify-around p-2">
+          <Button variant="ghost" size="icon">
+            <Wallet className="h-5 w-5" />
+          </Button>
+          <Button variant="ghost" size="icon">
+            <Cpu className="h-5 w-5" />
+          </Button>
+          <Button variant="ghost" size="icon">
+            <Activity className="h-5 w-5" />
+          </Button>
+          <Button variant="ghost" size="icon">
+            <Settings className="h-5 w-5" />
+          </Button>
+        </div>
       </div>
     </div>
   );
