@@ -11,8 +11,11 @@ import {
   WalletHealthScore, InsertWalletHealthScore,
   WalletHealthIssue, InsertWalletHealthIssue,
   NotificationPreference, InsertNotificationPreference,
+  UserApiKey, InsertUserApiKey,
+  MysterionTrainingData, InsertMysterionTrainingData,
   users, wallets, transactions, smartContracts, aiMonitoringLogs, cidEntries,
-  paymentMethods, payments, walletHealthScores, walletHealthIssues, notificationPreferences
+  paymentMethods, payments, walletHealthScores, walletHealthIssues, notificationPreferences,
+  userApiKeys, mysterionTrainingData
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql, inArray } from "drizzle-orm";

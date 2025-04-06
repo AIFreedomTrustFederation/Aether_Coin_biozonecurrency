@@ -79,6 +79,7 @@ export const usersRelations = relations(users, ({ many, one }) => ({
   votes: many(votes),
   governanceRewards: many(governanceRewards),
   notificationPreference: one(notificationPreferences),
+  apiKeys: many(userApiKeys),
   // New relations will be added in usersExtendedRelations after schema initialization
 }));
 
@@ -1367,6 +1368,74 @@ export const usersExtendedRelations = relations(users, ({ many, one }) => ({
   sandboxEnvironments: many(sandboxEnvironments),
 }));
 
+// User API Keys for Mysterion distributed LLM training
+export const userApiKeys = pgTable("user_api_keys", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  service: text("service").notNull(), // 'openai', 'anthropic', etc.
+  keyName: text("key_name").notNull(), // User-defined name for the key
+  keyIdentifier: text("key_identifier"), // First few chars of the key for identification
+  encryptedKey: text("encrypted_key").notNull(), // Encrypted API key
+  isActive: boolean("is_active").notNull().default(true),
+  isTrainingEnabled: boolean("is_training_enabled").notNull().default(true), // Whether to use for training
+  usageCount: integer("usage_count").notNull().default(0),
+  lastUsed: timestamp("last_used"),
+  lastContribution: timestamp("last_contribution"), // Last time contributed to training
+  contributionPoints: integer("contribution_points").notNull().default(0), // Points earned by contributing
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const userApiKeysRelations = relations(userApiKeys, ({ one }) => ({
+  user: one(users, {
+    fields: [userApiKeys.userId],
+    references: [users.id],
+  }),
+}));
+
+export const insertUserApiKeySchema = createInsertSchema(userApiKeys).omit({
+  id: true,
+  usageCount: true,
+  lastUsed: true,
+  lastContribution: true,
+  contributionPoints: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type UserApiKey = typeof userApiKeys.$inferSelect;
+export type InsertUserApiKey = z.infer<typeof insertUserApiKeySchema>;
+
+// Mysterion LLM Training Contributions
+export const mysterionTrainingData = pgTable("mysterion_training_data", {
+  id: serial("id").primaryKey(),
+  userApiKeyId: integer("user_api_key_id").notNull().references(() => userApiKeys.id),
+  dataSizeBytes: integer("data_size_bytes").notNull(),
+  dataHash: text("data_hash").notNull(), // Hash of the training data for deduplication
+  dataType: text("data_type").notNull(), // 'conversation', 'transaction', 'code', etc.
+  contributionDate: timestamp("contribution_date").defaultNow(),
+  processingStatus: text("processing_status").notNull().default("queued"), // 'queued', 'processing', 'completed', 'failed'
+  processingNotes: text("processing_notes"),
+  pointsAwarded: integer("points_awarded").notNull().default(0),
+});
+
+export const mysterionTrainingDataRelations = relations(mysterionTrainingData, ({ one }) => ({
+  userApiKey: one(userApiKeys, {
+    fields: [mysterionTrainingData.userApiKeyId],
+    references: [userApiKeys.id],
+  }),
+}));
+
+export const insertMysterionTrainingDataSchema = createInsertSchema(mysterionTrainingData).omit({
+  id: true,
+  contributionDate: true,
+  processingStatus: true,
+  pointsAwarded: true,
+});
+
+export type MysterionTrainingData = typeof mysterionTrainingData.$inferSelect;
+export type InsertMysterionTrainingData = z.infer<typeof insertMysterionTrainingDataSchema>;
+
 export const schema = {
   users,
   wallets,
@@ -1408,6 +1477,8 @@ export const schema = {
   transactionRatings,
   recursionLogs,
   aiCoinCompensation,
+  userApiKeys,
+  mysterionTrainingData,
   
   // DApp Builder and Marketplace schemas (imported from dapp-schema.ts)
   dappTemplates,
