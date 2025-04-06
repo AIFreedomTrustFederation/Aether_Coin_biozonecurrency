@@ -18,8 +18,27 @@ const LandingPage: React.FC = () => {
   }[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   
-  // Initialize with welcome message
+  // Initialize with welcome message and prevent scrolling issues
   useEffect(() => {
+    // Set initial scroll position to top immediately
+    if (typeof window !== 'undefined') {
+      // Ensure the page starts at the top immediately on mount
+      window.scrollTo(0, 0);
+      
+      // Set overflow hidden on body initially to prevent scroll jumps
+      document.body.style.overflow = 'hidden';
+      
+      // Re-enable scrolling after content is stabilized
+      const timer = setTimeout(() => {
+        document.body.style.overflow = '';
+      }, 100);
+      
+      return () => {
+        clearTimeout(timer);
+        document.body.style.overflow = '';
+      };
+    }
+    
     const welcomeMessage = {
       id: Date.now().toString(),
       role: 'assistant' as const,
@@ -28,9 +47,6 @@ const LandingPage: React.FC = () => {
     };
     
     setMessages([welcomeMessage]);
-    
-    // Ensure page starts at the top
-    window.scrollTo(0, 0);
   }, []);
   
   const handleSendMessage = (message: string) => {
@@ -102,7 +118,7 @@ const LandingPage: React.FC = () => {
   }, []);
   
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 to-indigo-900 text-white">
+    <div className="min-h-screen bg-gradient-to-b from-slate-900 to-indigo-900 text-white neon-scrollbar">
       {/* Hero Section */}
       <div className="container mx-auto px-4 py-24 flex flex-col items-center">
         {/* Use lightweight logo for faster initial render */}
@@ -110,27 +126,27 @@ const LandingPage: React.FC = () => {
           <LightweightLogo size="xl" color="#aa00ff" />
         </div>
         
-        <h1 className="text-5xl md:text-6xl font-bold text-center mb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
+        <h1 className="text-5xl md:text-6xl font-bold text-center mb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500 neon-glow neon-pulse" data-text="Aetherion">
           Aetherion
         </h1>
-        <p className="text-xl md:text-2xl text-center mb-8 max-w-3xl text-gray-300">
+        <p className="text-xl md:text-2xl text-center mb-8 max-w-3xl text-gray-300 neon-glow">
           Pioneering the Quantum-Resistant Blockchain Ecosystem
         </p>
         <div className="flex flex-wrap justify-center gap-4 mb-16">
           <Link href="/ai-assistant-onboarding">
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-md text-lg flex items-center">
+            <Button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-md text-lg flex items-center neon-button-advanced">
               <Lightbulb className="mr-2 h-5 w-5" />
               AI Assistant Demo
             </Button>
           </Link>
           <Link href="/blockchain-explorer">
-            <Button variant="outline" className="border-blue-400 text-blue-400 hover:bg-blue-400/10 px-6 py-3 rounded-md text-lg flex items-center">
+            <Button variant="outline" className="border-blue-400 text-blue-400 hover:bg-blue-400/10 px-6 py-3 rounded-md text-lg flex items-center neon-border">
               <Database className="mr-2 h-5 w-5" />
               Explore Blockchain
             </Button>
           </Link>
           <Link href="/wallet">
-            <Button variant="outline" className="border-purple-400 text-purple-400 hover:bg-purple-400/10 px-6 py-3 rounded-md text-lg flex items-center">
+            <Button variant="outline" className="border-purple-400 text-purple-400 hover:bg-purple-400/10 px-6 py-3 rounded-md text-lg flex items-center neon-border">
               <Wallet className="mr-2 h-5 w-5" />
               Access Wallet
             </Button>
