@@ -30,7 +30,18 @@ interface WalletContextProps {
   connect: (walletType: WalletType) => Promise<WalletInfo | WalletConnectError | undefined>;
   disconnect: () => Promise<void>;
   switchChain: (chainId: number) => Promise<boolean>;
-  purchase: (amountInUSD: string, paymentToken?: string) => Promise<{ success: boolean; txHash?: string; error?: string }>;
+  purchase: (
+    amountInUSD: string, 
+    paymentToken?: string, 
+    transferToAetherion?: boolean,
+    aetherionAddress?: string
+  ) => Promise<{ 
+    success: boolean; 
+    txHash?: string; 
+    error?: string;
+    tokenAmount?: string;
+    transferTxHash?: string;
+  }>;
   refreshBalance: () => Promise<void>;
   refreshICODetails: () => void;
 }
@@ -133,7 +144,12 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
   
   // Purchase tokens in the ICO
-  const purchase = async (amountInUSD: string, paymentToken?: string) => {
+  const purchase = async (
+    amountInUSD: string, 
+    paymentToken: string = 'native',
+    transferToAetherion: boolean = false,
+    aetherionAddress?: string
+  ) => {
     if (!wallet) {
       return { 
         success: false, 
@@ -141,7 +157,13 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       };
     }
     
-    const result = await purchaseTokens(wallet, amountInUSD, paymentToken);
+    const result = await purchaseTokens(
+      wallet, 
+      amountInUSD, 
+      paymentToken,
+      transferToAetherion,
+      aetherionAddress
+    );
     
     if (result.success) {
       // Update ICO details after successful purchase

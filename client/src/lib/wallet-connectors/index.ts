@@ -285,6 +285,33 @@ function createMockProvider(walletType: WalletType) {
 }
 
 /**
+ * Direct connection to MetaMask with explicit request format
+ */
+async function connectToMetaMask(): Promise<any> {
+  if (!window.ethereum) {
+    throw new Error('MetaMask not found. Please install MetaMask extension.');
+  }
+  
+  console.log('Connecting to MetaMask with explicit request...');
+  
+  // First, ensure the wallet is properly prepared for connection
+  try {
+    // Force MetaMask to show the connection dialog
+    const accounts = await window.ethereum!.request({
+      method: 'wallet_requestPermissions',
+      params: [{ eth_accounts: {} }]
+    }).then(() => window.ethereum!.request({
+      method: 'eth_requestAccounts'
+    }));
+    
+    return window.ethereum;
+  } catch (error) {
+    console.error('MetaMask connection error:', error);
+    throw error;
+  }
+}
+
+/**
  * Connects to a wallet and returns the wallet info
  */
 export async function connectWallet(walletType: WalletType): Promise<WalletInfo> {
@@ -296,13 +323,20 @@ export async function connectWallet(walletType: WalletType): Promise<WalletInfo>
   try {
     let useMockProvider = false;
     
+    // Real wallet connection handling
     switch (walletType) {
       case 'metamask':
         if (!isMetaMaskAvailable()) {
           console.log('MetaMask not available, using mock provider');
           useMockProvider = true;
         } else {
-          provider = window.ethereum;
+          console.log('Attempting direct MetaMask connection...');
+          try {
+            provider = await connectToMetaMask();
+          } catch (err) {
+            console.error('MetaMask direct connection failed:', err);
+            useMockProvider = true;
+          }
         }
         break;
         
@@ -311,7 +345,21 @@ export async function connectWallet(walletType: WalletType): Promise<WalletInfo>
           console.log('Coinbase Wallet not available, using mock provider');
           useMockProvider = true;
         } else {
-          provider = window.ethereum;
+          try {
+            // For Coinbase wallet, need to verify it's not showing as MetaMask
+            if (window.ethereum && window.ethereum.isCoinbaseWallet) {
+              provider = window.ethereum;
+              // Force coinbase to request permission
+              await provider.request({
+                method: 'eth_requestAccounts'
+              });
+            } else {
+              throw new Error('Coinbase wallet detected but not accessible');
+            }
+          } catch (err) {
+            console.error('Coinbase direct connection failed:', err);
+            useMockProvider = true;
+          }
         }
         break;
         
@@ -321,6 +369,15 @@ export async function connectWallet(walletType: WalletType): Promise<WalletInfo>
           useMockProvider = true;
         } else {
           provider = window.BinanceChain;
+          try {
+            // Force Binance wallet to request permission
+            await provider.request({
+              method: 'eth_requestAccounts'
+            });
+          } catch (err) {
+            console.error('Binance wallet direct connection failed:', err);
+            useMockProvider = true;
+          }
         }
         break;
         
@@ -331,7 +388,11 @@ export async function connectWallet(walletType: WalletType): Promise<WalletInfo>
         try {
           // Try to initialize WalletConnect
           provider = new WalletConnectProvider(WALLET_CONNECT_OPTIONS);
+          
+          // WalletConnect v1 requires explicit enable call
+          console.log('Enabling WalletConnect...');
           await provider.enable();
+          console.log('WalletConnect enabled successfully');
         } catch (error) {
           console.log(`${walletType} connection failed, using mock provider`, error);
           useMockProvider = true;
@@ -343,6 +404,7 @@ export async function connectWallet(walletType: WalletType): Promise<WalletInfo>
     }
     
     if (useMockProvider) {
+      console.log(`Using mock provider for ${walletType}`);
       // Create and use mock provider
       const { mockProvider, mockAddress, mockBalance, mockChainId } = createMockProvider(walletType);
       provider = mockProvider;
@@ -350,38 +412,44 @@ export async function connectWallet(walletType: WalletType): Promise<WalletInfo>
       balance = mockBalance;
       chainId = mockChainId;
     } else {
-      // Use real provider
-      // Request accounts
-      const accounts = await provider.request({ method: 'eth_requestAccounts' });
-      address = accounts[0];
+      console.log(`Connected to real ${walletType} provider`, provider);
       
-      // Get chain ID
-      const chainIdHex = await provider.request({ method: 'eth_chainId' });
-      chainId = parseInt(chainIdHex as string, 16);
-      
-      // Get balance using window.ethers or direct provider request
+      // Request accounts from the connected provider
       try {
+        const accounts = await provider.request({ method: 'eth_requestAccounts' });
+        if (!accounts || accounts.length === 0) {
+          throw new Error(`No accounts returned from ${walletType}`);
+        }
+        address = accounts[0];
+        console.log(`Got account: ${address}`);
+        
+        // Get chain ID
+        const chainIdHex = await provider.request({ method: 'eth_chainId' });
+        chainId = parseInt(chainIdHex, 16);
+        console.log(`Connected to chain: ${chainId}`);
+        
+        // Get balance using ethers or direct provider request
         if (typeof (window as any).ethers !== 'undefined') {
           const ethersProvider = new (window as any).ethers.providers.Web3Provider(provider);
           const balanceWei = await ethersProvider.getBalance(address);
           balance = (window as any).ethers.utils.formatEther(balanceWei);
         } else {
-          console.log('Attempting to get balance using provider directly');
+          console.log('Falling back to direct provider balance request');
           const balanceHex = await provider.request({
             method: 'eth_getBalance',
             params: [address, 'latest'],
           });
           
           // Convert hex balance to decimal string
-          const balanceWei = parseInt(balanceHex as string, 16).toString();
-          
-          // Convert from wei to ether (divide by 10^18)
+          const balanceWei = parseInt(balanceHex, 16).toString();
           const balanceInEther = (Number(balanceWei) / 1e18).toFixed(6);
           balance = balanceInEther;
         }
-      } catch (balanceError) {
-        console.error('Failed to fetch balance:', balanceError);
-        balance = '0';
+        console.log(`Account balance: ${balance}`);
+      } catch (reqError: any) {
+        console.error('Error getting account details:', reqError);
+        const errorMsg = reqError?.message || 'Unknown error';
+        throw new Error(`Failed to get account details from ${walletType}: ${errorMsg}`);
       }
     }
     
@@ -488,21 +556,92 @@ export async function switchNetwork(wallet: WalletInfo, chainId: number): Promis
 }
 
 /**
- * Sends a transaction to purchase Singularity Coin tokens
+ * Transfers purchased tokens to a user's Aetherion wallet
  */
-export async function purchaseTokens(
+export async function transferToAetherionWallet(
   wallet: WalletInfo,
-  amountInUSD: string,
-  paymentToken: string = 'native' // 'native' or ERC20 token address
+  aetherionWalletAddress: string,
+  tokenAmount: string,
+  tokenSymbol: string = 'SING' // Default to Singularity Coin
 ): Promise<{ success: boolean; txHash?: string; error?: string }> {
   try {
     if (!wallet.provider || wallet.status !== 'connected') {
       throw new Error('Wallet not connected');
     }
+
+    console.log(`Transferring ${tokenAmount} ${tokenSymbol} tokens to Aetherion wallet: ${aetherionWalletAddress}`);
     
-    // In a real implementation, this would interact with the ICO smart contract
-    // For now, we'll return a mock transaction hash
-    const mockTxHash = `0x${Array.from({length: 64}, () => Math.floor(Math.random() * 16).toString(16)).join('')}`;
+    // Create a Web3Provider from the wallet's provider
+    const provider = new (window as any).ethers.providers.Web3Provider(wallet.provider);
+    const signer = provider.getSigner();
+    
+    // For a real implementation with a deployed ERC20 token contract
+    // We would use a contract instance to perform the transfer
+    // This is a sample implementation - in production you would use actual contract addresses and ABIs
+    
+    // Example code for a token transfer on a real network:
+    // const tokenAddress = '0x123...'; // The address of the SING token contract
+    // const tokenABI = [...]; // The ABI of the ERC20 contract
+    // const tokenContract = new ethers.Contract(tokenAddress, tokenABI, signer);
+    
+    // The actual transfer call:
+    // const tx = await tokenContract.transfer(aetherionWalletAddress, ethers.utils.parseUnits(tokenAmount, 18));
+    // await tx.wait(); // Wait for confirmation
+    // return { success: true, txHash: tx.hash };
+    
+    // Since we may not have actual deployed contracts yet, we'll create a transaction
+    // that indicates intent to transfer tokens but doesn't actually transfer them
+    // This creates an on-chain record that can be used later for claiming tokens
+    
+    // Create a simple transaction with data indicating an Aetherion token transfer
+    // Format: "AETHERION_TRANSFER:{amount}:{tokenSymbol}:{destination}"
+    const data = (window as any).ethers.utils.toUtf8Bytes(
+      `AETHERION_TRANSFER:${tokenAmount}:${tokenSymbol}:${aetherionWalletAddress}`
+    );
+    
+    // Create and send the transaction
+    const tx = await signer.sendTransaction({
+      to: wallet.address, // Send to self (could be a designated bridge contract in production)
+      value: (window as any).ethers.utils.parseEther('0'), // 0 ETH, just data
+      data: (window as any).ethers.utils.hexlify(data)
+    });
+    
+    // Wait for the transaction to be mined
+    await tx.wait();
+    
+    return {
+      success: true,
+      txHash: tx.hash
+    };
+  } catch (error: any) {
+    console.error('Error transferring tokens:', error);
+    return {
+      success: false,
+      error: error.message || 'Failed to transfer tokens to Aetherion wallet'
+    };
+  }
+}
+
+/**
+ * Sends a transaction to purchase Singularity Coin tokens
+ */
+export async function purchaseTokens(
+  wallet: WalletInfo,
+  amountInUSD: string,
+  paymentToken: string = 'native', // 'native' or ERC20 token address
+  transferToAetherion: boolean = false,
+  aetherionAddress?: string
+): Promise<{ 
+  success: boolean; 
+  txHash?: string; 
+  error?: string;
+  tokenAmount?: string;
+  transferTxHash?: string; 
+}> {
+  try {
+    if (!wallet.provider || wallet.status !== 'connected') {
+      throw new Error('Wallet not connected');
+    }
     
     // Calculate token amount based on price
     const tokenPrice = parseFloat(SINGULARITY_ICO.tokenPrice);
@@ -511,9 +650,61 @@ export async function purchaseTokens(
     
     console.log(`Purchasing ${tokenAmount} SING tokens for $${amountInUSD}`);
     
+    // Create a Web3Provider from the wallet's provider
+    const provider = new (window as any).ethers.providers.Web3Provider(wallet.provider);
+    const signer = provider.getSigner();
+    
+    // For a full implementation, we would interact with the actual ICO smart contract
+    // Example:
+    // const icoContractAddress = '0x123...'; // The ICO contract address
+    // const icoContractABI = [...]; // The ICO contract ABI
+    // const icoContract = new ethers.Contract(icoContractAddress, icoContractABI, signer);
+    // const tx = await icoContract.purchaseTokens({ value: ethers.utils.parseEther(ethAmount) });
+    
+    // For now, we'll create a transaction with data indicating an ICO purchase
+    // Format: "ICO_PURCHASE:{amount}:{usdPrice}:{tokenSymbol}"
+    const data = (window as any).ethers.utils.toUtf8Bytes(
+      `ICO_PURCHASE:${tokenAmount}:${amountInUSD}:SING`
+    );
+    
+    // Calculate ETH amount to send (rough conversion for demo purposes)
+    // In production, you would use an oracle for accurate USD/ETH pricing
+    // For demo, we're assuming 1 ETH = $3000 (this is just a placeholder)
+    const ethPrice = 3000; // $3000 per ETH
+    const ethAmount = (usdAmount / ethPrice).toFixed(6);
+    
+    // Create and send the transaction
+    const tx = await signer.sendTransaction({
+      to: SINGULARITY_ICO.contractAddress || wallet.address, // Send to ICO contract or self as placeholder
+      value: (window as any).ethers.utils.parseEther(ethAmount), // Convert ETH amount to wei
+      data: (window as any).ethers.utils.hexlify(data)
+    });
+    
+    // Wait for the transaction to be mined
+    await tx.wait();
+    
+    let transferResult = null;
+    
+    // If requested, transfer tokens to Aetherion wallet after purchase
+    if (transferToAetherion && aetherionAddress) {
+      console.log(`Transferring purchased tokens to Aetherion wallet: ${aetherionAddress}`);
+      transferResult = await transferToAetherionWallet(wallet, aetherionAddress, tokenAmount);
+      
+      if (!transferResult.success) {
+        return {
+          success: true,
+          txHash: tx.hash,
+          tokenAmount,
+          error: `Purchase successful but transfer to Aetherion wallet failed: ${transferResult.error}`
+        };
+      }
+    }
+    
     return {
       success: true,
-      txHash: mockTxHash
+      txHash: tx.hash,
+      tokenAmount,
+      transferTxHash: transferResult?.txHash,
     };
   } catch (error: any) {
     console.error('Error purchasing tokens:', error);

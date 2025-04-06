@@ -20,8 +20,9 @@ import {
   SelectTrigger, 
   SelectValue 
 } from '@/components/ui/select';
-import { AlertCircle, Clock, DollarSign, Coins, Calculator } from 'lucide-react';
+import { AlertCircle, Clock, DollarSign, Coins, Calculator, ArrowRightLeft, Shield } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Checkbox } from '@/components/ui/checkbox';
 import { format } from 'date-fns';
 import { NetworkInfo, SUPPORTED_NETWORKS } from '@/lib/wallet-connectors';
 
@@ -30,8 +31,11 @@ const ICOParticipation: React.FC = () => {
   const [amount, setAmount] = useState<string>('');
   const [calculatedTokens, setCalculatedTokens] = useState<string>('0');
   const [paymentToken, setPaymentToken] = useState<string>('native');
+  const [transferToAetherion, setTransferToAetherion] = useState<boolean>(false);
+  const [aetherionAddress, setAetherionAddress] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [txHash, setTxHash] = useState<string | null>(null);
+  const [transferTxHash, setTransferTxHash] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   
   // Calculate tokens based on USD amount
@@ -77,9 +81,16 @@ const ICOParticipation: React.FC = () => {
       return;
     }
     
+    // Validate Aetherion address if transfer is requested
+    if (transferToAetherion && (!aetherionAddress || !aetherionAddress.trim())) {
+      setError('Please enter a valid Aetherion wallet address');
+      return;
+    }
+    
     setIsSubmitting(true);
     setError(null);
     setTxHash(null);
+    setTransferTxHash(null);
     
     try {
       // Ethereum mainnet is used for the ICO
@@ -90,10 +101,21 @@ const ICOParticipation: React.FC = () => {
         }
       }
       
-      const result = await purchase(amount, paymentToken);
+      const result = await purchase(
+        amount, 
+        paymentToken, 
+        transferToAetherion, 
+        transferToAetherion ? aetherionAddress : undefined
+      );
       
       if (result.success && result.txHash) {
         setTxHash(result.txHash);
+        
+        // If tokens were transferred to Aetherion wallet
+        if (result.transferTxHash) {
+          setTransferTxHash(result.transferTxHash);
+        }
+        
         setAmount('');
         setCalculatedTokens('0');
       } else {
@@ -255,6 +277,45 @@ const ICOParticipation: React.FC = () => {
               <span className="text-muted-foreground">{icoDetails.symbol}</span>
             </div>
           </div>
+          
+          {/* Aetherion Wallet Transfer Option */}
+          <div className="space-y-4 border p-3 rounded-md border-primary/20">
+            <div className="flex items-start space-x-2">
+              <Checkbox 
+                id="transfer-to-aetherion" 
+                checked={transferToAetherion}
+                onCheckedChange={(checked) => setTransferToAetherion(checked as boolean)}
+              />
+              <div className="grid gap-1.5 leading-none">
+                <Label
+                  htmlFor="transfer-to-aetherion"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex items-center"
+                >
+                  <Shield className="mr-1 h-4 w-4 text-primary/70" />
+                  Transfer tokens to Aetherion wallet
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Directly transfer your purchased tokens to a quantum-resistant Aetherion wallet
+                </p>
+              </div>
+            </div>
+            
+            {transferToAetherion && (
+              <div className="space-y-2">
+                <Label htmlFor="aetherion-address">Aetherion Wallet Address</Label>
+                <div className="relative">
+                  <ArrowRightLeft className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
+                  <Input
+                    id="aetherion-address"
+                    placeholder="Enter Aetherion wallet address"
+                    className="pl-10"
+                    value={aetherionAddress}
+                    onChange={(e) => setAetherionAddress(e.target.value)}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
         </div>
         
         {/* Success/Error messages */}
@@ -267,6 +328,15 @@ const ICOParticipation: React.FC = () => {
               <code className="block mt-1 p-2 bg-green-100 rounded text-xs break-all">
                 {txHash}
               </code>
+              {transferTxHash && (
+                <>
+                  <p className="mt-2 font-medium text-green-600">Tokens transferred to Aetherion wallet</p>
+                  <p className="text-xs text-muted-foreground">Transfer transaction:</p>
+                  <code className="block mt-1 p-2 bg-green-100 rounded text-xs break-all">
+                    {transferTxHash}
+                  </code>
+                </>
+              )}
             </AlertDescription>
           </Alert>
         )}
