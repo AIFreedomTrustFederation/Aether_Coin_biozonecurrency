@@ -9,6 +9,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { detectMobileWallets, DetectedWallet, openWallet, isMobileDevice } from '@/utils/mobileWalletDetector';
 import { Smartphone, Download, ExternalLink } from 'lucide-react';
+import WalletIcon from './WalletIcon';
 
 interface MobileWalletSelectorProps {
   isOpen: boolean;
@@ -114,10 +115,10 @@ const MobileWalletSelector: React.FC<MobileWalletSelectorProps> = ({
                 >
                   <div className="flex items-center">
                     <div className="w-8 h-8 mr-3 flex items-center justify-center">
-                      {/* This would be replaced with actual wallet icons */}
-                      <div className={`w-6 h-6 bg-primary/20 rounded-full flex items-center justify-center text-xs font-bold`}>
-                        {wallet.name.charAt(0)}
-                      </div>
+                      <WalletIcon 
+                        type={(wallet.id as any) || 'unknown'} 
+                        size="sm"
+                      />
                     </div>
                     <span>{wallet.name}</span>
                   </div>

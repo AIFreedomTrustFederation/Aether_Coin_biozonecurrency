@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { QRCodeSVG } from 'qrcode.react';
-import { isMobile } from '@/lib/utils';
 import { Smartphone, QrCode, ExternalLink, Check, X } from 'lucide-react';
 import {
   Dialog,
@@ -19,6 +18,9 @@ import {
   TabsTrigger,
 } from '@/components/ui/tabs';
 import { useWallet } from '@/context/WalletContext';
+import { useMobileWallet } from '@/hooks/use-mobile-wallet';
+import WalletIcon from './WalletIcon';
+import PermissionPrompt from './PermissionPrompt';
 
 interface MobileWalletConnectProps {
   onSuccess?: () => void;
@@ -39,10 +41,11 @@ const MobileWalletConnect: React.FC<MobileWalletConnectProps> = ({
 }) => {
   const { toast } = useToast();
   const { connect, isConnecting } = useWallet();
+  const { isMobile, installedWallets, refreshWallets } = useMobileWallet();
   const [open, setOpen] = useState(false);
   const [uri, setUri] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<string>(isMobile() ? "mobile" : "qr");
+  const [activeTab, setActiveTab] = useState<string>(isMobile ? "mobile" : "qr");
 
   // Set of popular wallet deep links for iOS and Android
   const mobileWallets = [
@@ -135,8 +138,12 @@ const MobileWalletConnect: React.FC<MobileWalletConnectProps> = ({
     }, 500);
   };
 
-  // Close the dialog when connection is successful
+  // Refresh wallet list when dialog opens and handle connection status
   useEffect(() => {
+    if (open && isMobile) {
+      refreshWallets();
+    }
+    
     // Add listener for WalletConnect session connection
     // This would be replaced with actual WalletConnect v2 listeners
     const checkConnectionInterval = setInterval(() => {
@@ -153,7 +160,7 @@ const MobileWalletConnect: React.FC<MobileWalletConnectProps> = ({
     return () => {
       clearInterval(checkConnectionInterval);
     };
-  }, [onSuccess]);
+  }, [open, onSuccess, isMobile, refreshWallets]);
 
   return (
     <>
@@ -212,28 +219,59 @@ const MobileWalletConnect: React.FC<MobileWalletConnectProps> = ({
             
             <TabsContent value="mobile" className="py-4">
               <div className="grid grid-cols-2 gap-3">
-                {mobileWallets.map((wallet) => (
-                  <button
-                    key={wallet.name}
-                    onClick={() => openMobileWallet(wallet)}
-                    className="flex flex-col items-center p-3 border rounded-lg hover:bg-accent/50 transition-colors"
-                  >
-                    <img 
-                      src={wallet.icon} 
-                      alt={wallet.name} 
-                      className="w-12 h-12 mb-2 rounded-full object-contain"
-                      onError={(e) => {
-                        // Fallback if image doesn't load
-                        (e.target as HTMLImageElement).src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIGZpbGw9IiM2NzRDOUIiLz48cGF0aCBkPSJNMTcuMDAzNiA5LjYwMzdMNi41NjI4OSAxNS42Mzg2QzYuMTM3NzYgMTUuOTI0NiA1LjU3MTc4IDE1LjgxMTQgNS4yODM0NCAxNS4zODk1QzQuOTk1MDkgMTQuOTY3NiA1LjEwOTE4IDE0LjQwNTMgNS41MzQzMSAxNC4xMTkzTDE1Ljk3NSA4LjA4NDM0QzE2LjQwMDEgNy43OTgzOCAxNi45NjYxIDcuOTExNTggMTcuMjU0NSA4LjMzMzQ1QzE3LjU0MjggOC43NTUzMiAxNy40Mjg3IDkuMzE3NyAxNy4wMDM2IDkuNjAzN1oiIGZpbGw9IndoaXRlIi8+PC9zdmc+';
+                {installedWallets.length > 0 ? (
+                  // Show detected wallets on device
+                  installedWallets.map((wallet) => (
+                    <button
+                      key={wallet.id}
+                      onClick={() => {
+                        // Use detected wallet deep link
+                        window.location.href = wallet.deepLink + encodeURIComponent(uri);
                       }}
-                    />
-                    <span className="text-sm font-medium">{wallet.name}</span>
-                  </button>
-                ))}
+                      className="flex flex-col items-center p-3 border rounded-lg bg-primary/5 border-primary hover:bg-primary/10 transition-colors"
+                    >
+                      <WalletIcon 
+                        id={wallet.id} 
+                        className="w-12 h-12 mb-2"
+                      />
+                      <span className="text-sm font-medium">{wallet.name}</span>
+                      <span className="text-xs text-primary">Installed</span>
+                    </button>
+                  ))
+                ) : (
+                  // Fallback to pre-defined list
+                  mobileWallets.map((wallet) => (
+                    <button
+                      key={wallet.name}
+                      onClick={() => openMobileWallet(wallet)}
+                      className="flex flex-col items-center p-3 border rounded-lg hover:bg-accent/50 transition-colors"
+                    >
+                      <img 
+                        src={wallet.icon} 
+                        alt={wallet.name} 
+                        className="w-12 h-12 mb-2 rounded-full object-contain"
+                        onError={(e) => {
+                          // Fallback if image doesn't load
+                          (e.target as HTMLImageElement).src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIGZpbGw9IiM2NzRDOUIiLz48cGF0aCBkPSJNMTcuMDAzNiA5LjYwMzdMNi41NjI4OSAxNS42Mzg2QzYuMTM3NzYgMTUuOTI0NiA1LjU3MTc4IDE1LjgxMTQgNS4yODM0NCAxNS4zODk1QzQuOTk1MDkgMTQuOTY3NiA1LjEwOTE4IDE0LjQwNTMgNS41MzQzMSAxNC4xMTkzTDE1Ljk3NSA4LjA4NDM0QzE2LjQwMDEgNy43OTgzOCAxNi45NjYxIDcuOTExNTggMTcuMjU0NSA4LjMzMzQ1QzE3LjU0MjggOC43NTUzMiAxNy40Mjg3IDkuMzE3NyAxNy4wMDM2IDkuNjAzN1oiIGZpbGw9IndoaXRlIi8+PC9zdmc+';
+                        }}
+                      />
+                      <span className="text-sm font-medium">{wallet.name}</span>
+                    </button>
+                  ))
+                )}
               </div>
               
               <div className="mt-4 text-sm text-muted-foreground text-center">
                 <p>Having trouble? Try using the QR code instead.</p>
+                {installedWallets.length === 0 && (
+                  <p className="mt-2">No wallet detected on your device. <a href="https://ethereum.org/wallets" target="_blank" rel="noopener noreferrer" className="text-primary underline">Install a wallet</a></p>
+                )}
+                <button 
+                  onClick={refreshWallets} 
+                  className="text-primary underline mt-2"
+                >
+                  Refresh wallet list
+                </button>
               </div>
             </TabsContent>
           </Tabs>

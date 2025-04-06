@@ -4,7 +4,7 @@ import { useLiveMode } from '../../contexts/LiveModeContext';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import WalletSelector from '@/components/wallet/WalletSelector';
+import EnhancedWalletSelector from '@/components/wallet/EnhancedWalletSelector';
 import { WalletType } from '@/lib/wallet-connectors';
 
 interface LiveModeIndicatorProps {
@@ -76,7 +76,7 @@ export function LiveModeIndicator({
             <Zap className="h-4 w-4" />
             <span>Live Mode</span>
           </Button>
-          <WalletSelector size="sm" variant="outline" className="h-9" />
+          <EnhancedWalletSelector size="sm" variant="outline" className="h-9" />
         </div>
       );
     }
@@ -138,7 +138,7 @@ export function LiveModeIndicator({
         </Badge>
         
         {isLiveMode && !connectedAddress && (
-          <WalletSelector size="sm" variant="outline" className="h-6 py-0 px-2 text-xs" />
+          <EnhancedWalletSelector size="sm" variant="outline" className="h-6 py-0 px-2 text-xs" />
         )}
         
         {isLiveMode && connectedAddress && (
@@ -178,7 +178,7 @@ export function LiveModeIndicator({
       </div>
       
       {isLiveMode && !connectedAddress && (
-        <WalletSelector size="sm" variant="outline" className="h-6 py-0 px-2 text-xs" />
+        <EnhancedWalletSelector size="sm" variant="outline" className="h-6 py-0 px-2 text-xs" />
       )}
       
       {isLiveMode && connectedAddress && (
