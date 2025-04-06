@@ -35,11 +35,13 @@ import TestPage from "./pages/TestPage";
 
 // Import Mobile Features Demo
 import MobileFeatureDemo from "@/components/mobile/MobileFeatureDemo";
+import EscrowPage from "./pages/Escrow";
 
 // Define navigation items for both mobile and desktop
 const navigationItems = [
   { name: "Dashboard", path: "/dashboard", icon: <Layout className="h-5 w-5" /> },
   { name: "Wallet", path: "/wallet", icon: <Wallet className="h-5 w-5" /> },
+  { name: "Escrow", path: "/escrow", icon: <Shield className="h-5 w-5" /> },
   { name: "Blockchain Dashboard", path: "/blockchain-dashboard", icon: <Blocks className="h-5 w-5" /> },
   { name: "Singularity", path: "/singularity", icon: <Zap className="h-5 w-5" /> },
   { name: "ICO", path: "/ico", icon: <Coins className="h-5 w-5" /> },
@@ -465,6 +467,7 @@ function App() {
             <Route path="/legacy-dashboard" component={Dashboard} />
             <Route path="/onboarding" component={OnboardingPage} />
             <Route path="/test" component={TestPage} />
+            <Route path="/escrow" component={EscrowPage} />
             <Route component={SimpleNotFound} />
           </Switch>
         </main>

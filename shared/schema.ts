@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, jsonb, decimal, primaryKey, uniqueIndex } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, jsonb, decimal, primaryKey, uniqueIndex, date } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
@@ -30,6 +30,7 @@ export const usersRelations = relations(users, ({ many, one }) => ({
   votes: many(votes),
   governanceRewards: many(governanceRewards),
   notificationPreference: one(notificationPreferences),
+  // New relations will be added in usersExtendedRelations after schema initialization
 }));
 
 export const insertUserSchema = createInsertSchema(users).omit({
@@ -920,6 +921,394 @@ export type StakingRecord = typeof stakingRecords.$inferSelect;
 export type InsertStakingRecord = z.infer<typeof insertStakingRecordSchema>;
 
 // Combine all schemas for export
+// Escrow Transactions schema
+export const escrowTransactions = pgTable("escrow_transactions", {
+  id: serial("id").primaryKey(),
+  sellerId: integer("seller_id").notNull().references(() => users.id),
+  buyerId: integer("buyer_id").notNull().references(() => users.id),
+  amount: decimal("amount").notNull(),
+  tokenSymbol: text("token_symbol").notNull(),
+  description: text("description").notNull(),
+  status: text("status").notNull(), // 'created', 'funded', 'in_progress', 'completed', 'disputed', 'refunded', 'canceled'
+  createdAt: timestamp("created_at").defaultNow(),
+  completedAt: timestamp("completed_at"),
+  expiresAt: timestamp("expires_at"),
+  disputedAt: timestamp("disputed_at"),
+  transactionHash: text("transaction_hash"),
+  contractAddress: text("contract_address"),
+  chain: text("chain").notNull(),
+  escrowFee: decimal("escrow_fee"),
+  releasedAt: timestamp("released_at"),
+  metadata: jsonb("metadata"), // For storing additional escrow specific data
+});
+
+// Escrow Proofs schema (for pictures, delivery confirmation, etc.)
+export const escrowProofs = pgTable("escrow_proofs", {
+  id: serial("id").primaryKey(),
+  escrowTransactionId: integer("escrow_transaction_id").notNull().references(() => escrowTransactions.id),
+  userId: integer("user_id").notNull().references(() => users.id), // Who uploaded the proof
+  proofType: text("proof_type").notNull(), // 'delivery_confirmation', 'condition_picture', 'tracking_info', etc.
+  description: text("description"),
+  fileUrl: text("file_url"), // IPFS/Web3.Storage URL to the proof file
+  fileCid: text("file_cid"), // IPFS CID of the proof file
+  timestamp: timestamp("timestamp").defaultNow(),
+  verified: boolean("verified").default(false),
+  verificationNotes: text("verification_notes"),
+});
+
+// Matrix Chat Rooms for Escrow Transactions
+export const matrixRooms = pgTable("matrix_rooms", {
+  id: serial("id").primaryKey(),
+  roomId: text("room_id").notNull().unique(), // Matrix room ID
+  escrowTransactionId: integer("escrow_transaction_id").notNull().references(() => escrowTransactions.id).unique(),
+  createdAt: timestamp("created_at").defaultNow(),
+  status: text("status").notNull(), // 'active', 'archived', 'deleted'
+  lastActivity: timestamp("last_activity").defaultNow(),
+  encryptionEnabled: boolean("encryption_enabled").default(true),
+});
+
+// Matrix Messages for Audit Trail
+export const matrixMessages = pgTable("matrix_messages", {
+  id: serial("id").primaryKey(),
+  roomId: integer("room_id").notNull().references(() => matrixRooms.id),
+  senderId: integer("sender_id").notNull().references(() => users.id),
+  content: text("content").notNull(),
+  sentAt: timestamp("sent_at").defaultNow(),
+  eventId: text("event_id").notNull(), // Matrix event ID
+  messageType: text("message_type").notNull(), // 'text', 'image', 'file', 'system'
+  metadata: jsonb("metadata"), // Additional message metadata
+});
+
+// Mysterion AI Ethics Assessment
+export const mysterionAssessments = pgTable("mysterion_assessments", {
+  id: serial("id").primaryKey(),
+  relatedEntityId: integer("related_entity_id").notNull(), // ID of escrow transaction, dispute, etc.
+  relatedEntityType: text("related_entity_type").notNull(), // 'escrow_transaction', 'dispute', etc.
+  assessmentType: text("assessment_type").notNull(), // 'ethics', 'fraud_detection', 'dispute_resolution', etc.
+  assessmentDate: timestamp("assessment_date").defaultNow(),
+  confidence: decimal("confidence").notNull(), // 0-1 confidence score
+  decision: text("decision").notNull(), // 'buyer_favor', 'seller_favor', 'split', 'inconclusive', etc.
+  rationale: text("rationale").notNull(),
+  ethicalPrinciples: text("ethical_principles").array(), // Array of ethical principles applied
+  precedents: jsonb("precedents"), // JSON of similar cases used as precedent
+  compensationAmount: decimal("compensation_amount"), // Optional AiCoin compensation
+  compensationReason: text("compensation_reason"),
+});
+
+// Escrow Disputes
+export const escrowDisputes = pgTable("escrow_disputes", {
+  id: serial("id").primaryKey(),
+  escrowTransactionId: integer("escrow_transaction_id").notNull().references(() => escrowTransactions.id),
+  initiatorId: integer("initiator_id").notNull().references(() => users.id),
+  reason: text("reason").notNull(),
+  description: text("description").notNull(),
+  status: text("status").notNull(), // 'opened', 'investigating', 'resolved_buyer', 'resolved_seller', 'split', 'escalated'
+  createdAt: timestamp("created_at").defaultNow(),
+  resolvedAt: timestamp("resolved_at"),
+  resolution: text("resolution"),
+  resolutionDetail: text("resolution_detail"),
+  mysterionAssessmentId: integer("mysterion_assessment_id").references(() => mysterionAssessments.id),
+});
+
+// User Reputation System
+export const userReputation = pgTable("user_reputation", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id).unique(),
+  overallScore: decimal("overall_score").notNull().default("0.5"), // 0-1 scale
+  transactionCount: integer("transaction_count").notNull().default(0),
+  positiveRatings: integer("positive_ratings").notNull().default(0),
+  negativeRatings: integer("negative_ratings").notNull().default(0),
+  disputesInitiated: integer("disputes_initiated").notNull().default(0),
+  disputesLost: integer("disputes_lost").notNull().default(0),
+  cooldownUntil: timestamp("cooldown_until"), // If user is in cooldown period
+  lastUpdated: timestamp("last_updated").defaultNow(),
+  trustLevel: text("trust_level").notNull().default("new"), // 'new', 'trusted', 'verified', 'elite', 'flagged'
+  verificationStatus: text("verification_status").notNull().default("none"), // 'none', 'basic', 'advanced', 'premium'
+  strikeCounts: integer("strike_counts").notNull().default(0), // Number of policy violations
+});
+
+// Transaction Ratings
+export const transactionRatings = pgTable("transaction_ratings", {
+  id: serial("id").primaryKey(),
+  escrowTransactionId: integer("escrow_transaction_id").notNull().references(() => escrowTransactions.id),
+  raterId: integer("rater_id").notNull().references(() => users.id),
+  ratedUserId: integer("rated_user_id").notNull().references(() => users.id),
+  rating: integer("rating").notNull(), // 1-5 scale
+  comment: text("comment"),
+  createdAt: timestamp("created_at").defaultNow(),
+  flagged: boolean("flagged").default(false),
+  flagReason: text("flag_reason"),
+});
+
+// Recursion Logs for Transaction Reversals
+export const recursionLogs = pgTable("recursion_logs", {
+  id: serial("id").primaryKey(),
+  transactionId: integer("transaction_id").notNull().references(() => transactions.id),
+  requesterId: integer("requester_id").notNull().references(() => users.id),
+  reason: text("reason").notNull(),
+  status: text("status").notNull(), // 'requested', 'processing', 'approved', 'denied', 'completed'
+  requestedAt: timestamp("requested_at").defaultNow(),
+  processedAt: timestamp("processed_at"),
+  networkFee: decimal("network_fee"),
+  recursionDepth: integer("recursion_depth").notNull().default(1), // Mandelbrot recursion depth applied
+  originalHash: text("original_hash").notNull(), // Original transaction hash
+  reversalHash: text("reversal_hash"), // Reversal transaction hash if processed
+  mysterionNotes: text("mysterion_notes"), // Notes from Mysterion AI about the reversal
+  approved: boolean("approved"),
+  approvalReason: text("approval_reason"),
+});
+
+// AiCoin Compensation Records
+export const aiCoinCompensation = pgTable("ai_coin_compensation", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  amount: decimal("amount").notNull(),
+  reason: text("reason").notNull(),
+  relatedEntityId: integer("related_entity_id"), // ID of escrow transaction, dispute, etc.
+  relatedEntityType: text("related_entity_type"), // 'escrow_transaction', 'dispute', etc.
+  status: text("status").notNull(), // 'pending', 'processed', 'failed'
+  createdAt: timestamp("created_at").defaultNow(),
+  processedAt: timestamp("processed_at"),
+  transactionHash: text("transaction_hash"),
+  mysterionAssessmentId: integer("mysterion_assessment_id").references(() => mysterionAssessments.id),
+});
+
+// Relations for new tables
+export const escrowTransactionsRelations = relations(escrowTransactions, ({ one, many }) => ({
+  seller: one(users, {
+    fields: [escrowTransactions.sellerId],
+    references: [users.id],
+    relationName: "seller_escrows"
+  }),
+  buyer: one(users, {
+    fields: [escrowTransactions.buyerId],
+    references: [users.id],
+    relationName: "buyer_escrows"
+  }),
+  proofs: many(escrowProofs),
+  matrixRoom: one(matrixRooms, {
+    fields: [escrowTransactions.id],
+    references: [matrixRooms.escrowTransactionId]
+  }),
+  disputes: many(escrowDisputes)
+}));
+
+export const escrowProofsRelations = relations(escrowProofs, ({ one }) => ({
+  escrowTransaction: one(escrowTransactions, {
+    fields: [escrowProofs.escrowTransactionId],
+    references: [escrowTransactions.id]
+  }),
+  user: one(users, {
+    fields: [escrowProofs.userId],
+    references: [users.id]
+  })
+}));
+
+export const matrixRoomsRelations = relations(matrixRooms, ({ one }) => ({
+  escrowTransaction: one(escrowTransactions, {
+    fields: [matrixRooms.escrowTransactionId],
+    references: [escrowTransactions.id]
+  })
+}));
+
+export const matrixMessagesRelations = relations(matrixMessages, ({ one }) => ({
+  room: one(matrixRooms, {
+    fields: [matrixMessages.roomId],
+    references: [matrixRooms.id]
+  }),
+  sender: one(users, {
+    fields: [matrixMessages.senderId],
+    references: [users.id]
+  })
+}));
+
+export const escrowDisputesRelations = relations(escrowDisputes, ({ one }) => ({
+  escrowTransaction: one(escrowTransactions, {
+    fields: [escrowDisputes.escrowTransactionId],
+    references: [escrowTransactions.id]
+  }),
+  initiator: one(users, {
+    fields: [escrowDisputes.initiatorId],
+    references: [users.id]
+  }),
+  mysterionAssessment: one(mysterionAssessments, {
+    fields: [escrowDisputes.mysterionAssessmentId],
+    references: [mysterionAssessments.id]
+  })
+}));
+
+export const mysterionAssessmentsRelations = relations(mysterionAssessments, ({ many }) => ({
+  disputes: many(escrowDisputes)
+}));
+
+export const userReputationRelations = relations(userReputation, ({ one }) => ({
+  user: one(users, {
+    fields: [userReputation.userId],
+    references: [users.id]
+  })
+}));
+
+export const transactionRatingsRelations = relations(transactionRatings, ({ one }) => ({
+  escrowTransaction: one(escrowTransactions, {
+    fields: [transactionRatings.escrowTransactionId],
+    references: [escrowTransactions.id]
+  }),
+  rater: one(users, {
+    fields: [transactionRatings.raterId],
+    references: [users.id],
+    relationName: "given_ratings"
+  }),
+  ratedUser: one(users, {
+    fields: [transactionRatings.ratedUserId],
+    references: [users.id],
+    relationName: "received_ratings"
+  })
+}));
+
+export const recursionLogsRelations = relations(recursionLogs, ({ one }) => ({
+  transaction: one(transactions, {
+    fields: [recursionLogs.transactionId],
+    references: [transactions.id]
+  }),
+  requester: one(users, {
+    fields: [recursionLogs.requesterId],
+    references: [users.id]
+  })
+}));
+
+export const aiCoinCompensationRelations = relations(aiCoinCompensation, ({ one }) => ({
+  user: one(users, {
+    fields: [aiCoinCompensation.userId],
+    references: [users.id]
+  }),
+  mysterionAssessment: one(mysterionAssessments, {
+    fields: [aiCoinCompensation.mysterionAssessmentId],
+    references: [mysterionAssessments.id]
+  })
+}));
+
+// Insert schemas for new tables
+export const insertEscrowTransactionSchema = createInsertSchema(escrowTransactions).omit({
+  id: true,
+  createdAt: true,
+  completedAt: true,
+  disputedAt: true,
+  releasedAt: true,
+});
+
+export const insertEscrowProofSchema = createInsertSchema(escrowProofs).omit({
+  id: true,
+  timestamp: true,
+  verified: true,
+  verificationNotes: true,
+});
+
+export const insertMatrixRoomSchema = createInsertSchema(matrixRooms).omit({
+  id: true,
+  createdAt: true,
+  lastActivity: true,
+});
+
+export const insertMatrixMessageSchema = createInsertSchema(matrixMessages).omit({
+  id: true,
+  sentAt: true,
+});
+
+export const insertEscrowDisputeSchema = createInsertSchema(escrowDisputes).omit({
+  id: true,
+  createdAt: true,
+  resolvedAt: true,
+  mysterionAssessmentId: true,
+});
+
+export const insertMysterionAssessmentSchema = createInsertSchema(mysterionAssessments).omit({
+  id: true,
+  assessmentDate: true,
+});
+
+export const insertUserReputationSchema = createInsertSchema(userReputation).omit({
+  id: true,
+  lastUpdated: true,
+  overallScore: true,
+  transactionCount: true,
+  positiveRatings: true,
+  negativeRatings: true,
+  disputesInitiated: true,
+  disputesLost: true,
+  trustLevel: true,
+  verificationStatus: true,
+  strikeCounts: true,
+});
+
+export const insertTransactionRatingSchema = createInsertSchema(transactionRatings).omit({
+  id: true,
+  createdAt: true,
+  flagged: true,
+  flagReason: true,
+});
+
+export const insertRecursionLogSchema = createInsertSchema(recursionLogs).omit({
+  id: true,
+  requestedAt: true,
+  processedAt: true,
+  reversalHash: true,
+  mysterionNotes: true,
+  approved: true,
+  approvalReason: true,
+});
+
+export const insertAiCoinCompensationSchema = createInsertSchema(aiCoinCompensation).omit({
+  id: true,
+  createdAt: true,
+  processedAt: true,
+  transactionHash: true,
+});
+
+// Types for the new schemas
+export type EscrowTransaction = typeof escrowTransactions.$inferSelect;
+export type InsertEscrowTransaction = z.infer<typeof insertEscrowTransactionSchema>;
+
+export type EscrowProof = typeof escrowProofs.$inferSelect;
+export type InsertEscrowProof = z.infer<typeof insertEscrowProofSchema>;
+
+export type MatrixRoom = typeof matrixRooms.$inferSelect;
+export type InsertMatrixRoom = z.infer<typeof insertMatrixRoomSchema>;
+
+export type MatrixMessage = typeof matrixMessages.$inferSelect;
+export type InsertMatrixMessage = z.infer<typeof insertMatrixMessageSchema>;
+
+export type EscrowDispute = typeof escrowDisputes.$inferSelect;
+export type InsertEscrowDispute = z.infer<typeof insertEscrowDisputeSchema>;
+
+export type MysterionAssessment = typeof mysterionAssessments.$inferSelect;
+export type InsertMysterionAssessment = z.infer<typeof insertMysterionAssessmentSchema>;
+
+export type UserReputation = typeof userReputation.$inferSelect;
+export type InsertUserReputation = z.infer<typeof insertUserReputationSchema>;
+
+export type TransactionRating = typeof transactionRatings.$inferSelect;
+export type InsertTransactionRating = z.infer<typeof insertTransactionRatingSchema>;
+
+export type RecursionLog = typeof recursionLogs.$inferSelect;
+export type InsertRecursionLog = z.infer<typeof insertRecursionLogSchema>;
+
+export type AiCoinCompensation = typeof aiCoinCompensation.$inferSelect;
+export type InsertAiCoinCompensation = z.infer<typeof insertAiCoinCompensationSchema>;
+
+// Extended user relations to include the new tables
+export const usersExtendedRelations = relations(users, ({ many, one }) => ({
+  sellerEscrows: many(escrowTransactions, { relationName: "seller_escrows" }),
+  buyerEscrows: many(escrowTransactions, { relationName: "buyer_escrows" }),
+  escrowProofs: many(escrowProofs),
+  matrixMessages: many(matrixMessages),
+  initiatedDisputes: many(escrowDisputes),
+  reputation: one(userReputation),
+  givenRatings: many(transactionRatings, { relationName: "given_ratings" }),
+  receivedRatings: many(transactionRatings, { relationName: "received_ratings" }),
+  recursionRequests: many(recursionLogs),
+  aiCoinCompensations: many(aiCoinCompensation),
+}));
+
 export const schema = {
   users,
   wallets,
@@ -950,4 +1339,15 @@ export const schema = {
   icoParticipations,
   icoPhases,
   stakingRecords,
+  // New schema tables
+  escrowTransactions,
+  escrowProofs,
+  matrixRooms,
+  matrixMessages,
+  escrowDisputes,
+  mysterionAssessments,
+  userReputation,
+  transactionRatings,
+  recursionLogs,
+  aiCoinCompensation,
 };

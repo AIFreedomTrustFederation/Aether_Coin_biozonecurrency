@@ -20,6 +20,7 @@ import { z } from "zod";
 import Stripe from "stripe";
 import apiGateway from "../api-gateway";
 import apiServicesRouter from "./routes/api-services";
+import escrowRoutes from "./routes/escrow-routes";
 import { openSourcePaymentService } from "./services/openSourcePayment";
 
 /**
@@ -116,6 +117,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Mount external API services router (CoinGecko, Blockstream, Etherscan, CryptoCompare, Matrix)
   app.use('/api/services', apiServicesRouter);
+  
+  // Mount escrow transaction routes
+  app.use('', escrowRoutes);
   
   // API routes
   
