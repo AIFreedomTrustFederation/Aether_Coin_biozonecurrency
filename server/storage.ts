@@ -36,7 +36,10 @@ export type { User, Wallet, Transaction, SmartContract, AiMonitoringLog, CidEntr
                TokenomicsConfig, TokenDistribution, Widget, WidgetTemplate, Dashboard,
                IcoParticipation, IcoPhase, StakingRecord, EscrowTransaction, EscrowProof,
                MatrixRoom, MatrixMessage, EscrowDispute, MysterionAssessment, UserReputation,
-               TransactionRating, RecursionLog, AiCoinCompensation, UserApiKey, MysterionTrainingData } from '../shared/schema';
+               TransactionRating, RecursionLog, AiCoinCompensation, UserApiKey, MysterionTrainingData,
+               // Bridge types
+               BridgeConfiguration, BridgeValidator, BridgeSupportedToken, BridgeTransaction,
+               BridgeNetwork, BridgeStatus, BridgeTransactionStatus } from '../shared/schema';
 
 // Export storage interface
 export interface IStorage {
@@ -88,6 +91,42 @@ export interface IStorage {
   createMysterionTrainingData(insertTrainingData: schema.InsertMysterionTrainingData): Promise<schema.MysterionTrainingData>;
   updateMysterionTrainingDataStatus(id: number, status: string, notes?: string): Promise<schema.MysterionTrainingData | undefined>;
   updateMysterionTrainingDataPoints(id: number, points: number): Promise<schema.MysterionTrainingData | undefined>;
+  
+  // Multi-Chain Bridge methods
+  // Bridge Configuration
+  getBridgeConfiguration(id: number): Promise<schema.BridgeConfiguration | undefined>;
+  getBridgeConfigurations(status?: schema.BridgeStatus): Promise<schema.BridgeConfiguration[]>;
+  getBridgeConfigurationByNetworks(sourceNetwork: string, targetNetwork: string): Promise<schema.BridgeConfiguration | undefined>;
+  createBridgeConfiguration(config: schema.InsertBridgeConfiguration): Promise<schema.BridgeConfiguration>;
+  updateBridgeConfigurationStatus(id: number, status: schema.BridgeStatus): Promise<schema.BridgeConfiguration | undefined>;
+  updateBridgeConfiguration(id: number, updates: Partial<schema.BridgeConfiguration>): Promise<schema.BridgeConfiguration | undefined>;
+  
+  // Bridge Validators
+  getBridgeValidator(id: number): Promise<schema.BridgeValidator | undefined>;
+  getBridgeValidatorsByBridgeId(bridgeId: number): Promise<schema.BridgeValidator[]>;
+  createBridgeValidator(validator: schema.InsertBridgeValidator): Promise<schema.BridgeValidator>;
+  updateBridgeValidatorStatus(id: number, status: string): Promise<schema.BridgeValidator | undefined>;
+  updateBridgeValidatorHeartbeat(id: number): Promise<schema.BridgeValidator | undefined>;
+  updateBridgeValidatorReputation(id: number, reputation: number): Promise<schema.BridgeValidator | undefined>;
+  
+  // Bridge Supported Tokens
+  getBridgeSupportedToken(id: number): Promise<schema.BridgeSupportedToken | undefined>;
+  getBridgeSupportedTokensByBridgeId(bridgeId: number): Promise<schema.BridgeSupportedToken[]>;
+  getBridgeSupportedTokenBySymbol(bridgeId: number, tokenSymbol: string): Promise<schema.BridgeSupportedToken | undefined>;
+  createBridgeSupportedToken(token: schema.InsertBridgeSupportedToken): Promise<schema.BridgeSupportedToken>;
+  updateBridgeSupportedTokenStatus(id: number, isEnabled: boolean): Promise<schema.BridgeSupportedToken | undefined>;
+  
+  // Bridge Transactions
+  getBridgeTransaction(id: number): Promise<schema.BridgeTransaction | undefined>;
+  getBridgeTransactionsByBridgeId(bridgeId: number, limit?: number): Promise<schema.BridgeTransaction[]>;
+  getBridgeTransactionsByUserId(userId: number, limit?: number): Promise<schema.BridgeTransaction[]>;
+  getBridgeTransactionsBySourceHash(sourceTransactionHash: string): Promise<schema.BridgeTransaction | undefined>;
+  getBridgeTransactionsByStatus(status: schema.BridgeTransactionStatus, limit?: number): Promise<schema.BridgeTransaction[]>;
+  createBridgeTransaction(transaction: schema.InsertBridgeTransaction): Promise<schema.BridgeTransaction>;
+  updateBridgeTransactionStatus(id: number, status: schema.BridgeTransactionStatus, errorMessage?: string): Promise<schema.BridgeTransaction | undefined>;
+  updateBridgeTransactionTargetHash(id: number, targetTransactionHash: string): Promise<schema.BridgeTransaction | undefined>;
+  addBridgeTransactionValidation(id: number, validatorId: number, signature: string): Promise<schema.BridgeTransaction | undefined>;
+  completeBridgeTransaction(id: number, targetTransactionHash: string): Promise<schema.BridgeTransaction | undefined>;
   
   // And other necessary methods...
 }

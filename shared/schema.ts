@@ -21,6 +21,17 @@ import {
   CodeGenResult
 } from './dapp-schema';
 
+// Import Bridge Schema
+import {
+  bridgeConfigurations,
+  bridgeValidators,
+  bridgeSupportedTokens,
+  bridgeTransactions,
+  BridgeNetwork,
+  BridgeStatus,
+  BridgeTransactionStatus
+} from './bridge-schema';
+
 // Escrow system types
 export enum EscrowStatus {
   INITIATED = 'initiated',
@@ -80,6 +91,7 @@ export const usersRelations = relations(users, ({ many, one }) => ({
   governanceRewards: many(governanceRewards),
   notificationPreference: one(notificationPreferences),
   apiKeys: many(userApiKeys),
+  bridgeTransactions: many(bridgeTransactions),
   // New relations will be added in usersExtendedRelations after schema initialization
 }));
 
@@ -115,6 +127,7 @@ export const walletsRelations = relations(wallets, ({ one, many }) => ({
   stakingPositions: many(stakingPositions),
   stakingRecords: many(stakingRecords),
   votes: many(votes),
+  bridgeTransactions: many(bridgeTransactions),
 }));
 
 export const insertWalletSchema = createInsertSchema(wallets).omit({
@@ -1440,6 +1453,21 @@ export const insertMysterionTrainingDataSchema = createInsertSchema(mysterionTra
 export type MysterionTrainingData = typeof mysterionTrainingData.$inferSelect;
 export type InsertMysterionTrainingData = z.infer<typeof insertMysterionTrainingDataSchema>;
 
+// Export bridge types
+export {
+  BridgeConfiguration,
+  InsertBridgeConfiguration,
+  BridgeValidator,
+  InsertBridgeValidator,
+  BridgeSupportedToken,
+  InsertBridgeSupportedToken,
+  BridgeTransaction,
+  InsertBridgeTransaction,
+  BridgeNetwork,
+  BridgeStatus,
+  BridgeTransactionStatus
+} from './bridge-schema';
+
 export const schema = {
   users,
   wallets,
@@ -1483,6 +1511,12 @@ export const schema = {
   aiCoinCompensation,
   userApiKeys,
   mysterionTrainingData,
+  
+  // Bridge infrastructure schemas
+  bridgeConfigurations,
+  bridgeValidators,
+  bridgeSupportedTokens,
+  bridgeTransactions,
   
   // DApp Builder and Marketplace schemas (imported from dapp-schema.ts)
   dappTemplates,

@@ -40,6 +40,7 @@ import DappBuilder from "./pages/DappBuilder";
 import FractalExplorer from "./pages/FractalExplorer";
 import { PaymentPage } from "./pages/PaymentPage";
 import TransactionsPage from "./pages/TransactionsPage";
+import BridgePage from "./pages/BridgePage";
 
 // Import Mobile Features Demo
 import MobileFeatureDemo from "@/components/mobile/MobileFeatureDemo";
@@ -52,6 +53,7 @@ const navigationItems = [
   { name: "Wallet", path: "/wallet", icon: <Wallet className="h-5 w-5" /> },
   { name: "Payment", path: "/payment", icon: <CreditCard className="h-5 w-5" /> },
   { name: "Transactions", path: "/transactions", icon: <BarChart3 className="h-5 w-5" /> },
+  { name: "Bridge", path: "/bridge", icon: <ChevronRight className="h-5 w-5 rotate-90" /> },
   { name: "Escrow", path: "/escrow", icon: <Shield className="h-5 w-5" /> },
   { name: "Blockchain Explorer", path: "/blockchain-explorer", icon: <Database className="h-5 w-5" /> },
   { name: "Blockchain Dashboard", path: "/blockchain-dashboard", icon: <Blocks className="h-5 w-5" /> },
@@ -490,6 +492,7 @@ function App() {
             <Route path="/escrow" component={EscrowPage} />
             <Route path="/payment" component={PaymentPage} />
             <Route path="/transactions" component={TransactionsPage} />
+            <Route path="/bridge" component={BridgePage} />
             <Route component={SimpleNotFound} />
           </Switch>
         </main>

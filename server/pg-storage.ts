@@ -13,12 +13,26 @@ import {
   NotificationPreference, InsertNotificationPreference,
   UserApiKey, InsertUserApiKey,
   MysterionTrainingData, InsertMysterionTrainingData,
+  // Bridge types
+  BridgeConfiguration, InsertBridgeConfiguration,
+  BridgeValidator, InsertBridgeValidator,
+  BridgeSupportedToken, InsertBridgeSupportedToken,
+  BridgeTransaction, InsertBridgeTransaction,
+  BridgeStatus, BridgeTransactionStatus,
+  // Schema tables
   users, wallets, transactions, smartContracts, aiMonitoringLogs, cidEntries,
   paymentMethods, payments, walletHealthScores, walletHealthIssues, notificationPreferences,
   userApiKeys, mysterionTrainingData
 } from "@shared/schema";
+// Import bridge tables directly from shared/bridge-schema.ts
+import { 
+  bridgeConfigurations, 
+  bridgeValidators, 
+  bridgeSupportedTokens, 
+  bridgeTransactions 
+} from "../shared/bridge-schema";
 import { db } from "./db";
-import { eq, desc, and, sql, inArray } from "drizzle-orm";
+import { eq, desc, and, sql, inArray, asc } from "drizzle-orm";
 
 export class PgStorage implements IStorage {
   // User methods
@@ -903,6 +917,443 @@ export class PgStorage implements IStorage {
       return result.length ? result[0] : undefined;
     } catch (error) {
       console.error('Error updating mysterion training data points:', error);
+      return undefined;
+    }
+  }
+
+  // Bridge Configuration methods
+  async getBridgeConfiguration(id: number): Promise<BridgeConfiguration | undefined> {
+    try {
+      const result = await db.select()
+        .from(bridgeConfigurations)
+        .where(eq(bridgeConfigurations.id, id))
+        .limit(1);
+      
+      return result.length ? result[0] : undefined;
+    } catch (error) {
+      console.error('Error getting bridge configuration:', error);
+      return undefined;
+    }
+  }
+
+  async getBridgeConfigurations(status?: BridgeStatus): Promise<BridgeConfiguration[]> {
+    try {
+      let query = db.select().from(bridgeConfigurations);
+      
+      if (status) {
+        query = query.where(eq(bridgeConfigurations.status, status));
+      }
+      
+      return await query.orderBy(desc(bridgeConfigurations.updatedAt));
+    } catch (error) {
+      console.error('Error getting bridge configurations:', error);
+      return [];
+    }
+  }
+
+  async getBridgeConfigurationByNetworks(sourceNetwork: string, targetNetwork: string): Promise<BridgeConfiguration | undefined> {
+    try {
+      const result = await db.select()
+        .from(bridgeConfigurations)
+        .where(and(
+          eq(bridgeConfigurations.sourceNetwork, sourceNetwork),
+          eq(bridgeConfigurations.targetNetwork, targetNetwork),
+          eq(bridgeConfigurations.status, BridgeStatus.ACTIVE)
+        ))
+        .limit(1);
+      
+      return result.length ? result[0] : undefined;
+    } catch (error) {
+      console.error('Error getting bridge configuration by networks:', error);
+      return undefined;
+    }
+  }
+
+  async createBridgeConfiguration(config: InsertBridgeConfiguration): Promise<BridgeConfiguration> {
+    try {
+      const result = await db.insert(bridgeConfigurations)
+        .values(config)
+        .returning();
+      
+      return result[0];
+    } catch (error) {
+      console.error('Error creating bridge configuration:', error);
+      throw error;
+    }
+  }
+
+  async updateBridgeConfigurationStatus(id: number, status: BridgeStatus): Promise<BridgeConfiguration | undefined> {
+    try {
+      const result = await db.update(bridgeConfigurations)
+        .set({ 
+          status,
+          updatedAt: new Date()
+        })
+        .where(eq(bridgeConfigurations.id, id))
+        .returning();
+      
+      return result.length ? result[0] : undefined;
+    } catch (error) {
+      console.error('Error updating bridge configuration status:', error);
+      return undefined;
+    }
+  }
+
+  async updateBridgeConfiguration(id: number, updates: Partial<BridgeConfiguration>): Promise<BridgeConfiguration | undefined> {
+    try {
+      // Add updated timestamp
+      const updatesWithTimestamp = {
+        ...updates,
+        updatedAt: new Date()
+      };
+      
+      const result = await db.update(bridgeConfigurations)
+        .set(updatesWithTimestamp)
+        .where(eq(bridgeConfigurations.id, id))
+        .returning();
+      
+      return result.length ? result[0] : undefined;
+    } catch (error) {
+      console.error('Error updating bridge configuration:', error);
+      return undefined;
+    }
+  }
+
+  // Bridge Validators methods
+  async getBridgeValidator(id: number): Promise<BridgeValidator | undefined> {
+    try {
+      const result = await db.select()
+        .from(bridgeValidators)
+        .where(eq(bridgeValidators.id, id))
+        .limit(1);
+      
+      return result.length ? result[0] : undefined;
+    } catch (error) {
+      console.error('Error getting bridge validator:', error);
+      return undefined;
+    }
+  }
+
+  async getBridgeValidatorsByBridgeId(bridgeId: number): Promise<BridgeValidator[]> {
+    try {
+      return await db.select()
+        .from(bridgeValidators)
+        .where(eq(bridgeValidators.bridgeId, bridgeId))
+        .orderBy(desc(bridgeValidators.isActive), desc(bridgeValidators.reputation));
+    } catch (error) {
+      console.error('Error getting bridge validators by bridge ID:', error);
+      return [];
+    }
+  }
+
+  async createBridgeValidator(validator: InsertBridgeValidator): Promise<BridgeValidator> {
+    try {
+      const result = await db.insert(bridgeValidators)
+        .values(validator)
+        .returning();
+      
+      return result[0];
+    } catch (error) {
+      console.error('Error creating bridge validator:', error);
+      throw error;
+    }
+  }
+
+  async updateBridgeValidatorStatus(id: number, status: string): Promise<BridgeValidator | undefined> {
+    try {
+      const result = await db.update(bridgeValidators)
+        .set({ status })
+        .where(eq(bridgeValidators.id, id))
+        .returning();
+      
+      return result.length ? result[0] : undefined;
+    } catch (error) {
+      console.error('Error updating bridge validator status:', error);
+      return undefined;
+    }
+  }
+
+  async updateBridgeValidatorHeartbeat(id: number): Promise<BridgeValidator | undefined> {
+    try {
+      const now = new Date();
+      const result = await db.update(bridgeValidators)
+        .set({ lastHeartbeat: now })
+        .where(eq(bridgeValidators.id, id))
+        .returning();
+      
+      return result.length ? result[0] : undefined;
+    } catch (error) {
+      console.error('Error updating bridge validator heartbeat:', error);
+      return undefined;
+    }
+  }
+
+  async updateBridgeValidatorReputation(id: number, reputation: number): Promise<BridgeValidator | undefined> {
+    try {
+      const result = await db.update(bridgeValidators)
+        .set({ reputation })
+        .where(eq(bridgeValidators.id, id))
+        .returning();
+      
+      return result.length ? result[0] : undefined;
+    } catch (error) {
+      console.error('Error updating bridge validator reputation:', error);
+      return undefined;
+    }
+  }
+
+  // Bridge Supported Tokens methods
+  async getBridgeSupportedToken(id: number): Promise<BridgeSupportedToken | undefined> {
+    try {
+      const result = await db.select()
+        .from(bridgeSupportedTokens)
+        .where(eq(bridgeSupportedTokens.id, id))
+        .limit(1);
+      
+      return result.length ? result[0] : undefined;
+    } catch (error) {
+      console.error('Error getting bridge supported token:', error);
+      return undefined;
+    }
+  }
+
+  async getBridgeSupportedTokensByBridgeId(bridgeId: number): Promise<BridgeSupportedToken[]> {
+    try {
+      return await db.select()
+        .from(bridgeSupportedTokens)
+        .where(eq(bridgeSupportedTokens.bridgeId, bridgeId))
+        .orderBy(desc(bridgeSupportedTokens.isEnabled), asc(bridgeSupportedTokens.tokenName));
+    } catch (error) {
+      console.error('Error getting bridge supported tokens by bridge ID:', error);
+      return [];
+    }
+  }
+
+  async getBridgeSupportedTokenBySymbol(bridgeId: number, tokenSymbol: string): Promise<BridgeSupportedToken | undefined> {
+    try {
+      const result = await db.select()
+        .from(bridgeSupportedTokens)
+        .where(and(
+          eq(bridgeSupportedTokens.bridgeId, bridgeId),
+          eq(bridgeSupportedTokens.tokenSymbol, tokenSymbol)
+        ))
+        .limit(1);
+      
+      return result.length ? result[0] : undefined;
+    } catch (error) {
+      console.error('Error getting bridge supported token by symbol:', error);
+      return undefined;
+    }
+  }
+
+  async createBridgeSupportedToken(token: InsertBridgeSupportedToken): Promise<BridgeSupportedToken> {
+    try {
+      const result = await db.insert(bridgeSupportedTokens)
+        .values(token)
+        .returning();
+      
+      return result[0];
+    } catch (error) {
+      console.error('Error creating bridge supported token:', error);
+      throw error;
+    }
+  }
+
+  async updateBridgeSupportedTokenStatus(id: number, isEnabled: boolean): Promise<BridgeSupportedToken | undefined> {
+    try {
+      const result = await db.update(bridgeSupportedTokens)
+        .set({ 
+          isEnabled,
+          updatedAt: new Date()
+        })
+        .where(eq(bridgeSupportedTokens.id, id))
+        .returning();
+      
+      return result.length ? result[0] : undefined;
+    } catch (error) {
+      console.error('Error updating bridge supported token status:', error);
+      return undefined;
+    }
+  }
+
+  // Bridge Transactions methods
+  async getBridgeTransaction(id: number): Promise<BridgeTransaction | undefined> {
+    try {
+      const result = await db.select()
+        .from(bridgeTransactions)
+        .where(eq(bridgeTransactions.id, id))
+        .limit(1);
+      
+      return result.length ? result[0] : undefined;
+    } catch (error) {
+      console.error('Error getting bridge transaction:', error);
+      return undefined;
+    }
+  }
+
+  async getBridgeTransactionsByBridgeId(bridgeId: number, limit: number = 50): Promise<BridgeTransaction[]> {
+    try {
+      return await db.select()
+        .from(bridgeTransactions)
+        .where(eq(bridgeTransactions.bridgeId, bridgeId))
+        .orderBy(desc(bridgeTransactions.initiatedAt))
+        .limit(limit);
+    } catch (error) {
+      console.error('Error getting bridge transactions by bridge ID:', error);
+      return [];
+    }
+  }
+
+  async getBridgeTransactionsByUserId(userId: number, limit: number = 50): Promise<BridgeTransaction[]> {
+    try {
+      return await db.select()
+        .from(bridgeTransactions)
+        .where(eq(bridgeTransactions.userId, userId))
+        .orderBy(desc(bridgeTransactions.initiatedAt))
+        .limit(limit);
+    } catch (error) {
+      console.error('Error getting bridge transactions by user ID:', error);
+      return [];
+    }
+  }
+
+  async getBridgeTransactionsBySourceHash(sourceTransactionHash: string): Promise<BridgeTransaction | undefined> {
+    try {
+      const result = await db.select()
+        .from(bridgeTransactions)
+        .where(eq(bridgeTransactions.sourceTransactionHash, sourceTransactionHash))
+        .limit(1);
+      
+      return result.length ? result[0] : undefined;
+    } catch (error) {
+      console.error('Error getting bridge transaction by source hash:', error);
+      return undefined;
+    }
+  }
+
+  async getBridgeTransactionsByStatus(status: BridgeTransactionStatus, limit: number = 50): Promise<BridgeTransaction[]> {
+    try {
+      return await db.select()
+        .from(bridgeTransactions)
+        .where(eq(bridgeTransactions.status, status))
+        .orderBy(desc(bridgeTransactions.initiatedAt))
+        .limit(limit);
+    } catch (error) {
+      console.error('Error getting bridge transactions by status:', error);
+      return [];
+    }
+  }
+
+  async createBridgeTransaction(transaction: InsertBridgeTransaction): Promise<BridgeTransaction> {
+    try {
+      const result = await db.insert(bridgeTransactions)
+        .values(transaction)
+        .returning();
+      
+      return result[0];
+    } catch (error) {
+      console.error('Error creating bridge transaction:', error);
+      throw error;
+    }
+  }
+
+  async updateBridgeTransactionStatus(
+    id: number, 
+    status: BridgeTransactionStatus, 
+    errorMessage?: string
+  ): Promise<BridgeTransaction | undefined> {
+    try {
+      const updates: Partial<BridgeTransaction> = { status };
+      
+      // Add error message if provided
+      if (errorMessage) {
+        updates.errorMessage = errorMessage;
+      }
+      
+      // If the status is COMPLETED, add completion timestamp
+      if (status === BridgeTransactionStatus.COMPLETED) {
+        updates.completedAt = new Date();
+      }
+      
+      const result = await db.update(bridgeTransactions)
+        .set(updates)
+        .where(eq(bridgeTransactions.id, id))
+        .returning();
+      
+      return result.length ? result[0] : undefined;
+    } catch (error) {
+      console.error('Error updating bridge transaction status:', error);
+      return undefined;
+    }
+  }
+
+  async updateBridgeTransactionTargetHash(
+    id: number, 
+    targetTransactionHash: string
+  ): Promise<BridgeTransaction | undefined> {
+    try {
+      const result = await db.update(bridgeTransactions)
+        .set({ targetTransactionHash })
+        .where(eq(bridgeTransactions.id, id))
+        .returning();
+      
+      return result.length ? result[0] : undefined;
+    } catch (error) {
+      console.error('Error updating bridge transaction target hash:', error);
+      return undefined;
+    }
+  }
+
+  async addBridgeTransactionValidation(
+    id: number, 
+    validatorId: number, 
+    signature: string
+  ): Promise<BridgeTransaction | undefined> {
+    try {
+      // First get the current validations array
+      const transaction = await this.getBridgeTransaction(id);
+      if (!transaction) {
+        return undefined;
+      }
+      
+      // Add the new validation
+      const validationsArray = Array.isArray(transaction.validations) ? transaction.validations : [];
+      validationsArray.push({
+        validatorId,
+        signature,
+        timestamp: new Date()
+      });
+      
+      // Update the transaction
+      const result = await db.update(bridgeTransactions)
+        .set({ 
+          validations: sql`${JSON.stringify(validationsArray)}`
+        })
+        .where(eq(bridgeTransactions.id, id))
+        .returning();
+      
+      return result.length ? result[0] : undefined;
+    } catch (error) {
+      console.error('Error adding bridge transaction validation:', error);
+      return undefined;
+    }
+  }
+
+  async completeBridgeTransaction(id: number, targetTransactionHash: string): Promise<BridgeTransaction | undefined> {
+    try {
+      const now = new Date();
+      const result = await db.update(bridgeTransactions)
+        .set({ 
+          status: BridgeTransactionStatus.COMPLETED,
+          targetTransactionHash,
+          completedAt: now
+        })
+        .where(eq(bridgeTransactions.id, id))
+        .returning();
+      
+      return result.length ? result[0] : undefined;
+    } catch (error) {
+      console.error('Error completing bridge transaction:', error);
       return undefined;
     }
   }
