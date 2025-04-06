@@ -10,7 +10,7 @@ import { Link } from "wouter";
 import { 
   Menu, X, Home, Layout, Wallet, Lock, Shield, Settings, AlertTriangle, ChevronRight, 
   BarChart3, Eye, Cpu, Bell, Zap, Coins, FileText, Database, Bot, TestTube, Blocks,
-  Smartphone, Lightbulb, CreditCard, Info
+  Smartphone, Lightbulb, CreditCard, Info, Palette
 } from "lucide-react";
 
 // Import existing pages for now
@@ -44,6 +44,7 @@ import TransactionsPage from "./pages/TransactionsPage";
 // Import Mobile Features Demo
 import MobileFeatureDemo from "@/components/mobile/MobileFeatureDemo";
 import EscrowPage from "./pages/Escrow";
+import BottomNavigation from "@/components/mobile/BottomNavigation";
 
 // Define navigation items for both mobile and desktop
 const navigationItems = [
@@ -410,7 +411,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <LiveModeProvider>
-        <div className="app-container w-full h-full">
+        <div className={`app-container w-full h-full ${isMobile ? 'pb-16' : ''}`}>
         {/* Top Navigation Bar */}
         <header className="flex justify-between items-center p-2 sm:p-4 bg-background border-b fixed top-0 left-0 right-0 z-30">
           <div className="flex items-center">
@@ -494,6 +495,11 @@ function App() {
         </main>
         
         <Toaster />
+        
+        {/* Add mobile bottom navigation for small screens */}
+        {isMobile && (
+          <BottomNavigation />
+        )}
         
         {/* Add floating Mysterion AI Assistant to all pages except the AI Assistant page itself */}
         {location !== '/ai-assistant' && (
