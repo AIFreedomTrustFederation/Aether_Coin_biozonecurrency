@@ -5,15 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
     <title>Aetherion UI Wallet</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@500;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <!-- Node.js polyfills for browser environment -->
+    
+    <!-- Essential global variables -->
     <script>
-      // Define global for Node.js module compatibility
-      var global = window;
+      // Set up the global object 
+      window.global = window;
       
-      // Define process for Node.js module compatibility
-      var process = {
+      // Set up process object
+      window.process = {
         env: {},
-        version: '',
+        version: 'v16.0.0',
         nextTick: function(fn) { setTimeout(fn, 0); },
         browser: true
       };

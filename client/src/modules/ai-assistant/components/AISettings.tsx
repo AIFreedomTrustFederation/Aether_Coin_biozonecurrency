@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
+import { mysterionClient } from '@/services/mysterion-client';
 import { 
   Dialog, 
   DialogContent, 
@@ -28,23 +29,6 @@ import {
   AlertDescription
 } from '@/components/ui/alert';
 import { Switch } from '@/components/ui/switch';
-
-// Mock data to use when not connected to actual backend
-const MOCK_API_KEYS = [
-  {
-    id: 1,
-    service: 'openai',
-    nickname: 'Primary GPT-4 Key',
-    isActive: true,
-    isTrainingEnabled: true,
-    usageCount: 42,
-    createdAt: new Date().toISOString(),
-    lastUsedAt: new Date().toISOString(),
-    vaultStatus: 'secured'
-  }
-];
-
-const MOCK_CONTRIBUTION_POINTS = 560;
 import {
   Tooltip,
   TooltipContent,
@@ -62,6 +46,23 @@ import {
   Brain, 
   AlertTriangle 
 } from 'lucide-react';
+
+// Mock data to use when not connected to actual backend
+const MOCK_API_KEYS = [
+  {
+    id: 1,
+    service: 'openai',
+    nickname: 'Primary GPT-4 Key',
+    isActive: true,
+    isTrainingEnabled: true,
+    usageCount: 42,
+    createdAt: new Date().toISOString(),
+    lastUsedAt: new Date().toISOString(),
+    vaultStatus: 'secured'
+  }
+];
+
+const MOCK_CONTRIBUTION_POINTS = 560;
 
 type ApiKey = {
   id: number;
@@ -81,13 +82,39 @@ export default function AISettings() {
   const { toast } = useToast();
 
   // Fetch API keys
-  const { data: apiKeyData, isLoading: keysLoading, error: keysError } = useQuery({
+  interface ApiKeyData {
+    apiKeys: ApiKey[];
+  }
+
+  interface ContributionData {
+    points: number;
+  }
+
+  const { data: apiKeyData, isLoading: keysLoading, error: keysError } = useQuery<ApiKeyData>({
     queryKey: ['/api/mysterion/api-keys'],
+    queryFn: async () => {
+      try {
+        const keys = await mysterionClient.getApiKeys();
+        return { apiKeys: keys };
+      } catch (error) {
+        console.error('Error fetching API keys:', error);
+        return { apiKeys: [] };
+      }
+    }
   });
 
   // Get contribution points
-  const { data: contributionData, isLoading: pointsLoading } = useQuery({
+  const { data: contributionData, isLoading: pointsLoading } = useQuery<ContributionData>({
     queryKey: ['/api/mysterion/contribution'],
+    queryFn: async () => {
+      try {
+        const points = await mysterionClient.getContributionPoints();
+        return { points };
+      } catch (error) {
+        console.error('Error fetching contribution points:', error);
+        return { points: 0 };
+      }
+    }
   });
 
   const apiKeys = apiKeyData?.apiKeys || MOCK_API_KEYS;
@@ -96,15 +123,7 @@ export default function AISettings() {
   // Delete API key
   const deleteMutation = useMutation({
     mutationFn: async (keyId: number) => {
-      const response = await fetch(`/api/mysterion/api-keys/${keyId}`, {
-        method: 'DELETE',
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to delete API key');
-      }
-      
-      return await response.json();
+      return await mysterionClient.deleteApiKey(keyId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/mysterion/api-keys'] });
@@ -125,22 +144,7 @@ export default function AISettings() {
   // Update API key settings
   const updateMutation = useMutation({
     mutationFn: async ({ keyId, isActive, isTrainingEnabled }: { keyId: number, isActive?: boolean, isTrainingEnabled?: boolean}) => {
-      const response = await fetch(`/api/mysterion/api-keys/${keyId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          isActive,
-          isTrainingEnabled,
-        }),
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to update API key settings');
-      }
-      
-      return await response.json();
+      return await mysterionClient.updateApiKey(keyId, { isActive, isTrainingEnabled });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/mysterion/api-keys'] });
@@ -364,26 +368,12 @@ function AddApiKeyDialog({
       nickname: string;
       isTrainingEnabled: boolean;
     }) => {
-      const response = await fetch('/api/mysterion/api-keys', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          apiKey: data.apiKey,
-          nickname: data.nickname,
-          service: 'openai',
-          isActive: true,
-          isTrainingEnabled: data.isTrainingEnabled,
-        }),
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to add API key');
-      }
-      
-      return await response.json();
+      return await mysterionClient.addApiKey(
+        'openai',
+        data.apiKey,
+        data.nickname,
+        data.isTrainingEnabled
+      );
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/mysterion/api-keys'] });
