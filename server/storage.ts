@@ -56,6 +56,14 @@ export interface IStorage {
   getTransactionsByWalletId(walletId: number): Promise<schema.Transaction[]>;
   getRecentTransactions(userId: number, limit: number): Promise<schema.Transaction[]>;
   createTransaction(insertTransaction: schema.InsertTransaction): Promise<schema.Transaction>;
+  getLayer2Transactions(userId: number, layer2Type?: string): Promise<schema.Transaction[]>;
+  updateTransactionDescription(id: number, description: string): Promise<schema.Transaction | undefined>;
+  updateTransactionLayer2Info(
+    id: number, 
+    isLayer2: boolean, 
+    layer2Type?: string, 
+    layer2Data?: Record<string, any>
+  ): Promise<schema.Transaction | undefined>;
   
   // Payment methods
   getPayment(id: number): Promise<schema.Payment | undefined>;

@@ -110,6 +110,72 @@ export class PgStorage implements IStorage {
     const result = await db.insert(transactions).values(insertTransaction).returning();
     return result[0];
   }
+  
+  // Get transactions with layer 2 filtering
+  async getLayer2Transactions(userId: number, layer2Type?: string): Promise<Transaction[]> {
+    // Get all transactions from wallets owned by the user
+    const userWallets = await this.getWalletsByUserId(userId);
+    
+    if (userWallets.length === 0) {
+      return [];
+    }
+    
+    const walletIds = userWallets.map(wallet => wallet.id);
+    
+    // Base condition: layer 2 transactions
+    let whereCondition = and(
+      sql`${transactions.walletId} IN (${sql.join(walletIds, sql`, `)})`,
+      eq(transactions.isLayer2, true)
+    );
+    
+    // Add layer2Type filter if provided
+    if (layer2Type) {
+      whereCondition = and(
+        whereCondition,
+        eq(transactions.layer2Type, layer2Type)
+      );
+    }
+    
+    const query = db
+      .select()
+      .from(transactions)
+      .where(whereCondition)
+      .orderBy(desc(transactions.timestamp));
+    
+    const result = await query;
+    return result;
+  }
+  
+  // Update transaction description
+  async updateTransactionDescription(id: number, description: string): Promise<Transaction | undefined> {
+    const result = await db
+      .update(transactions)
+      .set({ plainDescription: description })
+      .where(eq(transactions.id, id))
+      .returning();
+    
+    return result.length ? result[0] : undefined;
+  }
+  
+  // Update transaction layer 2 information
+  async updateTransactionLayer2Info(
+    id: number, 
+    isLayer2: boolean, 
+    layer2Type?: string, 
+    layer2Data?: Record<string, any>
+  ): Promise<Transaction | undefined> {
+    const result = await db
+      .update(transactions)
+      .set({ 
+        isLayer2, 
+        layer2Type: layer2Type || null,
+        layer2Data: layer2Data ? sql`${JSON.stringify(layer2Data)}` : null
+      })
+      .where(eq(transactions.id, id))
+      .returning();
+    
+    return result.length ? result[0] : undefined;
+  }
 
   // Smart Contract methods
   async getSmartContract(id: number): Promise<SmartContract | undefined> {

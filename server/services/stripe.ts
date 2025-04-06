@@ -50,7 +50,7 @@ export const stripeService = {
         metadata: {
           ...metadata,
           userId: userId.toString(),
-          walletId: walletId ? walletId.toString() : undefined,
+          walletId: walletId ? walletId.toString() : null,
         },
         automatic_payment_methods: {
           enabled: true,
@@ -74,7 +74,7 @@ export const stripeService = {
           ...metadata,
           processor: 'stripe',
           userId: userId.toString(),
-          walletId: walletId ? walletId.toString() : undefined,
+          walletId: walletId ? walletId.toString() : null,
         },
         walletId,
       };
@@ -159,6 +159,67 @@ export const stripeService = {
       return paymentIntent.status;
     } catch (error) {
       console.error('Error checking Stripe payment status:', error);
+      throw error;
+    }
+  },
+  
+  /**
+   * Save a payment method for a user
+   * 
+   * @param userId The user ID
+   * @param stripePaymentMethodId The Stripe payment method ID
+   * @param isDefault Whether this is the default payment method
+   * @returns The saved payment method
+   */
+  async savePaymentMethod(
+    userId: number,
+    stripePaymentMethodId: string,
+    isDefault: boolean = false
+  ) {
+    try {
+      if (!stripe) {
+        throw new Error('Stripe is not initialized');
+      }
+      
+      // Retrieve the payment method from Stripe to get details
+      const stripePaymentMethod = await stripe.paymentMethods.retrieve(stripePaymentMethodId);
+      
+      // Extract card details if it's a card
+      const cardDetails = stripePaymentMethod.type === 'card' && stripePaymentMethod.card 
+        ? {
+            last4: stripePaymentMethod.card.last4,
+            brand: stripePaymentMethod.card.brand,
+            expMonth: stripePaymentMethod.card.exp_month,
+            expYear: stripePaymentMethod.card.exp_year
+          }
+        : {};
+      
+      // Save to our database
+      const paymentMethod = await storage.createPaymentMethod({
+        userId,
+        type: stripePaymentMethod.type,
+        provider: 'stripe',
+        providerPaymentId: stripePaymentMethodId,
+        isDefault,
+        details: {
+          ...cardDetails,
+          billingDetails: stripePaymentMethod.billing_details
+        }
+      });
+      
+      // If this is set as default, update other payment methods to not be default
+      if (isDefault) {
+        const userPaymentMethods = await storage.getPaymentMethodsByUserId(userId);
+        for (const method of userPaymentMethods) {
+          if (method.id !== paymentMethod.id && method.isDefault) {
+            await storage.updatePaymentMethodDefault(method.id, false);
+          }
+        }
+      }
+      
+      return paymentMethod;
+    } catch (error) {
+      console.error('Error saving Stripe payment method:', error);
       throw error;
     }
   },

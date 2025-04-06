@@ -137,6 +137,10 @@ export const transactions = pgTable("transactions", {
   fee: text("fee"),
   blockNumber: integer("block_number"),
   aiVerified: boolean("ai_verified").default(false),
+  plainDescription: text("plain_description"), // Human-readable description
+  isLayer2: boolean("is_layer2").default(false), // Whether this is a Layer 2 transaction
+  layer2Type: text("layer2_type"), // e.g., 'optimism', 'arbitrum', 'polygon', 'zksync'
+  layer2Data: jsonb("layer2_data"), // Additional Layer 2 specific information
 });
 
 export const transactionsRelations = relations(transactions, ({ one }) => ({

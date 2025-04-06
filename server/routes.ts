@@ -190,7 +190,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             wallet.userId, 
             transactionType, 
             amount, 
-            transaction.symbol || 'SING' // Default to SING if no symbol provided
+            transaction.tokenSymbol || 'SING' // Default to SING if no symbol provided
           );
           
           console.log(`Transaction notification results:`, notificationResults);
@@ -206,6 +206,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid transaction data", errors: error.errors });
       }
       res.status(500).json({ message: "Failed to create transaction" });
+    }
+  });
+  
+  // Get Layer 2 transactions
+  app.get("/api/transactions/layer2", async (req, res) => {
+    try {
+      const userId = 1;
+      const layer2Type = req.query.type as string | undefined;
+      const transactions = await storage.getLayer2Transactions(userId, layer2Type);
+      res.json(transactions);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch Layer 2 transactions" });
+    }
+  });
+  
+  // Update transaction description (plain language explanation)
+  app.patch("/api/transactions/:id/description", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { description } = req.body;
+      
+      if (!description || typeof description !== 'string') {
+        return res.status(400).json({ message: "Description is required and must be a string" });
+      }
+      
+      const transaction = await storage.updateTransactionDescription(id, description);
+      
+      if (!transaction) {
+        return res.status(404).json({ message: "Transaction not found" });
+      }
+      
+      res.json(transaction);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update transaction description" });
+    }
+  });
+  
+  // Update transaction Layer 2 information
+  app.patch("/api/transactions/:id/layer2", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { isLayer2, layer2Type, layer2Data } = req.body;
+      
+      if (typeof isLayer2 !== 'boolean') {
+        return res.status(400).json({ message: "isLayer2 is required and must be a boolean" });
+      }
+      
+      const transaction = await storage.updateTransactionLayer2Info(
+        id, 
+        isLayer2, 
+        layer2Type, 
+        layer2Data
+      );
+      
+      if (!transaction) {
+        return res.status(404).json({ message: "Transaction not found" });
+      }
+      
+      res.json(transaction);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update transaction Layer 2 information" });
     }
   });
 
