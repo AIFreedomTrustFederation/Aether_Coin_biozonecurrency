@@ -36,9 +36,18 @@ export function MysterionAIPage() {
         <div className="lg:col-span-1">
           <Tabs defaultValue="features">
             <TabsList className="w-full">
-              <TabsTrigger value="features">Features</TabsTrigger>
-              <TabsTrigger value="security">Security</TabsTrigger>
-              <TabsTrigger value="tech">Technology</TabsTrigger>
+              <TabsTrigger value="features">
+                <span className="hidden sm:inline">Features</span>
+                <span className="sm:hidden">Features</span>
+              </TabsTrigger>
+              <TabsTrigger value="security">
+                <span className="hidden sm:inline">Security</span>
+                <span className="sm:hidden">Security</span>
+              </TabsTrigger>
+              <TabsTrigger value="tech">
+                <span className="hidden sm:inline">Technology</span>
+                <span className="sm:hidden">Tech</span>
+              </TabsTrigger>
             </TabsList>
             
             <TabsContent value="features" className="space-y-4 mt-4">

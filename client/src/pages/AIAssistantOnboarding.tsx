@@ -292,8 +292,14 @@ const AIAssistantOnboarding: React.FC = () => {
             <div>
               <Tabs defaultValue="chat">
                 <TabsList>
-                  <TabsTrigger value="chat">Chat</TabsTrigger>
-                  <TabsTrigger value="help">Help</TabsTrigger>
+                  <TabsTrigger value="chat">
+                    <span className="hidden sm:inline">Chat with Assistant</span>
+                    <span className="sm:hidden">Chat</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="help">
+                    <span className="hidden sm:inline">Help & Resources</span>
+                    <span className="sm:hidden">Help</span>
+                  </TabsTrigger>
                 </TabsList>
               </Tabs>
             </div>

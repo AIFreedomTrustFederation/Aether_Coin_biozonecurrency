@@ -10,8 +10,14 @@ const WalletPage: React.FC = () => {
         
         <Tabs defaultValue="create-wallet" className="w-full">
           <TabsList className="mb-6">
-            <TabsTrigger value="create-wallet">Create/Import Wallet</TabsTrigger>
-            <TabsTrigger value="web3-connect">Web3 Connect</TabsTrigger>
+            <TabsTrigger value="create-wallet">
+              <span className="hidden sm:inline">Create/Import Wallet</span>
+              <span className="sm:hidden">Create</span>
+            </TabsTrigger>
+            <TabsTrigger value="web3-connect">
+              <span className="hidden sm:inline">Web3 Connect</span>
+              <span className="sm:hidden">Connect</span>
+            </TabsTrigger>
           </TabsList>
           
           <TabsContent value="create-wallet">

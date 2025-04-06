@@ -60,31 +60,35 @@ const ChatInterface = ({
       {/* Messages area */}
       <ScrollArea className="flex-1 chat-messages p-4">
         <div className="space-y-4">
-          {messages.map((message: Message) => (
-            <div 
-              key={message.id}
-              className={cn(
-                "flex flex-col max-w-[80%] rounded-lg p-3 ",
-                message.role === 'user' 
-                  ? "ml-auto bg-primary text-primary-foreground" 
-                  : message.role === 'assistant'
-                    ? "mr-auto bg-muted" 
-                    : "mx-auto bg-secondary/50 text-secondary-foreground text-sm italic"
-              )}
-            >
-              <div className="whitespace-pre-wrap break-words">{message.content}</div>
+          {messages && messages.length > 0 ? (
+            messages.map((message: Message) => (
               <div 
+                key={message.id}
                 className={cn(
-                  "text-xs mt-1", 
+                  "flex flex-col max-w-[80%] rounded-lg p-3 ",
                   message.role === 'user' 
-                    ? "text-primary-foreground/70 text-right" 
-                    : "text-muted-foreground"
+                    ? "ml-auto bg-primary text-primary-foreground" 
+                    : message.role === 'assistant'
+                      ? "mr-auto bg-muted" 
+                      : "mx-auto bg-secondary/50 text-secondary-foreground text-sm italic"
                 )}
               >
-                {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                <div className="whitespace-pre-wrap break-words">{message.content}</div>
+                <div 
+                  className={cn(
+                    "text-xs mt-1", 
+                    message.role === 'user' 
+                      ? "text-primary-foreground/70 text-right" 
+                      : "text-muted-foreground"
+                  )}
+                >
+                  {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </div>
               </div>
-            </div>
-          ))}
+            ))
+          ) : (
+            <div className="text-center text-muted-foreground py-8">No messages yet</div>
+          )}
           
           {isProcessing && (
             <div className="flex items-center mr-auto bg-muted rounded-lg p-3 space-x-2">
