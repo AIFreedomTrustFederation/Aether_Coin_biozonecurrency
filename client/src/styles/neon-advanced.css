@@ -1,0 +1,124 @@
+/* Neon Advanced Effects - More detailed but non-critical styles */
+
+/* Enhanced neon glow with multiple layers */
+.neon-glow {
+  text-shadow: 0 0 5px var(--glow-color, #fff), 
+               0 0 10px var(--glow-color, #fff), 
+               0 0 15px var(--glow-color, #fff), 
+               0 0 20px var(--primary-color, #00ffff), 
+               0 0 35px var(--primary-color, #00ffff);
+}
+
+/* Enhanced neon border with inner glow */
+.neon-border {
+  box-shadow: 0 0 5px var(--primary-color, #00ffff),
+              0 0 10px var(--primary-color, #00ffff),
+              inset 0 0 5px var(--primary-color, #00ffff);
+}
+
+/* Enhanced neon button with better hover effects */
+.neon-button {
+  box-shadow: 0 0 5px var(--primary-color, #00ffff);
+  overflow: hidden;
+}
+
+.neon-button:hover, .neon-button:focus {
+  box-shadow: 0 0 10px var(--primary-color, #00ffff),
+              0 0 20px var(--primary-color, #00ffff);
+  text-shadow: none;
+}
+
+/* Enhanced neon card with inner glow */
+.neon-card {
+  box-shadow: 0 0 10px var(--primary-color, #00ffff),
+              inset 0 0 5px var(--primary-color, #00ffff);
+}
+
+/* Enhanced neon divider with glow */
+.neon-divider {
+  box-shadow: 0 0 10px var(--primary-color, #00ffff),
+              0 0 20px var(--primary-color, #00ffff);
+}
+
+/* Neon box shadows for elements */
+.neon-shadow {
+  box-shadow: 0 0 10px var(--primary-color, #00ffff),
+              0 0 20px rgba(var(--primary-color-rgb, 0, 255, 255), 0.5);
+}
+
+/* Neon grid lines */
+.neon-grid {
+  background-image: 
+    linear-gradient(rgba(var(--primary-color-rgb, 0, 255, 255), 0.3) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(var(--primary-color-rgb, 0, 255, 255), 0.3) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+/* Neon loading spinner */
+.neon-spinner {
+  border: 3px solid rgba(var(--primary-color-rgb, 0, 255, 255), 0.1);
+  border-top: 3px solid var(--primary-color, #00ffff);
+  border-radius: 50%;
+  box-shadow: 0 0 10px var(--primary-color, #00ffff);
+  animation: neon-spin 1s linear infinite;
+}
+
+@keyframes neon-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Neon gradient background */
+.neon-gradient-bg {
+  background: linear-gradient(
+    135deg, 
+    rgba(0, 0, 0, 0.9) 0%, 
+    rgba(var(--primary-color-rgb, 0, 255, 255), 0.1) 50%, 
+    rgba(0, 0, 0, 0.9) 100%
+  );
+}
+
+/* Neon themed scrollbar */
+.neon-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.neon-scrollbar::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+.neon-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--primary-color, #00ffff);
+  border-radius: 4px;
+  box-shadow: 0 0 5px var(--primary-color, #00ffff);
+}
+
+.neon-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(var(--primary-color-rgb, 0, 255, 255), 0.8);
+}
+
+/* Neon input field */
+.neon-input {
+  background-color: rgba(0, 0, 0, 0.7);
+  border: 1px solid var(--primary-color, #00ffff);
+  box-shadow: 0 0 5px var(--primary-color, #00ffff),
+              inset 0 0 2px var(--primary-color, #00ffff);
+  color: white;
+  transition: all 0.3s ease;
+}
+
+.neon-input:focus {
+  border: 1px solid var(--primary-color, #00ffff);
+  box-shadow: 0 0 10px var(--primary-color, #00ffff),
+              inset 0 0 5px var(--primary-color, #00ffff);
+  outline: none;
+}
+
+/* Neon outlined text */
+.neon-outlined-text {
+  color: black;
+  -webkit-text-stroke: 1px var(--primary-color, #00ffff);
+  text-shadow: 0 0 10px var(--primary-color, #00ffff);
+}

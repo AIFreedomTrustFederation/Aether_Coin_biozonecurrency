@@ -3,12 +3,15 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { SunMoon, Palette, Moon, Sun, Monitor } from 'lucide-react';
+import { SunMoon, Palette, Moon, Sun, Monitor, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useThemeStore } from '@/lib/theme';
+// We'll lazily import the theme loader when needed
+import { loadThemeStyles } from '@/lib/lazyThemeLoader';
 
 type ThemeOption = 'light' | 'dark' | 'system';
-type ColorScheme = 'purple' | 'blue' | 'green' | 'orange' | 'red';
-type Variant = 'vibrant' | 'professional' | 'tint';
+type ColorScheme = 'purple' | 'blue' | 'green' | 'orange' | 'red' | 'cyan' | 'pink';
+type Variant = 'vibrant' | 'professional' | 'tint' | 'neon';
 
 interface ThemeConfig {
   appearance: ThemeOption;
@@ -57,9 +60,23 @@ export function ThemeSwitcher({ className }: { className?: string }) {
     
     // Set primary color
     htmlElement.setAttribute('data-theme-color', newTheme.primaryColor);
+    htmlElement.style.setProperty('--primary-color', convertNamedColorToHex(newTheme.primaryColor));
     
     // Set variant
     htmlElement.setAttribute('data-theme-variant', newTheme.variant);
+    
+    // If neon variant is selected, load the special neon styles
+    if (newTheme.variant === 'neon') {
+      // Ensure dark mode is enabled for neon themes
+      htmlElement.classList.add('dark');
+      // Load the advanced neon styles
+      loadThemeStyles('neon-advanced');
+      
+      // Delayed loading of animations for better performance
+      setTimeout(() => {
+        loadThemeStyles('neon-animations');
+      }, 1000);
+    }
     
     // Set border radius
     htmlElement.style.setProperty('--radius', `${newTheme.radius}rem`);
@@ -69,6 +86,21 @@ export function ThemeSwitcher({ className }: { className?: string }) {
     
     // Update theme.json dynamically if needed
     updateThemeJson(newTheme);
+  };
+  
+  // Helper to convert color name to hex
+  const convertNamedColorToHex = (colorName: ColorScheme): string => {
+    const colorMap: Record<ColorScheme, string> = {
+      purple: '#8b5cf6',
+      blue: '#3b82f6',
+      green: '#10b981',
+      orange: '#f97316',
+      red: '#ef4444',
+      cyan: '#00ffff',
+      pink: '#ff00ff'
+    };
+    
+    return colorMap[colorName] || '#3b82f6';
   };
 
   // Function to update theme.json file (in a real app, this would be an API call)
@@ -185,6 +217,22 @@ export function ThemeSwitcher({ className }: { className?: string }) {
                   className="cursor-pointer w-6 h-6 rounded-full bg-red-500"
                 />
               </div>
+
+              <div className="flex items-center">
+                <RadioGroupItem value="cyan" id="cyan" className="sr-only" />
+                <Label 
+                  htmlFor="cyan" 
+                  className="cursor-pointer w-6 h-6 rounded-full bg-cyan-400 neon-glow"
+                />
+              </div>
+              
+              <div className="flex items-center">
+                <RadioGroupItem value="pink" id="pink" className="sr-only" />
+                <Label 
+                  htmlFor="pink" 
+                  className="cursor-pointer w-6 h-6 rounded-full bg-pink-500 neon-glow"
+                />
+              </div>
             </RadioGroup>
           </div>
 
@@ -193,7 +241,7 @@ export function ThemeSwitcher({ className }: { className?: string }) {
             <RadioGroup 
               defaultValue={theme.variant} 
               onValueChange={(value) => handleThemeChange('variant', value as Variant)}
-              className="grid grid-cols-3 gap-2"
+              className="grid grid-cols-4 gap-2"
             >
               <div className="flex flex-col items-center gap-1">
                 <RadioGroupItem value="vibrant" id="vibrant" className="sr-only" />
@@ -211,7 +259,7 @@ export function ThemeSwitcher({ className }: { className?: string }) {
                   htmlFor="professional" 
                   className="cursor-pointer w-full p-2 bg-background border rounded-md text-center"
                 >
-                  Professional
+                  Pro
                 </Label>
               </div>
               
@@ -222,6 +270,16 @@ export function ThemeSwitcher({ className }: { className?: string }) {
                   className="cursor-pointer w-full p-2 bg-background border rounded-md text-center"
                 >
                   Tint
+                </Label>
+              </div>
+              
+              <div className="flex flex-col items-center gap-1">
+                <RadioGroupItem value="neon" id="neon" className="sr-only" />
+                <Label 
+                  htmlFor="neon" 
+                  className="cursor-pointer w-full p-2 bg-background border border-primary rounded-md text-center flex justify-center items-center gap-1 font-medium text-primary"
+                >
+                  <Zap className="h-3 w-3" /> Neon
                 </Label>
               </div>
             </RadioGroup>

@@ -53,6 +53,42 @@ const defaultThemes: Theme[] = [
     mode: 'system', 
     primary: '#06b6d4', // Cyan
     radius: 1 
+  },
+  // Neon Themes
+  { 
+    id: 'neon-cyan', 
+    name: 'Neon Cyan', 
+    mode: 'dark', 
+    primary: '#00ffff', // Electric Cyan
+    radius: 0.5 
+  },
+  { 
+    id: 'neon-green', 
+    name: 'Neon Green', 
+    mode: 'dark', 
+    primary: '#00ff88', // Electric Green
+    radius: 0.5 
+  },
+  { 
+    id: 'neon-pink', 
+    name: 'Neon Pink', 
+    mode: 'dark', 
+    primary: '#ff00ff', // Electric Magenta
+    radius: 0.5 
+  },
+  { 
+    id: 'neon-blue', 
+    name: 'Neon Blue', 
+    mode: 'dark', 
+    primary: '#00aaff', // Electric Blue
+    radius: 0.5 
+  },
+  { 
+    id: 'neon-orange', 
+    name: 'Neon Orange', 
+    mode: 'dark', 
+    primary: '#ff9900', // Electric Orange
+    radius: 0.5 
   }
 ];
 
@@ -85,6 +121,7 @@ export const useThemeStore = create<ThemeState>()(
 export const applyTheme = (theme: Theme) => {
   // Update CSS variables
   document.documentElement.style.setProperty('--theme-primary', theme.primary);
+  document.documentElement.style.setProperty('--primary-color', theme.primary); // Support both naming conventions
   document.documentElement.style.setProperty('--theme-radius', `${theme.radius * 0.5}rem`);
   
   // Update data-theme attribute
@@ -97,10 +134,49 @@ export const applyTheme = (theme: Theme) => {
     document.documentElement.classList.toggle('dark', theme.mode === 'dark');
   }
   
-  // Update theme.json
-  // In a real app, this might send an API request to update the user's preferences
-  // In our simplified version, we're handling this through local storage with zustand/persist
+  // For neon themes, dynamically load additional styles
+  if (theme.id.startsWith('neon-')) {
+    // Set RGB variant of primary color for neon effects
+    const rgb = hexToRgb(theme.primary);
+    if (rgb) {
+      document.documentElement.style.setProperty(
+        '--primary-color-rgb', 
+        `${rgb.r}, ${rgb.g}, ${rgb.b}`
+      );
+    }
+    
+    // Lazy load advanced neon styles
+    import('../lib/lazyThemeLoader')
+      .then(module => {
+        const { loadThemeStyles } = module;
+        // Load advanced effects
+        loadThemeStyles('neon-advanced');
+        
+        // Load animations after a delay to prioritize critical content
+        setTimeout(() => {
+          loadThemeStyles('neon-animations');
+        }, 2000);
+      })
+      .catch(err => console.error('Failed to load theme modules:', err));
+  }
 };
+
+// Helper function to convert hex to RGB
+function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
+  // Remove # if present
+  hex = hex.startsWith('#') ? hex.slice(1) : hex;
+  
+  // Check if it's a valid hex color
+  const result = /^([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  if (!result) return null;
+  
+  // Convert to RGB values
+  return {
+    r: parseInt(result[1], 16),
+    g: parseInt(result[2], 16),
+    b: parseInt(result[3], 16)
+  };
+}
 
 // Add listener for system preference changes
 export const initializeThemeListener = () => {
@@ -108,6 +184,11 @@ export const initializeThemeListener = () => {
   
   // Apply initial theme
   applyTheme(theme);
+  
+  // Initialize the theme loader for progressive loading
+  import('./lazyThemeLoader')
+    .then(module => module.initializeThemeLoader())
+    .catch(err => console.warn('Theme loader initialization failed:', err));
   
   // Listen for theme changes in the store
   useThemeStore.subscribe((state) => {

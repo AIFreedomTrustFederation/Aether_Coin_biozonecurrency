@@ -3,14 +3,15 @@ import { Palette, Sun, Moon, Laptop } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { useThemeStore, Theme } from '@/lib/theme';
+import { Theme } from '@/lib/theme';
+import { useTheme } from '@/contexts/ThemeContext';
 import { useToast } from '@/hooks/use-toast';
 
 /**
  * Theme selection page - optimized for mobile
  */
 export default function ThemePage() {
-  const { theme, setTheme, availableThemes } = useThemeStore();
+  const { theme, setTheme, availableThemes } = useTheme();
   const { toast } = useToast();
   
   const modes = [

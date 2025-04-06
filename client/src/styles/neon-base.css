@@ -1,0 +1,49 @@
+/* Neon Base Effects - Essential styles */
+
+/* CSS Variables for neon theme */
+:root {
+  --primary-color-rgb: 0, 255, 136; /* Default neon green in RGB */
+  --glow-color: #ffffff;
+}
+
+/* Basic neon glow for text - lightweight version */
+.neon-glow {
+  text-shadow: 0 0 10px var(--primary-color, #00ffff);
+}
+
+/* Simple neon borders - minimal version */
+.neon-border {
+  border: 2px solid var(--primary-color, #00ffff);
+  box-shadow: 0 0 5px var(--primary-color, #00ffff);
+}
+
+/* Simple neon button styling - core functionality */
+.neon-button {
+  position: relative;
+  color: var(--primary-color, #00ffff);
+  border: 2px solid var(--primary-color, #00ffff);
+  background: transparent;
+  transition: all 0.3s ease;
+}
+
+.neon-button:hover, .neon-button:focus {
+  color: black;
+  background-color: var(--primary-color, #00ffff);
+}
+
+/* Neon card - simplified version */
+.neon-card {
+  background-color: rgba(0, 0, 0, 0.7);
+  border: 1px solid var(--primary-color, #00ffff);
+}
+
+/* Basic neon divider */
+.neon-divider {
+  height: 2px;
+  background: linear-gradient(
+    90deg, 
+    transparent 0%, 
+    var(--primary-color, #00ffff) 50%, 
+    transparent 100%
+  );
+}
