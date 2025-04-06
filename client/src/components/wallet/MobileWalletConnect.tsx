@@ -107,7 +107,20 @@ const MobileWalletConnect: React.FC<MobileWalletConnectProps> = ({
       await initiateWalletConnection();
     } catch (err) {
       console.error("Wallet connection error:", err);
-      setError(`Connection failed. Please try again.`);
+      
+      // Provide more helpful error message based on environment and device
+      if (isMobile) {
+        if (installedWallets.length === 0) {
+          setError(`No compatible wallet detected. Please install MetaMask, Trust Wallet, or Coinbase Wallet to connect.`);
+        } else {
+          setError(`Connection failed. Please try selecting one of your installed wallets below.`);
+        }
+      } else {
+        setError(`Connection failed. Please ensure your wallet extension is installed and unlocked.`);
+      }
+      
+      // Still show options for user
+      setOpen(true);
     }
   };
   
@@ -121,14 +134,25 @@ const MobileWalletConnect: React.FC<MobileWalletConnectProps> = ({
       if (result && 'uri' in result) {
         setUri(result.uri as string);
         setOpen(true);
-        return;
+        return result;
       }
       
       // If we get an error, handle it
       if (result && 'status' in result && result.status === 'error') {
         const errorResult = result as { error?: string };
-        setError(`Failed to connect: ${errorResult.error || 'Unknown error'}`);
-        return;
+        const errorMessage = errorResult.error || 'Unknown error';
+        setError(`Failed to connect: ${errorMessage}`);
+        
+        // Show toast with actionable message
+        toast({
+          title: "Connection Failed",
+          description: isMobile 
+            ? "Please check if you have a compatible wallet installed on your device."
+            : "Please make sure your wallet extension is installed and unlocked.",
+          variant: "destructive"
+        });
+        
+        return null;
       }
       
       // If we get here, then connection was successful
@@ -142,9 +166,33 @@ const MobileWalletConnect: React.FC<MobileWalletConnectProps> = ({
       }
       
       setOpen(false);
+      return result;
     } catch (err) {
       console.error("Wallet connection error:", err);
-      setError(`Connection failed. Please try again.`);
+      
+      // More detailed error handling
+      let errorMessage = "Connection failed. Please try again.";
+      
+      if (err instanceof Error) {
+        if (err.message.includes("MetaMask") || err.message.includes("provider")) {
+          errorMessage = "No wallet detected. Please install MetaMask or another compatible wallet.";
+        } else if (err.message.includes("User rejected")) {
+          errorMessage = "Request rejected. Please approve the connection in your wallet.";
+        }
+      }
+      
+      setError(errorMessage);
+      
+      // Show toast with actionable message
+      toast({
+        title: "Connection Failed",
+        description: isMobile 
+          ? "Please make sure you have a compatible wallet installed on your device."
+          : "Please check if your wallet extension is properly installed and unlocked.",
+        variant: "destructive"
+      });
+      
+      return null;
     }
   };
 
@@ -365,7 +413,27 @@ const MobileWalletConnect: React.FC<MobileWalletConnectProps> = ({
           {error && (
             <div className="bg-destructive/10 text-destructive p-3 rounded-md text-sm mt-2 flex items-start">
               <X className="h-5 w-5 mr-2 flex-shrink-0 mt-0.5" />
-              <p>{error}</p>
+              <div className="space-y-2">
+                <p>{error}</p>
+                <div className="flex gap-2 mt-2">
+                  <a 
+                    href="https://metamask.io/download/" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-xs bg-primary/20 hover:bg-primary/30 text-primary px-2 py-1 rounded-md transition-colors"
+                  >
+                    Install MetaMask
+                  </a>
+                  <a 
+                    href="https://ethereum.org/wallets" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-xs bg-muted hover:bg-muted/80 px-2 py-1 rounded-md transition-colors"
+                  >
+                    Get More Wallets
+                  </a>
+                </div>
+              </div>
             </div>
           )}
           
