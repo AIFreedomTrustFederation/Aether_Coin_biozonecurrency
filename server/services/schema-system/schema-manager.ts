@@ -1,456 +1,305 @@
+import { db } from "../../storage";
+import { contractSchemas } from "../../../shared/dapp-schema";
+import { eq } from "drizzle-orm";
+
 /**
  * Schema Manager Service
- * This service manages contract schemas and templates, including parameter substitution,
- * validation, and code generation.
+ * Manages schema definitions for contract generation
  */
-
-import { db } from '../../storage';
-import { contractSchemas, contractTemplates } from '../../../shared/dapp-schema';
-import { eq, desc } from 'drizzle-orm';
-
-interface SchemaValidationResult {
-  isValid: boolean;
-  errors: string[];
-}
-
-interface GeneratedCode {
-  code: string;
-  testCode?: string;
-  uiCode?: string;
-  documentation?: string;
-}
-
-/**
- * Template parameter types for schema code generation
- */
-export enum ParameterType {
-  STRING = 'string',
-  NUMBER = 'number',
-  BOOLEAN = 'boolean',
-  ADDRESS = 'address',
-  ARRAY = 'array',
-  ENUM = 'enum',
-  OBJECT = 'object'
-}
-
-/**
- * Parameter definition for schema templates
- */
-export interface ParameterDefinition {
-  name: string;
-  type: ParameterType;
-  description: string;
-  default?: any;
-  required: boolean;
-  validation?: {
-    pattern?: string;
-    min?: number;
-    max?: number;
-    options?: string[];
-  };
-}
-
 export class SchemaManager {
   /**
-   * Get a contract schema by ID
-   * @param schemaId Schema ID
-   * @returns Contract schema
-   */
-  async getSchemaById(schemaId: number): Promise<any> {
-    try {
-      return await db.query.contractSchemas.findFirst({
-        where: eq(contractSchemas.id, schemaId)
-      });
-    } catch (error) {
-      console.error('Error getting schema by ID:', error);
-      return null;
-    }
-  }
-
-  /**
-   * Get all schemas, optionally filtered by category
-   * @param category Optional category filter
-   * @returns Array of contract schemas
-   */
-  async getAllSchemas(category?: string): Promise<any[]> {
-    try {
-      let query;
-      
-      if (category) {
-        query = db.query.contractSchemas.findMany({
-          where: eq(contractSchemas.category, category)
-        });
-      } else {
-        query = db.query.contractSchemas.findMany();
-      }
-      
-      return await query;
-    } catch (error) {
-      console.error('Error getting schemas:', error);
-      return [];
-    }
-  }
-
-  /**
-   * Validate parameters against a schema's parameter definitions
-   * @param schemaId Schema ID
-   * @param parameters Parameters to validate
-   * @returns Validation result
-   */
-  async validateParameters(schemaId: number, parameters: Record<string, any>): Promise<SchemaValidationResult> {
-    try {
-      const schema = await db.query.contractSchemas.findFirst({
-        where: eq(contractSchemas.id, schemaId)
-      });
-      
-      if (!schema) {
-        return {
-          isValid: false,
-          errors: ['Schema not found']
-        };
-      }
-      
-      const paramDefs = schema.parameters as ParameterDefinition[];
-      const errors: string[] = [];
-      
-      // Check for required parameters
-      paramDefs.forEach(param => {
-        if (param.required && (parameters[param.name] === undefined || parameters[param.name] === null)) {
-          errors.push(`Missing required parameter: ${param.name}`);
-          return;
-        }
-        
-        // Skip validation if parameter is not provided and not required
-        if (parameters[param.name] === undefined || parameters[param.name] === null) {
-          return;
-        }
-        
-        // Type validation
-        const value = parameters[param.name];
-        switch (param.type) {
-          case ParameterType.STRING:
-            if (typeof value !== 'string') {
-              errors.push(`Parameter ${param.name} must be a string`);
-            } else if (param.validation?.pattern) {
-              const regex = new RegExp(param.validation.pattern);
-              if (!regex.test(value)) {
-                errors.push(`Parameter ${param.name} doesn't match the required pattern`);
-              }
-            }
-            break;
-            
-          case ParameterType.NUMBER:
-            if (typeof value !== 'number') {
-              errors.push(`Parameter ${param.name} must be a number`);
-            } else {
-              if (param.validation?.min !== undefined && value < param.validation.min) {
-                errors.push(`Parameter ${param.name} must be at least ${param.validation.min}`);
-              }
-              
-              if (param.validation?.max !== undefined && value > param.validation.max) {
-                errors.push(`Parameter ${param.name} must be at most ${param.validation.max}`);
-              }
-            }
-            break;
-            
-          case ParameterType.BOOLEAN:
-            if (typeof value !== 'boolean') {
-              errors.push(`Parameter ${param.name} must be a boolean`);
-            }
-            break;
-            
-          case ParameterType.ADDRESS:
-            // Basic Ethereum address validation
-            if (typeof value !== 'string' || !value.match(/^0x[a-fA-F0-9]{40}$/)) {
-              errors.push(`Parameter ${param.name} must be a valid Ethereum address`);
-            }
-            break;
-            
-          case ParameterType.ARRAY:
-            if (!Array.isArray(value)) {
-              errors.push(`Parameter ${param.name} must be an array`);
-            }
-            break;
-            
-          case ParameterType.ENUM:
-            if (param.validation?.options && !param.validation.options.includes(value)) {
-              errors.push(`Parameter ${param.name} must be one of: ${param.validation.options.join(', ')}`);
-            }
-            break;
-        }
-      });
-      
-      return {
-        isValid: errors.length === 0,
-        errors
-      };
-    } catch (error) {
-      console.error('Error validating parameters:', error);
-      return {
-        isValid: false,
-        errors: ['Error validating parameters']
-      };
-    }
-  }
-
-  /**
-   * Apply parameters to a schema to generate code
-   * @param schemaId Schema ID
-   * @param parameters Parameters to apply
-   * @returns Generated code
-   */
-  async applyParameters(schemaId: number, parameters: Record<string, any>): Promise<GeneratedCode | null> {
-    try {
-      // Validate parameters
-      const validationResult = await this.validateParameters(schemaId, parameters);
-      
-      if (!validationResult.isValid) {
-        console.error('Parameter validation failed:', validationResult.errors);
-        return null;
-      }
-      
-      // Get the schema
-      const schema = await this.getSchemaById(schemaId);
-      
-      if (!schema) {
-        console.error('Schema not found');
-        return null;
-      }
-      
-      // Set default values for missing parameters
-      const paramDefs = schema.parameters as ParameterDefinition[];
-      const finalParams: Record<string, any> = {};
-      
-      paramDefs.forEach(param => {
-        if (parameters[param.name] !== undefined) {
-          finalParams[param.name] = parameters[param.name];
-        } else if (param.default !== undefined) {
-          finalParams[param.name] = param.default;
-        }
-      });
-      
-      // Apply parameters to the base code template using string replacement
-      let code = schema.baseCode;
-      
-      // Replace template variables in the form {{paramName}}
-      for (const [key, value] of Object.entries(finalParams)) {
-        const placeholder = new RegExp(`{{${key}}}`, 'g');
-        code = code.replace(placeholder, String(value));
-      }
-      
-      // Also apply parameters to test cases, if any
-      let testCode;
-      if (schema.testCases) {
-        testCode = schema.testCases.baseCode || '';
-        
-        // Replace template variables in the test code
-        for (const [key, value] of Object.entries(finalParams)) {
-          const placeholder = new RegExp(`{{${key}}}`, 'g');
-          testCode = testCode.replace(placeholder, String(value));
-        }
-      }
-      
-      // Apply parameters to UI components, if any
-      let uiCode;
-      if (schema.uiComponents) {
-        uiCode = schema.uiComponents.baseCode || '';
-        
-        // Replace template variables in the UI code
-        for (const [key, value] of Object.entries(finalParams)) {
-          const placeholder = new RegExp(`{{${key}}}`, 'g');
-          uiCode = uiCode.replace(placeholder, String(value));
-        }
-      }
-      
-      return {
-        code,
-        testCode,
-        uiCode
-      };
-    } catch (error) {
-      console.error('Error applying parameters:', error);
-      return null;
-    }
-  }
-
-  /**
-   * Create a new contract schema
+   * Get a schema by its name
    * @param name Schema name
-   * @param description Schema description
+   * @returns Schema definition
+   */
+  async getSchemaByName(name: string) {
+    const schemas = await db.select()
+      .from(contractSchemas)
+      .where(eq(contractSchemas.name, name))
+      .limit(1);
+    
+    return schemas.length > 0 ? schemas[0] : null;
+  }
+
+  /**
+   * Get schema by category
    * @param category Schema category
-   * @param baseCode Base code template
-   * @param parameters Parameter definitions
-   * @param dependencies Schema dependencies
-   * @param securityConsiderations Security considerations
-   * @param testCases Test case templates
-   * @param uiComponents UI component templates
-   * @returns Created schema
+   * @returns Schema definitions
    */
-  async createSchema(
-    name: string,
-    description: string,
-    category: string,
-    baseCode: string,
-    parameters: ParameterDefinition[],
-    dependencies: Record<string, any>,
-    securityConsiderations: Record<string, any>,
-    testCases: Record<string, any>,
-    uiComponents: Record<string, any>
-  ): Promise<any> {
-    try {
-      const schema = await db
-        .insert(contractSchemas)
-        .values({
-          name,
-          description,
-          category,
-          compatibility: ['ethereum', 'polygon', 'arbitrum'],
-          parameters,
-          dependencies,
-          securityConsiderations,
-          baseCode,
-          testCases,
-          uiComponents,
-          version: '1.0.0',
-          createdAt: new Date(),
-          updatedAt: new Date()
-        })
-        .returning();
-      
-      return schema[0];
-    } catch (error) {
-      console.error('Error creating schema:', error);
-      throw error;
+  async getSchemasByCategory(category: string) {
+    const schemas = await db.select()
+      .from(contractSchemas)
+      .where(eq(contractSchemas.category, category));
+    
+    return schemas;
+  }
+
+  /**
+   * Get all available schemas
+   * @returns All schema definitions
+   */
+  async getAllSchemas() {
+    const schemas = await db.select().from(contractSchemas);
+    return schemas;
+  }
+
+  /**
+   * Map user requirements to a schema structure
+   * @param requirements User requirements in natural language
+   * @returns Mapped schema structure
+   */
+  async mapRequirementsToSchema(requirements: string) {
+    // This is a placeholder for a more sophisticated mapping system
+    // In a real implementation, this would analyze user requirements and map them to a schema
+    
+    if (requirements.toLowerCase().includes('erc20') || 
+        requirements.toLowerCase().includes('token') ||
+        requirements.toLowerCase().includes('cryptocurrency')) {
+      return this.getERC20Schema(requirements);
+    } else if (requirements.toLowerCase().includes('nft') || 
+              requirements.toLowerCase().includes('erc721') ||
+              requirements.toLowerCase().includes('collectible')) {
+      return this.getERC721Schema(requirements);
+    } else if (requirements.toLowerCase().includes('marketplace') || 
+              requirements.toLowerCase().includes('buy') ||
+              requirements.toLowerCase().includes('sell')) {
+      return this.getMarketplaceSchema(requirements);
+    } else if (requirements.toLowerCase().includes('dao') || 
+              requirements.toLowerCase().includes('governance') ||
+              requirements.toLowerCase().includes('vote')) {
+      return this.getDAOSchema(requirements);
+    } else {
+      // Default to a simple contract if we can't determine the type
+      return this.getGenericContractSchema(requirements);
     }
   }
 
   /**
-   * Create a new contract template based on a schema
-   * @param schemaId Schema ID
-   * @param name Template name
-   * @param description Template description
-   * @param templateCode Template code
-   * @param parameters Parameter definitions
-   * @returns Created template
+   * Parse numerical values from requirements
+   * @param requirements User requirements
+   * @param key The key to look for (e.g., "supply")
+   * @param defaultValue Default value if not found
+   * @returns Parsed numerical value
    */
-  async createTemplate(
-    schemaId: number,
-    name: string,
-    description: string,
-    templateCode: string,
-    parameters: ParameterDefinition[]
-  ): Promise<any> {
-    try {
-      const template = await db
-        .insert(contractTemplates)
-        .values({
-          schemaId,
-          name,
-          description,
-          templateCode,
-          parameters,
-          popularity: 0,
-          createdAt: new Date(),
-          updatedAt: new Date()
-        })
-        .returning();
+  private parseNumericValue(requirements: string, key: string, defaultValue: number): number {
+    const regex = new RegExp(`(\\d+(?:\\.\\d+)?)\\s*(?:million|thousand|billion)?\\s*${key}`, 'i');
+    const match = requirements.match(regex);
+    
+    if (match && match[1]) {
+      let value = parseFloat(match[1]);
       
-      return template[0];
-    } catch (error) {
-      console.error('Error creating template:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Get a list of templates for a schema
-   * @param schemaId Schema ID
-   * @returns Array of templates
-   */
-  async getTemplatesBySchema(schemaId: number): Promise<any[]> {
-    try {
-      const templates = await db.query.contractTemplates.findMany({
-        where: eq(contractTemplates.schemaId, schemaId)
-      });
-      
-      return templates;
-    } catch (error) {
-      console.error('Error getting templates by schema:', error);
-      return [];
-    }
-  }
-
-  /**
-   * Generate documentation for a schema
-   * @param schemaId Schema ID
-   * @param parameters Parameters for customizing the documentation
-   * @returns Generated documentation
-   */
-  async generateDocumentation(schemaId: number, parameters: Record<string, any>): Promise<string | null> {
-    try {
-      const schema = await this.getSchemaById(schemaId);
-      
-      if (!schema) {
-        console.error('Schema not found');
-        return null;
+      // Check for magnitude words
+      if (requirements.toLowerCase().includes(`${match[1]} million ${key}`)) {
+        value *= 1000000;
+      } else if (requirements.toLowerCase().includes(`${match[1]} billion ${key}`)) {
+        value *= 1000000000;
+      } else if (requirements.toLowerCase().includes(`${match[1]} thousand ${key}`)) {
+        value *= 1000;
       }
       
-      // Generate basic documentation template
-      let doc = `# ${parameters.contractName || schema.name}
-
-## Overview
-${schema.description}
-
-## Parameters
-
-`;
-      
-      const paramDefs = schema.parameters as ParameterDefinition[];
-      paramDefs.forEach(param => {
-        const paramValue = parameters[param.name] !== undefined ? 
-          parameters[param.name] : 
-          param.default !== undefined ? param.default : 'Not specified';
-        
-        doc += `### ${param.name}
-- Type: ${param.type}
-- Description: ${param.description}
-- Value: \`${JSON.stringify(paramValue)}\`
-${param.required ? '- Required: Yes' : '- Required: No'}
-
-`;
-      });
-      
-      doc += `## Security Considerations
-
-${schema.securityConsiderations.description || ''}
-
-### Security Checklist
-${(schema.securityConsiderations.checklist || []).map((item: string) => `- ${item}`).join('\n')}
-
-## Dependencies
-${Object.entries(schema.dependencies).map(([key, value]) => `- ${key}: ${value}`).join('\n')}
-
-## Usage Examples
-
-\`\`\`solidity
-// Example usage of ${parameters.contractName || schema.name}
-// Deploy this contract to interact with it
-\`\`\`
-
-## Testing Guide
-
-\`\`\`javascript
-// Example test for ${parameters.contractName || schema.name}
-// Run using your preferred testing framework
-\`\`\`
-`;
-      
-      return doc;
-    } catch (error) {
-      console.error('Error generating documentation:', error);
-      return null;
+      return value;
     }
+    
+    return defaultValue;
+  }
+
+  /**
+   * Parse percentage values from requirements
+   * @param requirements User requirements
+   * @param key The key to look for (e.g., "fee")
+   * @param defaultValue Default value if not found
+   * @returns Parsed percentage value
+   */
+  private parsePercentageValue(requirements: string, key: string, defaultValue: number): number {
+    const regex = new RegExp(`(\\d+(?:\\.\\d+)?)\\s*%\\s*${key}`, 'i');
+    const match = requirements.match(regex);
+    
+    if (match && match[1]) {
+      return parseFloat(match[1]);
+    }
+    
+    return defaultValue;
+  }
+
+  /**
+   * Extract a name for the contract from requirements
+   * @param requirements User requirements
+   * @param defaultName Default name if none is found
+   * @returns Extracted name
+   */
+  private extractName(requirements: string, defaultName: string): string {
+    const nameMatches = [
+      requirements.match(/called\s+([A-Za-z0-9]+)/i),
+      requirements.match(/named\s+([A-Za-z0-9]+)/i),
+      requirements.match(/create(?:s|ed)?\s+(?:a|an)?\s+([A-Za-z0-9]+)/i)
+    ].filter(Boolean);
+    
+    if (nameMatches.length > 0 && nameMatches[0] && nameMatches[0][1]) {
+      return nameMatches[0][1];
+    }
+    
+    return defaultName;
+  }
+
+  /**
+   * Check if a feature is requested in the requirements
+   * @param requirements User requirements
+   * @param feature Feature to check for
+   * @returns True if the feature is requested
+   */
+  private hasFeature(requirements: string, feature: string): boolean {
+    const lowercaseRequirements = requirements.toLowerCase();
+    const featureRegex = new RegExp(`\\b${feature.toLowerCase()}\\b`, 'i');
+    return featureRegex.test(lowercaseRequirements);
+  }
+
+  /**
+   * Get ERC-20 token schema based on requirements
+   * @param requirements User requirements
+   * @returns ERC-20 schema
+   */
+  private getERC20Schema(requirements: string) {
+    const name = this.extractName(requirements, 'MyToken');
+    const symbol = name.substring(0, 4).toUpperCase();
+    const initialSupply = this.parseNumericValue(requirements, 'supply', 1000000);
+    
+    // Check for specific features
+    const features = {
+      mintable: this.hasFeature(requirements, 'mint') || this.hasFeature(requirements, 'minting'),
+      burnable: this.hasFeature(requirements, 'burn') || this.hasFeature(requirements, 'burning'),
+      pausable: this.hasFeature(requirements, 'pause') || this.hasFeature(requirements, 'pausing'),
+      capped: this.hasFeature(requirements, 'cap') || this.hasFeature(requirements, 'maximum'),
+      ownable: this.hasFeature(requirements, 'owner') || this.hasFeature(requirements, 'ownable'),
+      votable: this.hasFeature(requirements, 'vote') || this.hasFeature(requirements, 'voting'),
+      taxable: this.hasFeature(requirements, 'tax') || this.hasFeature(requirements, 'fee'),
+      upgradeable: this.hasFeature(requirements, 'upgrade') || this.hasFeature(requirements, 'upgradeability'),
+    };
+    
+    return {
+      type: 'erc20',
+      name,
+      symbol,
+      initialSupply,
+      decimals: 18, // Default for most ERC-20 tokens
+      features
+    };
+  }
+
+  /**
+   * Get ERC-721 (NFT) schema based on requirements
+   * @param requirements User requirements
+   * @returns ERC-721 schema
+   */
+  private getERC721Schema(requirements: string) {
+    const name = this.extractName(requirements, 'MyNFT');
+    const symbol = name.substring(0, 4).toUpperCase();
+    
+    // Parse royalty percentage if specified
+    const royaltyPercentage = this.parsePercentageValue(requirements, 'royalty', 0);
+    
+    // Check for specific features
+    const features = {
+      mintable: this.hasFeature(requirements, 'mint') || this.hasFeature(requirements, 'minting'),
+      burnable: this.hasFeature(requirements, 'burn') || this.hasFeature(requirements, 'burning'),
+      pausable: this.hasFeature(requirements, 'pause') || this.hasFeature(requirements, 'pausing'),
+      enumerable: this.hasFeature(requirements, 'enumerate') || this.hasFeature(requirements, 'enumerable'),
+      uriStorage: true, // Always include URI storage for NFTs
+      royalties: royaltyPercentage > 0 || this.hasFeature(requirements, 'royalty'),
+      upgradeable: this.hasFeature(requirements, 'upgrade') || this.hasFeature(requirements, 'upgradeability'),
+      metadata: this.hasFeature(requirements, 'metadata') || this.hasFeature(requirements, 'properties')
+    };
+    
+    return {
+      type: 'erc721',
+      name,
+      symbol,
+      baseUri: 'ipfs://',
+      royaltyPercentage: royaltyPercentage || 2.5, // Default to 2.5% if royalties are requested but no percentage specified
+      features
+    };
+  }
+
+  /**
+   * Get Marketplace schema based on requirements
+   * @param requirements User requirements
+   * @returns Marketplace schema
+   */
+  private getMarketplaceSchema(requirements: string) {
+    const name = this.extractName(requirements, 'MyMarketplace');
+    
+    // Parse fee percentage if specified
+    const feePercentage = this.parsePercentageValue(requirements, 'fee', 0);
+    
+    // Check for specific features
+    const features = {
+      listings: true, // Always include listings
+      offers: this.hasFeature(requirements, 'offer') || this.hasFeature(requirements, 'bid'),
+      auction: this.hasFeature(requirements, 'auction') || this.hasFeature(requirements, 'bidding'),
+      escrow: this.hasFeature(requirements, 'escrow'),
+      royalties: this.hasFeature(requirements, 'royalty') || this.hasFeature(requirements, 'royalties'),
+      curation: this.hasFeature(requirements, 'curation') || this.hasFeature(requirements, 'curate'),
+      dispute: this.hasFeature(requirements, 'dispute') || this.hasFeature(requirements, 'resolution'),
+      upgradeable: this.hasFeature(requirements, 'upgrade') || this.hasFeature(requirements, 'upgradeability')
+    };
+    
+    return {
+      type: 'marketplace',
+      name,
+      feePercentage: feePercentage || 1, // Default to 1% if no fee specified
+      feeRecipient: '0x0000000000000000000000000000000000000000', // Default to zero address
+      features
+    };
+  }
+
+  /**
+   * Get DAO Governance schema based on requirements
+   * @param requirements User requirements
+   * @returns DAO schema
+   */
+  private getDAOSchema(requirements: string) {
+    const name = this.extractName(requirements, 'MyDAO');
+    
+    // Parse threshold and majority values if specified
+    const proposalThreshold = this.parseNumericValue(requirements, 'threshold', 0);
+    const majorityPercentage = this.parsePercentageValue(requirements, 'majority', 0);
+    
+    // Check for specific features
+    const features = {
+      voting: true, // Always include voting
+      proposals: true, // Always include proposals
+      execution: true, // Always include execution
+      timelock: this.hasFeature(requirements, 'timelock') || this.hasFeature(requirements, 'time lock'),
+      delegation: this.hasFeature(requirements, 'delegate') || this.hasFeature(requirements, 'delegation'),
+      quorum: this.hasFeature(requirements, 'quorum'),
+      upgradeable: this.hasFeature(requirements, 'upgrade') || this.hasFeature(requirements, 'upgradeability')
+    };
+    
+    return {
+      type: 'dao',
+      name,
+      votingToken: '', // To be provided by the implementation
+      proposalThreshold: proposalThreshold || 100000, // Default to 100,000 tokens
+      majorityPercentage: majorityPercentage || 60, // Default to 60%
+      votingPeriod: 3, // Default to 3 days
+      features
+    };
+  }
+
+  /**
+   * Get a generic contract schema for when no specific type is detected
+   * @param requirements User requirements
+   * @returns Generic contract schema
+   */
+  private getGenericContractSchema(requirements: string) {
+    const name = this.extractName(requirements, 'MyContract');
+    
+    return {
+      type: 'generic',
+      name,
+      features: {
+        ownable: true, // Default to ownable
+        upgradeable: this.hasFeature(requirements, 'upgrade') || this.hasFeature(requirements, 'upgradeability')
+      }
+    };
   }
 }
-
-export const schemaManager = new SchemaManager();

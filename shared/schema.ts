@@ -3,18 +3,22 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
 
-// Import DApp Builder and Marketplace schema elements
+// Import all DApp Builder and Marketplace schema elements
 import {
   dappTemplates,
-  dappComponents,
   userDapps,
+  dappCreationChats,
+  contractSchemas,
+  conversationMessages,
+  dappVersions,
+  dappFiles,
   marketplaceListings,
   dappPurchases,
   dappReviews,
-  dappCreationChats,
-  dappCreationStages,
+  securityAuditTemplates,
   browserUsers,
-  sandboxEnvironments
+  sandboxEnvironments,
+  CodeGenResult
 } from './dapp-schema';
 
 // User schema
@@ -1376,13 +1380,16 @@ export const schema = {
   
   // DApp Builder and Marketplace schemas (imported from dapp-schema.ts)
   dappTemplates,
-  dappComponents,
   userDapps,
   marketplaceListings,
   dappPurchases,
   dappReviews,
   dappCreationChats,
-  dappCreationStages,
+  contractSchemas,
+  conversationMessages,
+  dappVersions,
+  dappFiles,
+  securityAuditTemplates,
   browserUsers,
   sandboxEnvironments,
 };

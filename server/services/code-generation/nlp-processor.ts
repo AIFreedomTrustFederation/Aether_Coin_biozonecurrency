@@ -1,573 +1,410 @@
+import { db } from "../../storage";
+import { CodeGenerator } from "./code-generator";
+import { SchemaManager } from "../schema-system/schema-manager";
+import { dappCreationChats, conversationMessages } from "../../../shared/dapp-schema";
+import { eq } from "drizzle-orm";
+import { CodeGenResult } from "../../../shared/dapp-schema";
+
 /**
  * NLP Processor Service
- * This service processes natural language inputs into structured contract requirements,
- * extracts intents, entities, and relationships, and manages the conversation history.
+ * Processes user inputs in natural language and interfaces with code generation services
  */
+export class NLPProcessor {
+  private codeGenerator: CodeGenerator | null = null;
+  private schemaManager: SchemaManager | null = null;
 
-import { db } from '../../storage';
-import { conversationMessages, dappCreationChats } from '../../../shared/dapp-schema';
-import { eq, desc, and, sql } from 'drizzle-orm';
+  constructor() {
+    // We'll set these later to avoid circular dependencies
+    this.schemaManager = new SchemaManager();
+  }
 
-interface EntityData {
-  name: string;
-  entityType: string;
-  confidence: number;
-  properties: string[];
-  relationships: {
-    entity: string;
-    relation: string;
-  }[];
-}
-
-interface IntentAnalysis {
-  intent: string;
-  confidence: number;
-  entities: EntityData[];
-  actions: string[];
-  constraints: string[];
-  complexity: 'simple' | 'moderate' | 'complex';
-  tokenStandard?: string;
-  suggestedTemplate?: string;
-}
-
-export class NlpProcessor {
   /**
-   * Process a natural language input into structured contract requirements
-   * @param input Natural language input
-   * @returns Processed requirements
+   * Set code generator instance (called from CodeGenerator to avoid circular dependencies)
    */
-  async processInput(input: string): Promise<IntentAnalysis> {
+  setCodeGenerator(codeGenerator: CodeGenerator) {
+    this.codeGenerator = codeGenerator;
+  }
+
+  /**
+   * Process user input and generate a response
+   * @param userInput The natural language input from the user
+   * @param userId The user's ID
+   * @param chatId The chat session ID
+   * @returns Generated response and code
+   */
+  async processUserInput(
+    userInput: string,
+    userId: number,
+    chatId: number
+  ): Promise<{ response: string; generatedCode: CodeGenResult | null; projectName: string | null }> {
     try {
-      // In a real implementation, this would call an LLM API like GPT-4
-      // For now, we'll use some simple keyword extraction and heuristics
-      
-      // Analyze intent
-      const intent = this.extractIntent(input);
-      
-      // Extract entities
-      const entities = this.extractEntities(input);
-      
-      // Extract actions
-      const actions = this.extractActions(input);
-      
-      // Extract constraints
-      const constraints = this.extractConstraints(input);
-      
-      // Estimate complexity
-      const complexity = this.estimateComplexity(entities, actions, constraints);
-      
-      // Detect token standard if applicable
-      const tokenStandard = this.detectTokenStandard(input);
-      
-      // Suggest template if applicable
-      const suggestedTemplate = this.suggestTemplate(intent, entities, tokenStandard);
-      
-      return {
-        intent,
-        confidence: 0.85, // Would be provided by the LLM in real implementation
-        entities,
-        actions,
-        constraints,
-        complexity,
-        tokenStandard,
-        suggestedTemplate
-      };
-    } catch (error) {
-      console.error('Error processing NLP input:', error);
-      // Return a minimal valid structure in case of error
-      return {
-        intent: 'unknown',
-        confidence: 0,
-        entities: [],
-        actions: [],
-        constraints: [],
-        complexity: 'simple'
-      };
-    }
-  }
+      // Get chat settings
+      const chatSettings = await this.getChatSettings(chatId);
 
-  /**
-   * Extract the primary intent from the input
-   * @param input Natural language input
-   * @returns Extracted intent
-   */
-  private extractIntent(input: string): string {
-    const input_lower = input.toLowerCase();
-    
-    if (input_lower.includes('token') || input_lower.includes('erc20') || input_lower.includes('coin')) {
-      return 'TokenCreation';
-    } else if (input_lower.includes('nft') || input_lower.includes('collectible') || input_lower.includes('erc721')) {
-      return 'NFTCreation';
-    } else if (input_lower.includes('marketplace') || input_lower.includes('auction') || input_lower.includes('buy') || input_lower.includes('sell')) {
-      return 'Marketplace';
-    } else if (input_lower.includes('dao') || input_lower.includes('governance') || input_lower.includes('vote')) {
-      return 'Governance';
-    } else if (input_lower.includes('staking') || input_lower.includes('yield') || input_lower.includes('farming')) {
-      return 'Staking';
-    } else if (input_lower.includes('bridge') || input_lower.includes('cross-chain') || input_lower.includes('multichain')) {
-      return 'Bridge';
-    } else if (input_lower.includes('swap') || input_lower.includes('exchange') || input_lower.includes('liquidity')) {
-      return 'Exchange';
-    } else if (input_lower.includes('multisig') || input_lower.includes('wallet') || input_lower.includes('safe')) {
-      return 'MultiSigWallet';
-    } else {
-      return 'CustomContract';
-    }
-  }
+      // Analyze the intent of the user's message
+      const { intent, entities } = await this.analyzeIntent(userInput);
 
-  /**
-   * Extract entities from the input
-   * @param input Natural language input
-   * @returns Array of extracted entities
-   */
-  private extractEntities(input: string): EntityData[] {
-    const entities: EntityData[] = [];
-    const input_lower = input.toLowerCase();
-    
-    // Token entity detection
-    if (input_lower.includes('token') || input_lower.includes('coin')) {
-      const name = this.extractEntityName(input, ['token', 'coin']) || 'Token';
-      
-      entities.push({
-        name,
-        entityType: 'Token',
-        confidence: 0.9,
-        properties: ['name', 'symbol', 'totalSupply', 'decimals'],
-        relationships: []
-      });
-    }
-    
-    // NFT entity detection
-    if (input_lower.includes('nft') || input_lower.includes('collectible')) {
-      const name = this.extractEntityName(input, ['nft', 'collectible']) || 'NFT';
-      
-      entities.push({
-        name,
-        entityType: 'NFT',
-        confidence: 0.9,
-        properties: ['name', 'symbol', 'tokenURI', 'tokenId'],
-        relationships: []
-      });
-    }
-    
-    // User entity detection
-    if (input_lower.includes('user') || input_lower.includes('account') || input_lower.includes('wallet')) {
-      entities.push({
-        name: 'User',
-        entityType: 'Actor',
-        confidence: 0.85,
-        properties: ['address', 'balance'],
-        relationships: []
-      });
-    }
-    
-    // Owner entity detection
-    if (input_lower.includes('owner') || input_lower.includes('admin')) {
-      entities.push({
-        name: 'Owner',
-        entityType: 'Actor',
-        confidence: 0.85,
-        properties: ['address', 'permissions'],
-        relationships: []
-      });
-    }
-    
-    // Marketplace entity detection
-    if (input_lower.includes('marketplace') || input_lower.includes('market') || input_lower.includes('exchange')) {
-      entities.push({
-        name: 'Marketplace',
-        entityType: 'Platform',
-        confidence: 0.85,
-        properties: ['fee', 'treasuryAddress', 'listings'],
-        relationships: []
-      });
-    }
-    
-    // Add relationships between entities
-    if (entities.length > 1) {
-      for (let i = 0; i < entities.length; i++) {
-        for (let j = 0; j < entities.length; j++) {
-          if (i !== j) {
-            // Define relationships based on entity types
-            if (entities[i].entityType === 'Actor' && entities[j].entityType === 'Token') {
-              entities[i].relationships.push({
-                entity: entities[j].name,
-                relation: 'owns'
-              });
-            } else if (entities[i].entityType === 'Platform' && 
-                       (entities[j].entityType === 'Token' || entities[j].entityType === 'NFT')) {
-              entities[i].relationships.push({
-                entity: entities[j].name,
-                relation: 'lists'
-              });
-            }
+      let response = '';
+      let generatedCode: CodeGenResult | null = null;
+      let projectName: string | null = null;
+
+      // Handle the intent
+      switch (intent) {
+        case 'create_contract':
+          // Generate code based on the user's requirements
+          const result = await this.generateCode(userInput, entities, chatSettings);
+          generatedCode = result.code;
+          projectName = result.projectName;
+          response = result.response;
+          break;
+
+        case 'modify_contract':
+          // Modify existing contract code
+          if (entities.contractId) {
+            const result = await this.modifyCode(entities.contractId, userInput, chatSettings);
+            generatedCode = result.code;
+            projectName = result.projectName || null;
+            response = result.response;
+          } else {
+            response = "I'd be happy to help you modify a contract. Could you please specify which contract you'd like to modify or provide more details about what you want to change?";
           }
+          break;
+
+        case 'explain_concept':
+          // Provide explanation on blockchain concepts
+          response = await this.explainConcept(entities.concept || '');
+          break;
+
+        case 'security_audit':
+          // Perform security audit on contract
+          if (entities.contractId) {
+            const result = await this.auditCode(entities.contractId);
+            generatedCode = result.code;
+            response = result.response;
+          } else {
+            response = "I'd be happy to conduct a security audit on your smart contract. Could you please specify which contract you'd like me to analyze?";
+          }
+          break;
+
+        case 'deploy_request':
+          // Handle deployment request
+          response = "To deploy your contract, we'll need to first ensure it's properly tested and audited. I can help you prepare it for deployment. Would you like me to generate deployment scripts and configuration files?";
+          break;
+
+        case 'general_question':
+          // Answer general questions about DApps
+          response = this.answerGeneralQuestion(userInput);
+          break;
+
+        default:
+          // Default response if we can't determine the intent
+          response = "I'm not sure I fully understand what you're looking for. Could you provide more details about what kind of DApp or smart contract you want to create? For example, you could say something like 'Create a token with 1 million total supply' or 'Build an NFT marketplace with 2.5% royalties'.";
+      }
+
+      // Save the conversation
+      await this.saveConversation(chatId, userInput, response);
+
+      return { response, generatedCode, projectName };
+    } catch (error) {
+      console.error('Error processing user input:', error);
+      return {
+        response: "I'm sorry, I encountered an error while processing your request. Please try again with a different description or check the technical requirements.",
+        generatedCode: null,
+        projectName: null
+      };
+    }
+  }
+
+  /**
+   * Get chat settings
+   * @param chatId Chat ID
+   * @returns Chat settings
+   */
+  private async getChatSettings(chatId: number) {
+    const chat = await db.select()
+      .from(dappCreationChats)
+      .where(eq(dappCreationChats.id, chatId))
+      .limit(1);
+
+    return chat[0]?.settings || {
+      includeTests: true,
+      includeDocumentation: true,
+      includeFrontend: true,
+      optimizationLevel: 'basic',
+      securityChecks: true
+    };
+  }
+
+  /**
+   * Analyze the intent of the user's message
+   * @param userInput User's natural language input
+   * @returns Intent and extracted entities
+   */
+  private async analyzeIntent(userInput: string): Promise<{ intent: string; entities: Record<string, any> }> {
+    const input = userInput.toLowerCase();
+    const entities: Record<string, any> = {};
+    
+    // Simple intent detection based on keywords
+    if (
+      input.includes('create') ||
+      input.includes('generate') ||
+      input.includes('build') ||
+      input.includes('make') ||
+      input.includes('develop')
+    ) {
+      // Extract project name if mentioned
+      const projectNameMatch = userInput.match(/called\s+([A-Za-z0-9]+)/i) || 
+                            userInput.match(/named\s+([A-Za-z0-9]+)/i);
+      
+      if (projectNameMatch && projectNameMatch[1]) {
+        entities.projectName = projectNameMatch[1];
+      }
+
+      return { intent: 'create_contract', entities };
+    } else if (
+      input.includes('modify') ||
+      input.includes('change') ||
+      input.includes('update') ||
+      input.includes('improve') ||
+      input.includes('edit')
+    ) {
+      // Extract contract ID if mentioned
+      const contractIdMatch = input.match(/contract\s+(\d+)/i);
+      if (contractIdMatch && contractIdMatch[1]) {
+        entities.contractId = parseInt(contractIdMatch[1]);
+      }
+
+      return { intent: 'modify_contract', entities };
+    } else if (
+      input.includes('explain') ||
+      input.includes('what is') ||
+      input.includes('how does') ||
+      input.includes('tell me about')
+    ) {
+      // Extract concept if mentioned
+      const conceptMatches = [
+        input.match(/explain\s+([a-z\s]+)/i),
+        input.match(/what\s+is\s+([a-z\s]+)/i),
+        input.match(/how\s+does\s+([a-z\s]+)/i),
+        input.match(/tell\s+me\s+about\s+([a-z\s]+)/i)
+      ].filter(Boolean);
+
+      if (conceptMatches.length > 0 && conceptMatches[0]) {
+        entities.concept = conceptMatches[0][1].trim();
+      }
+
+      return { intent: 'explain_concept', entities };
+    } else if (
+      input.includes('audit') ||
+      input.includes('security') ||
+      input.includes('check') ||
+      input.includes('vulnerabilities')
+    ) {
+      // Extract contract ID if mentioned
+      const contractIdMatch = input.match(/contract\s+(\d+)/i);
+      if (contractIdMatch && contractIdMatch[1]) {
+        entities.contractId = parseInt(contractIdMatch[1]);
+      }
+
+      return { intent: 'security_audit', entities };
+    } else if (
+      input.includes('deploy') ||
+      input.includes('publish') ||
+      input.includes('release')
+    ) {
+      return { intent: 'deploy_request', entities };
+    } else {
+      return { intent: 'general_question', entities };
+    }
+  }
+
+  /**
+   * Generate code based on user requirements
+   * @param userInput User's natural language input
+   * @param entities Extracted entities from input
+   * @param settings Chat settings
+   * @returns Generated code, project name, and response
+   */
+  private async generateCode(
+    userInput: string,
+    entities: Record<string, any>,
+    settings: any
+  ): Promise<{ code: CodeGenResult; projectName: string; response: string }> {
+    try {
+      if (!this.codeGenerator) {
+        throw new Error('Code generator not initialized');
+      }
+
+      // Extract project name from entities or generate one
+      let projectName = entities.projectName || this.generateProjectName(userInput);
+
+      // Generate code using the code generator service
+      const generatedCode = await this.codeGenerator.generateContract(userInput, settings);
+
+      let response = `I've generated the ${projectName} smart contract based on your requirements. `;
+
+      if (settings.includeTests) {
+        response += "I've also included tests to ensure the contract functions correctly. ";
+      }
+
+      if (settings.includeDocumentation) {
+        response += "Documentation has been generated to help you understand the contract's functionality. ";
+      }
+
+      if (settings.includeFrontend) {
+        response += "I've created a basic UI component to interact with the contract. ";
+      }
+
+      if (settings.securityChecks) {
+        if (generatedCode.securityReport && generatedCode.securityReport.issues.length > 0) {
+          const criticalIssues = generatedCode.securityReport.issues.filter(
+            issue => issue.severity === 'critical' || issue.severity === 'high'
+          );
+          
+          if (criticalIssues.length > 0) {
+            response += `⚠️ The security analysis found ${criticalIssues.length} critical/high severity issues that should be addressed before deployment. `;
+          } else {
+            response += `The security analysis found ${generatedCode.securityReport.issues.length} minor issues that you might want to review. `;
+          }
+        } else {
+          response += "The security analysis didn't find any issues with the generated code. ";
         }
       }
+
+      response += "Please review the generated code. Would you like me to help you implement any additional features or make any modifications?";
+
+      return {
+        code: generatedCode,
+        projectName,
+        response
+      };
+    } catch (error) {
+      console.error('Error generating code:', error);
+      throw error;
     }
-    
-    return entities;
   }
 
   /**
-   * Extract actions from the input
-   * @param input Natural language input
-   * @returns Array of extracted actions
+   * Modify existing code based on user requirements
+   * @param contractId Contract ID to modify
+   * @param userInput User's natural language input
+   * @param settings Chat settings
+   * @returns Modified code, project name, and response
    */
-  private extractActions(input: string): string[] {
-    const actions: string[] = [];
-    const input_lower = input.toLowerCase();
-    
-    // Common token actions
-    if (input_lower.includes('mint') || input_lower.includes('create') || input_lower.includes('issue')) {
-      actions.push('mint');
-    }
-    
-    if (input_lower.includes('burn') || input_lower.includes('destroy')) {
-      actions.push('burn');
-    }
-    
-    if (input_lower.includes('transfer') || input_lower.includes('send') || input_lower.includes('move')) {
-      actions.push('transfer');
-    }
-    
-    if (input_lower.includes('approve') || input_lower.includes('allowance')) {
-      actions.push('approve');
-    }
-    
-    // Market actions
-    if (input_lower.includes('buy') || input_lower.includes('purchase')) {
-      actions.push('buy');
-    }
-    
-    if (input_lower.includes('sell') || input_lower.includes('list')) {
-      actions.push('sell');
-    }
-    
-    if (input_lower.includes('auction') || input_lower.includes('bid')) {
-      actions.push('createAuction');
-      actions.push('placeBid');
-    }
-    
-    // Governance actions
-    if (input_lower.includes('vote') || input_lower.includes('proposal')) {
-      actions.push('createProposal');
-      actions.push('vote');
-    }
-    
-    // Staking actions
-    if (input_lower.includes('stake') || input_lower.includes('deposit')) {
-      actions.push('stake');
-    }
-    
-    if (input_lower.includes('unstake') || input_lower.includes('withdraw')) {
-      actions.push('unstake');
-    }
-    
-    if (input_lower.includes('claim') || input_lower.includes('reward')) {
-      actions.push('claimRewards');
-    }
-    
-    // If no specific actions were detected, add some default ones based on intent
-    if (actions.length === 0) {
-      const intent = this.extractIntent(input);
-      
-      switch (intent) {
-        case 'TokenCreation':
-          actions.push('mint', 'transfer', 'burn');
-          break;
-        case 'NFTCreation':
-          actions.push('mint', 'transfer', 'getTokenURI');
-          break;
-        case 'Marketplace':
-          actions.push('listItem', 'buyItem', 'cancelListing');
-          break;
-        case 'Governance':
-          actions.push('propose', 'vote', 'execute');
-          break;
-        case 'Staking':
-          actions.push('stake', 'unstake', 'getReward');
-          break;
-        default:
-          actions.push('initialize', 'execute');
-      }
-    }
-    
-    return actions;
+  private async modifyCode(
+    contractId: number,
+    userInput: string,
+    settings: any
+  ): Promise<{ code: CodeGenResult; projectName: string | null; response: string }> {
+    // This would be implemented to retrieve and modify existing code
+    // For now, we'll return a placeholder response
+    return {
+      code: {
+        contractCode: '// Modified contract code would go here',
+        testCode: '// Modified test code would go here',
+      },
+      projectName: null,
+      response: "I would modify the contract based on your requirements, but this functionality is not yet implemented. Please try generating a new contract instead."
+    };
   }
 
   /**
-   * Extract constraints from the input
-   * @param input Natural language input
-   * @returns Array of extracted constraints
+   * Perform a security audit on existing code
+   * @param contractId Contract ID to audit
+   * @returns Audit results and response
    */
-  private extractConstraints(input: string): string[] {
-    const constraints: string[] = [];
-    const input_lower = input.toLowerCase();
-    
-    // Access control constraints
-    if (input_lower.includes('only owner') || input_lower.includes('admin only') || input_lower.includes('owner only')) {
-      constraints.push('Only owner can perform certain actions');
-    }
-    
-    // Time constraints
-    if (input_lower.includes('lock') || input_lower.includes('time limit') || input_lower.includes('deadline')) {
-      constraints.push('Time-based restrictions on certain actions');
-    }
-    
-    // Amount constraints
-    if (input_lower.includes('maximum') || input_lower.includes('minimum') || input_lower.includes('limit')) {
-      constraints.push('Amount-based restrictions on certain actions');
-    }
-    
-    // Pausability
-    if (input_lower.includes('pause') || input_lower.includes('emergency')) {
-      constraints.push('Contract can be paused in emergency situations');
-    }
-    
-    // Upgradability
-    if (input_lower.includes('upgrade') || input_lower.includes('proxy')) {
-      constraints.push('Contract can be upgraded');
-    }
-    
-    return constraints;
+  private async auditCode(
+    contractId: number
+  ): Promise<{ code: CodeGenResult; response: string }> {
+    // This would be implemented to retrieve and audit existing code
+    // For now, we'll return a placeholder response
+    return {
+      code: {
+        contractCode: '// Contract code',
+        securityReport: {
+          issues: [],
+          score: 95,
+          passedChecks: ['No reentrancy vulnerabilities', 'Proper access control'],
+          failedChecks: []
+        }
+      },
+      response: "I would perform a security audit on the contract, but this functionality is not yet implemented. Please try generating a new contract with security checks enabled instead."
+    };
   }
 
   /**
-   * Estimate the complexity of the contract based on requirements
-   * @param entities Extracted entities
-   * @param actions Extracted actions
-   * @param constraints Extracted constraints
-   * @returns Complexity estimation
+   * Explain a blockchain or smart contract concept
+   * @param concept The concept to explain
+   * @returns Explanation
    */
-  private estimateComplexity(
-    entities: EntityData[],
-    actions: string[],
-    constraints: string[]
-  ): 'simple' | 'moderate' | 'complex' {
-    const totalComplexity = entities.length + actions.length + constraints.length;
+  private async explainConcept(concept: string): Promise<string> {
+    // This would ideally use a more sophisticated knowledge base or LLM
+    // For now, we'll return a simple explanation based on common concepts
     
-    if (totalComplexity <= 5) {
-      return 'simple';
-    } else if (totalComplexity <= 10) {
-      return 'moderate';
+    const concepts: Record<string, string> = {
+      'erc20': "ERC-20 is the technical standard for fungible tokens created using the Ethereum blockchain. A fungible token is one that is interchangeable with another token—where the value of one token is always equal to the value of another token. ERC-20 tokens are designed to be equivalent and interchangeable, similar to how one dollar bill is equivalent to another.",
+      'erc721': "ERC-721 is the standard for non-fungible tokens (NFTs) on the Ethereum blockchain. NFTs are unique digital assets where each token has distinct properties and values. Unlike fungible tokens such as ERC-20, each ERC-721 token is unique and cannot be interchanged with another token at a 1:1 ratio.",
+      'smart contract': "A smart contract is a self-executing contract with the terms of the agreement directly written into code. Smart contracts run on blockchain networks and automatically execute when predetermined conditions are met. They eliminate the need for third-party intermediaries, making transactions traceable, transparent, and irreversible.",
+      'dao': "A DAO (Decentralized Autonomous Organization) is an entity with no central leadership. Decisions get made from the bottom-up, governed by a community organized around a specific set of rules enforced on a blockchain. DAOs are internet-native organizations collectively owned and managed by their members. They have built-in treasuries that are only accessible with the approval of their members.",
+      'gas': "Gas refers to the fee required to successfully conduct a transaction or execute a contract on the Ethereum blockchain. Gas fees are paid in Ethereum's native currency, Ether (ETH), and are used to allocate resources of the Ethereum Virtual Machine (EVM) so that decentralized applications can self-execute in a secured but decentralized fashion.",
+      'defi': "DeFi (Decentralized Finance) refers to a financial ecosystem built on blockchain technology that aims to recreate and improve upon traditional financial systems using smart contracts. DeFi applications provide services like lending, borrowing, trading, and earning interest without relying on traditional financial intermediaries like banks or brokers."
+    };
+    
+    // Try to match the concept with our knowledge base
+    const matchedConcept = Object.keys(concepts).find(key => 
+      concept.toLowerCase().includes(key.toLowerCase())
+    );
+    
+    if (matchedConcept) {
+      return concepts[matchedConcept];
     } else {
-      return 'complex';
+      return `I don't have specific information about "${concept}" in my knowledge base. Would you like me to help you create a smart contract or DApp related to this concept instead?`;
     }
   }
 
   /**
-   * Detect the token standard if applicable
-   * @param input Natural language input
-   * @returns Detected token standard or undefined
+   * Answer a general question about DApps or blockchain
+   * @param question The user's question
+   * @returns Answer
    */
-  private detectTokenStandard(input: string): string | undefined {
-    const input_lower = input.toLowerCase();
-    
-    if (input_lower.includes('erc20')) {
-      return 'ERC20';
-    } else if (input_lower.includes('erc721')) {
-      return 'ERC721';
-    } else if (input_lower.includes('erc1155')) {
-      return 'ERC1155';
-    } else if (input_lower.includes('token') && !input_lower.includes('nft')) {
-      return 'ERC20';
-    } else if (input_lower.includes('nft') || input_lower.includes('collectible')) {
-      return 'ERC721';
-    } else if (input_lower.includes('multi-token') || input_lower.includes('multitoken')) {
-      return 'ERC1155';
-    }
-    
-    return undefined;
+  private answerGeneralQuestion(question: string): string {
+    // This would ideally use a more sophisticated knowledge base or LLM
+    // For now, we'll return a generic response
+    return "I'd be happy to help you build a decentralized application (DApp) or smart contract. To get started, could you tell me what specific functionality you'd like your DApp to have? For example, you might want to create a token, an NFT collection, a marketplace, or a DAO governance system.";
   }
 
   /**
-   * Suggest a template based on the detected intent and entities
-   * @param intent Detected intent
-   * @param entities Extracted entities
-   * @param tokenStandard Detected token standard
-   * @returns Suggested template name or undefined
+   * Generate a project name based on user input
+   * @param userInput User's natural language input
+   * @returns Generated project name
    */
-  private suggestTemplate(
-    intent: string,
-    entities: EntityData[],
-    tokenStandard?: string
-  ): string | undefined {
-    switch (intent) {
-      case 'TokenCreation':
-        return tokenStandard === 'ERC20' ? 'StandardERC20Token' : 'CustomToken';
-        
-      case 'NFTCreation':
-        return tokenStandard === 'ERC721' ? 'StandardERC721NFT' : 'CustomNFT';
-        
-      case 'Marketplace':
-        const hasNFT = entities.some(e => e.entityType === 'NFT');
-        return hasNFT ? 'NFTMarketplace' : 'TokenMarketplace';
-        
-      case 'Governance':
-        return 'DAOGovernance';
-        
-      case 'Staking':
-        return 'TokenStaking';
-        
-      case 'MultiSigWallet':
-        return 'MultiSigWallet';
-        
-      default:
-        return undefined;
-    }
-  }
-
-  /**
-   * Extract entity name from the input based on keywords
-   * @param input Natural language input
-   * @param keywords Keywords to look for
-   * @returns Extracted entity name or undefined
-   */
-  private extractEntityName(input: string, keywords: string[]): string | undefined {
-    const words = input.split(/\s+/);
+  private generateProjectName(userInput: string): string {
+    // Extract meaningful words from the input
+    const words = userInput.split(/\s+/)
+      .filter(word => word.length > 3)
+      .filter(word => !['create', 'build', 'generate', 'make', 'develop', 'would', 'like', 'want', 'need', 'please', 'could', 'should'].includes(word.toLowerCase()));
     
-    for (let i = 0; i < words.length; i++) {
-      const word = words[i].toLowerCase();
-      
-      if (keywords.includes(word) && i > 0) {
-        // Check if previous word could be an adjective for the entity
-        // This is a simple heuristic and would be more sophisticated in a real NLP system
-        return words[i - 1];
-      }
+    // If we have meaningful words, use them to create a name
+    if (words.length > 0) {
+      const word = words[Math.floor(Math.random() * words.length)];
+      return word.charAt(0).toUpperCase() + word.slice(1) + 'DApp';
     }
     
-    // If no name is found, look for words that are likely to be proper nouns
-    for (const word of words) {
-      if (word.length > 1 && word[0] === word[0].toUpperCase() && word[1] === word[1].toLowerCase()) {
-        return word;
-      }
-    }
-    
-    return undefined;
+    // Default names if we can't extract anything meaningful
+    const defaultNames = ['AetherDApp', 'QuantumContract', 'FractalProject', 'MysterionDApp', 'CryptoProject'];
+    return defaultNames[Math.floor(Math.random() * defaultNames.length)];
   }
 
   /**
-   * Save conversation message for training and auditing
-   * @param userId User ID
-   * @param message Message content
-   * @param sender Message sender
-   * @param intent Detected intent
-   * @param entities Detected entities
-   * @returns Saved message
+   * Save conversation to the database
+   * @param chatId Chat ID
+   * @param userMessage User's message
+   * @param aiResponse AI's response
    */
-  async saveConversation(
-    userId: number,
-    message: string,
-    sender: 'user' | 'mysterion',
-    intent?: string,
-    entities?: EntityData[]
-  ): Promise<any> {
-    try {
-      // First, check if there's an active chat for this user
-      let chatId: number | null = null;
-      
-      const existingChat = await db.query.dappCreationChats.findFirst({
-        where: and(
-          eq(dappCreationChats.userId, userId),
-          eq(dappCreationChats.status, 'active')
-        ),
-        orderBy: [desc(dappCreationChats.startedAt)]
-      });
-      
-      if (existingChat) {
-        chatId = existingChat.id;
-      } else if (sender === 'user' && intent) {
-        // Create a new chat if this is a user message with intent
-        const newChat = await db
-          .insert(dappCreationChats)
-          .values({
-            userId,
-            intent: intent || 'general',
-            complexity: 'simple',
-            status: 'active',
-            startedAt: new Date()
-          })
-          .returning();
-        
-        chatId = newChat[0].id;
-      }
-      
-      // Save the message
-      const savedMessage = await db
-        .insert(conversationMessages)
-        .values({
-          userId,
-          dappId: chatId,
-          message,
-          sender,
-          intent: intent || null,
-          entities: entities || null,
-          timestamp: new Date(),
-          processed: false
-        })
-        .returning();
-      
-      // Update the chat's last message time
-      if (chatId) {
-        await db
-          .update(dappCreationChats)
-          .set({
-            lastMessageAt: new Date()
-          })
-          .where(eq(dappCreationChats.id, chatId));
-      }
-      
-      return savedMessage[0];
-    } catch (error) {
-      console.error('Error saving conversation:', error);
-      return null;
-    }
-  }
-
-  /**
-   * Get conversation history for a user
-   * @param userId User ID
-   * @param limit Maximum number of messages to retrieve
-   * @returns Array of conversation messages
-   */
-  async getConversationHistory(userId: number, limit: number = 10): Promise<any[]> {
-    try {
-      const messages = await db.query.conversationMessages.findMany({
-        where: eq(conversationMessages.userId, userId),
-        orderBy: [desc(conversationMessages.timestamp)],
-        limit
-      });
-      
-      return messages.reverse(); // Return in chronological order
-    } catch (error) {
-      console.error('Error getting conversation history:', error);
-      return [];
-    }
-  }
-
-  /**
-   * Get conversation history for a specific DApp creation
-   * @param userId User ID
-   * @param dappId DApp ID
-   * @returns Array of conversation messages
-   */
-  async getDappConversation(userId: number, dappId: number): Promise<any[]> {
-    try {
-      const messages = await db.query.conversationMessages.findMany({
-        where: and(
-          eq(conversationMessages.userId, userId),
-          eq(conversationMessages.dappId, dappId)
-        ),
-        orderBy: [desc(conversationMessages.timestamp)]
-      });
-      
-      return messages.reverse(); // Return in chronological order
-    } catch (error) {
-      console.error('Error getting DApp conversation:', error);
-      return [];
-    }
+  async saveConversation(chatId: number, userMessage: string, aiResponse: string): Promise<void> {
+    // Update chat's last update time
+    await db.update(dappCreationChats)
+      .set({ updatedAt: new Date() })
+      .where(eq(dappCreationChats.id, chatId));
   }
 }
-
-export const nlpProcessor = new NlpProcessor();
