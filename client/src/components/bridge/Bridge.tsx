@@ -38,7 +38,7 @@ import {
   getBridgeHealth,
   createBridgeTransaction
 } from '@/lib/bridgeAPI';
-import { BridgeStatus, BridgeNetwork } from '@/shared/schema';
+import { BridgeStatus, BridgeNetwork } from '@shared/schema';
 import { Loader2 } from 'lucide-react';
 
 const formSchema = z.object({

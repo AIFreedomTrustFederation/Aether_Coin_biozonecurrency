@@ -17,7 +17,7 @@ import {
   getBridgeConfigurations,
   runBridgeTest 
 } from '@/lib/bridgeAPI';
-import { BridgeStatus } from '@/shared/schema';
+import { BridgeStatus } from '@shared/schema';
 
 /**
  * Bridge Test Dashboard Component

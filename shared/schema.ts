@@ -6,14 +6,31 @@ import { relations } from "drizzle-orm";
 // Import and re-export bridge schemas
 import { 
   BridgeStatus,
+  BridgeStatusEnum,
   BridgeTransactionStatus,
+  BridgeTransactionStatusEnum,
   BridgeNetwork,
-  BridgeHealth,
-  FeeEstimate,
+  BridgeNetworkEnum,
   bridgeConfigurations,
   bridgeValidators,
   bridgeSupportedTokens,
   bridgeTransactions,
+  BridgeConfigurationType,
+  BridgeValidatorType,
+  BridgeSupportedTokenType,
+  BridgeTransactionType,
+  BridgeHealthType,
+  FeeEstimateType
+} from "./bridge-schema";
+
+// Import interface types
+import type {
+  BridgeHealth,
+  FeeEstimate
+} from "./bridge-schema";
+
+// Import types
+import type {
   BridgeConfiguration, 
   InsertBridgeConfiguration,
   BridgeValidator, 
@@ -26,6 +43,7 @@ import {
 
 // Re-export bridge types
 export {
+  // Types
   BridgeConfiguration, 
   InsertBridgeConfiguration,
   BridgeValidator, 
@@ -34,11 +52,28 @@ export {
   InsertBridgeSupportedToken,
   BridgeTransaction, 
   InsertBridgeTransaction,
+  
+  // Enums and values
   BridgeStatus,
+  BridgeStatusEnum,
   BridgeTransactionStatus,
+  BridgeTransactionStatusEnum,
   BridgeNetwork,
+  BridgeNetworkEnum,
   BridgeHealth,
-  FeeEstimate
+  FeeEstimate,
+  
+  // Tables
+  bridgeConfigurations,
+  bridgeValidators,
+  bridgeSupportedTokens,
+  bridgeTransactions,
+  
+  // Type values
+  BridgeConfigurationType,
+  BridgeValidatorType,
+  BridgeSupportedTokenType,
+  BridgeTransactionType
 };
 
 // Import all DApp Builder and Marketplace schema elements
@@ -783,8 +818,9 @@ export const insertFundTransactionSchema = createInsertSchema(fundTransactions).
   timestamp: true,
 });
 
-// Forward declaration for token distributions
-const tokenDistributionsRef = () => tokenDistributions;
+// Tokenomics Management - moving declaration up before references
+// Token Distribution forward declaration
+let tokenDistributions: any;
 
 // Tokenomics Management
 export const tokenomicsConfig = pgTable("tokenomics_config", {
@@ -810,7 +846,7 @@ export const insertTokenomicsConfigSchema = createInsertSchema(tokenomicsConfig)
 });
 
 // Token Distribution
-export const tokenDistributions = pgTable("token_distributions", {
+tokenDistributions = pgTable("token_distributions", {
   id: serial("id").primaryKey(),
   configId: integer("config_id").notNull().references(() => tokenomicsConfig.id),
   name: text("name").notNull(), // 'ICO', 'Team', 'Foundation', 'Ecosystem', 'Development'
@@ -824,12 +860,15 @@ export const tokenDistributions = pgTable("token_distributions", {
   createdBy: integer("created_by").notNull().references(() => users.id),
 });
 
+// Export tokenDistributions after initialization
+export { tokenDistributions };
+
 export const tokenomicsConfigRelations = relations(tokenomicsConfig, ({ one, many }) => ({
   updater: one(users, {
     fields: [tokenomicsConfig.updatedBy],
     references: [users.id],
   }),
-  distributions: many(tokenDistributionsRef),
+  distributions: many(tokenDistributions),
 }));
 
 export const tokenDistributionsRelations = relations(tokenDistributions, ({ one }) => ({

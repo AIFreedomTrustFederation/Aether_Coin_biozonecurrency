@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import aetherionLogoPath from "@assets/aetherion-logo.svg";
+import aetherionLogoPath from "@/assets/aetherion-logo.svg";
 
 interface AetherionLogoProps {
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';

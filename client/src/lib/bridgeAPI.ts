@@ -1,5 +1,5 @@
 import { apiRequest } from '@/lib/queryClient';
-import { BridgeStatus, BridgeTransactionStatus } from '@/shared/schema';
+import { BridgeStatus, BridgeTransactionStatus } from '@shared/schema';
 
 // Get all bridge configurations
 export const getBridgeConfigurations = async (status?: BridgeStatus) => {

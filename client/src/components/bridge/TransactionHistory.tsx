@@ -26,7 +26,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Loader2, ExternalLink, RefreshCw } from 'lucide-react';
 import { getBridgeTransactions, getBridgeConfigurations, getMockTransactions, getMockBridges } from '@/lib/bridgeAPI';
-import { BridgeStatus, BridgeTransactionStatus } from '@/shared/schema';
+import { BridgeStatus, BridgeTransactionStatus } from '@shared/schema';
 
 const getStatusColor = (status: BridgeTransactionStatus) => {
   switch (status) {
