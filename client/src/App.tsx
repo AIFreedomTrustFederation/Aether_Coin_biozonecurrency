@@ -59,6 +59,7 @@ const BridgeTestPage = lazy(() => import("./pages/BridgeTestPage"));
 // Lazy load Mobile Features Demo
 const MobileFeatureDemo = lazy(() => import("@/components/mobile/MobileFeatureDemo"));
 const EscrowPage = lazy(() => import("./pages/Escrow"));
+const ThemePage = lazy(() => import("./pages/Theme"));
 const BottomNavigation = lazy(() => import("@/components/mobile/BottomNavigation"));
 
 // Define navigation items for both mobile and desktop
@@ -616,6 +617,12 @@ function App() {
             <Route path="/bridge-test">
               <Suspense fallback={<LoadingScreen message="Loading bridge test..." />}>
                 <BridgeTestPage />
+              </Suspense>
+            </Route>
+            
+            <Route path="/theme">
+              <Suspense fallback={<LoadingScreen message="Loading theme settings..." />}>
+                <ThemePage />
               </Suspense>
             </Route>
             <Route>

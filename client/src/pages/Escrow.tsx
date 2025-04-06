@@ -4,6 +4,7 @@ import { useCurrentUser } from "@/hooks/use-users";
 import { Package, Wallet, CircleDollarSign, Shield } from "lucide-react";
 import EscrowCreationForm from "../components/escrow/EscrowCreationForm";
 import EscrowTransactionList from "../components/escrow/EscrowTransactionList";
+import { EscrowFlowChart } from "@/components/EscrowFlowChart";
 
 export default function EscrowPage() {
   const { currentUser, isLoading } = useCurrentUser();
@@ -63,14 +64,8 @@ export default function EscrowPage() {
               </p>
               
               <div>
-                <h3 className="font-medium mb-1">How it works:</h3>
-                <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
-                  <li>Buyer creates an escrow transaction</li>
-                  <li>Funds are held in secure escrow</li>
-                  <li>Seller delivers product/service</li>
-                  <li>Buyer confirms receipt</li>
-                  <li>Funds are released to seller</li>
-                </ol>
+                <h3 className="font-medium mb-2">How it works:</h3>
+                <EscrowFlowChart />
               </div>
               
               <div>
