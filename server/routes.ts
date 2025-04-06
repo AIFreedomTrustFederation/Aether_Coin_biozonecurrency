@@ -15,12 +15,13 @@ import {
 } from "@shared/schema";
 import { stripeService } from "./services/stripe";
 import * as twilioService from "./services/twilio";
-import { matrixService } from "./services/matrix";
+import { matrixCommunication } from "./services/matrix-integration";
 import { z } from "zod";
 import Stripe from "stripe";
 import apiGateway from "../api-gateway";
 import apiServicesRouter from "./routes/api-services";
 import escrowRoutes from "./routes/escrow-routes";
+import dappBuilderEnhancements from "./routes/dapp-builder-enhancements";
 import { openSourcePaymentService } from "./services/openSourcePayment";
 
 /**
@@ -53,7 +54,7 @@ async function sendUserNotifications(
   
   try {
     // Try Matrix notification
-    const eventId = await matrixService.sendUserNotification(userId, message, htmlMessage);
+    const eventId = await matrixCommunication.sendUserNotification(userId, message, htmlMessage);
     results.matrix = !!eventId;
   } catch (error) {
     console.error('Error sending Matrix notification:', error);
@@ -87,7 +88,7 @@ async function sendTransactionNotification(
   
   try {
     // Try Matrix notification
-    const eventId = await matrixService.sendTransactionNotification(userId, transactionType, amount, tokenSymbol);
+    const eventId = await matrixCommunication.sendTransactionNotification(userId, transactionType, amount, tokenSymbol);
     results.matrix = !!eventId;
   } catch (error) {
     console.error('Error sending Matrix transaction notification:', error);
@@ -120,6 +121,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Mount escrow transaction routes
   app.use('', escrowRoutes);
+
+  // Mount DApp Builder enhancement routes
+  app.use('/api/dapp-builder', dappBuilderEnhancements);
   
   // API routes
   
@@ -776,7 +780,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Add status of notification services
       const notificationServices = {
         smsAvailable: twilioService.isTwilioConfigured(),
-        matrixAvailable: matrixService.isMatrixConfigured()
+        matrixAvailable: matrixCommunication.isMatrixConfigured()
       };
       
       res.json({
@@ -987,7 +991,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Check if Matrix service is properly configured
-      const isMatrixConfigured = matrixService.isMatrixConfigured();
+      const isMatrixConfigured = matrixCommunication.isMatrixConfigured();
       
       // If Matrix service is not configured, we'll update without verification
       if (!isMatrixConfigured) {
@@ -1001,10 +1005,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       try {
         // Initialize Matrix client if not already done
-        await matrixService.initialize();
+        await matrixCommunication.initialize();
         
         // Check if the Matrix ID exists
-        const isValid = await matrixService.verifyMatrixId(matrixId);
+        const isValid = await matrixCommunication.verifyMatrixId(matrixId);
         
         if (!isValid) {
           return res.status(400).json({ 
@@ -1070,7 +1074,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Check if Matrix service is properly configured
-      if (!matrixService.isMatrixConfigured()) {
+      if (!matrixCommunication.isMatrixConfigured()) {
         return res.status(503).json({ 
           message: "Matrix service not configured", 
           needsConfiguration: true 
@@ -1079,13 +1083,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       try {
         // Initialize Matrix client if needed
-        await matrixService.initialize();
+        await matrixCommunication.initialize();
         
         // Send a test message using the user notification method
         const message = "This is a test message from Aetherion Wallet. Your Matrix notifications are working correctly!";
         const htmlMessage = "<b>This is a test message from Aetherion Wallet.</b> Your Matrix notifications are working correctly!";
         
-        const eventId = await matrixService.sendUserNotification(userId, message, htmlMessage);
+        const eventId = await matrixCommunication.sendUserNotification(userId, message, htmlMessage);
         
         if (!eventId) {
           return res.status(500).json({ message: "Failed to send Matrix notification" });
@@ -1152,13 +1156,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Test Matrix if requested or if no specific channel requested
       if (!channel || channel === 'matrix') {
-        if (matrixService.isMatrixConfigured()) {
+        if (matrixCommunication.isMatrixConfigured()) {
           if (preferences.matrixId && preferences.isMatrixVerified && preferences.matrixEnabled) {
             try {
-              await matrixService.initialize();
+              await matrixCommunication.initialize();
               const message = "This is a unified test message from Aetherion Wallet. Your Matrix notifications are working correctly!";
               const htmlMessage = "<b>This is a unified test message from Aetherion Wallet.</b> Your Matrix notifications are working correctly!";
-              const eventId = await matrixService.sendUserNotification(userId, message, htmlMessage);
+              const eventId = await matrixCommunication.sendUserNotification(userId, message, htmlMessage);
               results.matrix = !!eventId;
             } catch (error) {
               console.error('Matrix test error:', error);

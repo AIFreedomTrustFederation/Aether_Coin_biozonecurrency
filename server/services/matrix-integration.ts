@@ -1,375 +1,339 @@
 /**
- * Matrix Communication Integration Service
+ * Matrix Communication Service
  * 
- * This service implements the integration with the Matrix communication protocol
- * to provide secure, decentralized, end-to-end encrypted communication between
- * transaction participants.
+ * Integrates Matrix protocol for secure messaging and real-time communication.
+ * This service establishes encrypted communication channels for users
+ * and provides notifications about transactions, wallet activities, and DApp updates.
  */
 
-import { db } from '../storage';
-import {
-  matrixRooms,
-  matrixMessages,
-  users,
-  escrowTransactions,
-  notificationPreferences,
-  type MatrixRoom,
-  type InsertMatrixMessage,
-  type MatrixMessage
-} from '@shared/schema';
-import { eq, and } from 'drizzle-orm';
 import * as sdk from 'matrix-js-sdk';
+import { db } from '../db';
+import { users } from '../../shared/schema';
+import { eq } from 'drizzle-orm';
 
-// Types for Matrix integration
-interface MatrixCredentials {
-  userId: string;
-  accessToken: string;
-  baseUrl: string;
-}
-
-interface MatrixRoomConfig {
-  name: string;
-  topic: string;
-  isEncrypted: boolean;
-  userIds: string[];
-}
-
-interface SendMessageParams {
+/**
+ * Message payload for Matrix communication
+ */
+interface MatrixMessagePayload {
   roomId: string;
   userId: number;
   content: string;
   messageType: string;
-  metadata?: any;
+  metadata?: Record<string, any>;
 }
 
 /**
- * Matrix Communication Service
- * Manages secure communication channels between transaction participants
+ * System message payload for Matrix communication
  */
-export class MatrixCommunicationService {
+interface SystemMessagePayload {
+  roomId: string;
+  userId: number;
+  content: string;
+  messageType: 'system';
+  metadata?: Record<string, any>;
+}
+
+/**
+ * Matrix communication service for secure messaging
+ */
+class MatrixCommunicationService {
   private client: sdk.MatrixClient | null = null;
-  private homeserverUrl: string;
-  private isInitialized: boolean = false;
+  private initialized: boolean = false;
   
+  /**
+   * Constructor initializes the Matrix client
+   * In a real implementation, this would configure the client properly
+   */
   constructor() {
-    // Matrix homeserver to use - in production this might be configurable
-    this.homeserverUrl = process.env.MATRIX_HOMESERVER_URL || 'https://matrix.org';
+    try {
+      // Check for Matrix homeserver and credentials
+      const homeserverUrl = process.env.MATRIX_HOMESERVER_URL;
+      const accessToken = process.env.MATRIX_ACCESS_TOKEN;
+      
+      if (homeserverUrl && accessToken) {
+        this.client = sdk.createClient({
+          baseUrl: homeserverUrl,
+          accessToken,
+          userId: process.env.MATRIX_USER_ID || '@aetherion:matrix.org',
+        });
+        this.initialized = true;
+        console.log('Matrix client initialized');
+      } else {
+        console.log('Matrix configuration not found. Running in simulation mode.');
+      }
+    } catch (error) {
+      console.error('Error initializing Matrix client:', error);
+    }
   }
   
   /**
-   * Initialize the Matrix client with admin credentials
-   * In production, this would use proper credentials stored securely
+   * Check if Matrix service is properly configured
+   * @returns True if Matrix is configured, false otherwise
    */
-  async initialize(): Promise<boolean> {
-    if (this.isInitialized) {
-      return true;
+  isMatrixConfigured(): boolean {
+    return !!process.env.MATRIX_HOMESERVER_URL && !!process.env.MATRIX_ACCESS_TOKEN;
+  }
+  
+  /**
+   * Initialize the Matrix client
+   * This is used to (re)initialize the client when needed
+   */
+  async initialize(): Promise<void> {
+    if (this.initialized) {
+      return;
     }
     
     try {
-      // Check if Matrix service credentials are configured
-      const matrixUserId = process.env.MATRIX_USER_ID;
-      const matrixAccessToken = process.env.MATRIX_ACCESS_TOKEN;
+      const homeserverUrl = process.env.MATRIX_HOMESERVER_URL;
+      const accessToken = process.env.MATRIX_ACCESS_TOKEN;
       
-      if (!matrixUserId || !matrixAccessToken) {
-        console.log('Matrix credentials not configured, using simulation mode');
-        this.isInitialized = true;
-        return false;
+      if (homeserverUrl && accessToken) {
+        this.client = sdk.createClient({
+          baseUrl: homeserverUrl,
+          accessToken,
+          userId: process.env.MATRIX_USER_ID || '@aetherion:matrix.org',
+        });
+        this.initialized = true;
+        console.log('Matrix client initialized');
+      } else {
+        console.log('Matrix configuration not found. Cannot initialize client.');
       }
-      
-      // Create and initialize the client
-      this.client = sdk.createClient({
-        baseUrl: this.homeserverUrl,
-        userId: matrixUserId,
-        accessToken: matrixAccessToken,
-      });
-      
-      // Start the client (without syncing to save resources)
-      await this.client.startClient({ syncEnabled: false });
-      
-      console.log('Matrix client initialized');
-      this.isInitialized = true;
-      return true;
     } catch (error) {
-      console.error('Failed to initialize Matrix client:', error);
-      this.isInitialized = false;
+      console.error('Error initializing Matrix client:', error);
+      throw new Error('Failed to initialize Matrix client');
+    }
+  }
+  
+  /**
+   * Verify if the given Matrix ID is valid
+   * @param matrixId Matrix ID to verify
+   * @returns True if valid, false otherwise
+   */
+  async verifyMatrixId(matrixId: string): Promise<boolean> {
+    if (!matrixId || typeof matrixId !== 'string') {
       return false;
     }
+    
+    // Basic validation for Matrix ID format
+    const matrixIdRegex = /@[\w-]+:[\w.-]+\.\w+/;
+    if (!matrixIdRegex.test(matrixId)) {
+      return false;
+    }
+    
+    // If client is available, try to check the user's existence
+    if (this.client) {
+      try {
+        // In a real implementation, we would check if the user exists
+        // For now, we just check format and assume it exists
+        return true;
+      } catch (error) {
+        console.error('Error verifying Matrix ID:', error);
+        return false;
+      }
+    }
+    
+    // In simulation mode, assume it's valid if it matches the format
+    return matrixIdRegex.test(matrixId);
   }
   
   /**
-   * Create a new Matrix room for an escrow transaction
+   * Sends a message in a Matrix room
+   * @param payload Message payload
+   * @returns Event ID if successful, null otherwise
    */
-  async createTransactionRoom(escrowTransactionId: number): Promise<MatrixRoom | null> {
+  async sendMessage(payload: MatrixMessagePayload): Promise<string | null> {
     try {
-      await this.initialize();
-      
-      // Get the escrow transaction details
-      const escrowTransaction = await db.query.escrowTransactions.findFirst({
-        where: eq(escrowTransactions.id, escrowTransactionId),
-        with: {
-          buyer: true,
-          seller: true,
-        }
-      });
-      
-      if (!escrowTransaction) {
-        throw new Error('Escrow transaction not found');
-      }
-      
-      // Get Matrix IDs for both parties
-      const buyerPrefs = await db.query.notificationPreferences.findFirst({
-        where: eq(notificationPreferences.userId, escrowTransaction.buyerId),
-      });
-      
-      const sellerPrefs = await db.query.notificationPreferences.findFirst({
-        where: eq(notificationPreferences.userId, escrowTransaction.sellerId),
-      });
-      
-      // Room configuration
-      const roomConfig: MatrixRoomConfig = {
-        name: `Transaction #${escrowTransactionId}`,
-        topic: `Escrow transaction for ${escrowTransaction.amount} ${escrowTransaction.tokenSymbol}`,
-        isEncrypted: true,
-        userIds: []
-      };
-      
-      // Add verified Matrix IDs if available
-      if (buyerPrefs?.matrixId && buyerPrefs.isMatrixVerified) {
-        roomConfig.userIds.push(buyerPrefs.matrixId);
-      }
-      
-      if (sellerPrefs?.matrixId && sellerPrefs.isMatrixVerified) {
-        roomConfig.userIds.push(sellerPrefs.matrixId);
-      }
-      
-      // Create the room (or simulate creation if no Matrix client)
-      let matrixRoomId: string;
-      
+      // If client is available, send the actual message
       if (this.client) {
-        // Real Matrix room creation
-        const response = await this.client.createRoom({
-          name: roomConfig.name,
-          topic: roomConfig.topic,
-          visibility: 'private',
-          invite: roomConfig.userIds,
-          initial_state: roomConfig.isEncrypted ? [
-            {
-              type: 'm.room.encryption',
-              state_key: '',
-              content: { algorithm: 'm.megolm.v1.aes-sha2' }
-            }
-          ] : [],
+        const user = await db.query.users.findFirst({
+          where: eq(users.id, payload.userId),
         });
         
-        matrixRoomId = response.room_id;
-      } else {
-        // Simulate room creation
-        matrixRoomId = `!simulated_${Date.now()}_${escrowTransactionId}:aetherion.org`;
-      }
-      
-      // Store room in database
-      const createdRoom = await db.insert(matrixRooms).values({
-        roomId: matrixRoomId,
-        escrowTransactionId,
-        status: 'active',
-        encryptionEnabled: roomConfig.isEncrypted,
-      }).returning();
-      
-      // Send welcome message
-      if (createdRoom[0]) {
-        await this.sendSystemMessage({
-          roomId: matrixRoomId,
-          userId: 0, // System user
-          content: 'Welcome to the transaction chat room. This is a secure channel for communication regarding your transaction.',
-          messageType: 'system',
-          metadata: {
-            transaction: {
-              id: escrowTransactionId,
-              amount: escrowTransaction.amount,
-              tokenSymbol: escrowTransaction.tokenSymbol,
-            }
-          }
-        });
-      }
-      
-      return createdRoom[0];
-    } catch (error) {
-      console.error('Failed to create transaction room:', error);
-      return null;
-    }
-  }
-  
-  /**
-   * Send a message in a transaction chat room
-   */
-  async sendMessage(params: SendMessageParams): Promise<MatrixMessage | null> {
-    try {
-      await this.initialize();
-      
-      // Get the room from our database
-      const room = await db.query.matrixRooms.findFirst({
-        where: eq(matrixRooms.roomId, params.roomId),
-      });
-      
-      if (!room) {
-        throw new Error('Room not found');
-      }
-      
-      // Get user details
-      const user = await db.query.users.findFirst({
-        where: eq(users.id, params.userId),
-      });
-      
-      if (!user && params.userId !== 0) { // Allow system messages (userId=0)
-        throw new Error('User not found');
-      }
-      
-      // Prepare message for our database
-      const messageData: Omit<InsertMatrixMessage, 'eventId'> = {
-        roomId: room.id,
-        senderId: params.userId,
-        content: params.content,
-        messageType: params.messageType,
-        metadata: params.metadata || {},
-      };
-      
-      let eventId: string;
-      
-      // Send message through Matrix if client is available
-      if (this.client) {
-        const result = await this.client.sendMessage(params.roomId, {
-          msgtype: 'm.text',
-          body: params.content,
+        // Special handling for different message types
+        let messageContent: any = {
+          msgtype: 'm.room.message',
+          body: payload.content,
           format: 'org.matrix.custom.html',
-          formatted_body: params.content,
-        });
+          formatted_body: payload.content,
+        };
         
-        eventId = result.event_id;
-      } else {
-        // Simulate event ID for development without Matrix
-        eventId = `$simulated_${Date.now()}_${Math.floor(Math.random() * 1000000)}:aetherion.org`;
+        // Add metadata if available
+        if (payload.metadata) {
+          messageContent.metadata = payload.metadata;
+        }
+        
+        // Add message type
+        messageContent.type = payload.messageType;
+        
+        // Send message
+        const result = await this.client.sendEvent(
+          payload.roomId,
+          'm.room.message',
+          messageContent,
+          ''
+        );
+        
+        return result.event_id;
       }
       
-      // Store in our database
-      const dbMessage = await db.insert(matrixMessages).values({
-        ...messageData,
-        eventId,
-      }).returning();
+      // Simulation mode - log the message
+      console.log(`[Matrix Simulation] Message to room ${payload.roomId}: ${payload.content}`);
+      console.log(`[Matrix Simulation] Type: ${payload.messageType}, Metadata:`, payload.metadata);
       
-      return dbMessage[0];
+      return `sim_event_${Date.now()}`;
     } catch (error) {
-      console.error('Failed to send message:', error);
+      console.error('Error sending Matrix message:', error);
       return null;
     }
   }
   
   /**
-   * Send a system message to a room
+   * Sends a system message (for administrative notifications)
+   * @param payload System message payload
+   * @returns Event ID if successful, null otherwise
    */
-  async sendSystemMessage(params: SendMessageParams): Promise<MatrixMessage | null> {
-    return this.sendMessage({
-      ...params,
-      userId: 0, // System user
-      messageType: 'system'
-    });
+  async sendSystemMessage(payload: SystemMessagePayload): Promise<string | null> {
+    try {
+      // Special formatting for system messages
+      const messagePayload = {
+        ...payload,
+        content: `🔔 System Notice: ${payload.content}`,
+      };
+      
+      return this.sendMessage(messagePayload);
+    } catch (error) {
+      console.error('Error sending system message:', error);
+      return null;
+    }
   }
   
   /**
-   * Get messages for a transaction
+   * Sends a notification to a specific user
+   * @param userId User ID
+   * @param message Plain text message
+   * @param htmlMessage Optional HTML formatted message
+   * @returns Event ID if successful, null otherwise
    */
-  async getMessagesForTransaction(escrowTransactionId: number): Promise<MatrixMessage[]> {
+  async sendUserNotification(
+    userId: number, 
+    message: string, 
+    htmlMessage?: string
+  ): Promise<string | null> {
     try {
-      // Get the room for this transaction
-      const room = await db.query.matrixRooms.findFirst({
-        where: eq(matrixRooms.escrowTransactionId, escrowTransactionId),
-      });
+      // Get user's Matrix room ID (in real implementation, this would be stored in user preferences)
+      // For now, we generate a simulated room ID
+      const roomId = `!user_${userId}_notifications:aetherion.org`;
       
-      if (!room) {
-        return [];
-      }
-      
-      // Get messages
-      const messages = await db.query.matrixMessages.findMany({
-        where: eq(matrixMessages.roomId, room.id),
-        orderBy: (fields, { asc }) => [asc(fields.sentAt)],
-        with: {
-          sender: true,
+      return this.sendMessage({
+        roomId,
+        userId,
+        content: htmlMessage || message,
+        messageType: 'notification',
+        metadata: {
+          type: 'user_notification',
+          timestamp: new Date().toISOString()
         }
       });
-      
-      return messages;
     } catch (error) {
-      console.error('Failed to get messages:', error);
-      return [];
+      console.error('Error sending notification to user:', error);
+      return null;
     }
   }
   
   /**
-   * Verify a user's Matrix ID
+   * Sends a transaction notification
+   * @param userId User ID
+   * @param transactionType Transaction type (send, receive, etc.)
+   * @param amount Transaction amount
+   * @param tokenSymbol Token symbol
+   * @returns Event ID if successful, null otherwise
    */
-  async verifyUserMatrixId(userId: number, matrixId: string): Promise<boolean> {
+  async sendTransactionNotification(
+    userId: number,
+    transactionType: string,
+    amount: string,
+    tokenSymbol: string
+  ): Promise<string | null> {
     try {
-      await this.initialize();
+      // Format message based on transaction type
+      let message = '';
+      let emoji = '';
       
-      // In a real implementation:
-      // 1. Send a verification message to the Matrix ID
-      // 2. User confirms by replying with a code
-      // 3. Mark as verified once confirmed
+      if (transactionType === 'send') {
+        emoji = '↗️';
+        message = `You sent ${amount} ${tokenSymbol}`;
+      } else if (transactionType === 'receive') {
+        emoji = '↘️';
+        message = `You received ${amount} ${tokenSymbol}`;
+      } else {
+        emoji = '🔄';
+        message = `Transaction of ${amount} ${tokenSymbol} (${transactionType})`;
+      }
       
-      // For now, we'll simulate verification
-      console.log(`Verifying Matrix ID ${matrixId} for user ${userId}`);
+      // Add emoji to message
+      message = `${emoji} ${message}`;
       
-      // Update user's notification preferences
-      await db.update(notificationPreferences)
-        .set({
-          matrixId,
-          isMatrixVerified: true,
-          matrixEnabled: true,
-        })
-        .where(eq(notificationPreferences.userId, userId));
+      // Get user's Matrix room ID
+      const roomId = `!user_${userId}_notifications:aetherion.org`;
       
-      return true;
+      return this.sendMessage({
+        roomId,
+        userId,
+        content: message,
+        messageType: 'transaction',
+        metadata: {
+          type: 'transaction',
+          transactionType,
+          amount,
+          tokenSymbol,
+          timestamp: new Date().toISOString()
+        }
+      });
     } catch (error) {
-      console.error('Matrix ID verification failed:', error);
-      return false;
+      console.error('Error sending transaction notification:', error);
+      return null;
     }
   }
   
   /**
-   * Archive a transaction room when the transaction is complete
+   * Creates a direct message room between users
+   * @param userId1 First user ID
+   * @param userId2 Second user ID
+   * @returns Room ID if successful, null otherwise
    */
-  async archiveRoom(escrowTransactionId: number): Promise<boolean> {
+  async createDirectMessageRoom(userId1: number, userId2: number): Promise<string | null> {
     try {
-      // Get the room
-      const room = await db.query.matrixRooms.findFirst({
-        where: eq(matrixRooms.escrowTransactionId, escrowTransactionId),
-      });
+      // In a real implementation, this would create an actual Matrix room
+      // For now, we generate a simulated room ID
+      const roomId = `!dm_${Math.min(userId1, userId2)}_${Math.max(userId1, userId2)}_${Date.now()}:aetherion.org`;
       
-      if (!room) {
-        return false;
-      }
+      // Log the creation
+      console.log(`[Matrix Simulation] Created DM room ${roomId} between users ${userId1} and ${userId2}`);
       
-      // If Matrix client is available, update the room state
-      if (this.client) {
-        await this.client.setRoomTopic(room.roomId, 'ARCHIVED: Transaction completed');
-      }
-      
-      // Send system message about archiving
-      await this.sendSystemMessage({
-        roomId: room.roomId,
-        userId: 0,
-        content: 'This transaction has been completed. The room will now be archived.',
-        messageType: 'system',
-      });
-      
-      // Update room status in database
-      await db.update(matrixRooms)
-        .set({ status: 'archived' })
-        .where(eq(matrixRooms.id, room.id));
-      
-      return true;
+      return roomId;
     } catch (error) {
-      console.error('Failed to archive room:', error);
+      console.error('Error creating direct message room:', error);
+      return null;
+    }
+  }
+  
+  /**
+   * Checks if a user has Matrix integration enabled
+   * @param userId User ID
+   * @returns True if Matrix is enabled, false otherwise
+   */
+  async isMatrixEnabled(userId: number): Promise<boolean> {
+    try {
+      // Check user preferences in database
+      const user = await db.query.users.findFirst({
+        where: eq(users.id, userId),
+      });
+      
+      // In a real implementation, this would check a specific setting
+      // For now, assume all users with IDs have Matrix enabled
+      return !!user;
+    } catch (error) {
+      console.error('Error checking Matrix integration status:', error);
       return false;
     }
   }
