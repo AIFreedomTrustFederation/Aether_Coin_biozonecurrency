@@ -5,14 +5,14 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 
-export interface Message {
+interface Message {
   id: string;
   role: 'user' | 'assistant' | 'system';
   content: string;
   timestamp: Date;
 }
 
-export interface ChatInterfaceProps {
+interface ChatInterfaceProps {
   messages: Message[];
   onSendMessage: (message: string) => void;
   isProcessing?: boolean;
@@ -60,7 +60,7 @@ const ChatInterface = ({
       {/* Messages area */}
       <ScrollArea className="flex-1 chat-messages p-4">
         <div className="space-y-4">
-          {messages.map((message: Message) => (
+          {messages.map((message) => (
             <div 
               key={message.id}
               className={cn(
@@ -124,5 +124,4 @@ const ChatInterface = ({
   );
 };
 
-export { ChatInterface };
 export default ChatInterface;

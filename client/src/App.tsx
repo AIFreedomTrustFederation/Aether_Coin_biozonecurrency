@@ -10,7 +10,7 @@ import { Link } from "wouter";
 import { 
   Menu, X, Home, Layout, Wallet, Lock, Shield, Settings, AlertTriangle, ChevronRight, 
   BarChart3, Eye, Cpu, Bell, Zap, Coins, FileText, Database, Bot, TestTube, Blocks,
-  Smartphone
+  Smartphone, Lightbulb
 } from "lucide-react";
 
 // Import existing pages for now
@@ -29,11 +29,14 @@ import DashboardPage from "./pages/DashboardPage";
 import SettingsPage from "./pages/SettingsPage";
 import BlockchainVisualizerPage from "./pages/BlockchainVisualizerPage";
 import BlockchainDashboardPage from "./pages/BlockchainDashboardPage";
+import BlockchainExplorer from "./pages/BlockchainExplorer";
 import WalletPage from "./pages/WalletPage";
 import MysterionAIPage from "./pages/MysterionAIPage";
+import AIAssistantOnboarding from "./pages/AIAssistantOnboarding";
 import OnboardingPage from "./pages/Onboarding";
 import TestPage from "./pages/TestPage";
 import DappBuilder from "./pages/DappBuilder";
+import FractalExplorer from "./pages/FractalExplorer";
 
 // Import Mobile Features Demo
 import MobileFeatureDemo from "@/components/mobile/MobileFeatureDemo";
@@ -44,6 +47,7 @@ const navigationItems = [
   { name: "Dashboard", path: "/dashboard", icon: <Layout className="h-5 w-5" /> },
   { name: "Wallet", path: "/wallet", icon: <Wallet className="h-5 w-5" /> },
   { name: "Escrow", path: "/escrow", icon: <Shield className="h-5 w-5" /> },
+  { name: "Blockchain Explorer", path: "/blockchain-explorer", icon: <Database className="h-5 w-5" /> },
   { name: "Blockchain Dashboard", path: "/blockchain-dashboard", icon: <Blocks className="h-5 w-5" /> },
   { name: "Singularity", path: "/singularity", icon: <Zap className="h-5 w-5" /> },
   { name: "ICO", path: "/ico", icon: <Coins className="h-5 w-5" /> },
@@ -51,6 +55,7 @@ const navigationItems = [
   { name: "Fractal Explorer", path: "/fractal-explorer", icon: <Cpu className="h-5 w-5" /> },
   { name: "Blockchain Visualizer", path: "/blockchain-visualizer", icon: <Database className="h-5 w-5" /> },
   { name: "Mysterion AI", path: "/ai-assistant", icon: <Bot className="h-5 w-5" /> },
+  { name: "AI Assistant Demo", path: "/ai-assistant-onboarding", icon: <Lightbulb className="h-5 w-5" /> },
   { name: "Mobile Features", path: "/mobile-feature", icon: <Smartphone className="h-5 w-5" /> },
   { name: "Security", path: "/security", icon: <Shield className="h-5 w-5" /> },
   { name: "Settings", path: "/settings", icon: <Settings className="h-5 w-5" /> },
@@ -454,7 +459,9 @@ function App() {
             <Route path="/" component={LandingPage} />
             <Route path="/dashboard" component={DashboardPage} />
             <Route path="/wallet" component={WalletPage} />
-            <Route path="/fractal-explorer" component={SimpleFractalExplorer} />
+            <Route path="/fractal-explorer" component={FractalExplorer} />
+            <Route path="/blockchain-explorer" component={BlockchainExplorer} />
+            <Route path="/ai-assistant-onboarding" component={AIAssistantOnboarding} />
             <Route path="/security" component={SecurityPage} />
             <Route path="/singularity" component={SingularityCoinPage} />
             <Route path="/ico" component={ICOPage} />

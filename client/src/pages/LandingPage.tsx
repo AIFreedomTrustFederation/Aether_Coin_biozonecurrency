@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
+import { Lightbulb, Database, Wallet } from 'lucide-react';
 // Import AIAssistant for the floating AI assistant button
 import { AIAssistant } from '../modules/ai-assistant/components/AIAssistant';
 // Import the SimpleChatInterface component
@@ -83,14 +84,22 @@ const LandingPage: React.FC = () => {
           Pioneering the Quantum-Resistant Blockchain Ecosystem
         </p>
         <div className="flex flex-wrap justify-center gap-4 mb-16">
-          <Link href="/ai-assistant">
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-md text-lg">
+          <Link href="/ai-assistant-onboarding">
+            <Button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-md text-lg flex items-center">
+              <Lightbulb className="mr-2 h-5 w-5" />
               AI Assistant Demo
             </Button>
           </Link>
-          <Link href="/assets">
-            <Button variant="outline" className="border-blue-400 text-blue-400 hover:bg-blue-400/10 px-6 py-3 rounded-md text-lg">
-              Explore Wallet
+          <Link href="/blockchain-explorer">
+            <Button variant="outline" className="border-blue-400 text-blue-400 hover:bg-blue-400/10 px-6 py-3 rounded-md text-lg flex items-center">
+              <Database className="mr-2 h-5 w-5" />
+              Explore Blockchain
+            </Button>
+          </Link>
+          <Link href="/wallet">
+            <Button variant="outline" className="border-purple-400 text-purple-400 hover:bg-purple-400/10 px-6 py-3 rounded-md text-lg flex items-center">
+              <Wallet className="mr-2 h-5 w-5" />
+              Access Wallet
             </Button>
           </Link>
         </div>
