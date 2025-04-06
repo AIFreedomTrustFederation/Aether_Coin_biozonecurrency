@@ -129,6 +129,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Mount Mysterion AI system routes
   app.use('/api/mysterion', mysterionRoutes);
   
+  // Whitepaper endpoint
+  app.get("/api/whitepaper", (req: Request, res: Response) => {
+    res.send(`# FractalCoin Whitepaper
+
+## Pioneering Quantum-Resistant Blockchain Technology
+
+### Abstract
+
+FractalCoin represents a paradigm shift in blockchain technology, founded on the revolutionary principles of toroidal economics and fractal mathematics. Our mission is to create a truly equitable and sustainable blockchain ecosystem that eliminates the inherent advantage of early adopters and ensures fair value distribution across all participants, regardless of when they join.
+
+The FractalCoin blockchain implements several groundbreaking concepts:
+
+1. **Fractal Recursive Tokenomics**: Token distribution and fee structures based on Fibonacci sequences and Mandelbrot set mathematics, creating natural balance throughout the ecosystem.
+
+2. **Toroidal Economics Model**: A circular value flow mechanism that ensures equitable returns for all participants regardless of entry timing.
+
+3. **Death & Resurrection Mining Protocol**: A collaborative mining approach that redistributes computational resources through participant lifecycles, preventing mining power concentration.
+
+4. **Quantum Succession Planning**: Advanced cryptographic mechanisms ensuring digital asset continuity beyond a participant's lifetime.
+
+5. **AI Freedom Trust Federation**: Decentralized governance maintaining mathematical harmony and fair resource distribution in perpetuity.
+
+### Section 1: Core Economic Principles
+
+The fractal nature of our tokenomics ensures that growth patterns, fee structures, and reward mechanisms follow natural mathematical sequences that create balance within the system. By implementing a toroidal flow model, value continuously circulates in a way that prevents concentration at any single point.
+
+New participants joining at any stage experience equivalent growth opportunities through mathematically balanced entry points. This contrasts with traditional exponential models where early adopters gain disproportionate advantages.
+
+### Section 2: Mining & Node Distribution
+
+Our "Death & Resurrection" mining model ensures computational resources are redistributed when nodes go offline, preventing monopolization. Mining rewards follow Fibonacci distribution patterns, with the network maintaining the same ratio of rewards regardless of total computational power.
+
+Quantum-resistant security protocols ensure network integrity against both classical and quantum attacks, future-proofing the system for decades to come.
+
+### Section 3: Implementation Roadmap
+
+The FractalCoin implementation follows a staged approach:
+
+1. **Genesis Layer**: Core protocol establishment with base quantum resistance (2025 Q1-Q2)
+2. **Fractal Expansion**: Layer 2 solutions implementing the toroidal economic model (2025 Q3-Q4)
+3. **AI Trust Integration**: Decentralized governance systems with mathematical balancing (2026 Q1-Q2)
+4. **Full Quantum Shield**: Complete post-quantum cryptographic implementation (2026 Q3-Q4)
+
+### Conclusion
+
+FractalCoin represents not just a technological innovation but a fundamental reimagining of how value can be created and distributed in a digital economy. By aligning blockchain incentives with natural mathematical patterns, we create a system that is inherently fair, sustainable, and resistant to the centralization pressures that have affected previous cryptocurrency implementations.`);
+  });
+  
   // API routes
   
   // Get user wallets
