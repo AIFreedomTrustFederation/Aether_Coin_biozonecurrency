@@ -93,6 +93,7 @@
     "matrix-js-sdk": "^37.2.0",
     "memorystore": "^1.6.7",
     "multer": "^1.4.5-lts.2",
+    "node-fetch": "^3.3.2",
     "openai": "^4.91.1",
     "passport": "^0.7.0",
     "passport-local": "^1.0.0",

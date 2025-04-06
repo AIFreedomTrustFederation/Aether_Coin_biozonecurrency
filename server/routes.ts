@@ -23,6 +23,7 @@ import apiServicesRouter from "./routes/api-services";
 import escrowRoutes from "./routes/escrow-routes";
 import dappBuilderEnhancements from "./routes/dapp-builder-enhancements";
 import mysterionRoutes from "./routes/mysterion";
+import aiGuidanceRoutes from "./routes/ai-guidance";
 import { openSourcePaymentService } from "./services/openSourcePayment";
 
 /**
@@ -128,6 +129,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Mount Mysterion AI system routes
   app.use('/api/mysterion', mysterionRoutes);
+  
+  // Mount AI guidance routes for wallet assistance
+  app.use('/api/ai', aiGuidanceRoutes);
   
   // Whitepaper endpoint
   app.get("/api/whitepaper", (req: Request, res: Response) => {
