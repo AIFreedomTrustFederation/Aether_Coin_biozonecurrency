@@ -1,567 +1,755 @@
 /**
  * Escrow Service
  * 
- * This service implements the escrow transaction system similar to eBay's model
- * for securely holding funds during transactions between buyers and sellers.
- * It integrates with Mysterion AI for dispute resolution and Matrix for communication.
+ * Provides functionality for creating and managing escrow transactions,
+ * handling evidence submission, disputes, and user ratings.
  */
 
-import { db } from '../storage';
-import {
+import { db } from '../db';
+import { 
   escrowTransactions,
   escrowProofs,
   escrowDisputes,
-  users,
+  transactionRatings,
   userReputation,
+  users,
   matrixRooms,
-  type EscrowTransaction,
+  EscrowStatus,
+  DisputeStatus,
+  EvidenceType,
+  type EscrowTransaction, 
   type EscrowProof,
   type EscrowDispute,
-  type User
-} from '@shared/schema';
-import { eq, and, desc, or } from 'drizzle-orm';
+  type TransactionRating,
+  type UserReputation,
+  type MatrixRoom
+} from '../../shared/schema';
+import { and, asc, count, desc, eq, gte, lt, sql } from 'drizzle-orm';
 import { matrixCommunication } from './matrix-integration';
-import { mysterionEthics } from './mysterion-ethics';
+import { ipfsService } from './ipfs-service';
+import { v4 as uuidv4 } from 'uuid';
 
-// Types for escrow service
-interface CreateEscrowParams {
-  buyerId: number;
+// Interfaces for request types
+export interface CreateEscrowRequest {
   sellerId: number;
-  amount: string;
+  buyerId: number;
+  amount: number;
   tokenSymbol: string;
   description: string;
   chain: string;
-  expiresInDays?: number;
-  metadata?: any;
+  expiresAt?: Date;
 }
 
-interface AddProofParams {
-  escrowTransactionId: number;
-  userId: number;
-  proofType: string;
-  description: string;
-  fileUrl: string;
-  fileCid: string;
-}
-
-interface CreateDisputeParams {
+export interface CreateDisputeRequest {
   escrowTransactionId: number;
   initiatorId: number;
   reason: string;
   description: string;
 }
 
+export interface ProofUploadRequest {
+  escrowTransactionId: number;
+  userId: number;
+  proofType: string;
+  description: string;
+  file: Buffer;
+  fileType: string;
+  filename: string;
+}
+
+export interface UserRatingRequest {
+  escrowTransactionId: number;
+  raterId: number;
+  ratedUserId: number;
+  rating: number;
+  comment?: string;
+}
+
+// Threshold values
+const MINIMUM_REQUIRED_TRUST_LEVEL = 20; // Minimum trust level for direct escrow completion
+const MINIMUM_REQUIRED_REPUTATION = 50; // Minimum reputation for direct transactions
+const HIGH_TRUST_THRESHOLD = 80; // Threshold for high trust level
+
+// Mandatory cooling period in days
+const DEFAULT_COOLING_PERIOD_DAYS = 3;
+
 /**
- * Escrow Transaction Service
- * Manages secure escrow transactions between buyers and sellers
+ * Main escrow service implementation
  */
-export class EscrowService {
+class EscrowService {
   /**
    * Create a new escrow transaction
    */
-  async createEscrow(params: CreateEscrowParams): Promise<EscrowTransaction | null> {
+  async createEscrowTransaction(data: CreateEscrowRequest): Promise<EscrowTransaction> {
+    // Ensure seller and buyer exist and are different users
+    if (data.sellerId === data.buyerId) {
+      throw new Error("Seller and buyer cannot be the same user");
+    }
+    
+    // Check if seller has sufficient trust level
+    const sellerRep = await this.getUserReputation(data.sellerId);
+    if (sellerRep && sellerRep.trustLevel < MINIMUM_REQUIRED_TRUST_LEVEL) {
+      throw new Error(`Seller needs a trust level of at least ${MINIMUM_REQUIRED_TRUST_LEVEL}`);
+    }
+    
+    // Create escrow transaction record
+    const [escrow] = await db.insert(escrowTransactions).values({
+      sellerId: data.sellerId,
+      buyerId: data.buyerId,
+      amount: data.amount.toString(),
+      tokenSymbol: data.tokenSymbol,
+      status: EscrowStatus.INITIATED,
+      description: data.description,
+      chain: data.chain,
+      createdAt: new Date(),
+      expiresAt: data.expiresAt || new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // Default 14 days
+      updatedAt: new Date()
+    }).returning();
+    
+    if (!escrow) {
+      throw new Error("Failed to create escrow transaction");
+    }
+    
+    // Create Matrix room for the escrow participants
     try {
-      // Validate seller and buyer exist
-      const [seller, buyer] = await Promise.all([
-        db.query.users.findFirst({
-          where: eq(users.id, params.sellerId),
-        }),
-        db.query.users.findFirst({
-          where: eq(users.id, params.buyerId),
-        })
-      ]);
+      const escrowRoomId = await matrixCommunication.createEscrowRoom(
+        escrow.id,
+        data.sellerId,
+        data.buyerId,
+        `Escrow-${escrow.id}`
+      );
       
-      if (!seller || !buyer) {
-        throw new Error('Invalid buyer or seller');
+      if (escrowRoomId) {
+        // Send initial message to room
+        await matrixCommunication.sendMessageToRoom(
+          escrowRoomId,
+          0, // System user
+          `Escrow transaction #${escrow.id} has been created. Amount: ${data.amount} ${data.tokenSymbol}.
+           
+           Current status: ${EscrowStatus.INITIATED}
+           
+           The buyer should fund the escrow to proceed.`
+        );
+        
+        // Insert into matrix_rooms table instead of updating escrow
+        await db.insert(matrixRooms).values({
+          roomId: escrowRoomId,
+          escrowTransactionId: escrow.id,
+          status: 'active',
+          encryptionEnabled: true
+        });
       }
-      
-      // Calculate expiration date (default 14 days)
-      const expiresInDays = params.expiresInDays || 14;
-      const expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + expiresInDays);
-      
-      // Calculate escrow fee (0.5% of transaction)
-      const amountNum = parseFloat(params.amount);
-      const escrowFee = (amountNum * 0.005).toFixed(5);
-      
-      // Create the escrow transaction
-      const escrow = await db.insert(escrowTransactions).values({
-        sellerId: params.sellerId,
-        buyerId: params.buyerId,
-        amount: params.amount,
-        tokenSymbol: params.tokenSymbol,
-        description: params.description,
-        status: 'created',
-        expiresAt,
-        chain: params.chain,
-        escrowFee,
-        metadata: params.metadata || {},
-      }).returning();
-      
-      if (!escrow[0]) {
-        throw new Error('Failed to create escrow transaction');
-      }
-      
-      // Create Matrix room for communication between parties
-      const room = await matrixCommunication.createTransactionRoom(escrow[0].id);
-      
-      if (room) {
-        console.log(`Created Matrix room ${room.roomId} for escrow transaction ${escrow[0].id}`);
-      }
-      
-      return escrow[0];
     } catch (error) {
-      console.error('Failed to create escrow transaction:', error);
+      console.error(`Error creating Matrix room for escrow ${escrow.id}:`, error);
+      // Non-blocking: we continue even if Matrix room creation fails
+    }
+    
+    return escrow;
+  }
+  
+  /**
+   * Get a specific escrow transaction by ID
+   * Only allows access for involved parties
+   */
+  async getEscrowById(escrowId: number, userId: number): Promise<EscrowTransaction & { matrixRoomId?: string } | null> {
+    // Get escrow with validation that user is involved
+    const escrow = await db.query.escrowTransactions.findFirst({
+      where: and(
+        eq(escrowTransactions.id, escrowId),
+        sql`(${escrowTransactions.sellerId} = ${userId} OR ${escrowTransactions.buyerId} = ${userId})`
+      )
+    });
+    
+    if (!escrow) {
       return null;
+    }
+    
+    // Get associated Matrix room if exists
+    const matrixRoom = await db.query.matrixRooms.findFirst({
+      where: eq(matrixRooms.escrowTransactionId, escrowId)
+    });
+    
+    // Return escrow with matrix room ID if available
+    return {
+      ...escrow,
+      matrixRoomId: matrixRoom?.roomId
+    };
+  }
+  
+  /**
+   * Get all escrow transactions for a user
+   */
+  async getUserEscrows(
+    userId: number, 
+    role?: 'buyer' | 'seller',
+    status?: EscrowStatus,
+    limit = 20,
+    offset = 0
+  ): Promise<(EscrowTransaction & { matrixRoomId?: string })[]> {
+    let whereClause;
+    
+    if (role === 'buyer') {
+      whereClause = eq(escrowTransactions.buyerId, userId);
+    } else if (role === 'seller') {
+      whereClause = eq(escrowTransactions.sellerId, userId);
+    } else {
+      // If no role specified, get all escrows where user is either buyer or seller
+      whereClause = sql`(${escrowTransactions.sellerId} = ${userId} OR ${escrowTransactions.buyerId} = ${userId})`;
+    }
+    
+    // Add status filter if provided
+    if (status) {
+      whereClause = and(whereClause, eq(escrowTransactions.status, status));
+    }
+    
+    const escrows = await db.select()
+      .from(escrowTransactions)
+      .where(whereClause)
+      .orderBy(desc(escrowTransactions.createdAt))
+      .limit(limit)
+      .offset(offset);
+    
+    // Get associated Matrix rooms
+    const escrowIds = escrows.map(escrow => escrow.id);
+    
+    if (escrowIds.length === 0) {
+      return escrows;
+    }
+    
+    const matrixRooms = await db.select()
+      .from(matrixRooms)
+      .where(sql`${matrixRooms.escrowTransactionId} IN (${escrowIds.join(',')})`);
+    
+    // Create a map of escrowId to matrixRoomId
+    const roomMap = new Map<number, string>();
+    for (const room of matrixRooms) {
+      roomMap.set(room.escrowTransactionId, room.roomId);
+    }
+    
+    // Add matrixRoomId to each escrow
+    return escrows.map(escrow => ({
+      ...escrow,
+      matrixRoomId: roomMap.get(escrow.id)
+    }));
+  }
+  
+  /**
+   * Update the status of an escrow transaction
+   */
+  async updateEscrowStatus(escrowId: number, newStatus: EscrowStatus, userId: number): Promise<EscrowTransaction> {
+    // Get current escrow
+    const escrow = await this.getEscrowById(escrowId, userId);
+    
+    if (!escrow) {
+      throw new Error("Escrow transaction not found or you're not authorized to access it");
+    }
+    
+    // Validate state transition
+    this.validateStatusTransition(escrow.status as EscrowStatus, newStatus, userId, escrow);
+    
+    // Update escrow status
+    const [updated] = await db.update(escrowTransactions)
+      .set({ 
+        status: newStatus,
+        updatedAt: new Date()
+      })
+      .where(eq(escrowTransactions.id, escrowId))
+      .returning();
+    
+    if (!updated) {
+      throw new Error("Failed to update escrow status");
+    }
+    
+    // If there's a Matrix room, send a status update message
+    if (escrow.matrixRoomId) {
+      try {
+        await matrixCommunication.sendMessageToRoom(
+          escrow.matrixRoomId,
+          0, // System user
+          `Escrow status updated to: ${newStatus}
+           
+           ${this.getStatusUpdateMessage(newStatus)}`
+        );
+      } catch (error) {
+        console.error(`Error sending Matrix status update for escrow ${escrowId}:`, error);
+        // Non-blocking
+      }
+    }
+    
+    // If completed or refunded, update user reputation
+    if (newStatus === EscrowStatus.COMPLETED) {
+      await this.updateReputationOnCompletion(escrow);
+    } else if (newStatus === EscrowStatus.REFUNDED) {
+      await this.updateReputationOnRefund(escrow);
+    }
+    
+    return updated;
+  }
+  
+  /**
+   * Helper to validate escrow status transitions
+   */
+  private validateStatusTransition(
+    currentStatus: EscrowStatus, 
+    newStatus: EscrowStatus,
+    userId: number,
+    escrow: EscrowTransaction
+  ): void {
+    const isBuyer = userId === escrow.buyerId;
+    const isSeller = userId === escrow.sellerId;
+    
+    // Define allowed transitions based on current status
+    const validTransitions: Record<EscrowStatus, EscrowStatus[]> = {
+      [EscrowStatus.INITIATED]: [EscrowStatus.FUNDED, EscrowStatus.CANCELLED],
+      [EscrowStatus.FUNDED]: [EscrowStatus.EVIDENCE_SUBMITTED, EscrowStatus.DISPUTED, EscrowStatus.REFUNDED],
+      [EscrowStatus.EVIDENCE_SUBMITTED]: [EscrowStatus.VERIFIED, EscrowStatus.DISPUTED],
+      [EscrowStatus.VERIFIED]: [EscrowStatus.COMPLETED, EscrowStatus.DISPUTED],
+      [EscrowStatus.COMPLETED]: [],  // Terminal state
+      [EscrowStatus.DISPUTED]: [EscrowStatus.COMPLETED, EscrowStatus.REFUNDED],
+      [EscrowStatus.REFUNDED]: [],   // Terminal state
+      [EscrowStatus.CANCELLED]: []   // Terminal state
+    };
+    
+    // Role-based permissions for transitions
+    if (newStatus === EscrowStatus.FUNDED && !isBuyer) {
+      throw new Error("Only buyer can fund an escrow");
+    }
+    
+    if (newStatus === EscrowStatus.VERIFIED && !isBuyer) {
+      throw new Error("Only buyer can verify the evidence");
+    }
+    
+    if (newStatus === EscrowStatus.COMPLETED) {
+      // Special case: high trust seller can complete directly if threshold met
+      const highTrustCase = isBuyer && escrow.sellerTrustLevel && escrow.sellerTrustLevel >= HIGH_TRUST_THRESHOLD;
+      
+      if (!isBuyer && !highTrustCase) {
+        throw new Error("Only buyer can complete the escrow");
+      }
+    }
+    
+    if (newStatus === EscrowStatus.REFUNDED && !isSeller && currentStatus !== EscrowStatus.DISPUTED) {
+      throw new Error("Only seller can initiate a refund unless the escrow is disputed");
+    }
+    
+    if (newStatus === EscrowStatus.CANCELLED) {
+      if (currentStatus !== EscrowStatus.INITIATED) {
+        throw new Error("Can only cancel an escrow that hasn't been funded yet");
+      }
+      
+      if (!isBuyer && !isSeller) {
+        throw new Error("Only buyer or seller can cancel the escrow");
+      }
+    }
+    
+    // Check if transition is valid
+    if (!validTransitions[currentStatus].includes(newStatus)) {
+      throw new Error(`Invalid state transition from ${currentStatus} to ${newStatus}`);
     }
   }
   
   /**
-   * Fund an escrow transaction
+   * Generate user-friendly messages for status updates
    */
-  async fundEscrow(
-    escrowTransactionId: number, 
-    transactionHash: string
-  ): Promise<EscrowTransaction | null> {
-    try {
-      // Get the escrow transaction
-      const escrow = await db.query.escrowTransactions.findFirst({
-        where: eq(escrowTransactions.id, escrowTransactionId),
-      });
-      
-      if (!escrow) {
-        throw new Error('Escrow transaction not found');
-      }
-      
-      if (escrow.status !== 'created') {
-        throw new Error('Escrow transaction cannot be funded in its current state');
-      }
-      
-      // Update escrow status to funded
-      const updated = await db.update(escrowTransactions)
-        .set({
-          status: 'funded',
-          transactionHash,
-        })
-        .where(eq(escrowTransactions.id, escrowTransactionId))
-        .returning();
-      
-      if (!updated[0]) {
-        throw new Error('Failed to update escrow transaction');
-      }
-      
-      // Notify the seller via Matrix that funds are in escrow
-      const room = await db.query.matrixRooms.findFirst({
-        where: eq(matrixRooms.escrowTransactionId, escrowTransactionId),
-      });
-      
-      if (room) {
-        await matrixCommunication.sendSystemMessage({
-          roomId: room.roomId,
-          userId: 0,
-          content: `Escrow has been funded with ${escrow.amount} ${escrow.tokenSymbol}. Seller can now proceed with delivery.`,
-          messageType: 'system',
-        });
-      }
-      
-      return updated[0];
-    } catch (error) {
-      console.error('Failed to fund escrow:', error);
-      return null;
+  private getStatusUpdateMessage(status: EscrowStatus): string {
+    switch (status) {
+      case EscrowStatus.FUNDED:
+        return "The escrow has been funded. Seller can now proceed with the transaction.";
+      case EscrowStatus.EVIDENCE_SUBMITTED:
+        return "Evidence has been submitted. Buyer should verify the evidence.";
+      case EscrowStatus.VERIFIED:
+        return "Evidence has been verified. The transaction can be completed.";
+      case EscrowStatus.COMPLETED:
+        return "The transaction has been completed successfully. Funds have been released to the seller.";
+      case EscrowStatus.DISPUTED:
+        return "The transaction is under dispute. Please provide any requested information.";
+      case EscrowStatus.REFUNDED:
+        return "The funds have been refunded to the buyer.";
+      case EscrowStatus.CANCELLED:
+        return "The escrow has been cancelled.";
+      default:
+        return "";
     }
   }
   
   /**
-   * Add a proof to an escrow transaction (photo, delivery confirmation, etc.)
+   * Upload proof for an escrow transaction
    */
-  async addProof(params: AddProofParams): Promise<EscrowProof | null> {
-    try {
-      // Validate escrow transaction exists
-      const escrow = await db.query.escrowTransactions.findFirst({
-        where: eq(escrowTransactions.id, params.escrowTransactionId),
-      });
-      
-      if (!escrow) {
-        throw new Error('Escrow transaction not found');
-      }
-      
-      // Validate user is involved in this transaction
-      if (escrow.buyerId !== params.userId && escrow.sellerId !== params.userId) {
-        throw new Error('User not authorized for this escrow transaction');
-      }
-      
-      // Create the proof
-      const proof = await db.insert(escrowProofs).values({
-        escrowTransactionId: params.escrowTransactionId,
-        userId: params.userId,
-        proofType: params.proofType,
-        description: params.description,
-        fileUrl: params.fileUrl,
-        fileCid: params.fileCid,
-      }).returning();
-      
-      if (!proof[0]) {
-        throw new Error('Failed to create proof');
-      }
-      
-      // Notify via Matrix about the new proof
-      const room = await db.query.matrixRooms.findFirst({
-        where: eq(matrixRooms.escrowTransactionId, params.escrowTransactionId),
-      });
-      
-      if (room) {
-        const user = await db.query.users.findFirst({
-          where: eq(users.id, params.userId),
-        });
-        
-        const userRole = escrow.sellerId === params.userId ? 'Seller' : 'Buyer';
-        const username = user ? user.username : userRole;
-        
-        await matrixCommunication.sendSystemMessage({
-          roomId: room.roomId,
-          userId: 0,
-          content: `${username} added a new ${params.proofType} proof: "${params.description}". View it at ${params.fileUrl}`,
-          messageType: 'system',
-          metadata: {
-            proofId: proof[0].id,
-            proofType: params.proofType,
-            fileCid: params.fileCid,
-          }
-        });
-      }
-      
-      return proof[0];
-    } catch (error) {
-      console.error('Failed to add proof:', error);
-      return null;
+  async uploadProof(data: ProofUploadRequest): Promise<EscrowProof> {
+    // Get escrow and verify user is involved
+    const escrow = await this.getEscrowById(data.escrowTransactionId, data.userId);
+    
+    if (!escrow) {
+      throw new Error("Escrow transaction not found or you're not authorized to access it");
     }
-  }
-  
-  /**
-   * Mark an escrow transaction as in progress (seller acknowledged)
-   */
-  async startTransaction(
-    escrowTransactionId: number, 
-    sellerId: number
-  ): Promise<EscrowTransaction | null> {
-    try {
-      // Get the escrow transaction
-      const escrow = await db.query.escrowTransactions.findFirst({
-        where: and(
-          eq(escrowTransactions.id, escrowTransactionId),
-          eq(escrowTransactions.sellerId, sellerId)
-        ),
-      });
-      
-      if (!escrow) {
-        throw new Error('Escrow transaction not found or unauthorized');
-      }
-      
-      if (escrow.status !== 'funded') {
-        throw new Error('Escrow transaction must be funded before starting');
-      }
-      
-      // Update escrow status to in_progress
-      const updated = await db.update(escrowTransactions)
-        .set({ status: 'in_progress' })
-        .where(eq(escrowTransactions.id, escrowTransactionId))
-        .returning();
-      
-      if (!updated[0]) {
-        throw new Error('Failed to update escrow transaction');
-      }
-      
-      // Notify via Matrix
-      const room = await db.query.matrixRooms.findFirst({
-        where: eq(matrixRooms.escrowTransactionId, escrowTransactionId),
-      });
-      
-      if (room) {
-        await matrixCommunication.sendSystemMessage({
-          roomId: room.roomId,
-          userId: 0,
-          content: 'Seller has acknowledged the transaction and is now processing the order.',
-          messageType: 'system',
-        });
-      }
-      
-      return updated[0];
-    } catch (error) {
-      console.error('Failed to start transaction:', error);
-      return null;
+    
+    // Verify escrow is in an appropriate state for proof submission
+    if (
+      escrow.status !== EscrowStatus.FUNDED && 
+      escrow.status !== EscrowStatus.EVIDENCE_SUBMITTED &&
+      escrow.status !== EscrowStatus.DISPUTED
+    ) {
+      throw new Error(`Cannot upload proof when escrow is in ${escrow.status} state`);
     }
-  }
-  
-  /**
-   * Complete an escrow transaction (buyer confirms receipt)
-   */
-  async completeTransaction(
-    escrowTransactionId: number, 
-    buyerId: number
-  ): Promise<EscrowTransaction | null> {
-    try {
-      // Get the escrow transaction
-      const escrow = await db.query.escrowTransactions.findFirst({
-        where: and(
-          eq(escrowTransactions.id, escrowTransactionId),
-          eq(escrowTransactions.buyerId, buyerId)
-        ),
-      });
-      
-      if (!escrow) {
-        throw new Error('Escrow transaction not found or unauthorized');
-      }
-      
-      if (escrow.status !== 'in_progress') {
-        throw new Error('Escrow transaction must be in progress before completing');
-      }
-      
-      // Update escrow status to completed
-      const updated = await db.update(escrowTransactions)
-        .set({ 
-          status: 'completed',
-          completedAt: new Date(),
-        })
-        .where(eq(escrowTransactions.id, escrowTransactionId))
-        .returning();
-      
-      if (!updated[0]) {
-        throw new Error('Failed to update escrow transaction');
-      }
-      
-      // Notify via Matrix
-      const room = await db.query.matrixRooms.findFirst({
-        where: eq(matrixRooms.escrowTransactionId, escrowTransactionId),
-      });
-      
-      if (room) {
-        await matrixCommunication.sendSystemMessage({
-          roomId: room.roomId,
-          userId: 0,
-          content: 'Buyer has confirmed receipt. Transaction completed successfully!',
-          messageType: 'system',
-        });
-        
-        // Archive the room after completion
-        await matrixCommunication.archiveRoom(escrowTransactionId);
-      }
-      
-      // Update reputation for both parties
-      await mysterionEthics.updateUserReputation(escrow.buyerId);
-      await mysterionEthics.updateUserReputation(escrow.sellerId);
-      
-      return updated[0];
-    } catch (error) {
-      console.error('Failed to complete transaction:', error);
-      return null;
+    
+    // Upload file to IPFS
+    const cid = await ipfsService.uploadFile(
+      data.file,
+      data.filename,
+      data.fileType
+    );
+    
+    // Create proof record
+    const [proof] = await db.insert(escrowProofs).values({
+      escrowTransactionId: data.escrowTransactionId,
+      userId: data.userId,
+      proofType: data.proofType,
+      description: data.description,
+      fileUrl: cid,
+      mimeType: data.fileType,
+      fileName: data.filename,
+      uploadedAt: new Date(),
+      verifiedAt: null,
+      verifiedBy: null
+    }).returning();
+    
+    if (!proof) {
+      throw new Error("Failed to save proof record");
     }
-  }
-  
-  /**
-   * Create a dispute for an escrow transaction
-   */
-  async createDispute(params: CreateDisputeParams): Promise<EscrowDispute | null> {
-    try {
-      // Get the escrow transaction
-      const escrow = await db.query.escrowTransactions.findFirst({
-        where: eq(escrowTransactions.id, params.escrowTransactionId),
-      });
-      
-      if (!escrow) {
-        throw new Error('Escrow transaction not found');
-      }
-      
-      // Verify initiator is part of this transaction
-      if (escrow.buyerId !== params.initiatorId && escrow.sellerId !== params.initiatorId) {
-        throw new Error('User not authorized to dispute this transaction');
-      }
-      
-      // Verify transaction is in a disputable state
-      const validStates = ['funded', 'in_progress'];
-      if (!validStates.includes(escrow.status)) {
-        throw new Error(`Transaction cannot be disputed in '${escrow.status}' state`);
-      }
-      
-      // Create the dispute
-      const dispute = await db.insert(escrowDisputes).values({
-        escrowTransactionId: params.escrowTransactionId,
-        initiatorId: params.initiatorId,
-        reason: params.reason,
-        description: params.description,
-        status: 'opened',
-      }).returning();
-      
-      if (!dispute[0]) {
-        throw new Error('Failed to create dispute');
-      }
-      
-      // Update escrow status
-      await db.update(escrowTransactions)
-        .set({ 
-          status: 'disputed',
-          disputedAt: new Date(),
-        })
-        .where(eq(escrowTransactions.id, params.escrowTransactionId));
-      
-      // Notify via Matrix
-      const room = await db.query.matrixRooms.findFirst({
-        where: eq(matrixRooms.escrowTransactionId, params.escrowTransactionId),
-      });
-      
-      if (room) {
-        const initiator = await db.query.users.findFirst({
-          where: eq(users.id, params.initiatorId),
-        });
-        
-        const initiatorRole = escrow.sellerId === params.initiatorId ? 'Seller' : 'Buyer';
-        const username = initiator ? initiator.username : initiatorRole;
-        
-        await matrixCommunication.sendSystemMessage({
-          roomId: room.roomId,
-          userId: 0,
-          content: `DISPUTE OPENED: ${username} has opened a dispute: "${params.reason}". Mysterion AI will analyze the case and provide a resolution.`,
-          messageType: 'system',
-          metadata: {
-            disputeId: dispute[0].id,
-            reason: params.reason,
-          }
-        });
-      }
-      
-      return dispute[0];
-    } catch (error) {
-      console.error('Failed to create dispute:', error);
-      return null;
+    
+    // Update escrow status if needed
+    if (escrow.status === EscrowStatus.FUNDED) {
+      await this.updateEscrowStatus(
+        data.escrowTransactionId,
+        EscrowStatus.EVIDENCE_SUBMITTED,
+        data.userId
+      );
     }
+    
+    // If there's a Matrix room, send a notification
+    if (escrow.matrixRoomId) {
+      try {
+        const proofUrl = ipfsService.getFileUrl(cid);
+        await matrixCommunication.sendMessageToRoom(
+          escrow.matrixRoomId,
+          data.userId,
+          `New proof uploaded:
+           Type: ${data.proofType}
+           Description: ${data.description}
+           File: ${data.filename}
+           
+           Link: ${proofUrl}`
+        );
+      } catch (error) {
+        console.error(`Error sending Matrix proof notification for escrow ${data.escrowTransactionId}:`, error);
+        // Non-blocking
+      }
+    }
+    
+    return proof;
   }
   
   /**
    * Get proofs for an escrow transaction
    */
-  async getProofs(escrowTransactionId: number): Promise<EscrowProof[]> {
-    try {
-      const proofs = await db.query.escrowProofs.findMany({
-        where: eq(escrowProofs.escrowTransactionId, escrowTransactionId),
-        orderBy: (fields, { desc }) => [desc(fields.timestamp)],
-        with: {
-          user: true,
-        }
-      });
+  async getProofs(escrowId: number, userId: number): Promise<EscrowProof[]> {
+    // Verify user is involved in the escrow
+    const escrow = await this.getEscrowById(escrowId, userId);
+    
+    if (!escrow) {
+      throw new Error("Escrow transaction not found or you're not authorized to access it");
+    }
+    
+    // Get all proofs for this escrow
+    const proofs = await db.select()
+      .from(escrowProofs)
+      .where(eq(escrowProofs.escrowTransactionId, escrowId))
+      .orderBy(desc(escrowProofs.uploadedAt));
+    
+    return proofs;
+  }
+  
+  /**
+   * Create a dispute for an escrow transaction
+   */
+  async createDispute(data: CreateDisputeRequest): Promise<EscrowDispute> {
+    // Verify user is involved in the escrow
+    const escrow = await this.getEscrowById(data.escrowTransactionId, data.initiatorId);
+    
+    if (!escrow) {
+      throw new Error("Escrow transaction not found or you're not authorized to access it");
+    }
+    
+    // Check if dispute already exists
+    const existingDispute = await db.query.escrowDisputes.findFirst({
+      where: eq(escrowDisputes.escrowTransactionId, data.escrowTransactionId)
+    });
+    
+    if (existingDispute) {
+      throw new Error("A dispute already exists for this escrow transaction");
+    }
+    
+    // Create dispute record
+    const [dispute] = await db.insert(escrowDisputes).values({
+      escrowTransactionId: data.escrowTransactionId,
+      initiatorId: data.initiatorId,
+      reason: data.reason,
+      description: data.description,
+      status: DisputeStatus.OPENED,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      resolvedAt: null,
+      resolvedBy: null,
+      resolution: null
+    }).returning();
+    
+    if (!dispute) {
+      throw new Error("Failed to create dispute");
+    }
+    
+    // Update escrow status to disputed
+    await this.updateEscrowStatus(
+      data.escrowTransactionId,
+      EscrowStatus.DISPUTED,
+      data.initiatorId
+    );
+    
+    // If there's a Matrix room, send a notification
+    if (escrow.matrixRoomId) {
+      try {
+        await matrixCommunication.sendMessageToRoom(
+          escrow.matrixRoomId,
+          data.initiatorId,
+          `A dispute has been opened:
+           Reason: ${data.reason}
+           Details: ${data.description}
+           
+           The escrow is now in DISPUTED status. Both parties should work together to resolve the issue.
+           If needed, a moderator will be assigned to help resolve the dispute.`
+        );
+      } catch (error) {
+        console.error(`Error sending Matrix dispute notification for escrow ${data.escrowTransactionId}:`, error);
+        // Non-blocking
+      }
+    }
+    
+    return dispute;
+  }
+  
+  /**
+   * Get dispute information for an escrow
+   */
+  async getDispute(escrowId: number, userId: number): Promise<EscrowDispute | null> {
+    // Verify user is involved in the escrow
+    const escrow = await this.getEscrowById(escrowId, userId);
+    
+    if (!escrow) {
+      throw new Error("Escrow transaction not found or you're not authorized to access it");
+    }
+    
+    // Get dispute
+    const dispute = await db.query.escrowDisputes.findFirst({
+      where: eq(escrowDisputes.escrowTransactionId, escrowId)
+    });
+    
+    return dispute;
+  }
+  
+  /**
+   * Rate another user after an escrow transaction
+   */
+  async rateUser(data: UserRatingRequest): Promise<TransactionRating> {
+    // Verify escrow exists and user is involved
+    const escrow = await this.getEscrowById(data.escrowTransactionId, data.raterId);
+    
+    if (!escrow) {
+      throw new Error("Escrow transaction not found or you're not authorized to access it");
+    }
+    
+    // Verify escrow is completed or refunded
+    if (escrow.status !== EscrowStatus.COMPLETED && escrow.status !== EscrowStatus.REFUNDED) {
+      throw new Error("Cannot rate until the escrow is completed or refunded");
+    }
+    
+    // Prevent self-rating
+    if (data.raterId === data.ratedUserId) {
+      throw new Error("Cannot rate yourself");
+    }
+    
+    // Verify that rated user is the other party in the escrow
+    if (
+      (data.raterId === escrow.buyerId && data.ratedUserId !== escrow.sellerId) ||
+      (data.raterId === escrow.sellerId && data.ratedUserId !== escrow.buyerId)
+    ) {
+      throw new Error("Can only rate the other party in the escrow transaction");
+    }
+    
+    // Check if already rated
+    const existingRating = await db.query.transactionRatings.findFirst({
+      where: and(
+        eq(transactionRatings.escrowTransactionId, data.escrowTransactionId),
+        eq(transactionRatings.raterId, data.raterId)
+      )
+    });
+    
+    if (existingRating) {
+      throw new Error("You have already submitted a rating for this transaction");
+    }
+    
+    // Create rating record
+    const [rating] = await db.insert(transactionRatings).values({
+      escrowTransactionId: data.escrowTransactionId,
+      raterId: data.raterId,
+      ratedUserId: data.ratedUserId,
+      rating: data.rating,
+      comment: data.comment || null,
+      createdAt: new Date()
+    }).returning();
+    
+    if (!rating) {
+      throw new Error("Failed to save rating");
+    }
+    
+    // Update user reputation based on the new rating
+    await this.updateReputationFromRating(data.ratedUserId, data.rating);
+    
+    // If there's a Matrix room, send a notification
+    if (escrow.matrixRoomId) {
+      try {
+        await matrixCommunication.sendMessageToRoom(
+          escrow.matrixRoomId,
+          data.raterId,
+          `Rating submitted:
+           Rating: ${data.rating}/5
+           ${data.comment ? `Comment: ${data.comment}` : ''}`
+        );
+      } catch (error) {
+        console.error(`Error sending Matrix rating notification for escrow ${data.escrowTransactionId}:`, error);
+        // Non-blocking
+      }
+    }
+    
+    return rating;
+  }
+  
+  /**
+   * Get user reputation or create if it doesn't exist
+   */
+  async getUserReputation(userId: number): Promise<UserReputation | null> {
+    let reputation = await db.query.userReputation.findFirst({
+      where: eq(userReputation.userId, userId)
+    });
+    
+    if (!reputation) {
+      // Create new reputation record for user
+      const [newReputation] = await db.insert(userReputation).values({
+        userId,
+        trustLevel: 50, // Default starting trust level
+        positiveRatings: 0,
+        negativeRatings: 0,
+        totalTransactions: 0,
+        disputesInitiated: 0,
+        disputesReceived: 0,
+        coolingOffPeriod: null,
+        updatedAt: new Date()
+      }).returning();
       
-      return proofs;
-    } catch (error) {
-      console.error('Failed to get proofs:', error);
-      return [];
+      reputation = newReputation;
+    }
+    
+    return reputation;
+  }
+  
+  /**
+   * Update reputation when escrow is completed successfully
+   */
+  private async updateReputationOnCompletion(escrow: EscrowTransaction): Promise<void> {
+    // Update seller reputation
+    let sellerRep = await this.getUserReputation(escrow.sellerId);
+    if (sellerRep) {
+      await db.update(userReputation)
+        .set({
+          trustLevel: Math.min(100, sellerRep.trustLevel + 2), // Increase trust, max 100
+          totalTransactions: sellerRep.totalTransactions + 1,
+          updatedAt: new Date()
+        })
+        .where(eq(userReputation.userId, escrow.sellerId));
+    }
+    
+    // Update buyer reputation
+    let buyerRep = await this.getUserReputation(escrow.buyerId);
+    if (buyerRep) {
+      await db.update(userReputation)
+        .set({
+          trustLevel: Math.min(100, buyerRep.trustLevel + 1), // Smaller increase for buyer
+          totalTransactions: buyerRep.totalTransactions + 1,
+          updatedAt: new Date()
+        })
+        .where(eq(userReputation.userId, escrow.buyerId));
     }
   }
   
   /**
-   * Get escrow transactions for a user (as buyer or seller)
+   * Update reputation when escrow is refunded
    */
-  async getUserTransactions(userId: number): Promise<EscrowTransaction[]> {
-    try {
-      const transactions = await db.query.escrowTransactions.findMany({
-        where: or(
-          eq(escrowTransactions.buyerId, userId),
-          eq(escrowTransactions.sellerId, userId)
-        ),
-        orderBy: (fields, { desc }) => [desc(fields.createdAt)],
-        with: {
-          buyer: true,
-          seller: true,
-        }
-      });
-      
-      return transactions;
-    } catch (error) {
-      console.error('Failed to get user transactions:', error);
-      return [];
+  private async updateReputationOnRefund(escrow: EscrowTransaction): Promise<void> {
+    // Only update transaction count, no trust level changes for refunds
+    // Update seller reputation
+    let sellerRep = await this.getUserReputation(escrow.sellerId);
+    if (sellerRep) {
+      await db.update(userReputation)
+        .set({
+          totalTransactions: sellerRep.totalTransactions + 1,
+          updatedAt: new Date()
+        })
+        .where(eq(userReputation.userId, escrow.sellerId));
+    }
+    
+    // Update buyer reputation
+    let buyerRep = await this.getUserReputation(escrow.buyerId);
+    if (buyerRep) {
+      await db.update(userReputation)
+        .set({
+          totalTransactions: buyerRep.totalTransactions + 1,
+          updatedAt: new Date()
+        })
+        .where(eq(userReputation.userId, escrow.buyerId));
     }
   }
   
   /**
-   * Process a dispute with Mysterion AI
+   * Update user reputation based on a new rating
    */
-  async processDispute(disputeId: number): Promise<EscrowDispute | null> {
-    try {
-      // Get the dispute details
-      const dispute = await db.query.escrowDisputes.findFirst({
-        where: eq(escrowDisputes.id, disputeId),
-        with: {
-          escrowTransaction: true,
-        }
-      });
-      
-      if (!dispute || !dispute.escrowTransaction) {
-        throw new Error('Dispute or transaction not found');
-      }
-      
-      // Get proofs submitted for this transaction
-      const proofs = await this.getProofs(dispute.escrowTransactionId);
-      
-      // Get reputation for both parties
-      const buyerRep = await db.query.userReputation.findFirst({
-        where: eq(userReputation.userId, dispute.escrowTransaction.buyerId),
-      });
-      
-      const sellerRep = await db.query.userReputation.findFirst({
-        where: eq(userReputation.userId, dispute.escrowTransaction.sellerId),
-      });
-      
-      // Update dispute status to investigating
-      await db.update(escrowDisputes)
-        .set({ status: 'investigating' })
-        .where(eq(escrowDisputes.id, disputeId));
-      
-      // Have Mysterion AI assess the dispute
-      const assessment = await mysterionEthics.assessDispute({
-        disputeId,
-        buyerReputation: buyerRep?.overallScore ? parseFloat(buyerRep.overallScore) : 0.5,
-        sellerReputation: sellerRep?.overallScore ? parseFloat(sellerRep.overallScore) : 0.5,
-        transactionAmount: parseFloat(dispute.escrowTransaction.amount),
-        proofCount: proofs.length,
-        description: dispute.description,
-      });
-      
-      // Get the updated dispute with assessment
-      const updatedDispute = await db.query.escrowDisputes.findFirst({
-        where: eq(escrowDisputes.id, disputeId),
-        with: {
-          mysterionAssessment: true,
-          escrowTransaction: true,
-        }
-      });
-      
-      // Notify via Matrix about the resolution
-      if (updatedDispute) {
-        const room = await db.query.matrixRooms.findFirst({
-          where: eq(matrixRooms.escrowTransactionId, updatedDispute.escrowTransactionId),
-        });
-        
-        if (room) {
-          let resolutionMessage = 'Mysterion AI has assessed this dispute. ';
-          
-          if (updatedDispute.mysterionAssessment) {
-            resolutionMessage += `Decision: ${updatedDispute.mysterionAssessment.decision}. `;
-            resolutionMessage += updatedDispute.mysterionAssessment.rationale;
-          }
-          
-          await matrixCommunication.sendSystemMessage({
-            roomId: room.roomId,
-            userId: 0,
-            content: resolutionMessage,
-            messageType: 'system',
-          });
-        }
-      }
-      
-      return updatedDispute;
-    } catch (error) {
-      console.error('Failed to process dispute:', error);
-      return null;
+  private async updateReputationFromRating(userId: number, rating: number): Promise<void> {
+    const userRep = await this.getUserReputation(userId);
+    
+    if (!userRep) {
+      return;
     }
+    
+    // Determine if positive or negative
+    const isPositive = rating >= 4; // 4-5 are positive, 1-3 are negative
+    
+    // Update counts
+    const updates: Partial<UserReputation> = {
+      positiveRatings: isPositive ? userRep.positiveRatings + 1 : userRep.positiveRatings,
+      negativeRatings: !isPositive ? userRep.negativeRatings + 1 : userRep.negativeRatings,
+      updatedAt: new Date()
+    };
+    
+    // Adjust trust level based on rating
+    if (isPositive) {
+      updates.trustLevel = Math.min(100, userRep.trustLevel + 1);
+    } else {
+      updates.trustLevel = Math.max(0, userRep.trustLevel - (5 - rating));
+    }
+    
+    // Apply updates
+    await db.update(userReputation)
+      .set(updates)
+      .where(eq(userReputation.userId, userId));
   }
 }
 
-// Singleton instance
+// Create and export singleton instance
 export const escrowService = new EscrowService();

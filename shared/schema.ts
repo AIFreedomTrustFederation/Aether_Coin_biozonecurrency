@@ -21,6 +21,37 @@ import {
   CodeGenResult
 } from './dapp-schema';
 
+// Escrow system types
+export enum EscrowStatus {
+  INITIATED = 'initiated',
+  FUNDED = 'funded',
+  EVIDENCE_SUBMITTED = 'evidence_submitted',
+  VERIFIED = 'verified',
+  COMPLETED = 'completed',
+  DISPUTED = 'disputed',
+  REFUNDED = 'refunded',
+  CANCELLED = 'cancelled'
+}
+
+export enum EvidenceType {
+  IMAGE = 'image',
+  VIDEO = 'video',
+  DOCUMENT = 'document',
+  AUDIO = 'audio',
+  CHAT_LOG = 'chat_log',
+  OTHER = 'other'
+}
+
+export enum DisputeStatus {
+  OPENED = 'opened',
+  REVIEWING = 'reviewing',
+  EVIDENCE_REQUESTED = 'evidence_requested',
+  RESOLVED_BUYER = 'resolved_buyer',
+  RESOLVED_SELLER = 'resolved_seller',
+  RESOLVED_SPLIT = 'resolved_split',
+  CLOSED = 'closed'
+}
+
 // User schema
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),

@@ -318,6 +318,68 @@ class MatrixCommunicationService {
   }
   
   /**
+   * Creates a room for escrow transaction participants
+   * @param escrowId Escrow transaction ID
+   * @param sellerId Seller user ID
+   * @param buyerId Buyer user ID
+   * @param roomName Room name
+   * @returns Room ID if successful, null otherwise
+   */
+  async createEscrowRoom(
+    escrowId: number,
+    sellerId: number,
+    buyerId: number,
+    roomName: string
+  ): Promise<string | null> {
+    try {
+      // In a real implementation, this would create an actual Matrix room
+      // For now, we generate a simulated room ID
+      const roomId = `!escrow_${escrowId}_${Date.now()}:aetherion.org`;
+      
+      // Log the creation
+      console.log(`[Matrix Simulation] Created escrow room ${roomId} for transaction ${escrowId}`);
+      console.log(`[Matrix Simulation] Participants: Seller ID ${sellerId}, Buyer ID ${buyerId}`);
+      
+      return roomId;
+    } catch (error) {
+      console.error('Error creating escrow room:', error);
+      return null;
+    }
+  }
+  
+  /**
+   * Sends a message to a specific room
+   * @param roomId Matrix room ID
+   * @param userId User ID (0 for system messages)
+   * @param message Message content
+   * @returns Event ID if successful, null otherwise
+   */
+  async sendMessageToRoom(
+    roomId: string,
+    userId: number,
+    message: string
+  ): Promise<string | null> {
+    try {
+      // Determine message type based on user ID
+      const messageType = userId === 0 ? 'system' : 'user';
+      
+      // Send the message
+      return this.sendMessage({
+        roomId,
+        userId,
+        content: message,
+        messageType,
+        metadata: {
+          timestamp: new Date().toISOString()
+        }
+      });
+    } catch (error) {
+      console.error('Error sending message to room:', error);
+      return null;
+    }
+  }
+  
+  /**
    * Checks if a user has Matrix integration enabled
    * @param userId User ID
    * @returns True if Matrix is enabled, false otherwise

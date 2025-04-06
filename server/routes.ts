@@ -120,7 +120,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/api/services', apiServicesRouter);
   
   // Mount escrow transaction routes
-  app.use('', escrowRoutes);
+  app.use('/api/escrow', escrowRoutes);
 
   // Mount DApp Builder enhancement routes
   app.use('/api/dapp-builder', dappBuilderEnhancements);

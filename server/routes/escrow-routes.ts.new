@@ -88,10 +88,9 @@ router.post('/', async (req, res) => {
     // Parse and validate request body
     const data = createEscrowSchema.parse(req.body);
     
-    // Get user ID from header for development/testing
-    // In production, this would come from a proper auth middleware
-    const userIdHeader = req.header('User-Id');
-    const userId = userIdHeader ? parseInt(userIdHeader) : 1;
+    // Use authenticated user as seller or buyer (security check in service)
+    // For development, we'll use a fixed user ID - in production this would come from authentication
+    const userId = 1; // Demo user ID
     
     // Convert expiry date if present
     if (data.expiresAt) {
@@ -119,10 +118,8 @@ router.post('/', async (req, res) => {
  */
 router.get('/', async (req, res) => {
   try {
-    // Get user ID from header for development/testing
-    // In production, this would come from a proper auth middleware
-    const userIdHeader = req.header('User-Id');
-    const userId = userIdHeader ? parseInt(userIdHeader) : 1;
+    // For development, we'll use a fixed user ID - in production this would come from authentication
+    const userId = 1; // Demo user ID
     
     // Parse optional query parameters
     const role = req.query.role as 'buyer' | 'seller' | undefined;
@@ -151,10 +148,8 @@ router.get('/:id', async (req, res) => {
       return res.status(400).json({ error: 'Invalid escrow ID' });
     }
     
-    // Get user ID from header for development/testing
-    // In production, this would come from a proper auth middleware
-    const userIdHeader = req.header('User-Id');
-    const userId = userIdHeader ? parseInt(userIdHeader) : 1;
+    // For development, we'll use a fixed user ID - in production this would come from authentication
+    const userId = 1; // Demo user ID
     
     // Get escrow
     const escrow = await escrowService.getEscrowById(escrowId, userId);
@@ -181,10 +176,8 @@ router.put('/:id/status', async (req, res) => {
       return res.status(400).json({ error: 'Invalid escrow ID' });
     }
     
-    // Get user ID from header for development/testing
-    // In production, this would come from a proper auth middleware
-    const userIdHeader = req.header('User-Id');
-    const userId = userIdHeader ? parseInt(userIdHeader) : 1;
+    // For development, we'll use a fixed user ID - in production this would come from authentication
+    const userId = 1; // Demo user ID
     
     // Parse and validate status
     const { status } = updateStatusSchema.parse(req.body);
@@ -233,10 +226,8 @@ router.post('/:id/proof', upload.single('file'), async (req, res) => {
       return res.status(400).json({ error: 'Invalid escrow ID' });
     }
     
-    // Get user ID from header for development/testing
-    // In production, this would come from a proper auth middleware
-    const userIdHeader = req.header('User-Id');
-    const userId = userIdHeader ? parseInt(userIdHeader) : 1;
+    // For development, we'll use a fixed user ID - in production this would come from authentication
+    const userId = 1; // Demo user ID
     
     // Verify file was uploaded
     if (!req.file) {
@@ -287,10 +278,8 @@ router.post('/:id/dispute', async (req, res) => {
       return res.status(400).json({ error: 'Invalid escrow ID' });
     }
     
-    // Get user ID from header for development/testing
-    // In production, this would come from a proper auth middleware
-    const userIdHeader = req.header('User-Id');
-    const userId = userIdHeader ? parseInt(userIdHeader) : 1;
+    // For development, we'll use a fixed user ID - in production this would come from authentication
+    const userId = 1; // Demo user ID
     
     // Parse and validate dispute data
     const dispute = createDisputeSchema.parse(req.body);
@@ -338,10 +327,8 @@ router.post('/:id/rate', async (req, res) => {
       return res.status(400).json({ error: 'Invalid escrow ID' });
     }
     
-    // Get user ID from header for development/testing
-    // In production, this would come from a proper auth middleware
-    const userIdHeader = req.header('User-Id');
-    const userId = userIdHeader ? parseInt(userIdHeader) : 1;
+    // For development, we'll use a fixed user ID - in production this would come from authentication
+    const userId = 1; // Demo user ID
     
     // Parse and validate rating data
     const rating = ratingSchema.parse(req.body);
