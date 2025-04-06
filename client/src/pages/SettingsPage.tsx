@@ -102,6 +102,15 @@ const SettingsPage: React.FC = () => {
                         className={`p-4 border rounded-lg cursor-pointer transition hover:shadow-md ${
                           t.id === theme.id ? 'ring-2 ring-primary' : ''
                         }`}
+                        onClick={() => useThemeStore.getState().setTheme(t)}
+                        role="button"
+                        tabIndex={0}
+                        aria-label={`Select ${t.name} theme`}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            useThemeStore.getState().setTheme(t);
+                          }
+                        }}
                       >
                         <div className="flex items-center gap-2 mb-2">
                           <div 
