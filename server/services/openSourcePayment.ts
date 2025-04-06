@@ -52,10 +52,13 @@ class OpenSourcePaymentService {
         description,
         provider: 'open_source',
         providerPaymentId: paymentId,
-        paymentMethod,
+        paymentMethodId: null, // Using null since we don't have a stored payment method
         walletId: walletId || null,
         status: 'pending',
-        metadata: metadata || {}
+        metadata: {
+          ...metadata,
+          customPaymentMethod: paymentMethod // Store the payment method type in metadata
+        }
       });
 
       // In a real implementation, we would initiate the payment with the actual processor
@@ -112,12 +115,25 @@ class OpenSourcePaymentService {
         throw new Error('Payment not found');
       }
       
+      const payment = payments[0];
+      
       // Update the payment status
       const updatedPayment = await storage.updatePaymentStatus(
-        payments[0].id,
-        'succeeded',
+        payment.id,
+        'completed', // Changed from 'succeeded' to 'completed' for consistency with Stripe
         new Date()
       );
+      
+      // If payment is completed and has a wallet ID, update wallet balance
+      if (payment.walletId) {
+        const wallet = await storage.getWallet(payment.walletId);
+        if (wallet) {
+          const amount = parseFloat(payment.amount);
+          const currentBalance = parseFloat(wallet.balance);
+          const newBalance = currentBalance + (amount / 100); // amount is in cents
+          await storage.updateWalletBalance(payment.walletId, newBalance.toString());
+        }
+      }
       
       return updatedPayment || null;
     } catch (error) {

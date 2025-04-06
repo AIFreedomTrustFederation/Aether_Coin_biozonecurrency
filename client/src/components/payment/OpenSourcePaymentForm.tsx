@@ -1,25 +1,24 @@
-import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useState } from 'react';
 import { z } from 'zod';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
+import { useMutation } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Loader2, CreditCard } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-import { Loader2 } from 'lucide-react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { fetchWallets } from '@/lib/api';
+import { useQuery } from '@tanstack/react-query';
 
+// Form validation schema
 const paymentSchema = z.object({
-  amount: z.string()
-    .min(1, { message: 'Amount is required' })
-    .refine((val) => !isNaN(parseFloat(val)) && parseFloat(val) > 0, {
-      message: 'Amount must be a positive number',
-    }),
-  currency: z.string().min(1, { message: 'Currency is required' }),
+  amount: z.string().min(1, 'Amount is required'),
+  currency: z.string().min(1, 'Currency is required'),
   description: z.string().optional(),
-  paymentMethod: z.string().min(1, { message: 'Payment method is required' }),
+  paymentMethod: z.string().min(1, 'Payment method is required'),
   walletId: z.string().optional(),
 });
 
@@ -31,20 +30,26 @@ interface OpenSourcePaymentFormProps {
 }
 
 export function OpenSourcePaymentForm({ onSuccess, onError }: OpenSourcePaymentFormProps) {
-  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-
+  const { toast } = useToast();
+  
+  // Fetch wallets for the wallet selection dropdown
+  const { data: wallets } = useQuery({
+    queryKey: ['/api/wallets'],
+    queryFn: fetchWallets
+  });
+  
   const form = useForm<PaymentFormValues>({
     resolver: zodResolver(paymentSchema),
     defaultValues: {
       amount: '',
-      currency: 'USD',
-      description: 'Wallet funding',
-      paymentMethod: 'bank_transfer',
-      walletId: '',
+      currency: 'usd',
+      description: '',
+      paymentMethod: 'credit_card',
+      walletId: 'none',
     },
   });
-
+  
   const handleSubmit = async (data: PaymentFormValues) => {
     try {
       setIsLoading(true);
@@ -53,16 +58,17 @@ export function OpenSourcePaymentForm({ onSuccess, onError }: OpenSourcePaymentF
       const amountInCents = Math.round(parseFloat(data.amount) * 100);
       
       // Make API request to process the open-source payment
-      const response = await apiRequest('/api/payments/open-source', {
-        method: 'POST',
-        data: {
+      const response = await apiRequest(
+        'POST',
+        '/api/payments/open-source',
+        {
           amount: amountInCents,
           currency: data.currency,
-          description: data.description,
+          description: data.description || "Open Source Payment",
           paymentMethod: data.paymentMethod,
-          walletId: data.walletId ? parseInt(data.walletId) : undefined,
-        },
-      });
+          walletId: data.walletId && data.walletId !== 'none' ? parseInt(data.walletId) : undefined,
+        }
+      );
       
       toast({
         title: 'Payment Processed',
@@ -72,6 +78,9 @@ export function OpenSourcePaymentForm({ onSuccess, onError }: OpenSourcePaymentF
       if (onSuccess) {
         onSuccess(response);
       }
+      
+      // Reset form
+      form.reset();
     } catch (error) {
       console.error('Payment processing error:', error);
       const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
@@ -91,115 +100,112 @@ export function OpenSourcePaymentForm({ onSuccess, onError }: OpenSourcePaymentF
   };
 
   return (
-    <Card className="w-full max-w-lg">
-      <CardHeader>
-        <CardTitle>Open Source Payment</CardTitle>
-        <CardDescription>
-          Process your payment using our open-source payment option. 
-          This option is free of processing fees and uses open standards.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="amount"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Amount</FormLabel>
-                  <FormControl>
-                    <Input placeholder="0.00" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="currency"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Currency</FormLabel>
-                  <Select 
-                    onValueChange={field.onChange} 
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select currency" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="USD">USD - US Dollar</SelectItem>
-                      <SelectItem value="EUR">EUR - Euro</SelectItem>
-                      <SelectItem value="GBP">GBP - British Pound</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="paymentMethod"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Payment Method</FormLabel>
-                  <Select 
-                    onValueChange={field.onChange} 
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select payment method" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-                      <SelectItem value="crypto">Cryptocurrency</SelectItem>
-                      <SelectItem value="open_collective">Open Collective</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormDescription>
-                    Choose the open-source payment method you'd like to use
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description (Optional)</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Payment purpose" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <CardFooter className="flex justify-end pt-4 px-0">
-              <Button type="submit" disabled={isLoading}>
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  'Complete Payment'
-                )}
-              </Button>
-            </CardFooter>
-          </form>
-        </Form>
-      </CardContent>
-    </Card>
+    <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+      <div className="space-y-2">
+        <Label htmlFor="amount">Amount</Label>
+        <div className="flex">
+          <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-input bg-muted text-muted-foreground">
+            $
+          </span>
+          <Input
+            id="amount"
+            type="number"
+            placeholder="0.00"
+            step="0.01"
+            min="0.01"
+            className="rounded-l-none"
+            {...form.register('amount')}
+          />
+        </div>
+        {form.formState.errors.amount && (
+          <p className="text-sm text-destructive mt-1">{form.formState.errors.amount.message}</p>
+        )}
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="currency">Currency</Label>
+        <Select
+          defaultValue={form.getValues('currency')}
+          onValueChange={(value) => form.setValue('currency', value)}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select currency" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="usd">USD</SelectItem>
+            <SelectItem value="eur">EUR</SelectItem>
+            <SelectItem value="gbp">GBP</SelectItem>
+          </SelectContent>
+        </Select>
+        {form.formState.errors.currency && (
+          <p className="text-sm text-destructive mt-1">{form.formState.errors.currency.message}</p>
+        )}
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="paymentMethod">Payment Method</Label>
+        <Select
+          defaultValue={form.getValues('paymentMethod')}
+          onValueChange={(value) => form.setValue('paymentMethod', value)}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select payment method" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="credit_card">Credit Card</SelectItem>
+            <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+            <SelectItem value="crypto">Cryptocurrency</SelectItem>
+          </SelectContent>
+        </Select>
+        {form.formState.errors.paymentMethod && (
+          <p className="text-sm text-destructive mt-1">{form.formState.errors.paymentMethod.message}</p>
+        )}
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="walletId">Destination Wallet (Optional)</Label>
+        <Select
+          defaultValue={form.getValues('walletId')}
+          onValueChange={(value) => form.setValue('walletId', value)}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select wallet (optional)" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">No specific wallet</SelectItem>
+            {wallets && wallets.map((wallet) => (
+              <SelectItem key={wallet.id} value={wallet.id.toString()}>
+                {wallet.name} ({wallet.symbol})
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="description">Description (Optional)</Label>
+        <Input
+          id="description"
+          placeholder="Payment description"
+          {...form.register('description')}
+        />
+      </div>
+
+      <Button type="submit" className="w-full" disabled={isLoading}>
+        {isLoading ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Processing...
+          </>
+        ) : (
+          <>
+            <CreditCard className="mr-2 h-4 w-4" />
+            Process Payment
+          </>
+        )}
+      </Button>
+    </form>
   );
 }
+
+export default OpenSourcePaymentForm;

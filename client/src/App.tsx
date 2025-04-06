@@ -10,7 +10,7 @@ import { Link } from "wouter";
 import { 
   Menu, X, Home, Layout, Wallet, Lock, Shield, Settings, AlertTriangle, ChevronRight, 
   BarChart3, Eye, Cpu, Bell, Zap, Coins, FileText, Database, Bot, TestTube, Blocks,
-  Smartphone, Lightbulb
+  Smartphone, Lightbulb, CreditCard
 } from "lucide-react";
 
 // Import existing pages for now
@@ -37,6 +37,7 @@ import OnboardingPage from "./pages/Onboarding";
 import TestPage from "./pages/TestPage";
 import DappBuilder from "./pages/DappBuilder";
 import FractalExplorer from "./pages/FractalExplorer";
+import { PaymentPage } from "./pages/PaymentPage";
 
 // Import Mobile Features Demo
 import MobileFeatureDemo from "@/components/mobile/MobileFeatureDemo";
@@ -46,6 +47,7 @@ import EscrowPage from "./pages/Escrow";
 const navigationItems = [
   { name: "Dashboard", path: "/dashboard", icon: <Layout className="h-5 w-5" /> },
   { name: "Wallet", path: "/wallet", icon: <Wallet className="h-5 w-5" /> },
+  { name: "Payment", path: "/payment", icon: <CreditCard className="h-5 w-5" /> },
   { name: "Escrow", path: "/escrow", icon: <Shield className="h-5 w-5" /> },
   { name: "Blockchain Explorer", path: "/blockchain-explorer", icon: <Database className="h-5 w-5" /> },
   { name: "Blockchain Dashboard", path: "/blockchain-dashboard", icon: <Blocks className="h-5 w-5" /> },
@@ -478,6 +480,7 @@ function App() {
             <Route path="/onboarding" component={OnboardingPage} />
             <Route path="/test" component={TestPage} />
             <Route path="/escrow" component={EscrowPage} />
+            <Route path="/payment" component={PaymentPage} />
             <Route component={SimpleNotFound} />
           </Switch>
         </main>

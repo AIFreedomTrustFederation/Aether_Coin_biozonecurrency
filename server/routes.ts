@@ -1371,6 +1371,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Process open-source payments
+  app.post("/api/payments/open-source", async (req, res) => {
+    try {
+      const { amount, currency, description, paymentMethod, walletId } = req.body;
+      
+      if (!amount || typeof amount !== 'number' || amount <= 0) {
+        return res.status(400).json({ message: "Invalid payment amount" });
+      }
+      
+      if (!currency || typeof currency !== 'string') {
+        return res.status(400).json({ message: "Invalid currency" });
+      }
+      
+      if (!paymentMethod || typeof paymentMethod !== 'string') {
+        return res.status(400).json({ message: "Invalid payment method" });
+      }
+      
+      const userId = 1; // For demo purposes
+      
+      const result = await openSourcePaymentService.processPayment({
+        userId,
+        amount,
+        currency,
+        description: description || 'Open Source Payment',
+        paymentMethod,
+        walletId: walletId || undefined
+      });
+      
+      // Normally we would do more verification here before automating this
+      // but for demo purposes, we'll auto-verify the payment
+      await openSourcePaymentService.verifyPayment(result.id);
+      
+      res.json({
+        success: true,
+        payment: result
+      });
+    } catch (error) {
+      console.error('Open source payment error:', error);
+      res.status(500).json({ 
+        message: "Failed to process payment", 
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
   const httpServer = createServer(app);
   return httpServer;
 }

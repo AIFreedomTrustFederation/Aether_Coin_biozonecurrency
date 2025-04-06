@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchPaymentMethods, processPayment, createPaymentIntent } from '@/lib/api';
 import { fetchWallets } from '@/lib/api';
@@ -65,14 +65,6 @@ export function PaymentForm() {
         title: "Payment successful",
         description: "Your payment has been processed successfully.",
       });
-      
-      // Reset form after success
-      setTimeout(() => {
-        setAmount('');
-        setDescription('');
-        setPaymentMethodId('');
-        setPaymentStatus('idle');
-      }, 3000);
     },
     onError: (error) => {
       setPaymentStatus('error');
@@ -83,6 +75,20 @@ export function PaymentForm() {
       });
     }
   });
+  
+  // Handle resetting the form when payment status changes
+  useEffect(() => {
+    if (paymentStatus === 'success') {
+      const timer = setTimeout(() => {
+        setAmount('');
+        setDescription('');
+        setPaymentMethodId('');
+        setPaymentStatus('idle');
+      }, 3000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [paymentStatus]);
   
   // Create payment intent mutation (alternative flow)
   const intentMutation = useMutation({
@@ -126,7 +132,7 @@ export function PaymentForm() {
       amount: amountCents,
       currency,
       description: description || 'Wallet funding',
-      walletId: walletId ? parseInt(walletId) : undefined
+      walletId: walletId && walletId !== 'none' ? parseInt(walletId) : undefined
     };
     
     processMutation.mutate(params);
@@ -225,7 +231,7 @@ export function PaymentForm() {
                   <SelectValue placeholder="Select wallet (optional)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">No specific wallet</SelectItem>
+                  <SelectItem value="none">No specific wallet</SelectItem>
                   {wallets && wallets.map((wallet) => (
                     <SelectItem key={wallet.id} value={wallet.id.toString()}>
                       {wallet.name} ({wallet.symbol})

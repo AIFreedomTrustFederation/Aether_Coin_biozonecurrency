@@ -303,14 +303,18 @@ export const getPaymentStatus = async (id: number): Promise<Payment> => {
 };
 
 // Stripe specific APIs
-export const createPaymentIntent = async (amount: number, currency: string, metadata?: Record<string, any>): Promise<{ clientSecret: string, id: string }> => {
-  const response = await apiRequest('POST', '/api/payments/intent', { 
+export const createPaymentIntent = async (amount: number, currency: string, metadata?: Record<string, any>): Promise<{ clientSecret: string, paymentIntentId: string }> => {
+  const response = await apiRequest('POST', '/api/payments/stripe/create-intent', { 
     amount, 
     currency,
     metadata
   });
   
-  return await response.json();
+  const data = await response.json();
+  return {
+    clientSecret: data.clientSecret,
+    paymentIntentId: data.paymentIntentId
+  };
 };
 
 export const saveStripePaymentMethod = async (stripePaymentMethodId: string, isDefault: boolean = false): Promise<PaymentMethod> => {
