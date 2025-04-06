@@ -216,13 +216,13 @@ class EscrowService {
       return escrows;
     }
     
-    const matrixRooms = await db.select()
+    const roomEntries = await db.select()
       .from(matrixRooms)
       .where(sql`${matrixRooms.escrowTransactionId} IN (${escrowIds.join(',')})`);
     
     // Create a map of escrowId to matrixRoomId
     const roomMap = new Map<number, string>();
-    for (const room of matrixRooms) {
+    for (const room of roomEntries) {
       roomMap.set(room.escrowTransactionId, room.roomId);
     }
     

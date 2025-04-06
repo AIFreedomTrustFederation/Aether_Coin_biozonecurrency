@@ -1,5 +1,25 @@
 // Import polyfills first to ensure they are loaded before any code that might need them
-import "./polyfills";
+import { Buffer } from 'buffer';
+
+// Polyfill for 'global'
+if (typeof window !== 'undefined') {
+  window.global = window;
+}
+
+// Polyfill for 'Buffer'
+if (typeof window !== 'undefined') {
+  window.Buffer = Buffer;
+}
+
+// Polyfill for 'process'
+if (typeof window !== 'undefined') {
+  window.process = {
+    env: {},
+    version: '',
+    nextTick: (fn: Function) => setTimeout(fn, 0),
+    browser: true
+  } as any;
+}
 
 import { createRoot } from "react-dom/client";
 import App from "./App";
