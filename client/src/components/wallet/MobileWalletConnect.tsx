@@ -127,13 +127,46 @@ const MobileWalletConnect: React.FC<MobileWalletConnectProps> = ({
   // Separate function to start the actual connection process
   const initiateWalletConnection = async () => {
     try {
-      // Connect using WalletConnect
-      const result = await connect('walletconnect' as any); // Type casting for now
+      setIsConnecting(true);
+      
+      // First, check if MetaMask is installed (for mobile, this would be a special case)
+      if (window.ethereum?.isMetaMask) {
+        try {
+          // Direct MetaMask connection on mobile
+          const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+          
+          if (accounts && accounts.length > 0) {
+            // Successfully connected to MetaMask
+            toast({
+              title: "Wallet Connected",
+              description: "Successfully connected to MetaMask",
+            });
+            
+            // Store permission preference
+            localStorage.setItem('walletPermissionsAccepted', 'true');
+            
+            if (onSuccess) {
+              onSuccess();
+            }
+            
+            setOpen(false);
+            setIsConnecting(false);
+            return { accounts };
+          }
+        } catch (metaMaskError) {
+          console.error("MetaMask connection error:", metaMaskError);
+          // If MetaMask fails, continue to try WalletConnect
+        }
+      }
+      
+      // Fallback to WalletConnect
+      const result = await connect('WalletConnect' as any); // Using proper case
       
       // If we get a URI back, it means we need to show the QR code or deep link
       if (result && 'uri' in result) {
         setUri(result.uri as string);
         setOpen(true);
+        setIsConnecting(false);
         return result;
       }
       
@@ -152,6 +185,7 @@ const MobileWalletConnect: React.FC<MobileWalletConnectProps> = ({
           variant: "destructive"
         });
         
+        setIsConnecting(false);
         return null;
       }
       
@@ -161,14 +195,19 @@ const MobileWalletConnect: React.FC<MobileWalletConnectProps> = ({
         description: "Successfully connected to your wallet",
       });
       
+      // Store permission preference
+      localStorage.setItem('walletPermissionsAccepted', 'true');
+      
       if (onSuccess) {
         onSuccess();
       }
       
       setOpen(false);
+      setIsConnecting(false);
       return result;
     } catch (err) {
       console.error("Wallet connection error:", err);
+      setIsConnecting(false);
       
       // More detailed error handling
       let errorMessage = "Connection failed. Please try again.";

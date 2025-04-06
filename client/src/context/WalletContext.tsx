@@ -161,20 +161,38 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const response = await connectWallet(walletType);
       
       if (response.provider && response.accounts.length > 0) {
-        // Convert the connection response to our WalletInfo format
-        const provider = new (window as any).ethers.providers.Web3Provider(response.provider);
-        const balanceWei = await provider.getBalance(response.accounts[0]);
-        const balance = (window as any).ethers.utils.formatEther(balanceWei);
-        const network = await provider.getNetwork();
+        let walletInfo: WalletInfo;
         
-        const walletInfo: WalletInfo = {
-          status: 'connected',
-          address: response.accounts[0],
-          balance,
-          chainId: network.chainId,
-          nativeToken: SUPPORTED_NETWORKS[network.chainId]?.symbol || 'ETH',
-          provider: response.walletProvider
-        };
+        try {
+          // Use BrowserProvider from ethers v6
+          // Convert the connection response to our WalletInfo format
+          const provider = response.provider;
+          const balanceWei = await provider.getBalance(response.accounts[0]);
+          const balance = parseFloat(balanceWei.toString()) / 1e18; // Manual conversion to ether
+          const network = await provider.getNetwork();
+          const chainId = network.chainId;
+          
+          walletInfo = {
+            status: 'connected',
+            address: response.accounts[0],
+            balance: balance.toString(),
+            chainId: Number(chainId),
+            nativeToken: SUPPORTED_NETWORKS[Number(chainId)]?.symbol || 'ETH',
+            provider: response.walletProvider
+          };
+        } catch (err) {
+          console.error("Error getting wallet info:", err);
+          
+          // Fallback - create a basic wallet info object
+          walletInfo = {
+            status: 'connected',
+            address: response.accounts[0],
+            balance: '0',  // We'll refresh this later
+            chainId: 1,    // Default to Ethereum mainnet
+            nativeToken: 'ETH',
+            provider: response.walletProvider
+          };
+        }
         
         setWallet(walletInfo);
         // Save connected wallet type to local storage
