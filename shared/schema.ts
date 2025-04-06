@@ -3,6 +3,20 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
 
+// Import DApp Builder and Marketplace schema elements
+import {
+  dappTemplates,
+  dappComponents,
+  userDapps,
+  marketplaceListings,
+  dappPurchases,
+  dappReviews,
+  dappCreationChats,
+  dappCreationStages,
+  browserUsers,
+  sandboxEnvironments
+} from './dapp-schema';
+
 // User schema
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -1307,6 +1321,15 @@ export const usersExtendedRelations = relations(users, ({ many, one }) => ({
   receivedRatings: many(transactionRatings, { relationName: "received_ratings" }),
   recursionRequests: many(recursionLogs),
   aiCoinCompensations: many(aiCoinCompensation),
+  
+  // DApp Builder and Marketplace relations
+  userDapps: many(userDapps),
+  dappListings: many(marketplaceListings),
+  dappPurchases: many(dappPurchases),
+  dappReviews: many(dappReviews),
+  dappCreationChats: many(dappCreationChats),
+  browserSettings: one(browserUsers),
+  sandboxEnvironments: many(sandboxEnvironments),
 }));
 
 export const schema = {
@@ -1350,4 +1373,16 @@ export const schema = {
   transactionRatings,
   recursionLogs,
   aiCoinCompensation,
+  
+  // DApp Builder and Marketplace schemas (imported from dapp-schema.ts)
+  dappTemplates,
+  dappComponents,
+  userDapps,
+  marketplaceListings,
+  dappPurchases,
+  dappReviews,
+  dappCreationChats,
+  dappCreationStages,
+  browserUsers,
+  sandboxEnvironments,
 };

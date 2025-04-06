@@ -32,6 +32,7 @@ import WalletPage from "./pages/WalletPage";
 import MysterionAIPage from "./pages/MysterionAIPage";
 import OnboardingPage from "./pages/Onboarding";
 import TestPage from "./pages/TestPage";
+import DappBuilder from "./pages/DappBuilder";
 
 // Import Mobile Features Demo
 import MobileFeatureDemo from "@/components/mobile/MobileFeatureDemo";
