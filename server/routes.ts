@@ -22,6 +22,7 @@ import apiGateway from "../api-gateway";
 import apiServicesRouter from "./routes/api-services";
 import escrowRoutes from "./routes/escrow-routes";
 import dappBuilderEnhancements from "./routes/dapp-builder-enhancements";
+import mysterionRoutes from "./routes/mysterion";
 import { openSourcePaymentService } from "./services/openSourcePayment";
 
 /**
@@ -124,6 +125,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Mount DApp Builder enhancement routes
   app.use('/api/dapp-builder', dappBuilderEnhancements);
+  
+  // Mount Mysterion AI system routes
+  app.use('/api/mysterion', mysterionRoutes);
   
   // API routes
   

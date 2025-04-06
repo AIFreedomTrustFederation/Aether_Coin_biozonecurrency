@@ -1,517 +1,512 @@
-import React, { useState } from 'react';
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardFooter, 
-  CardHeader, 
-  CardTitle 
-} from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { 
-  Select, 
-  SelectContent, 
-  SelectGroup, 
-  SelectItem, 
-  SelectLabel, 
-  SelectTrigger, 
-  SelectValue 
-} from '@/components/ui/select';
-import { Slider } from '@/components/ui/slider';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import React, { useState, useEffect } from 'react';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { 
-  Settings, 
-  BellRing, 
-  Shield, 
-  MessageSquare, 
-  Key, 
-  CheckCircle2, 
-  AlertTriangle,
-  Trash2,
-  Mic,
-  Languages
-} from 'lucide-react';
-import { useAI } from '../contexts/AIContext';
-import { AISettingsProps } from '../types';
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+  DialogClose
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
+  Alert,
+  AlertTitle,
+  AlertDescription
+} from '@/components/ui/alert';
+import { Switch } from '@/components/ui/switch';
 
-/**
- * AISettings component for configuring AI assistant preferences,
- * security options, and notification settings.
- */
-const AISettings: React.FC<AISettingsProps> = ({ className = '' }) => {
-  const { state, updateConfig, clearConversation, removeCredential } = useAI();
-  const { config, storedCredentials } = state;
+// Mock data to use when not connected to actual backend
+const MOCK_API_KEYS = [
+  {
+    id: 1,
+    service: 'openai',
+    nickname: 'Primary GPT-4 Key',
+    isActive: true,
+    isTrainingEnabled: true,
+    usageCount: 42,
+    createdAt: new Date().toISOString(),
+    lastUsedAt: new Date().toISOString(),
+    vaultStatus: 'secured'
+  }
+];
+
+const MOCK_CONTRIBUTION_POINTS = 560;
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { 
+  Info, 
+  Plus, 
+  CheckCircle, 
+  XCircle, 
+  Key, 
+  Shield, 
+  Trash, 
+  Brain, 
+  AlertTriangle 
+} from 'lucide-react';
+
+type ApiKey = {
+  id: number;
+  service: string;
+  nickname: string;
+  isActive: boolean;
+  isTrainingEnabled: boolean;
+  usageCount: number;
+  createdAt: string;
+  lastUsedAt: string | null;
+  vaultStatus: string;
+}
+
+// Main component for managing API keys
+export default function AISettings() {
+  const [isAddKeyDialogOpen, setIsAddKeyDialogOpen] = useState(false);
   const { toast } = useToast();
-  const [matrixId, setMatrixId] = useState(config.matrixId || '');
-  const [currentTab, setCurrentTab] = useState('general');
-  
-  // Handle save matrix ID
-  const handleSaveMatrixId = () => {
-    if (!matrixId) {
+
+  // Fetch API keys
+  const { data: apiKeyData, isLoading: keysLoading, error: keysError } = useQuery({
+    queryKey: ['/api/mysterion/api-keys'],
+  });
+
+  // Get contribution points
+  const { data: contributionData, isLoading: pointsLoading } = useQuery({
+    queryKey: ['/api/mysterion/contribution'],
+  });
+
+  const apiKeys = apiKeyData?.apiKeys || MOCK_API_KEYS;
+  const points = contributionData?.points || MOCK_CONTRIBUTION_POINTS;
+
+  // Delete API key
+  const deleteMutation = useMutation({
+    mutationFn: async (keyId: number) => {
+      const response = await fetch(`/api/mysterion/api-keys/${keyId}`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to delete API key');
+      }
+      
+      return await response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/mysterion/api-keys'] });
       toast({
+        title: 'API Key Deleted',
+        description: 'The API key has been removed securely.',
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Error Deleting API Key',
+        description: error instanceof Error ? error.message : 'An unknown error occurred',
         variant: 'destructive',
-        title: 'Matrix ID Required',
-        description: 'Please enter a valid Matrix ID to enable Matrix notifications.'
+      });
+    },
+  });
+
+  // Update API key settings
+  const updateMutation = useMutation({
+    mutationFn: async ({ keyId, isActive, isTrainingEnabled }: { keyId: number, isActive?: boolean, isTrainingEnabled?: boolean}) => {
+      const response = await fetch(`/api/mysterion/api-keys/${keyId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          isActive,
+          isTrainingEnabled,
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update API key settings');
+      }
+      
+      return await response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/mysterion/api-keys'] });
+      toast({
+        title: 'Settings Updated',
+        description: 'API key settings have been updated.',
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Error Updating Settings',
+        description: error instanceof Error ? error.message : 'An unknown error occurred',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const handleDeleteKey = (keyId: number) => {
+    if (confirm('Are you sure you want to delete this API key? This action cannot be undone.')) {
+      deleteMutation.mutate(keyId);
+    }
+  };
+
+  const handleToggleActive = (keyId: number, currentValue: boolean) => {
+    updateMutation.mutate({ keyId, isActive: !currentValue });
+  };
+
+  const handleToggleTraining = (keyId: number, currentValue: boolean) => {
+    updateMutation.mutate({ keyId, isTrainingEnabled: !currentValue });
+  };
+
+  return (
+    <div className="container max-w-4xl mx-auto py-6">
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-3xl font-bold">Mysterion AI Settings</h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-2">
+            Manage your OpenAI API keys and contribute to the distributed training network
+          </p>
+        </div>
+        <Button onClick={() => setIsAddKeyDialogOpen(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Add API Key
+        </Button>
+      </div>
+
+      {/* Contribution Status Card */}
+      <Card className="mb-8">
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <Brain className="mr-2 h-5 w-5" /> 
+            Mysterion Network Contribution
+          </CardTitle>
+          <CardDescription>
+            Your contribution to the distributed AI training network
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex justify-between items-center">
+            <div>
+              <p className="text-2xl font-bold">{pointsLoading ? '...' : points} Points</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Training points earned from your API key usage
+              </p>
+            </div>
+            <div className="bg-primary/10 p-3 rounded-full">
+              <Brain className="h-8 w-8 text-primary" />
+            </div>
+          </div>
+        </CardContent>
+        <CardFooter className="text-sm text-gray-500 dark:text-gray-400 border-t pt-4">
+          <div className="flex items-center">
+            <Info className="h-4 w-4 mr-2" />
+            <span>Points determine your training priority and future rewards</span>
+          </div>
+        </CardFooter>
+      </Card>
+
+      {/* Security Information */}
+      <Alert className="mb-8 bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800">
+        <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-500" />
+        <AlertTitle className="text-amber-800 dark:text-amber-400">Secure Key Storage</AlertTitle>
+        <AlertDescription className="text-amber-700 dark:text-amber-300">
+          Your API keys are stored using quantum-resistant encryption and fractal sharding. 
+          Keys are never stored in plain text and are secured in your local vault.
+        </AlertDescription>
+      </Alert>
+
+      {/* API Keys List */}
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <h2 className="text-xl font-semibold">Your API Keys</h2>
+        </div>
+
+        {keysLoading ? (
+          <p className="text-center py-8 text-gray-500">Loading your API keys...</p>
+        ) : keysError ? (
+          <Alert variant="destructive" className="my-4">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>
+              Failed to load API keys. Please try again later.
+            </AlertDescription>
+          </Alert>
+        ) : apiKeys.length === 0 ? (
+          <div className="text-center py-12 bg-gray-50 dark:bg-gray-900/50 rounded-lg border border-dashed">
+            <Key className="h-10 w-10 mx-auto text-gray-400 mb-3" />
+            <h3 className="text-lg font-medium text-gray-700 dark:text-gray-300">No API Keys Found</h3>
+            <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto mt-2">
+              Add your OpenAI API key to start using Mysterion and contribute to the distributed AI training network
+            </p>
+            <Button 
+              variant="outline" 
+              className="mt-4"
+              onClick={() => setIsAddKeyDialogOpen(true)}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add your first API key
+            </Button>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {apiKeys.map((key: ApiKey) => (
+              <Card key={key.id} className="overflow-hidden">
+                <CardHeader className="pb-2">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <CardTitle className="flex items-center text-lg">
+                        {key.nickname}
+                        {key.vaultStatus === 'secured' && (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger>
+                                <Shield className="ml-2 h-4 w-4 text-green-500" />
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Quantum-secured in local vault</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
+                      </CardTitle>
+                      <CardDescription>
+                        {key.service.toUpperCase()} • Added {new Date(key.createdAt).toLocaleDateString()}
+                      </CardDescription>
+                    </div>
+                    <Button 
+                      size="sm" 
+                      variant="ghost" 
+                      className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                      onClick={() => handleDeleteKey(key.id)}
+                    >
+                      <Trash className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent className="pb-3">
+                  <div className="flex flex-col sm:flex-row gap-3 sm:gap-6">
+                    <div className="flex items-center space-x-2">
+                      <div className="flex-shrink-0">
+                        <Label htmlFor={`active-${key.id}`} className="mr-2">Active</Label>
+                        <Switch 
+                          id={`active-${key.id}`}
+                          checked={key.isActive}
+                          onCheckedChange={() => handleToggleActive(key.id, key.isActive)}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className="flex-shrink-0">
+                        <Label htmlFor={`training-${key.id}`} className="mr-2">Training Mode</Label>
+                        <Switch 
+                          id={`training-${key.id}`}
+                          checked={key.isTrainingEnabled}
+                          onCheckedChange={() => handleToggleTraining(key.id, key.isTrainingEnabled)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+                <CardFooter className="bg-gray-50 dark:bg-gray-900/30 pt-3 text-sm text-gray-500">
+                  <div className="flex flex-col sm:flex-row justify-between w-full">
+                    <div>Usage count: {key.usageCount || 0}</div>
+                    <div>
+                      {key.lastUsedAt ? `Last used: ${new Date(key.lastUsedAt).toLocaleString()}` : 'Not used yet'}
+                    </div>
+                  </div>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Add API Key Dialog */}
+      <AddApiKeyDialog 
+        isOpen={isAddKeyDialogOpen} 
+        onOpenChange={setIsAddKeyDialogOpen}
+      />
+    </div>
+  );
+}
+
+// Dialog for adding a new API key
+function AddApiKeyDialog({ 
+  isOpen, 
+  onOpenChange 
+}: { 
+  isOpen: boolean; 
+  onOpenChange: (open: boolean) => void;
+}) {
+  const [apiKey, setApiKey] = useState('');
+  const [nickname, setNickname] = useState('');
+  const [isTrainingEnabled, setIsTrainingEnabled] = useState(true);
+  const { toast } = useToast();
+
+  // Add API key mutation
+  const addKeyMutation = useMutation({
+    mutationFn: async (data: {
+      apiKey: string;
+      nickname: string;
+      isTrainingEnabled: boolean;
+    }) => {
+      const response = await fetch('/api/mysterion/api-keys', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          apiKey: data.apiKey,
+          nickname: data.nickname,
+          service: 'openai',
+          isActive: true,
+          isTrainingEnabled: data.isTrainingEnabled,
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to add API key');
+      }
+      
+      return await response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/mysterion/api-keys'] });
+      toast({
+        title: 'API Key Added',
+        description: 'Your API key has been securely stored and is ready for use.',
+      });
+      resetForm();
+      onOpenChange(false);
+    },
+    onError: (error) => {
+      toast({
+        title: 'Error Adding API Key',
+        description: error instanceof Error ? error.message : 'An unknown error occurred',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const resetForm = () => {
+    setApiKey('');
+    setNickname('');
+    setIsTrainingEnabled(true);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!apiKey) {
+      toast({
+        title: 'API Key Required',
+        description: 'Please enter your OpenAI API key',
+        variant: 'destructive',
       });
       return;
     }
     
-    updateConfig({ matrixId });
+    if (!nickname) {
+      toast({
+        title: 'Nickname Required',
+        description: 'Please provide a name for this API key',
+        variant: 'destructive',
+      });
+      return;
+    }
     
-    toast({
-      title: 'Matrix ID Saved',
-      description: 'Your Matrix ID has been updated successfully.'
+    addKeyMutation.mutate({
+      apiKey,
+      nickname,
+      isTrainingEnabled,
     });
   };
-  
-  // Handle toggle for boolean settings
-  const handleToggleSetting = (key: keyof typeof config, value: boolean) => {
-    updateConfig({ [key]: value });
-    
-    toast({
-      title: 'Setting Updated',
-      description: `${key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())} has been ${value ? 'enabled' : 'disabled'}.`
-    });
-  };
-  
-  // Handle notification level change
-  const handleNotificationLevelChange = (value: string) => {
-    updateConfig({ 
-      notificationLevel: value as 'all' | 'important' | 'minimal' 
-    });
-    
-    toast({
-      title: 'Notification Level Updated',
-      description: `Notifications set to: ${value.charAt(0).toUpperCase() + value.slice(1)}`
-    });
-  };
-  
-  // Handle AI response style change
-  const handleResponseStyleChange = (value: string) => {
-    updateConfig({ 
-      aiResponseStyle: value as 'concise' | 'detailed'
-    });
-    
-    toast({
-      title: 'AI Response Style Updated',
-      description: `AI responses will now be more ${value}.`
-    });
-  };
-  
-  // Handle language change
-  const handleLanguageChange = (value: string) => {
-    updateConfig({ language: value });
-    
-    toast({
-      title: 'Language Updated',
-      description: `Interface language set to: ${value.toUpperCase()}`
-    });
-  };
-  
-  // Handle alert threshold change
-  const handleAlertThresholdChange = (value: number[]) => {
-    updateConfig({ maxAlertThreshold: value[0] });
-  };
-  
-  // Handle clear conversation
-  const handleClearConversation = () => {
-    clearConversation();
-    
-    toast({
-      title: 'Conversation Cleared',
-      description: 'Your chat history has been cleared.'
-    });
-  };
-  
-  // Handle credential removal
-  const handleRemoveCredential = (id: string, name: string) => {
-    removeCredential(id);
-    
-    toast({
-      title: 'Credential Removed',
-      description: `"${name}" has been removed from secure storage.`
-    });
-  };
-  
+
   return (
-    <div className={`space-y-6 ${className}`}>
-      <div className="flex items-center gap-2">
-        <Settings className="h-5 w-5" />
-        <h2 className="text-xl font-semibold">AI Assistant Settings</h2>
-      </div>
-      
-      <Tabs defaultValue="general" value={currentTab} onValueChange={setCurrentTab}>
-        <TabsList className="grid grid-cols-4 mb-4">
-          <TabsTrigger value="general">General</TabsTrigger>
-          <TabsTrigger value="security">Security</TabsTrigger>
-          <TabsTrigger value="notifications">Notifications</TabsTrigger>
-          <TabsTrigger value="credentials">Credentials</TabsTrigger>
-        </TabsList>
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Add OpenAI API Key</DialogTitle>
+          <DialogDescription>
+            Add your API key to use the Mysterion AI network and contribute to distributed training
+          </DialogDescription>
+        </DialogHeader>
         
-        {/* General Settings */}
-        <TabsContent value="general" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>General Preferences</CardTitle>
-              <CardDescription>
-                Configure how the AI assistant communicates with you
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Language Selection */}
-              <div className="space-y-2">
-                <Label htmlFor="language" className="flex items-center gap-2">
-                  <Languages className="h-4 w-4" />
-                  Interface Language
-                </Label>
-                <Select
-                  value={config.language}
-                  onValueChange={handleLanguageChange}
-                >
-                  <SelectTrigger id="language">
-                    <SelectValue placeholder="Select language" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectLabel>Languages</SelectLabel>
-                      <SelectItem value="en">English</SelectItem>
-                      <SelectItem value="es">Spanish</SelectItem>
-                      <SelectItem value="fr">French</SelectItem>
-                      <SelectItem value="de">German</SelectItem>
-                      <SelectItem value="ja">Japanese</SelectItem>
-                      <SelectItem value="zh">Chinese</SelectItem>
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* AI Response Style */}
-              <div className="space-y-2">
-                <Label htmlFor="responseStyle" className="flex items-center gap-2">
-                  <MessageSquare className="h-4 w-4" />
-                  AI Response Style
-                </Label>
-                <Select
-                  value={config.aiResponseStyle}
-                  onValueChange={handleResponseStyleChange}
-                >
-                  <SelectTrigger id="responseStyle">
-                    <SelectValue placeholder="Select style" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="concise">Concise</SelectItem>
-                    <SelectItem value="detailed">Detailed</SelectItem>
-                  </SelectContent>
-                </Select>
-                <p className="text-sm text-muted-foreground">
-                  {config.aiResponseStyle === 'concise' 
-                    ? 'Concise: Short and to-the-point responses' 
-                    : 'Detailed: More comprehensive explanations'}
+        <form onSubmit={handleSubmit}>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="nickname">Nickname</Label>
+              <Input
+                id="nickname"
+                placeholder="My OpenAI Key"
+                value={nickname}
+                onChange={(e) => setNickname(e.target.value)}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="apiKey">OpenAI API Key</Label>
+              <Input
+                id="apiKey"
+                type="password"
+                placeholder="sk-..."
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+              />
+              <p className="text-xs text-gray-500">
+                Your key will be encrypted using quantum-resistant algorithms and fractal sharding
+              </p>
+            </div>
+            
+            <div className="flex items-center space-x-2 pt-2">
+              <Switch
+                id="training-mode"
+                checked={isTrainingEnabled}
+                onCheckedChange={setIsTrainingEnabled}
+              />
+              <Label htmlFor="training-mode">Enable Training Mode</Label>
+            </div>
+            
+            <div className="bg-gray-50 dark:bg-gray-900/30 p-3 rounded-md text-sm">
+              <div className="flex">
+                <Info className="h-5 w-5 text-blue-500 mr-2 flex-shrink-0" />
+                <p>
+                  Training mode allows your API key to be used in the Mysterion AI distributed 
+                  training network. You earn points for your contributions, which can be redeemed 
+                  for benefits in the future.
                 </p>
               </div>
-              
-              {/* Voice Interaction */}
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label 
-                    htmlFor="voiceToggle"
-                    className="flex items-center gap-2"
-                  >
-                    <Mic className="h-4 w-4" />
-                    Voice Interaction
-                  </Label>
-                  <p className="text-sm text-muted-foreground">
-                    Enable speech recognition and text-to-speech
-                  </p>
-                </div>
-                <Switch 
-                  id="voiceToggle"
-                  checked={config.enableVoice}
-                  onCheckedChange={(checked) => 
-                    handleToggleSetting('enableVoice', checked)
-                  }
-                />
-              </div>
-            </CardContent>
-            <CardFooter className="justify-between border-t pt-4">
-              <Button 
-                variant="outline" 
-                onClick={handleClearConversation}
-              >
-                Clear Conversation History
-              </Button>
-            </CardFooter>
-          </Card>
-        </TabsContent>
-        
-        {/* Security Settings */}
-        <TabsContent value="security" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Security Settings</CardTitle>
-              <CardDescription>
-                Configure security features and transaction verification
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Phishing Detection */}
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label 
-                    htmlFor="phishingToggle"
-                    className="flex items-center gap-2"
-                  >
-                    <Shield className="h-4 w-4" />
-                    Phishing Detection
-                  </Label>
-                  <p className="text-sm text-muted-foreground">
-                    Automatically detect and warn about potential phishing attempts
-                  </p>
-                </div>
-                <Switch 
-                  id="phishingToggle"
-                  checked={config.enablePhishingDetection}
-                  onCheckedChange={(checked) => 
-                    handleToggleSetting('enablePhishingDetection', checked)
-                  }
-                />
-              </div>
-              
-              {/* Auto Transaction Verification */}
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label 
-                    htmlFor="transactionToggle"
-                    className="flex items-center gap-2"
-                  >
-                    <CheckCircle2 className="h-4 w-4" />
-                    Auto Transaction Verification
-                  </Label>
-                  <p className="text-sm text-muted-foreground">
-                    Automatically verify transactions for suspicious activity
-                  </p>
-                </div>
-                <Switch 
-                  id="transactionToggle"
-                  checked={config.autoVerifyTransactions}
-                  onCheckedChange={(checked) => 
-                    handleToggleSetting('autoVerifyTransactions', checked)
-                  }
-                />
-              </div>
-              
-              {/* Alert Threshold */}
-              <div className="space-y-3">
-                <div className="space-y-0.5">
-                  <Label 
-                    htmlFor="alertThreshold"
-                    className="flex items-center gap-2"
-                  >
-                    <AlertTriangle className="h-4 w-4" />
-                    Alert Threshold
-                  </Label>
-                  <p className="text-sm text-muted-foreground">
-                    Set the sensitivity level for security alerts (1-10)
-                  </p>
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  <Slider
-                    id="alertThreshold"
-                    min={1}
-                    max={10}
-                    step={1}
-                    value={[config.maxAlertThreshold]}
-                    onValueChange={handleAlertThresholdChange}
-                  />
-                  <span className="min-w-8 text-center font-medium">
-                    {config.maxAlertThreshold}
-                  </span>
-                </div>
-                
-                <p className="text-sm text-muted-foreground">
-                  {config.maxAlertThreshold < 4 ? (
-                    "Low: Only critical security issues will be reported"
-                  ) : config.maxAlertThreshold < 8 ? (
-                    "Medium: Balance between security and convenience"
-                  ) : (
-                    "High: Maximum security with more frequent alerts"
-                  )}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        {/* Notification Settings */}
-        <TabsContent value="notifications" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Notification Settings</CardTitle>
-              <CardDescription>
-                Configure how and when you receive notifications
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Notification Level */}
-              <div className="space-y-2">
-                <Label htmlFor="notificationLevel" className="flex items-center gap-2">
-                  <BellRing className="h-4 w-4" />
-                  Notification Level
-                </Label>
-                <Select
-                  value={config.notificationLevel}
-                  onValueChange={handleNotificationLevelChange}
-                >
-                  <SelectTrigger id="notificationLevel">
-                    <SelectValue placeholder="Select level" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Notifications</SelectItem>
-                    <SelectItem value="important">Important Only</SelectItem>
-                    <SelectItem value="minimal">Minimal (Critical Only)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              {/* Email Notifications */}
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label 
-                    htmlFor="emailToggle"
-                    className="flex items-center gap-2"
-                  >
-                    Email Notifications
-                  </Label>
-                  <p className="text-sm text-muted-foreground">
-                    Receive security and transaction alerts via email
-                  </p>
-                </div>
-                <Switch 
-                  id="emailToggle"
-                  checked={config.emailEnabled}
-                  onCheckedChange={(checked) => 
-                    handleToggleSetting('emailEnabled', checked)
-                  }
-                />
-              </div>
-              
-              {/* Matrix Notifications */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label 
-                      htmlFor="matrixToggle"
-                      className="flex items-center gap-2"
-                    >
-                      Matrix Notifications
-                    </Label>
-                    <p className="text-sm text-muted-foreground">
-                      Receive notifications via Matrix messaging protocol
-                    </p>
-                  </div>
-                  <Switch 
-                    id="matrixToggle"
-                    checked={config.matrixEnabled}
-                    onCheckedChange={(checked) => 
-                      handleToggleSetting('matrixEnabled', checked)
-                    }
-                  />
-                </div>
-                
-                {config.matrixEnabled && (
-                  <div className="space-y-2">
-                    <Label htmlFor="matrixId">Matrix ID</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        id="matrixId"
-                        placeholder="@username:matrix.org"
-                        value={matrixId}
-                        onChange={(e) => setMatrixId(e.target.value)}
-                      />
-                      <Button onClick={handleSaveMatrixId}>Save</Button>
-                    </div>
-                    {!config.matrixId && (
-                      <p className="text-sm text-amber-500">
-                        Please add your Matrix ID to receive notifications
-                      </p>
-                    )}
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        {/* Stored Credentials */}
-        <TabsContent value="credentials" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Secure Credentials</CardTitle>
-              <CardDescription>
-                View and manage securely stored credentials
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {storedCredentials.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-8 text-center">
-                  <Key className="h-12 w-12 text-muted-foreground/50 mb-4" />
-                  <h3 className="text-lg font-medium mb-2">No Stored Credentials</h3>
-                  <p className="text-muted-foreground max-w-md">
-                    You haven't stored any credentials yet. The AI assistant can securely store your credentials for various services.
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {storedCredentials.map((credential) => (
-                    <div 
-                      key={credential.id}
-                      className="flex items-center justify-between p-4 border rounded-lg"
-                    >
-                      <div className="space-y-1">
-                        <div className="font-medium">{credential.name}</div>
-                        <div className="text-sm text-muted-foreground flex gap-2">
-                          <span>{credential.service}</span>
-                          <span>•</span>
-                          <span>{credential.type}</span>
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          Last used: {credential.lastUsed ? 
-                            new Date(credential.lastUsed).toLocaleDateString() : 
-                            'Never'}
-                        </div>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleRemoveCredential(credential.id, credential.name)}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-            <CardFooter>
-              <Alert className="w-full">
-                <AlertTriangle className="h-4 w-4" />
-                <AlertTitle>Security Notice</AlertTitle>
-                <AlertDescription>
-                  All credentials are securely encrypted using advanced encryption standards and can only be accessed by you.
-                </AlertDescription>
-              </Alert>
-            </CardFooter>
-          </Card>
-        </TabsContent>
-      </Tabs>
-    </div>
+            </div>
+          </div>
+          
+          <DialogFooter className="mt-4">
+            <DialogClose asChild>
+              <Button type="button" variant="outline">Cancel</Button>
+            </DialogClose>
+            <Button 
+              type="submit" 
+              disabled={addKeyMutation.isPending}
+            >
+              {addKeyMutation.isPending ? 'Adding...' : 'Add API Key'}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
-};
-
-export default AISettings;
+}

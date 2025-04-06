@@ -14,7 +14,8 @@ import {
 } from "lucide-react";
 
 // Import existing pages for now
-import AIAssistant from "./modules/ai-assistant/components/AIAssistant";
+import { AIAssistant } from "./modules/ai-assistant/components/AIAssistant";
+import AISettings from "./modules/ai-assistant/components/AISettings";
 import LandingPage from "./pages/LandingPage";
 import Dashboard from "@/components/Dashboard";
 import { SecurityPage } from "./pages/SecurityPage";
@@ -462,6 +463,7 @@ function App() {
             <Route path="/blockchain-dashboard" component={BlockchainDashboardPage} />
             <Route path="/settings" component={SettingsPage} />
             <Route path="/ai-assistant" component={MysterionAIPage} />
+            <Route path="/ai/settings" component={AISettings} />
             <Route path="/mobile-features" component={MobileFeatureDemo} />
             <Route path="/mobile-feature" component={MobileFeatureDemo} />
             <Route path="/admin" component={AdminPortal} />

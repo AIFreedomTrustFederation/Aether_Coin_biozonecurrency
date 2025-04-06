@@ -87,3 +87,22 @@ migrations/
 
 # Generated type definitions
 types/generated/
+
+# API key storage and sharded key fragments
+api-keys/
+key-fragments/
+**/api_keys*.json
+**/user_key_vault*.json
+**/*.keystore
+**/*.keyshards
+quantum-vault/
+.mysterion-keys/
+# API key storage and sharded key fragments
+api-keys/
+key-fragments/
+**/api_keys*.json
+**/user_key_vault*.json
+**/*.keystore
+**/*.keyshards
+quantum-vault/
+.mysterion-keys/

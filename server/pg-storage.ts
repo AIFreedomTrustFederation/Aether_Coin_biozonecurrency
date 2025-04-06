@@ -602,4 +602,242 @@ export class PgStorage implements IStorage {
       return undefined;
     }
   }
+
+  // User API Keys for Mysterion LLM training
+  async getUserApiKey(id: number): Promise<UserApiKey | undefined> {
+    try {
+      const result = await db.select()
+        .from(userApiKeys)
+        .where(eq(userApiKeys.id, id))
+        .limit(1);
+      
+      return result.length ? result[0] : undefined;
+    } catch (error) {
+      console.error('Error getting user API key:', error);
+      return undefined;
+    }
+  }
+
+  async getUserApiKeysByUserId(userId: number): Promise<UserApiKey[]> {
+    try {
+      const result = await db.select()
+        .from(userApiKeys)
+        .where(eq(userApiKeys.userId, userId))
+        .orderBy(desc(userApiKeys.createdAt));
+      
+      return result;
+    } catch (error) {
+      console.error('Error getting user API keys by user ID:', error);
+      return [];
+    }
+  }
+
+  async getUserApiKeysByService(userId: number, service: string): Promise<UserApiKey[]> {
+    try {
+      const result = await db.select()
+        .from(userApiKeys)
+        .where(and(
+          eq(userApiKeys.userId, userId),
+          eq(userApiKeys.service, service)
+        ))
+        .orderBy(desc(userApiKeys.createdAt));
+      
+      return result;
+    } catch (error) {
+      console.error('Error getting user API keys by service:', error);
+      return [];
+    }
+  }
+  
+  async createUserApiKey(insertUserApiKey: InsertUserApiKey): Promise<UserApiKey> {
+    try {
+      // Import the vault service here to avoid circular dependencies
+      const { storeApiKey } = await import('./services/quantum-vault');
+      
+      // First store the API key in the quantum vault
+      const { keyId, isSuccess } = await storeApiKey(
+        insertUserApiKey.userId,
+        insertUserApiKey.service,
+        insertUserApiKey.apiKey || ''
+      );
+      
+      if (!isSuccess) {
+        throw new Error('Failed to store API key in quantum vault');
+      }
+      
+      // Store a reference in the database without the actual API key
+      const dbRecord = {
+        ...insertUserApiKey,
+        apiKey: undefined, // Remove the key from the database record
+        vaultKeyId: keyId, // Store the vault reference instead
+      };
+      
+      const result = await db.insert(userApiKeys).values(dbRecord).returning();
+      return result[0];
+    } catch (error) {
+      console.error('Error creating user API key:', error);
+      throw error;
+    }
+  }
+  
+  async updateUserApiKeyStatus(id: number, isActive: boolean): Promise<UserApiKey | undefined> {
+    try {
+      const result = await db.update(userApiKeys)
+        .set({ isActive, updatedAt: new Date() })
+        .where(eq(userApiKeys.id, id))
+        .returning();
+      
+      return result.length ? result[0] : undefined;
+    } catch (error) {
+      console.error('Error updating user API key status:', error);
+      return undefined;
+    }
+  }
+  
+  async updateUserApiKeyTrainingStatus(id: number, isTrainingEnabled: boolean): Promise<UserApiKey | undefined> {
+    try {
+      const result = await db.update(userApiKeys)
+        .set({ isTrainingEnabled, updatedAt: new Date() })
+        .where(eq(userApiKeys.id, id))
+        .returning();
+      
+      return result.length ? result[0] : undefined;
+    } catch (error) {
+      console.error('Error updating user API key training status:', error);
+      return undefined;
+    }
+  }
+  
+  async incrementUserApiKeyUsage(id: number): Promise<UserApiKey | undefined> {
+    try {
+      // Get the current API key to get the current usage count
+      const currentKey = await this.getUserApiKey(id);
+      if (!currentKey) return undefined;
+      
+      const result = await db.update(userApiKeys)
+        .set({ 
+          usageCount: (currentKey.usageCount || 0) + 1,
+          lastUsedAt: new Date()
+        })
+        .where(eq(userApiKeys.id, id))
+        .returning();
+      
+      return result.length ? result[0] : undefined;
+    } catch (error) {
+      console.error('Error incrementing user API key usage:', error);
+      return undefined;
+    }
+  }
+  
+  async deleteUserApiKey(id: number): Promise<boolean> {
+    try {
+      // Import the vault service here to avoid circular dependencies
+      const { deleteApiKey } = await import('./services/quantum-vault');
+      
+      // Get the API key record to get the vault key ID
+      const apiKey = await this.getUserApiKey(id);
+      if (!apiKey) return false;
+      
+      // Delete the API key from the vault
+      if (apiKey.vaultKeyId) {
+        await deleteApiKey(apiKey.userId, apiKey.vaultKeyId);
+      }
+      
+      // Delete the database record
+      const result = await db.delete(userApiKeys)
+        .where(eq(userApiKeys.id, id))
+        .returning({ id: userApiKeys.id });
+      
+      return result.length > 0;
+    } catch (error) {
+      console.error('Error deleting user API key:', error);
+      return false;
+    }
+  }
+  
+  // Mysterion Training Data
+  async getMysterionTrainingData(id: number): Promise<MysterionTrainingData | undefined> {
+    try {
+      const result = await db.select()
+        .from(mysterionTrainingData)
+        .where(eq(mysterionTrainingData.id, id))
+        .limit(1);
+      
+      return result.length ? result[0] : undefined;
+    } catch (error) {
+      console.error('Error getting mysterion training data:', error);
+      return undefined;
+    }
+  }
+  
+  async getMysterionTrainingDataByApiKeyId(apiKeyId: number): Promise<MysterionTrainingData[]> {
+    try {
+      const result = await db.select()
+        .from(mysterionTrainingData)
+        .where(eq(mysterionTrainingData.apiKeyId, apiKeyId))
+        .orderBy(desc(mysterionTrainingData.createdAt));
+      
+      return result;
+    } catch (error) {
+      console.error('Error getting mysterion training data by API key ID:', error);
+      return [];
+    }
+  }
+  
+  async createMysterionTrainingData(insertTrainingData: InsertMysterionTrainingData): Promise<MysterionTrainingData> {
+    try {
+      const result = await db.insert(mysterionTrainingData)
+        .values(insertTrainingData)
+        .returning();
+      
+      return result[0];
+    } catch (error) {
+      console.error('Error creating mysterion training data:', error);
+      throw error;
+    }
+  }
+  
+  async updateMysterionTrainingDataStatus(id: number, status: string, notes?: string): Promise<MysterionTrainingData | undefined> {
+    try {
+      const updates: any = { 
+        status, 
+        updatedAt: new Date() 
+      };
+      
+      if (notes !== undefined) {
+        updates.notes = notes;
+      }
+      
+      const result = await db.update(mysterionTrainingData)
+        .set(updates)
+        .where(eq(mysterionTrainingData.id, id))
+        .returning();
+      
+      return result.length ? result[0] : undefined;
+    } catch (error) {
+      console.error('Error updating mysterion training data status:', error);
+      return undefined;
+    }
+  }
+  
+  async updateMysterionTrainingDataPoints(id: number, points: number): Promise<MysterionTrainingData | undefined> {
+    try {
+      // Get the current training data to get the current points
+      const currentData = await this.getMysterionTrainingData(id);
+      if (!currentData) return undefined;
+      
+      const result = await db.update(mysterionTrainingData)
+        .set({ 
+          points: (currentData.points || 0) + points,
+          updatedAt: new Date()
+        })
+        .where(eq(mysterionTrainingData.id, id))
+        .returning();
+      
+      return result.length ? result[0] : undefined;
+    } catch (error) {
+      console.error('Error updating mysterion training data points:', error);
+      return undefined;
+    }
+  }
 }

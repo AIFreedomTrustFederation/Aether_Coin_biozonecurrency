@@ -1,24 +1,19 @@
-// Import polyfills first to ensure they are loaded before any code that might need them
+// Import Buffer for crypto operations
 import { Buffer } from 'buffer';
 
-// Polyfill for 'global'
+// Polyfill for 'Buffer' - needed for crypto operations
 if (typeof window !== 'undefined') {
-  window.global = window;
+  (window as any).Buffer = Buffer;
 }
 
-// Polyfill for 'Buffer'
+// Polyfill for 'process' - needed for some Node.js modules
 if (typeof window !== 'undefined') {
-  window.Buffer = Buffer;
-}
-
-// Polyfill for 'process'
-if (typeof window !== 'undefined') {
-  window.process = {
+  (window as any).process = {
     env: {},
     version: '',
     nextTick: (fn: Function) => setTimeout(fn, 0),
     browser: true
-  } as any;
+  };
 }
 
 import { createRoot } from "react-dom/client";
