@@ -335,32 +335,26 @@ const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
     nextSoundRef.current = new Audio('/sounds/next.mp3');
     completeSoundRef.current = new Audio('/sounds/complete.mp3');
     
-    // Save tutorial progress to the server and localStorage as fallback
-    const saveTutorialProgress = async () => {
-      try {
-        // Try to save to the server if authenticated
-        await apiRequest(
-          '/api/tutorial/status', 
-          'POST', 
-          {
-            completed: false,
-            lastSection: currentSection.id
-          }
-        );
-      } catch (error) {
-        console.error('Failed to save tutorial progress to server:', error);
-        
-        // Fallback: Save to localStorage if server save fails (e.g., not authenticated)
-        try {
-          localStorage.setItem('aetherion_tutorial_completed', 'false');
-          localStorage.setItem('aetherion_tutorial_last_section', currentSection.id);
-        } catch (localError) {
-          console.error('Failed to save tutorial progress to localStorage:', localError);
-        }
-      }
-    };
+    // Save tutorial state to localStorage first as primary storage
+    try {
+      localStorage.setItem('aetherion_tutorial_completed', 'false');
+      localStorage.setItem('aetherion_tutorial_last_section', currentSection.id);
+    } catch (localError) {
+      console.error('Failed to save tutorial progress to localStorage:', localError);
+    }
     
-    saveTutorialProgress();
+    // Silently try to save to the server if authenticated
+    apiRequest(
+      '/api/tutorial/status', 
+      'POST', 
+      {
+        completed: false,
+        lastSection: currentSection.id
+      }
+    ).catch(() => {
+      // Silently ignore API errors since we've already saved to localStorage
+      // This prevents console errors for unauthenticated users
+    });
     
     return () => {
       disableTutorialMode();
@@ -396,62 +390,50 @@ const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
       setCurrentSectionIndex(currentSectionIndex + 1);
       setCurrentStepIndex(0);
       
-      // Save tutorial progress to the server and localStorage as fallback
-      const saveTutorialProgress = async () => {
-        try {
-          // Try to save to the server if authenticated
-          await apiRequest(
-            '/api/tutorial/status', 
-            'POST', 
-            {
-              completed: false,
-              lastSection: tutorialSections[currentSectionIndex + 1].id
-            }
-          );
-        } catch (error) {
-          console.error('Failed to save tutorial progress to server:', error);
-          
-          // Fallback: Save to localStorage if server save fails (e.g., not authenticated)
-          try {
-            localStorage.setItem('aetherion_tutorial_completed', 'false');
-            localStorage.setItem('aetherion_tutorial_last_section', tutorialSections[currentSectionIndex + 1].id);
-          } catch (localError) {
-            console.error('Failed to save tutorial progress to localStorage:', localError);
-          }
-        }
-      };
+      // Save to localStorage first as primary storage
+      try {
+        localStorage.setItem('aetherion_tutorial_completed', 'false');
+        localStorage.setItem('aetherion_tutorial_last_section', tutorialSections[currentSectionIndex + 1].id);
+      } catch (localError) {
+        console.error('Failed to save tutorial progress to localStorage:', localError);
+      }
       
-      saveTutorialProgress();
+      // Silently try to save to the server if authenticated
+      apiRequest(
+        '/api/tutorial/status', 
+        'POST', 
+        {
+          completed: false,
+          lastSection: tutorialSections[currentSectionIndex + 1].id
+        }
+      ).catch(() => {
+        // Silently ignore API errors since we've already saved to localStorage
+      });
     } else {
       // Tutorial completed
       playSound('complete');
       
-      // Save completed status to the server
-      const saveTutorialCompletion = async () => {
-        try {
-          // Try to save to the server if authenticated
-          await apiRequest(
-            '/api/tutorial/status', 
-            'POST', 
-            {
-              completed: true,
-              lastSection: currentSection.id
-            }
-          );
-        } catch (error) {
-          console.error('Failed to save tutorial completion:', error);
-          
-          // Fallback: Save to localStorage if server save fails (e.g., not authenticated)
-          try {
-            localStorage.setItem('aetherion_tutorial_completed', 'true');
-            localStorage.setItem('aetherion_tutorial_last_section', currentSection.id);
-          } catch (localError) {
-            console.error('Failed to save tutorial completion to localStorage:', localError);
-          }
-        }
-      };
+      // Save to localStorage first as primary storage - mark as COMPLETED
+      try {
+        localStorage.setItem('aetherion_tutorial_completed', 'true');
+        localStorage.setItem('aetherion_tutorial_last_section', currentSection.id);
+      } catch (localError) {
+        console.error('Failed to save tutorial completion to localStorage:', localError);
+      }
       
-      saveTutorialCompletion();
+      // Silently try to save to the server if authenticated
+      apiRequest(
+        '/api/tutorial/status', 
+        'POST', 
+        {
+          completed: true,
+          lastSection: currentSection.id
+        }
+      ).catch(() => {
+        // Silently ignore API errors since we've already saved to localStorage
+      });
+      
+      // Always close the tutorial immediately
       onClose();
     }
   };
@@ -479,27 +461,31 @@ const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
   const handleSkip = useCallback(() => {
     // Save to localStorage first as a reliable fallback - mark as COMPLETED
     try {
+      // Mark as completed to prevent reopening
       localStorage.setItem('aetherion_tutorial_completed', 'true');
       localStorage.setItem('aetherion_tutorial_last_section', currentSection.id);
+      
+      // Silently try to save to the server if authenticated, but don't show errors
+      // Also mark as COMPLETED on the server
+      apiRequest(
+        '/api/tutorial/status', 
+        'POST', 
+        {
+          completed: true,
+          lastSection: currentSection.id
+        }
+      ).catch(() => {
+        // Suppress error messages - we already saved to localStorage which is sufficient
+        // This avoids error messages in the console that might worry users
+      });
+      
+      // Always close the tutorial immediately
+      onClose();
     } catch (localError) {
+      // In the rare case localStorage fails, still close the tutorial
       console.error('Failed to save tutorial skip status to localStorage:', localError);
+      onClose();
     }
-    
-    // Try to save to the server if authenticated (but don't wait for it)
-    // Also mark as COMPLETED on the server
-    apiRequest(
-      '/api/tutorial/status', 
-      'POST', 
-      {
-        completed: true,
-        lastSection: currentSection.id
-      }
-    ).catch(error => {
-      console.error('Failed to save tutorial skip status to server:', error);
-    });
-    
-    // Always close the tutorial, regardless of save status
-    onClose();
   }, [currentSection, onClose]);
 
   // Auto-advance timer
