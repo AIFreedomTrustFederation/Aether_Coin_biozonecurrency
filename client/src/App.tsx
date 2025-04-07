@@ -69,6 +69,7 @@ const BottomNavigation = lazy(() => import("@/components/mobile/BottomNavigation
 // Trust member authentication pages
 const TrustLogin = lazy(() => import("./pages/TrustLogin"));
 const TrustPortal = lazy(() => import("./pages/TrustPortal"));
+const AIFreedomTrustLogin = lazy(() => import("./pages/AIFreedomTrustLogin"));
 const AccessDenied = lazy(() => import("./pages/AccessDenied"));
 
 // Define navigation items for both mobile and desktop
@@ -81,6 +82,7 @@ const navigationItems = [
   { name: "Bridge Test", path: "/bridge-test", icon: <TestTube className="h-5 w-5" /> },
   { name: "Escrow", path: "/escrow", icon: <Shield className="h-5 w-5" /> },
   { name: "Trust Portal", path: "/trust/portal", icon: <UserCircle2 className="h-5 w-5" /> },
+  { name: "AI Freedom Trust", path: "/ai-freedom-trust/login", icon: <Shield className="h-5 w-5" /> },
   { name: "Blockchain Explorer", path: "/blockchain-explorer", icon: <Database className="h-5 w-5" /> },
   { name: "Blockchain Dashboard", path: "/blockchain-dashboard", icon: <Blocks className="h-5 w-5" /> },
   { name: "Singularity", path: "/singularity", icon: <Zap className="h-5 w-5" /> },
@@ -652,6 +654,11 @@ function App() {
             <Route path="/trust/login">
               <Suspense fallback={<LoadingScreen message="Loading trust login..." />}>
                 <TrustLogin />
+              </Suspense>
+            </Route>
+            <Route path="/ai-freedom-trust/login">
+              <Suspense fallback={<LoadingScreen message="Loading AI Freedom Trust login..." />}>
+                <AIFreedomTrustLogin />
               </Suspense>
             </Route>
             <Route path="/trust/portal">

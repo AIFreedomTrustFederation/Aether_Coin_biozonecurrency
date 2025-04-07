@@ -177,10 +177,22 @@ const AIFreedomTrustLogin = () => {
           
           <CardFooter className="flex flex-col gap-4">
             <div className="text-sm text-muted-foreground w-full text-center">
-              <div className="flex items-center justify-center gap-2">
+              <div className="flex items-center justify-center gap-2 mb-2">
                 <GitBranch className="h-4 w-4" />
                 <Link href="https://github.com/AIFreedomTrustFederation/Aether_Coin_biozonecurrency" className="text-primary hover:underline">
                   View Aether Coin Biozone Currency Project
+                </Link>
+              </div>
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <GitBranch className="h-4 w-4 rotate-180" />
+                <Link href="https://github.com/AIFreedomTrustFederation/Aetherion-Quantum-Wallet" className="text-primary hover:underline">
+                  View Aetherion Quantum Wallet Repository
+                </Link>
+              </div>
+              <div className="border-t pt-2 mt-2">
+                <p className="mb-2 font-medium text-sm">Trust Member?</p>
+                <Link href="/trust/portal" className="inline-flex items-center justify-center text-sm rounded-md bg-primary px-3 py-1.5 text-primary-foreground shadow-sm hover:bg-primary/80">
+                  <Shield className="h-3.5 w-3.5 mr-1.5" /> Go to Trust Portal
                 </Link>
               </div>
             </div>

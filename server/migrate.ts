@@ -155,6 +155,21 @@ async function migrate() {
       if (trustMember) {
         console.log(`Created AI Freedom Trust member with ID: ${trustMember.id}`);
       }
+      
+      // Create the specifically requested AI Freedom Trust user
+      const [aiFreedomUser] = await db.insert(users).values({
+        username: 'aifreedomtrust',
+        email: 'admin@aifreedom.trust',
+        passwordHash: await bcrypt.hash('FreedomLiberty2021', 10), // Properly hashed password
+        role: 'admin',
+        isTrustMember: true,
+        trustMemberSince: new Date(),
+        trustMemberLevel: 'governing'
+      }).returning();
+      
+      if (aiFreedomUser) {
+        console.log(`Created AI Freedom Trust admin user with ID: ${aiFreedomUser.id}`);
+      }
 
       if (demoUser) {
         const userId = demoUser.id;
