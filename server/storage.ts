@@ -35,11 +35,8 @@ export type { User, Wallet, Transaction, SmartContract, AiMonitoringLog, CidEntr
                InsertMandelbrotRecursionEvent, InsurancePolicyType, InsurancePolicyStatus,
                BeneficiaryType, FractalLoanStatus, FractalLoanCollateralType, RecurveSyncStatus,
                RecurveTokenTier, TorusNodeType,
-               // AI Assistant Training types
-               TrainingFeedbackType, TrainingProcessingStatus,
-               AiTrainingData, InsertAiTrainingData,
-               AiTrainingJob, InsertAiTrainingJob,
-               AiTrainingContributor, InsertAiTrainingContributor } from '../shared/schema';
+               // AI Assistant Training types - types defined in enums but not exported
+               TrainingFeedbackType, TrainingProcessingStatus } from '../shared/schema';
 
 // Export storage interface
 export interface IStorage {
@@ -82,6 +79,25 @@ export interface IStorage {
   getPaymentsByProviderPaymentId(providerPaymentId: string): Promise<schema.Payment[]>;
   createPayment(payment: schema.InsertPayment): Promise<schema.Payment>;
   updatePaymentStatus(id: number, status: string, processedAt?: Date): Promise<schema.Payment | undefined>;
+  
+  // Payment Method methods
+  getPaymentMethodsByUserId(userId: number): Promise<schema.PaymentMethod[]>;
+  updatePaymentMethodDefault(id: number, isDefault: boolean): Promise<schema.PaymentMethod | undefined>;
+  deletePaymentMethod(id: number): Promise<boolean>;
+  
+  // Smart Contract methods
+  getSmartContractsByUserId(userId: number): Promise<schema.SmartContract[]>;
+  createSmartContract(contract: schema.InsertSmartContract): Promise<schema.SmartContract>;
+  updateSmartContractStatus(id: number, status: string): Promise<schema.SmartContract | undefined>;
+  
+  // AI Monitoring methods
+  getAiMonitoringLogs(userId: number, limit?: number): Promise<schema.AiMonitoringLog[]>;
+  createAiMonitoringLog(log: schema.InsertAiMonitoringLog): Promise<schema.AiMonitoringLog>;
+  
+  // CID Entry methods
+  getCidEntriesByUserId(userId: number): Promise<schema.CidEntry[]>;
+  createCidEntry(entry: schema.InsertCidEntry): Promise<schema.CidEntry>;
+  updateCidEntryStatus(id: number, status: string): Promise<schema.CidEntry | undefined>;
   
   // User API Keys for Mysterion LLM training
   getUserApiKey(id: number): Promise<schema.UserApiKey | undefined>;
@@ -188,32 +204,32 @@ export interface IStorage {
   createMandelbrotRecursionEvent(event: schema.InsertMandelbrotRecursionEvent): Promise<schema.MandelbrotRecursionEvent>;
   
   // AI Assistant Training Data methods - temporarily commented out to resolve circular dependency
-  getAiTrainingData?(id: number): Promise<schema.AiTrainingData | undefined>;
-  getAiTrainingDataByUserId?(userId: number): Promise<schema.AiTrainingData[]>;
-  getAiTrainingDataByStatus?(status: schema.TrainingProcessingStatus): Promise<schema.AiTrainingData[]>;
-  getAiTrainingDataByFeedbackType?(feedbackType: schema.TrainingFeedbackType): Promise<schema.AiTrainingData[]>;
-  createAiTrainingData?(data: schema.InsertAiTrainingData): Promise<schema.AiTrainingData>;
-  updateAiTrainingDataStatus?(id: number, status: schema.TrainingProcessingStatus, notes?: string): Promise<schema.AiTrainingData | undefined>;
-  updateAiTrainingDataRewards?(id: number, points: number, singTokens?: number): Promise<schema.AiTrainingData | undefined>;
+  getAiTrainingData?(id: number): Promise<any | undefined>;
+  getAiTrainingDataByUserId?(userId: number): Promise<any[]>;
+  getAiTrainingDataByStatus?(status: schema.TrainingProcessingStatus): Promise<any[]>;
+  getAiTrainingDataByFeedbackType?(feedbackType: schema.TrainingFeedbackType): Promise<any[]>;
+  createAiTrainingData?(data: any): Promise<any>;
+  updateAiTrainingDataStatus?(id: number, status: schema.TrainingProcessingStatus, notes?: string): Promise<any | undefined>;
+  updateAiTrainingDataRewards?(id: number, points: number, singTokens?: number): Promise<any | undefined>;
   
   // AI Training Jobs methods
-  getAiTrainingJob?(id: number): Promise<schema.AiTrainingJob | undefined>;
-  getAiTrainingJobsByStatus?(status: string): Promise<schema.AiTrainingJob[]>;
-  createAiTrainingJob?(job: schema.InsertAiTrainingJob): Promise<schema.AiTrainingJob>;
-  updateAiTrainingJobStatus?(id: number, status: string): Promise<schema.AiTrainingJob | undefined>;
-  completeAiTrainingJob?(id: number, metrics: Record<string, any>): Promise<schema.AiTrainingJob | undefined>;
+  getAiTrainingJob?(id: number): Promise<any | undefined>;
+  getAiTrainingJobsByStatus?(status: string): Promise<any[]>;
+  createAiTrainingJob?(job: any): Promise<any>;
+  updateAiTrainingJobStatus?(id: number, status: string): Promise<any | undefined>;
+  completeAiTrainingJob?(id: number, metrics: Record<string, any>): Promise<any | undefined>;
   
   // AI Training Contributors methods
-  getAiTrainingContributor?(id: number): Promise<schema.AiTrainingContributor | undefined>;
-  getAiTrainingContributorByUserId?(userId: number): Promise<schema.AiTrainingContributor | undefined>;
-  getTopAiTrainingContributors?(limit: number): Promise<schema.AiTrainingContributor[]>;
-  createAiTrainingContributor?(contributor: schema.InsertAiTrainingContributor): Promise<schema.AiTrainingContributor>;
+  getAiTrainingContributor?(id: number): Promise<any | undefined>;
+  getAiTrainingContributorByUserId?(userId: number): Promise<any | undefined>;
+  getTopAiTrainingContributors?(limit: number): Promise<any[]>;
+  createAiTrainingContributor?(contributor: any): Promise<any>;
   updateAiTrainingContributor?(
     id: number,
     contributions: number,
     points: number,
     singTokens: number
-  ): Promise<schema.AiTrainingContributor | undefined>;
-  updateAiTrainingContributorTier?(id: number, tier: string): Promise<schema.AiTrainingContributor | undefined>;
-  updateAiTrainingContributorRank?(id: number, rank: number): Promise<schema.AiTrainingContributor | undefined>;
+  ): Promise<any | undefined>;
+  updateAiTrainingContributorTier?(id: number, tier: string): Promise<any | undefined>;
+  updateAiTrainingContributorRank?(id: number, rank: number): Promise<any | undefined>;
 }
