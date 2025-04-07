@@ -16,6 +16,7 @@ import {
 import { stripeService } from "./services/stripe";
 import * as twilioService from "./services/twilio";
 import { matrixCommunication } from "./services/matrix-integration";
+import { ipfsService } from "./services/ipfs-service";
 import { z } from "zod";
 import Stripe from "stripe";
 import session from "express-session";
@@ -26,6 +27,7 @@ import dappBuilderEnhancements from "./routes/dapp-builder-enhancements";
 import mysterionRoutes from "./routes/mysterion";
 import aiGuidanceRoutes from "./routes/ai-guidance";
 import authRoutes from "./routes/auth-routes";
+import web3StorageRoutes from "./routes/web3-storage-routes";
 import { openSourcePaymentService } from "./services/openSourcePayment";
 
 /**

@@ -40,8 +40,9 @@ class Web3StorageService implements IpfsService {
   
   /**
    * Configure the service with API token from environment
+   * Now public so it can be called from the API when token is updated
    */
-  private configure(): void {
+  public configure(): void {
     const token = process.env.WEB3_STORAGE_TOKEN;
     
     if (token) {
@@ -57,6 +58,19 @@ class Web3StorageService implements IpfsService {
       console.warn('WEB3_STORAGE_TOKEN not found in environment, IPFS uploads will be mocked');
       this.isConfigured = false;
     }
+  }
+  
+  /**
+   * Check if the Web3Storage service is properly configured with a valid token
+   * @returns Configuration status object
+   */
+  public getConfigurationStatus(): { isConfigured: boolean; message: string } {
+    return {
+      isConfigured: this.isConfigured,
+      message: this.isConfigured 
+        ? 'Web3Storage is properly configured with a valid token' 
+        : 'Web3Storage is not configured or has an invalid token'
+    };
   }
   
   /**
