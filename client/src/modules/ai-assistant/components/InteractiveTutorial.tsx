@@ -177,22 +177,38 @@ const tutorialSections = [
 ];
 
 interface InteractiveTutorialProps {
-  onComplete: () => void;
-  onSkip: () => void;
+  isOpen: boolean;
+  onClose: () => void;
   initialSection?: string;
 }
 
 const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({ 
-  onComplete,
-  onSkip,
+  isOpen,
+  onClose,
   initialSection
 }) => {
   const { enableTutorialMode, disableTutorialMode } = useAI();
   const [currentSectionIndex, setCurrentSectionIndex] = useState(() => {
+    // Try to use initialSection from props first (from API)
     if (initialSection) {
       const index = tutorialSections.findIndex(section => section.id === initialSection);
       return index >= 0 ? index : 0;
     }
+    
+    // Fallback: Try to load from localStorage if available
+    try {
+      const savedSection = localStorage.getItem('aetherion_tutorial_last_section');
+      if (savedSection) {
+        const index = tutorialSections.findIndex(section => section.id === savedSection);
+        if (index >= 0) {
+          return index;
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load tutorial section from localStorage:', error);
+    }
+    
+    // Default to the first section if no saved state is found
     return 0;
   });
   
@@ -244,18 +260,28 @@ const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
     nextSoundRef.current = new Audio('/sounds/next.mp3');
     completeSoundRef.current = new Audio('/sounds/complete.mp3');
     
-    // Save tutorial progress to the server
+    // Save tutorial progress to the server and localStorage as fallback
     const saveTutorialProgress = async () => {
       try {
-        await apiRequest('/api/tutorial/status', {
-          method: 'POST',
-          body: JSON.stringify({
+        // Try to save to the server if authenticated
+        await apiRequest(
+          '/api/tutorial/status', 
+          'POST', 
+          {
             completed: false,
             lastSection: currentSection.id
-          })
-        });
+          }
+        );
       } catch (error) {
-        console.error('Failed to save tutorial progress:', error);
+        console.error('Failed to save tutorial progress to server:', error);
+        
+        // Fallback: Save to localStorage if server save fails (e.g., not authenticated)
+        try {
+          localStorage.setItem('aetherion_tutorial_completed', 'false');
+          localStorage.setItem('aetherion_tutorial_last_section', currentSection.id);
+        } catch (localError) {
+          console.error('Failed to save tutorial progress to localStorage:', localError);
+        }
       }
     };
     
@@ -295,18 +321,28 @@ const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
       setCurrentSectionIndex(currentSectionIndex + 1);
       setCurrentStepIndex(0);
       
-      // Save tutorial progress to the server
+      // Save tutorial progress to the server and localStorage as fallback
       const saveTutorialProgress = async () => {
         try {
-          await apiRequest('/api/tutorial/status', {
-            method: 'POST',
-            body: JSON.stringify({
+          // Try to save to the server if authenticated
+          await apiRequest(
+            '/api/tutorial/status', 
+            'POST', 
+            {
               completed: false,
               lastSection: tutorialSections[currentSectionIndex + 1].id
-            })
-          });
+            }
+          );
         } catch (error) {
-          console.error('Failed to save tutorial progress:', error);
+          console.error('Failed to save tutorial progress to server:', error);
+          
+          // Fallback: Save to localStorage if server save fails (e.g., not authenticated)
+          try {
+            localStorage.setItem('aetherion_tutorial_completed', 'false');
+            localStorage.setItem('aetherion_tutorial_last_section', tutorialSections[currentSectionIndex + 1].id);
+          } catch (localError) {
+            console.error('Failed to save tutorial progress to localStorage:', localError);
+          }
         }
       };
       
@@ -318,20 +354,30 @@ const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
       // Save completed status to the server
       const saveTutorialCompletion = async () => {
         try {
-          await apiRequest('/api/tutorial/status', {
-            method: 'POST',
-            body: JSON.stringify({
+          // Try to save to the server if authenticated
+          await apiRequest(
+            '/api/tutorial/status', 
+            'POST', 
+            {
               completed: true,
               lastSection: currentSection.id
-            })
-          });
+            }
+          );
         } catch (error) {
           console.error('Failed to save tutorial completion:', error);
+          
+          // Fallback: Save to localStorage if server save fails (e.g., not authenticated)
+          try {
+            localStorage.setItem('aetherion_tutorial_completed', 'true');
+            localStorage.setItem('aetherion_tutorial_last_section', currentSection.id);
+          } catch (localError) {
+            console.error('Failed to save tutorial completion to localStorage:', localError);
+          }
         }
       };
       
       saveTutorialCompletion();
-      onComplete();
+      onClose();
     }
   };
 
@@ -357,17 +403,28 @@ const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
   // Handle user skipping the tutorial
   const handleSkip = async () => {
     try {
-      await apiRequest('/api/tutorial/status', {
-        method: 'POST',
-        body: JSON.stringify({
+      // Try to save to the server if authenticated
+      await apiRequest(
+        '/api/tutorial/status', 
+        'POST', 
+        {
           completed: false,
           lastSection: currentSection.id
-        })
-      });
-      onSkip();
+        }
+      );
+      onClose();
     } catch (error) {
       console.error('Failed to save tutorial skip status:', error);
-      onSkip();
+      
+      // Fallback: Save to localStorage if server save fails (e.g., not authenticated)
+      try {
+        localStorage.setItem('aetherion_tutorial_completed', 'false');
+        localStorage.setItem('aetherion_tutorial_last_section', currentSection.id);
+      } catch (localError) {
+        console.error('Failed to save tutorial skip status to localStorage:', localError);
+      }
+      
+      onClose();
     }
   };
 
