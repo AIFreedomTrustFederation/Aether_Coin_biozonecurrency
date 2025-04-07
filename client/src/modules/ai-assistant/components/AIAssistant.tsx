@@ -22,6 +22,12 @@ const initialMessages = [
   }
 ];
 
+// Touch position interface
+interface TouchPosition {
+  x: number;
+  y: number;
+}
+
 /**
  * AIAssistant component that provides the Mysterion AI experience
  * It can be minimized to a floating button and expanded to a chat window
@@ -72,9 +78,10 @@ export function AIAssistant({ userId, className = '' }: AIAssistantProps) {
     setIsOpen(false);
   };
   
-  // Generic drag handler that works with any element type
+  // Mouse drag handlers
   const handleDragStart = (e: React.MouseEvent) => {
     if (dragRef.current) {
+      e.preventDefault();
       const rect = dragRef.current.getBoundingClientRect();
       setDragOffset({
         x: e.clientX - rect.left,
@@ -97,16 +104,65 @@ export function AIAssistant({ userId, className = '' }: AIAssistantProps) {
     setIsDragging(false);
   };
   
+  // Touch drag handlers
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (dragRef.current && e.touches.length > 0) {
+      const touch = e.touches[0];
+      const rect = dragRef.current.getBoundingClientRect();
+      setDragOffset({
+        x: touch.clientX - rect.left,
+        y: touch.clientY - rect.top
+      });
+      setIsDragging(true);
+    }
+  };
+  
+  const handleTouchMove = (e: TouchEvent) => {
+    if (isDragging && e.touches.length > 0) {
+      // Use passive: false to allow preventDefault
+      if (e.cancelable) {
+        e.preventDefault(); // Prevent scrolling while dragging
+      }
+      
+      const touch = e.touches[0];
+      // Calculate boundaries to ensure the button stays on screen with a slight margin
+      const margin = 20;
+      const maxX = window.innerWidth - 80;
+      const maxY = window.innerHeight - 80;
+      
+      const newX = Math.max(margin, Math.min(touch.clientX - dragOffset.x, maxX));
+      const newY = Math.max(margin, Math.min(touch.clientY - dragOffset.y, maxY));
+      
+      setPosition({ x: newX, y: newY });
+    }
+  };
+  
+  const handleTouchEnd = () => {
+    setIsDragging(false);
+  };
+  
   // Add and remove event listeners for dragging
   useEffect(() => {
     if (isDragging) {
+      // Mouse events
       window.addEventListener('mousemove', handleDragMove);
       window.addEventListener('mouseup', handleDragEnd);
+      
+      // Touch events
+      window.addEventListener('touchmove', handleTouchMove, { passive: false });
+      window.addEventListener('touchend', handleTouchEnd);
+      window.addEventListener('touchcancel', handleTouchEnd);
     }
     
     return () => {
+      // Clean up mouse events
       window.removeEventListener('mousemove', handleDragMove);
       window.removeEventListener('mouseup', handleDragEnd);
+      
+      // Clean up touch events
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleTouchEnd);
+      window.removeEventListener('touchcancel', handleTouchEnd);
     };
   }, [isDragging]);
   
@@ -129,6 +185,7 @@ export function AIAssistant({ userId, className = '' }: AIAssistantProps) {
             <div 
               className="p-2 border-b bg-primary/10 flex justify-between items-center cursor-move"
               onMouseDown={handleDragStart}
+              onTouchStart={handleTouchStart}
             >
               <div className="flex items-center">
                 <Move size={16} className="mr-2 text-muted-foreground" />
@@ -172,9 +229,17 @@ export function AIAssistant({ userId, className = '' }: AIAssistantProps) {
         ) : (
           <div className="relative group">
             <Button 
-              onClick={toggleOpen} 
-              className="rounded-full h-16 w-16 shadow-xl cursor-move bg-primary text-primary-foreground"
+              onClick={(e) => {
+                // Only toggle if it's a tap/click, not a drag start
+                if (!isDragging) {
+                  toggleOpen();
+                }
+              }} 
+              className="rounded-full h-16 w-16 shadow-xl cursor-move bg-primary text-primary-foreground
+                hover:opacity-90 active:scale-95 transition-all"
               onMouseDown={handleDragStart}
+              onTouchStart={handleTouchStart}
+              style={{ touchAction: 'none' }} // Prevent browser handling for better touch control
               aria-label="Open AI assistant"
             >
               <MessageSquare size={28} />
