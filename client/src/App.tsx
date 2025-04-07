@@ -40,6 +40,7 @@ const WhitepaperPage = lazy(() => import("./pages/WhitepaperPage"));
 const AboutPage = lazy(() => import("./pages/AboutPage"));
 const AdminPortal = lazy(() => import("./pages/AdminPortal"));
 const AetherCoinNetworkPage = lazy(() => import("./pages/AetherCoinNetworkPage"));
+const NetworkDetailsPage = lazy(() => import("./pages/NetworkDetailsPage"));
 
 // Lazy load new personalization pages
 const DashboardPage = lazy(() => import("./pages/DashboardPage"));
@@ -538,6 +539,12 @@ function App() {
             <Route path="/aethercoin">
               <Suspense fallback={<LoadingScreen message="Loading AetherCoin Network..." />}>
                 <AetherCoinNetworkPage />
+              </Suspense>
+            </Route>
+            
+            <Route path="/network-details">
+              <Suspense fallback={<LoadingScreen message="Loading Network Details..." />}>
+                <NetworkDetailsPage />
               </Suspense>
             </Route>
             <Route path="/ico">

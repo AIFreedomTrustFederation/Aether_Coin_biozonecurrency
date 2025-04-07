@@ -1,11 +1,14 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { Link } from 'wouter';
 import AetherCoinNetworkManager from '../components/wallet/AetherCoinNetworkManager';
 import MandelbrotVisualization from '../components/tokenomics/MandelbrotVisualization';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { ExternalLink, Info } from 'lucide-react';
 import { blockchainService } from '../core/blockchain';
 import { bioZoeService } from '../core/biozoe';
+import { BioZoeLifecycleState, QuantumEntanglementType } from '../core/biozoe/types';
 
 export function AetherCoinNetworkPage() {
   const { data: blockHeight } = useQuery({
@@ -39,7 +42,18 @@ export function AetherCoinNetworkPage() {
 
   return (
     <div className="container mx-auto py-8">
-      <h1 className="text-4xl font-bold mb-8 text-center">AetherCoin BioZoeCurrency Network</h1>
+      <div className="flex flex-col items-center justify-center mb-8">
+        <h1 className="text-4xl font-bold text-center">AetherCoin BioZoeCurrency Network</h1>
+        <div className="mt-4">
+          <Link href="/network-details">
+            <Button variant="outline" className="flex items-center gap-2">
+              <Info className="h-4 w-4" />
+              <span>View All Network Details</span>
+              <ExternalLink className="h-4 w-4" />
+            </Button>
+          </Link>
+        </div>
+      </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
         <div>
