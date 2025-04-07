@@ -262,6 +262,21 @@ const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
   onClose,
   initialSection
 }) => {
+  // Force close method that will work on both desktop and mobile
+  const forceClose = useCallback(() => {
+    console.log("FORCE CLOSING TUTORIAL");
+    
+    // Save state to localStorage
+    try {
+      localStorage.setItem('aetherion_tutorial_completed', 'true');
+    } catch (e) {
+      // Ignore localStorage errors
+    }
+    
+    // Immediately close without waiting
+    setTimeout(() => onClose(), 0);
+  }, [onClose]);
+  
   const { enableTutorialMode, disableTutorialMode } = useAI();
   const [currentSectionIndex, setCurrentSectionIndex] = useState(() => {
     // Try to use initialSection from props first (from API)
@@ -422,34 +437,14 @@ const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
         // Silently ignore API errors since we've already saved to localStorage
       });
     } else {
-      // Tutorial completed
+      // Tutorial completed - play sound
       playSound('complete');
       
-      console.log("Finish button clicked, closing tutorial...");
+      console.log("Finish button clicked, force closing tutorial...");
       
-      // First, immediately close the tutorial without waiting for any async operations
-      onClose();
-      
-      // Then try to save the state - this happens after the UI has already closed
-      try {
-        // Mark as completed to prevent reopening
-        localStorage.setItem('aetherion_tutorial_completed', 'true');
-        localStorage.setItem('aetherion_tutorial_last_section', currentSection.id);
-        
-        // Silently try to save to the server if authenticated
-        apiRequest(
-          '/api/tutorial/status', 
-          'POST', 
-          {
-            completed: true,
-            lastSection: currentSection.id
-          }
-        ).catch(() => {
-          // Silent catch - no error messages displayed
-        });
-      } catch (error) {
-        // Silent catch for localStorage too - tutorial is already closed so no need to log
-      }
+      // Use forceClose to handle closing and localStorage in one operation
+      // This ensures it works on both mobile and desktop browsers
+      forceClose();
     }
   };
 
@@ -472,34 +467,7 @@ const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
     // If we're already at the first step of the first section, do nothing
   };
 
-  // Handle user skipping the tutorial
-  const handleSkip = useCallback(() => {
-    console.log("Skip button clicked, closing tutorial...");
-    
-    // First, immediately close the tutorial without waiting for any async operations
-    onClose();
-    
-    // Then try to save the state - this happens after the UI has already closed
-    try {
-      // Mark as completed to prevent reopening
-      localStorage.setItem('aetherion_tutorial_completed', 'true');
-      localStorage.setItem('aetherion_tutorial_last_section', currentSection.id);
-      
-      // Silently try to save to the server if authenticated, but don't show errors
-      apiRequest(
-        '/api/tutorial/status', 
-        'POST', 
-        {
-          completed: true,
-          lastSection: currentSection.id
-        }
-      ).catch(() => {
-        // Silent catch - no error messages displayed
-      });
-    } catch (error) {
-      // Silent catch for localStorage too - tutorial is already closed so no need to log
-    }
-  }, [currentSection, onClose]);
+  // We've replaced the handleSkip functionality with forceClose
 
   // Auto-advance timer
   useEffect(() => {
@@ -674,7 +642,7 @@ const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
                 <Button 
                   variant="ghost" 
                   size="icon"
-                  onClick={handleSkip}
+                  onClick={forceClose}
                 >
                   <X size={18} />
                 </Button>
@@ -714,7 +682,7 @@ const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
               <div className="flex space-x-2">
                 <Button 
                   variant="ghost" 
-                  onClick={handleSkip}
+                  onClick={forceClose}
                 >
                   Skip Tutorial
                 </Button>
