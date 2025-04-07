@@ -459,185 +459,112 @@ const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
     
     switch (currentStep.type) {
       case 'message':
-        return (
-          <div className="tutorial-message">
-            <p>{currentStep.instruction}</p>
-          </div>
-        );
+        return <MessageStep instruction={currentStep.instruction} />;
         
       case 'ai-message':
-        return (
-          <div className="tutorial-ai-message flex flex-col space-y-4">
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-                <Sparkles className="text-primary-foreground w-4 h-4" />
-              </div>
-              <span className="font-bold">{currentStep.characterName}</span>
-            </div>
-            <p className="pl-10">{currentStep.message}</p>
-            <p className="text-sm text-muted-foreground mt-2">{currentStep.instruction}</p>
-          </div>
-        );
+        if ('characterName' in currentStep && 'message' in currentStep) {
+          return (
+            <AiMessageStep 
+              instruction={currentStep.instruction} 
+              characterName={currentStep.characterName} 
+              message={currentStep.message} 
+            />
+          );
+        }
+        return null;
         
       case 'click':
-        return (
-          <div className="tutorial-click">
-            <p>{currentStep.instruction}</p>
-            <div className="mt-4">
-              <Button 
-                onClick={completeStep}
-                className="simulate-click-btn"
-              >
-                Simulate Click
-              </Button>
-            </div>
-          </div>
-        );
+        return <ClickStep instruction={currentStep.instruction} onComplete={completeStep} />;
         
       case 'select':
-        return (
-          <div className="tutorial-select">
-            <p>{currentStep.instruction}</p>
-            <div className="mt-4 space-y-2">
-              {currentStep.options.map((option, index) => (
-                <Button 
-                  key={index} 
-                  variant="outline" 
-                  className="w-full justify-start text-left"
-                  onClick={() => completeStep()}
-                >
-                  {option}
-                </Button>
-              ))}
-            </div>
-          </div>
-        );
+        if ('options' in currentStep) {
+          return (
+            <SelectStep 
+              instruction={currentStep.instruction} 
+              options={currentStep.options} 
+              onComplete={completeStep} 
+            />
+          );
+        }
+        return null;
         
       case 'radio':
-        return (
-          <div className="tutorial-radio">
-            <p>{currentStep.instruction}</p>
-            <RadioGroup className="mt-4 space-y-2" onValueChange={() => completeStep()}>
-              {currentStep.options.map((option, index) => (
-                <div key={index} className="flex items-center space-x-2">
-                  <RadioGroupItem value={option} id={`option-${index}`} />
-                  <Label htmlFor={`option-${index}`}>{option}</Label>
-                </div>
-              ))}
-            </RadioGroup>
-          </div>
-        );
+        if ('options' in currentStep) {
+          return (
+            <RadioStep 
+              instruction={currentStep.instruction} 
+              options={currentStep.options} 
+              onComplete={completeStep} 
+            />
+          );
+        }
+        return null;
         
       case 'checkbox':
-        return (
-          <div className="tutorial-checkbox">
-            <p>{currentStep.instruction}</p>
-            <div className="mt-4 space-y-2">
-              {currentStep.elements.map((element, index) => (
-                <div key={index} className="flex items-center space-x-2">
-                  <Checkbox id={`checkbox-${index}`} onCheckedChange={() => completeStep()} />
-                  <label
-                    htmlFor={`checkbox-${index}`}
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                    {element}
-                  </label>
-                </div>
-              ))}
-            </div>
-          </div>
-        );
+        if ('elements' in currentStep) {
+          return (
+            <CheckboxStep 
+              instruction={currentStep.instruction} 
+              elements={currentStep.elements} 
+              onComplete={completeStep} 
+            />
+          );
+        }
+        return null;
         
       case 'slider':
-        return (
-          <div className="tutorial-slider">
-            <p>{currentStep.instruction}</p>
-            <div className="mt-6">
-              <Slider
-                defaultValue={[currentStep.defaultValue]}
-                max={currentStep.max}
-                min={currentStep.min}
-                step={currentStep.step}
-                onValueChange={() => completeStep()}
-              />
-            </div>
-          </div>
-        );
+        if ('min' in currentStep && 'max' in currentStep && 
+            'step' in currentStep && 'defaultValue' in currentStep) {
+          return (
+            <SliderStep 
+              instruction={currentStep.instruction} 
+              min={currentStep.min}
+              max={currentStep.max}
+              step={currentStep.step}
+              defaultValue={currentStep.defaultValue}
+              onComplete={completeStep} 
+            />
+          );
+        }
+        return null;
         
       case 'form':
-        return (
-          <div className="tutorial-form">
-            <p>{currentStep.instruction}</p>
-            <div className="mt-4 space-y-4">
-              {currentStep.fields.map((field, index) => (
-                <div key={index} className="space-y-2">
-                  <Label htmlFor={field.id}>{field.label}</Label>
-                  <Input 
-                    id={field.id} 
-                    type={field.type} 
-                    placeholder={field.placeholder}
-                    onChange={() => completeStep()} 
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-        );
+        if ('fields' in currentStep) {
+          return (
+            <FormStep 
+              instruction={currentStep.instruction} 
+              fields={currentStep.fields} 
+              onComplete={completeStep} 
+            />
+          );
+        }
+        return null;
         
       case 'input':
-        return (
-          <div className="tutorial-input">
-            <p>{currentStep.instruction}</p>
-            <div className="mt-4">
-              <Input 
-                id={currentStep.id} 
-                placeholder={currentStep.placeholder}
-                onChange={() => completeStep()} 
-              />
-            </div>
-          </div>
-        );
+        if ('id' in currentStep && 'placeholder' in currentStep) {
+          return (
+            <InputStep 
+              instruction={currentStep.instruction} 
+              id={currentStep.id}
+              placeholder={currentStep.placeholder}
+              onComplete={completeStep} 
+            />
+          );
+        }
+        return null;
         
       case 'observe':
-        // Auto-complete after duration
-        useEffect(() => {
-          const timer = setTimeout(() => {
-            completeStep();
-          }, currentStep.duration);
-          
-          return () => clearTimeout(timer);
-        }, [currentStep]);
-        
-        return (
-          <div className="tutorial-observe">
-            <p>{currentStep.instruction}</p>
-            <div className="mt-4 flex justify-center">
-              <div className="relative w-12 h-12">
-                <motion.div
-                  className="absolute inset-0 border-4 rounded-full"
-                  initial={{ borderColor: "rgba(255, 255, 255, 0.2)" }}
-                  animate={{
-                    borderColor: ["rgba(255, 255, 255, 0.2)", "rgba(99, 102, 241, 1)", "rgba(255, 255, 255, 0.2)"],
-                  }}
-                  transition={{
-                    repeat: Infinity,
-                    duration: 2,
-                  }}
-                />
-                <motion.div
-                  className="absolute inset-2 bg-primary rounded-full opacity-50"
-                  animate={{
-                    scale: [1, 1.2, 1],
-                  }}
-                  transition={{
-                    repeat: Infinity,
-                    duration: 2,
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-        );
+        if ('id' in currentStep && 'duration' in currentStep) {
+          return (
+            <ObserveStep
+              id={currentStep.id}
+              instruction={currentStep.instruction}
+              duration={currentStep.duration}
+              onComplete={completeStep}
+            />
+          );
+        }
+        return null;
         
       default:
         return <p>Unknown step type</p>;
@@ -741,6 +668,271 @@ const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
         </motion.div>
       </motion.div>
     </AnimatePresence>
+  );
+};
+
+// Step Type Components
+// These prevent React hooks rules violation by moving hooks to separate components
+
+// Message Step Component
+const MessageStep = ({ instruction }: { instruction: string }) => (
+  <div className="tutorial-message">
+    <p>{instruction}</p>
+  </div>
+);
+
+// AI Message Step Component
+const AiMessageStep = ({ 
+  instruction, 
+  characterName, 
+  message 
+}: { 
+  instruction: string;
+  characterName: string;
+  message: string;
+}) => (
+  <div className="tutorial-ai-message flex flex-col space-y-4">
+    <div className="flex items-center space-x-2">
+      <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+        <Sparkles className="text-primary-foreground w-4 h-4" />
+      </div>
+      <span className="font-bold">{characterName}</span>
+    </div>
+    <p className="pl-10">{message}</p>
+    <p className="text-sm text-muted-foreground mt-2">{instruction}</p>
+  </div>
+);
+
+// Click Step Component
+const ClickStep = ({ 
+  instruction, 
+  onComplete 
+}: { 
+  instruction: string;
+  onComplete: () => void;
+}) => (
+  <div className="tutorial-click">
+    <p>{instruction}</p>
+    <div className="mt-4">
+      <Button 
+        onClick={onComplete}
+        className="simulate-click-btn"
+      >
+        Simulate Click
+      </Button>
+    </div>
+  </div>
+);
+
+// Select Step Component
+const SelectStep = ({ 
+  instruction, 
+  options, 
+  onComplete 
+}: { 
+  instruction: string;
+  options: string[];
+  onComplete: () => void;
+}) => (
+  <div className="tutorial-select">
+    <p>{instruction}</p>
+    <div className="mt-4 space-y-2">
+      {options.map((option, index) => (
+        <Button 
+          key={index} 
+          variant="outline" 
+          className="w-full justify-start text-left"
+          onClick={() => onComplete()}
+        >
+          {option}
+        </Button>
+      ))}
+    </div>
+  </div>
+);
+
+// Radio Step Component  
+const RadioStep = ({ 
+  instruction, 
+  options, 
+  onComplete 
+}: { 
+  instruction: string;
+  options: string[];
+  onComplete: () => void;
+}) => (
+  <div className="tutorial-radio">
+    <p>{instruction}</p>
+    <RadioGroup className="mt-4 space-y-2" onValueChange={() => onComplete()}>
+      {options.map((option, index) => (
+        <div key={index} className="flex items-center space-x-2">
+          <RadioGroupItem value={option} id={`option-${index}`} />
+          <Label htmlFor={`option-${index}`}>{option}</Label>
+        </div>
+      ))}
+    </RadioGroup>
+  </div>
+);
+
+// Checkbox Step Component
+const CheckboxStep = ({ 
+  instruction, 
+  elements, 
+  onComplete 
+}: { 
+  instruction: string;
+  elements: string[];
+  onComplete: () => void;
+}) => (
+  <div className="tutorial-checkbox">
+    <p>{instruction}</p>
+    <div className="mt-4 space-y-2">
+      {elements.map((element, index) => (
+        <div key={index} className="flex items-center space-x-2">
+          <Checkbox id={`checkbox-${index}`} onCheckedChange={() => onComplete()} />
+          <label
+            htmlFor={`checkbox-${index}`}
+            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+          >
+            {element}
+          </label>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+// Slider Step Component
+const SliderStep = ({ 
+  instruction, 
+  min, 
+  max, 
+  step, 
+  defaultValue, 
+  onComplete 
+}: { 
+  instruction: string;
+  min: number;
+  max: number;
+  step: number;
+  defaultValue: number;
+  onComplete: () => void;
+}) => (
+  <div className="tutorial-slider">
+    <p>{instruction}</p>
+    <div className="mt-6">
+      <Slider
+        defaultValue={[defaultValue]}
+        max={max}
+        min={min}
+        step={step}
+        onValueChange={() => onComplete()}
+      />
+    </div>
+  </div>
+);
+
+// Form Step Component
+const FormStep = ({ 
+  instruction, 
+  fields, 
+  onComplete 
+}: { 
+  instruction: string;
+  fields: Array<{id: string, label: string, type: string, placeholder?: string}>;
+  onComplete: () => void;
+}) => (
+  <div className="tutorial-form">
+    <p>{instruction}</p>
+    <div className="mt-4 space-y-4">
+      {fields.map((field, index) => (
+        <div key={index} className="space-y-2">
+          <Label htmlFor={field.id}>{field.label}</Label>
+          <Input 
+            id={field.id} 
+            type={field.type} 
+            placeholder={field.placeholder || ''}
+            onChange={() => onComplete()} 
+          />
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+// Input Step Component
+const InputStep = ({ 
+  instruction, 
+  id, 
+  placeholder, 
+  onComplete 
+}: { 
+  instruction: string;
+  id: string;
+  placeholder: string;
+  onComplete: () => void;
+}) => (
+  <div className="tutorial-input">
+    <p>{instruction}</p>
+    <div className="mt-4">
+      <Input 
+        id={id} 
+        placeholder={placeholder}
+        onChange={() => onComplete()} 
+      />
+    </div>
+  </div>
+);
+
+// Observe Step Component - This one needs useEffect so it's a more complex component
+const ObserveStep = ({ 
+  id, 
+  instruction, 
+  duration, 
+  onComplete 
+}: { 
+  id: string;
+  instruction: string; 
+  duration: number; 
+  onComplete: () => void;
+}) => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onComplete();
+    }, duration);
+    
+    return () => clearTimeout(timer);
+  }, [duration, onComplete]);
+  
+  return (
+    <div className="tutorial-observe">
+      <p>{instruction}</p>
+      <div className="mt-4 flex justify-center">
+        <div className="relative w-12 h-12">
+          <motion.div
+            className="absolute inset-0 border-4 rounded-full"
+            initial={{ borderColor: "rgba(255, 255, 255, 0.2)" }}
+            animate={{
+              borderColor: ["rgba(255, 255, 255, 0.2)", "rgba(99, 102, 241, 1)", "rgba(255, 255, 255, 0.2)"],
+            }}
+            transition={{
+              repeat: Infinity,
+              duration: 2,
+            }}
+          />
+          <motion.div
+            className="absolute inset-2 bg-primary rounded-full opacity-50"
+            animate={{
+              scale: [1, 1.2, 1],
+            }}
+            transition={{
+              repeat: Infinity,
+              duration: 2,
+            }}
+          />
+        </div>
+      </div>
+    </div>
   );
 };
 
