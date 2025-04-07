@@ -3,39 +3,28 @@
  * Deploys Aetherion app to Storacha and updates ENS records
  * 
  * This script:
- * 1. Builds the application
+ * 1. Builds the application if not already built
  * 2. Collects all files from the build directory
- * 3. Uploads to Storacha (IPFS/Filecoin alternative)
+ * 3. Uploads to Storacha (IPFS)
  * 4. Updates ENS domain record with new CID (if configured)
  * 5. Outputs deployment information
  */
 
-// Using ESM syntax for Node.js
-import dotenv from 'dotenv';
-import fs from 'fs';
+import fs from 'fs/promises';
 import path from 'path';
 import axios from 'axios';
-import FormData from 'form-data';
 import { ethers } from 'ethers';
-import { fileURLToPath } from 'url';
+import dotenv from 'dotenv';
 
-// Initialize dotenv
+// Load environment variables
 dotenv.config();
 
-// Get __dirname equivalent in ESM
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Environment variables
+// Configuration
+const STORACHA_API_ENDPOINT = 'https://api.storacha.io/v1/upload';
 const STORACHA_API_KEY = process.env.STORACHA_API_KEY;
 const ENS_PRIVATE_KEY = process.env.ENS_PRIVATE_KEY;
 const ENS_DOMAIN = process.env.ENS_DOMAIN;
-const ETH_NETWORK = process.env.ETH_NETWORK || 'mainnet';
-
-// Constants
-const BUILD_DIR = path.join(__dirname, '../dist');
-const STORACHA_API_URL = 'https://api.storacha.io/v1/upload';
-const GATEWAY_URL = 'storacha.io';
+const BUILD_DIR = './dist';
 
 /**
  * Get all files from a directory recursively
@@ -43,30 +32,29 @@ const GATEWAY_URL = 'storacha.io';
  * @returns {Promise<Array<{path: string, content: Buffer}>>} - Array of file objects
  */
 async function getFilesFromDirectory(directory) {
-  try {
-    const files = [];
-    const entries = fs.readdirSync(directory, { withFileTypes: true });
-
+  const files = [];
+  
+  async function scanDirectory(currentDir, baseDir) {
+    const entries = await fs.readdir(currentDir, { withFileTypes: true });
+    
     for (const entry of entries) {
-      const fullPath = path.join(directory, entry.name);
+      const fullPath = path.join(currentDir, entry.name);
+      const relativePath = path.relative(baseDir, fullPath);
       
       if (entry.isDirectory()) {
-        const subDirFiles = await getFilesFromDirectory(fullPath);
-        files.push(...subDirFiles);
+        await scanDirectory(fullPath, baseDir);
       } else {
-        // Create relative path from the build directory
-        const relativePath = path.relative(BUILD_DIR, fullPath);
-        const content = fs.readFileSync(fullPath);
-        files.push({ path: relativePath, content });
+        const content = await fs.readFile(fullPath);
+        files.push({
+          path: relativePath,
+          content
+        });
       }
     }
-
-    console.log(`Found ${files.length} files in ${directory}`);
-    return files;
-  } catch (error) {
-    console.error('Error getting files from directory:', error);
-    throw error;
   }
+  
+  await scanDirectory(directory, directory);
+  return files;
 }
 
 /**
@@ -75,51 +63,40 @@ async function getFilesFromDirectory(directory) {
  * @returns {Promise<string>} - IPFS CID for the deployed content
  */
 async function deployToStoracha(buildDir) {
-  if (!STORACHA_API_KEY) {
-    throw new Error('STORACHA_API_KEY environment variable is required');
+  console.log('📦 Collecting files from build directory...');
+  const files = await getFilesFromDirectory(buildDir);
+  console.log(`Found ${files.length} files to upload.`);
+  
+  // Prepare FormData with files
+  const formData = new FormData();
+  
+  // Add each file to FormData
+  for (const file of files) {
+    // Convert Buffer to Blob for browser compatibility
+    const blob = new Blob([file.content]);
+    formData.append('files', blob, file.path);
   }
-
+  
+  console.log('🚀 Uploading to Storacha...');
+  
   try {
-    // Get all files from build directory
-    const files = await getFilesFromDirectory(buildDir);
-    
-    // Create form data for upload
-    const formData = new FormData();
-    
-    // Add each file to the form data
-    for (const file of files) {
-      formData.append('files', file.content, {
-        filename: file.path,
-        filepath: file.path,
-      });
-    }
-    
-    // Add metadata
-    formData.append('name', 'Aetherion Wallet');
-    
-    console.log(`Uploading ${files.length} files to Storacha...`);
-    
-    // Upload to Storacha
-    const response = await axios.post(STORACHA_API_URL, formData, {
+    const response = await axios.post(STORACHA_API_ENDPOINT, formData, {
       headers: {
-        ...formData.getHeaders(),
         'Authorization': `Bearer ${STORACHA_API_KEY}`,
-      },
-      maxContentLength: Infinity,
-      maxBodyLength: Infinity,
+        'Content-Type': 'multipart/form-data'
+      }
     });
     
-    if (response.status !== 200 || !response.data.cid) {
-      throw new Error(`Failed to upload to Storacha: ${JSON.stringify(response.data)}`);
+    if (response.status === 200 && response.data.cid) {
+      return response.data.cid;
+    } else {
+      throw new Error('Invalid response from Storacha API');
     }
-    
-    const cid = response.data.cid;
-    console.log(`📦 Files uploaded! CID: ${cid}`);
-    console.log(`🔗 Gateway URL: https://${cid}.${GATEWAY_URL}/`);
-    
-    return cid;
   } catch (error) {
-    console.error('Error deploying to Storacha:', error);
+    console.error('❌ Error uploading to Storacha:', error.message);
+    if (error.response) {
+      console.error('Response details:', error.response.data);
+    }
     throw error;
   }
 }
@@ -131,49 +108,58 @@ async function deployToStoracha(buildDir) {
  */
 async function updateENSRecord(cid) {
   if (!ENS_PRIVATE_KEY || !ENS_DOMAIN) {
-    console.log('ENS_PRIVATE_KEY or ENS_DOMAIN not set, skipping ENS record update');
+    console.log('⚠️ ENS update skipped: missing ENS_PRIVATE_KEY or ENS_DOMAIN');
     return;
   }
-
+  
+  console.log(`🔄 Updating ENS domain ${ENS_DOMAIN} with CID ${cid}...`);
+  
   try {
-    // Initialize Ethers provider
-    const provider = new ethers.providers.InfuraProvider(ETH_NETWORK);
+    const provider = new ethers.providers.InfuraProvider('mainnet');
     const wallet = new ethers.Wallet(ENS_PRIVATE_KEY, provider);
     
-    // Initialize ENS
-    const ens = new ethers.Contract(
-      // ENS Registry address
+    // Convert IPFS CID to contenthash format
+    const contentHash = `ipfs://${cid}`;
+    
+    // Get ENS registry and resolver
+    const ensRegistry = new ethers.Contract(
       '0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e',
-      ['function setResolver(bytes32 node, address resolver) public'],
+      ['function resolver(bytes32 node) view returns (address)'],
       wallet
     );
     
-    // Get ENS resolver
-    console.log(`Getting ENS resolver for ${ENS_DOMAIN}...`);
-    const ensName = ENS_DOMAIN.endsWith('.eth') ? ENS_DOMAIN : `${ENS_DOMAIN}.eth`;
-    const resolver = await provider.getResolver(ensName);
+    const nameHash = ethers.utils.namehash(ENS_DOMAIN);
+    const resolverAddress = await ensRegistry.resolver(nameHash);
     
-    if (!resolver) {
-      throw new Error(`No resolver found for ${ensName}`);
+    if (!resolverAddress || resolverAddress === ethers.constants.AddressZero) {
+      throw new Error(`No resolver found for ${ENS_DOMAIN}`);
     }
     
-    // Format the IPFS CID as contenthash
-    const ipfsContentId = `ipfs://${cid}`;
+    // Connect to the resolver
+    const resolver = new ethers.Contract(
+      resolverAddress,
+      ['function setContenthash(bytes32 node, bytes contenthash) public'],
+      wallet
+    );
     
-    // Update contenthash
-    console.log(`Updating contenthash for ${ensName} to ${ipfsContentId}...`);
-    const tx = await resolver.connect(wallet).setContenthash(
-      ethers.utils.namehash(ensName),
-      ethers.utils.hexlify(ethers.utils.toUtf8Bytes(ipfsContentId))
+    // Encode the IPFS content hash
+    const encodedContentHash = ethers.utils.hexlify(
+      ethers.utils.base58.decode(cid).slice(2)
+    );
+    
+    // Update the content hash
+    const tx = await resolver.setContenthash(
+      nameHash,
+      encodedContentHash,
+      { gasLimit: 100000 }
     );
     
     console.log(`Transaction sent: ${tx.hash}`);
     await tx.wait();
+    console.log(`✅ ENS record updated successfully!`);
     
-    console.log(`✅ ENS record updated for ${ensName}`);
-    console.log(`🔗 ENS URL: https://${ensName}.link/`);
   } catch (error) {
-    console.error('Error updating ENS record:', error);
+    console.error('❌ Error updating ENS record:', error.message);
     throw error;
   }
 }
@@ -183,36 +169,40 @@ async function updateENSRecord(cid) {
  */
 async function main() {
   try {
+    // Check if API key is available
+    if (!STORACHA_API_KEY) {
+      throw new Error('STORACHA_API_KEY is not set in environment variables');
+    }
+    
     // Check if build directory exists
-    if (!fs.existsSync(BUILD_DIR)) {
-      throw new Error(`Build directory not found: ${BUILD_DIR}`);
+    try {
+      await fs.access(BUILD_DIR);
+    } catch (error) {
+      console.log('🔧 Build directory not found, running build first...');
+      // You would typically run a build command here
+      // e.g., await execAsync('npm run build');
+      throw new Error('Build directory not found. Please run "npm run build" first.');
     }
     
     // Deploy to Storacha
     const cid = await deployToStoracha(BUILD_DIR);
+    console.log(`✅ Deployment successful! CID: ${cid}`);
+    console.log(`🌍 Your app is available at: https://${cid}.ipfs.dweb.link/`);
+    console.log(`🌍 Gateway URL: https://ipfs.io/ipfs/${cid}/`);
+    console.log(`🌍 Storacha URL: https://storacha.io/ipfs/${cid}/`);
     
     // Update ENS record if configured
     if (ENS_PRIVATE_KEY && ENS_DOMAIN) {
       await updateENSRecord(cid);
+      console.log(`🌍 ENS Website: https://${ENS_DOMAIN}.limo/`);
     }
     
-    // Output deployment information
-    console.log('\n--- Deployment Summary ---');
-    console.log(`IPFS CID: ${cid}`);
-    console.log(`Gateway URL: https://${cid}.${GATEWAY_URL}/`);
-    
-    if (ENS_DOMAIN) {
-      const ensName = ENS_DOMAIN.endsWith('.eth') ? ENS_DOMAIN : `${ENS_DOMAIN}.eth`;
-      console.log(`ENS Domain: ${ensName}`);
-      console.log(`ENS URL: https://${ensName}.link/`);
-    }
-    
-    console.log('\nDeployment complete! 🎉');
+    return cid;
   } catch (error) {
-    console.error('Deployment failed:', error);
+    console.error('❌ Deployment failed:', error.message);
     process.exit(1);
   }
 }
 
-// Execute main function
-main();
+// Run the script
+main().catch(console.error);

@@ -1,49 +1,75 @@
-import React from 'react';
-import { cn } from '@/lib/utils';
+import { FC } from 'react';
+import { Link } from 'wouter';
+import { ArrowRight, Search, Home as HomeIcon, Wallet as WalletIcon, LineChart as ChartIcon, BookText as BookIcon } from 'lucide-react';
 
-export interface NavItem {
-  icon: React.ElementType;
-  label: string;
-  path: string;
+interface QuickAccessSectionProps {
+  onClose: () => void;
 }
 
-export interface QuickAccessSectionProps {
-  items: NavItem[];
-  isActive: (path: string) => boolean;
-  onSelect: (path: string) => void;
-}
-
-const QuickAccessSection = ({
-  items,
-  isActive,
-  onSelect
-}: QuickAccessSectionProps) => {
+/**
+ * Quick access section for the mobile menu
+ * Provides shortcuts to the most frequently used pages
+ */
+const QuickAccessSection: FC<QuickAccessSectionProps> = ({ onClose }) => {
   return (
-    <div className="py-4 border-b border-border">
-      <h3 className="px-4 text-sm font-medium text-muted-foreground mb-2">Quick Access</h3>
-      <div className="relative px-4">
-        {/* Shadow indicators for scroll */}
-        <div className="absolute left-4 top-0 bottom-0 w-8 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none"></div>
-        <div className="absolute right-4 top-0 bottom-0 w-8 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none"></div>
+    <div className="mb-6">
+      <h3 className="text-lg font-semibold mb-3 text-primary">Quick Access</h3>
+      
+      <div className="grid grid-cols-2 gap-3">
+        {/* Dashboard */}
+        <Link href="/">
+          <a 
+            className="flex flex-col items-center justify-center p-4 border rounded-lg hover:bg-primary/5 transition-colors" 
+            onClick={onClose}
+          >
+            <HomeIcon className="h-6 w-6 text-primary mb-2" />
+            <span className="text-sm font-medium">Dashboard</span>
+          </a>
+        </Link>
         
-        <div className="overflow-x-auto scrollbar-hide pb-2">
-          <div className="flex space-x-4 min-w-max">
-            {items.map((item) => (
-              <div
-                key={`quick-${item.path}`}
-                className={cn(
-                  "flex flex-col items-center justify-center p-3 rounded-lg cursor-pointer whitespace-nowrap",
-                  isActive(item.path)
-                    ? 'bg-primary/10 text-primary'
-                    : 'text-muted-foreground hover:bg-accent/10 hover:text-foreground'
-                )}
-                onClick={() => onSelect(item.path)}
-              >
-                <item.icon className="w-5 h-5 mb-1" />
-                <span className="text-xs font-medium">{item.label}</span>
-              </div>
-            ))}
-          </div>
+        {/* Wallet */}
+        <Link href="/wallet">
+          <a 
+            className="flex flex-col items-center justify-center p-4 border rounded-lg hover:bg-primary/5 transition-colors" 
+            onClick={onClose}
+          >
+            <WalletIcon className="h-6 w-6 text-primary mb-2" />
+            <span className="text-sm font-medium">Wallet</span>
+          </a>
+        </Link>
+        
+        {/* Analytics */}
+        <Link href="/analytics">
+          <a 
+            className="flex flex-col items-center justify-center p-4 border rounded-lg hover:bg-primary/5 transition-colors" 
+            onClick={onClose}
+          >
+            <ChartIcon className="h-6 w-6 text-primary mb-2" />
+            <span className="text-sm font-medium">Analytics</span>
+          </a>
+        </Link>
+        
+        {/* Docs */}
+        <Link href="/docs">
+          <a 
+            className="flex flex-col items-center justify-center p-4 border rounded-lg hover:bg-primary/5 transition-colors" 
+            onClick={onClose}
+          >
+            <BookIcon className="h-6 w-6 text-primary mb-2" />
+            <span className="text-sm font-medium">Documentation</span>
+          </a>
+        </Link>
+      </div>
+      
+      {/* Search Bar */}
+      <div className="mt-4 relative">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <input 
+            type="text" 
+            placeholder="Search Aetherion..." 
+            className="w-full pl-10 pr-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50"
+          />
         </div>
       </div>
     </div>
