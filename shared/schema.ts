@@ -1540,6 +1540,12 @@ export const domainConfigurations = pgTable("domain_configurations", {
   domainType: text("domain_type").default("standard").notNull(), // standard, premium, enterprise
   paymentStatus: text("payment_status").default("pending").notNull(), // pending, paid, failed, refunded
   autoRenew: boolean("auto_renew").default(true),
+  domainRegistrationType: text("domain_registration_type").default("fractalcoin").notNull(), // fractalcoin, trust, traditional
+  registrarInfo: jsonb("registrar_info"), // Information about the registrar service
+  dnsConfiguration: jsonb("dns_configuration"), // DNS record configurations
+  trustCredentials: jsonb("trust_credentials"), // For .trust domain integration
+  sslCertificate: jsonb("ssl_certificate"), // SSL certificate information
+  customDomainSettings: jsonb("custom_domain_settings"), // Settings for traditional domains
 });
 
 export const domainConfigurationsRelations = relations(domainConfigurations, ({ one, many }) => ({
@@ -1614,6 +1620,66 @@ export const insertDomainDeploymentSchema = createInsertSchema(domainDeployments
 
 export type DomainDeployment = typeof domainDeployments.$inferSelect;
 export type InsertDomainDeployment = z.infer<typeof insertDomainDeploymentSchema>;
+
+export const dnsRecords = pgTable("dns_records", {
+  id: serial("id").primaryKey(),
+  domainId: integer("domain_id").notNull().references(() => domainConfigurations.id),
+  recordType: text("record_type").notNull(), // A, AAAA, CNAME, MX, TXT, etc.
+  name: text("name").notNull(), // subdomain or @ for root
+  value: text("value").notNull(), // IP, hostname, text value, etc.
+  ttl: integer("ttl").default(3600), // Time to live in seconds
+  priority: integer("priority"), // For MX and SRV records
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+});
+
+export const dnsRecordsRelations = relations(dnsRecords, ({ one }) => ({
+  domain: one(domainConfigurations, {
+    fields: [dnsRecords.domainId],
+    references: [domainConfigurations.id],
+  }),
+}));
+
+export const insertDnsRecordSchema = createInsertSchema(dnsRecords).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type DnsRecord = typeof dnsRecords.$inferSelect;
+export type InsertDnsRecord = z.infer<typeof insertDnsRecordSchema>;
+
+export const domainTrustWalletConnections = pgTable("domain_trust_wallet_connections", {
+  id: serial("id").primaryKey(),
+  domainId: integer("domain_id").notNull().references(() => domainConfigurations.id),
+  walletId: integer("wallet_id").notNull().references(() => wallets.id),
+  walletAddress: text("wallet_address").notNull(),
+  connectionType: text("connection_type").notNull(), // owner, manager, delegate
+  isActive: boolean("is_active").default(true).notNull(),
+  verificationProof: text("verification_proof"), // Proof of ownership
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  expiresAt: timestamp("expires_at"),
+});
+
+export const domainTrustWalletConnectionsRelations = relations(domainTrustWalletConnections, ({ one }) => ({
+  domain: one(domainConfigurations, {
+    fields: [domainTrustWalletConnections.domainId],
+    references: [domainConfigurations.id],
+  }),
+  wallet: one(wallets, {
+    fields: [domainTrustWalletConnections.walletId],
+    references: [wallets.id],
+  }),
+}));
+
+export const insertDomainTrustWalletConnectionSchema = createInsertSchema(domainTrustWalletConnections).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type DomainTrustWalletConnection = typeof domainTrustWalletConnections.$inferSelect;
+export type InsertDomainTrustWalletConnection = z.infer<typeof insertDomainTrustWalletConnectionSchema>;
 
 export const domainActivityLogs = pgTable("domain_activity_logs", {
   id: serial("id").primaryKey(),
@@ -1756,6 +1822,8 @@ export const schema = {
   domainActivityLogs,
   storageProviderNodes,
   nodeAllocationMapping,
+  dnsRecords,
+  domainTrustWalletConnections,
   
   // DApp Builder and Marketplace schemas (imported from dapp-schema.ts)
   dappTemplates,

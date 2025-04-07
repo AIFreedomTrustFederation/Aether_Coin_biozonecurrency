@@ -9,6 +9,8 @@ import { Loader2, Upload, Globe, Database, Server, HardDrive } from 'lucide-reac
 import { useToast } from '@/hooks/use-toast';
 import { Progress } from '@/components/ui/progress';
 import { useAuth } from '../../context/AuthContext';
+import { FilecoinStorageIntegration } from './FilecoinStorageIntegration';
+import { ResourceAllocationFeedback } from './ResourceAllocationFeedback';
 
 interface DomainAnalytics {
   totalDomains: number;
@@ -243,90 +245,116 @@ export default function DomainHostingPortal() {
           </TabsContent>
           
           <TabsContent value="storage">
-            <div className="mb-6">
-              <h3 className="text-lg font-medium mb-4">Storage Allocations by Node Type</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium">FractalCoin Nodes</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center">
-                      <Server className="mr-2 h-4 w-4 text-muted-foreground" />
-                      <div className="text-2xl font-bold">
-                        {/* Calculate total nodes across all domains */}
-                        {data.domains.reduce((sum, domain) => sum + domain.storage.nodeCount, 0)}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-6">
+              <div className="lg:col-span-3 space-y-6">
+                <div className="mb-6">
+                  <h3 className="text-lg font-medium mb-4">Storage Allocations by Node Type</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-medium">FractalCoin Nodes</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex items-center">
+                          <Server className="mr-2 h-4 w-4 text-muted-foreground" />
+                          <div className="text-2xl font-bold">
+                            {/* Calculate total nodes across all domains */}
+                            {data.domains.reduce((sum, domain) => sum + domain.storage.nodeCount, 0)}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-medium">Total Cost (FCL)</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex items-center">
+                          <HardDrive className="mr-2 h-4 w-4 text-muted-foreground" />
+                          <div className="text-2xl font-bold">
+                            {/* Calculate total cost across all domains */}
+                            {data.domains.reduce((sum, domain) => sum + domain.storage.cost, 0).toFixed(4)}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-medium">Average Cost per GB</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold">
+                          {data.totalStorage > 0 ? 
+                            (data.domains.reduce((sum, domain) => sum + domain.storage.cost, 0) / 
+                            (data.totalStorage / (1024 * 1024 * 1024))).toFixed(4) : 
+                            '0.0000'} FCL
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
                 
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium">Total Cost (FCL)</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center">
-                      <HardDrive className="mr-2 h-4 w-4 text-muted-foreground" />
-                      <div className="text-2xl font-bold">
-                        {/* Calculate total cost across all domains */}
-                        {data.domains.reduce((sum, domain) => sum + domain.storage.cost, 0).toFixed(4)}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                <h3 className="text-lg font-medium mb-4">Storage Allocation Details</h3>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Domain</TableHead>
+                      <TableHead>Storage</TableHead>
+                      <TableHead>Nodes</TableHead>
+                      <TableHead>Cost (FCL)</TableHead>
+                      <TableHead>Cost per GB</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {data.domains.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center py-4">
+                          No storage allocations found
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      data.domains.map(domain => (
+                        <TableRow key={domain.domainId}>
+                          <TableCell className="font-medium">{domain.domainName}</TableCell>
+                          <TableCell>{formatBytes(domain.storage.total)}</TableCell>
+                          <TableCell>{domain.storage.nodeCount}</TableCell>
+                          <TableCell>{domain.storage.cost.toFixed(4)}</TableCell>
+                          <TableCell>
+                            {domain.storage.total > 0 ? 
+                              (domain.storage.cost / (domain.storage.total / (1024 * 1024 * 1024))).toFixed(4) : 
+                              '0.0000'} FCL
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+              
+              <div className="lg:col-span-2 space-y-6">
+                {/* Filecoin Integration Panel */}
+                <FilecoinStorageIntegration
+                  allocatedStorage={data.totalStorage > 0 ? Math.round(data.totalStorage / (1024 * 1024)) : 100}
+                  usedStorage={data.totalStorage > 0 ? Math.round(data.totalStorage / (1024 * 1024) * 0.65) : 0}
+                  nodeCount={data.domains.reduce((sum, domain) => sum + domain.storage.nodeCount, 0)}
+                  cid="bafybeiczsscdsbs7ffqz55asqdf3smv6klcw3gofszvwlyarci47bgf354"
+                  status="active"
+                />
                 
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium">Average Cost per GB</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">
-                      {data.totalStorage > 0 ? 
-                        (data.domains.reduce((sum, domain) => sum + domain.storage.cost, 0) / 
-                        (data.totalStorage / (1024 * 1024 * 1024))).toFixed(4) : 
-                        '0.0000'} FCL
-                    </div>
-                  </CardContent>
-                </Card>
+                {/* Resource Allocation Panel */}
+                <ResourceAllocationFeedback 
+                  domainId={data.domains.length > 0 ? data.domains[0].domainId : 1}
+                  onAllocate={(resources) => {
+                    toast({
+                      title: 'Resources Allocated',
+                      description: `Successfully allocated ${resources.storage}MB of storage and ${resources.compute} vCPUs.`,
+                    });
+                  }}
+                />
               </div>
             </div>
-            
-            <h3 className="text-lg font-medium mb-4">Storage Allocation Details</h3>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Domain</TableHead>
-                  <TableHead>Storage</TableHead>
-                  <TableHead>Nodes</TableHead>
-                  <TableHead>Cost (FCL)</TableHead>
-                  <TableHead>Cost per GB</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {data.domains.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center py-4">
-                      No storage allocations found
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  data.domains.map(domain => (
-                    <TableRow key={domain.domainId}>
-                      <TableCell className="font-medium">{domain.domainName}</TableCell>
-                      <TableCell>{formatBytes(domain.storage.total)}</TableCell>
-                      <TableCell>{domain.storage.nodeCount}</TableCell>
-                      <TableCell>{domain.storage.cost.toFixed(4)}</TableCell>
-                      <TableCell>
-                        {domain.storage.total > 0 ? 
-                          (domain.storage.cost / (domain.storage.total / (1024 * 1024 * 1024))).toFixed(4) : 
-                          '0.0000'} FCL
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
           </TabsContent>
           
           <TabsContent value="deployments">
