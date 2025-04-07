@@ -1,0 +1,34 @@
+[vite] connecting...
+[vite] connected.
+Browser polyfills initialized
+blockchainService.getBlockchainState is not a function
+blockchainService.getAllWallets is not a function
+blockchainService.initialize is not a function
+The above error occurred in the <BlockchainExplorer> component:
+
+    at BlockchainExplorer (https://2f154dc7-67c3-41ad-9ad8-ace4b00318a4-00-c4yxhoqygvpy.picard.replit.dev/src/components/blockchain/BlockchainExplorer.tsx:31:39)
+    at div
+    at https://2f154dc7-67c3-41ad-9ad8-ace4b00318a4-00-c4yxhoqygvpy.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-JVRV33CZ.js?v=62d1b99f:41:13
+    at Presence (https://2f154dc7-67c3-41ad-9ad8-ace4b00318a4-00-c4yxhoqygvpy.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-TY4GEPG4.js?v=62d1b99f:24:11)
+    at https://2f154dc7-67c3-41ad-9ad8-ace4b00318a4-00-c4yxhoqygvpy.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tabs.js?v=62d1b99f:173:13
+    at _c5 (https://2f154dc7-67c3-41ad-9ad8-ace4b00318a4-00-c4yxhoqygvpy.picard.replit.dev/src/components/ui/tabs.tsx:72:12)
+    at div
+    at https://2f154dc7-67c3-41ad-9ad8-ace4b00318a4-00-c4yxhoqygvpy.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-JVRV33CZ.js?v=62d1b99f:41:13
+    at Provider (https://2f154dc7-67c3-41ad-9ad8-ace4b00318a4-00-c4yxhoqygvpy.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-KFL2BQUL.js?v=62d1b99f:38:15)
+    at https://2f154dc7-67c3-41ad-9ad8-ace4b00318a4-00-c4yxhoqygvpy.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tabs.js?v=62d1b99f:51:7
+    at div
+    at div
+    at div
+    at BlockchainDashboardPage (https://2f154dc7-67c3-41ad-9ad8-ace4b00318a4-00-c4yxhoqygvpy.picard.replit.dev/src/pages/BlockchainDashboardPage.tsx:31:3)
+    at Suspense
+    at Route (https://2f154dc7-67c3-41ad-9ad8-ace4b00318a4-00-c4yxhoqygvpy.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=62d1b99f:323:16)
+    at Switch (https://2f154dc7-67c3-41ad-9ad8-ace4b00318a4-00-c4yxhoqygvpy.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=62d1b99f:379:17)
+    at main
+    at div
+    at LiveModeProvider (https://2f154dc7-67c3-41ad-9ad8-ace4b00318a4-00-c4yxhoqygvpy.picard.replit.dev/src/contexts/LiveModeContext.tsx:39:36)
+    at AuthProvider (https://2f154dc7-67c3-41ad-9ad8-ace4b00318a4-00-c4yxhoqygvpy.picard.replit.dev/src/context/AuthContext.tsx:35:32)
+    at QueryClientProvider (https://2f154dc7-67c3-41ad-9ad8-ace4b00318a4-00-c4yxhoqygvpy.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=62d1b99f:2805:3)
+    at App (https://2f154dc7-67c3-41ad-9ad8-ace4b00318a4-00-c4yxhoqygvpy.picard.replit.dev/src/App.tsx?v=oiFmXwrgMDqp70G1uYvpK:1216:22)
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.

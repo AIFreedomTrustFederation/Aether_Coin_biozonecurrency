@@ -621,6 +621,85 @@ class BlockchainService extends EventEmitter {
       this.startBlockGeneration();
     }
   }
+
+  /**
+   * Get complete blockchain state including chain and pending transactions
+   */
+  public getBlockchainState() {
+    return {
+      chain: this.getChain(),
+      pendingTransactions: this.getPendingTransactions(),
+      latestBlock: this.getLatestBlock(),
+      blockHeight: this.getBlockHeight(),
+      walletStatus: this.getWalletStatus(),
+      networkType: this.getNetworkType(),
+      currentDifficulty: this.config.difficulty,
+      isValid: this.isChainValid()
+    };
+  }
+  
+  /**
+   * Get all available wallets
+   */
+  public getAllWallets() {
+    // In a full implementation, this would retrieve actual wallets
+    // For now, return a mock wallet if connected
+    const wallets = [];
+    
+    if (this.walletAddress) {
+      wallets.push({
+        address: this.walletAddress,
+        balance: 1000, // Mock balance
+        type: 'primary',
+        label: 'Main Wallet'
+      });
+      
+      // Add some mock additional wallets for demo purposes
+      wallets.push({
+        address: '0x' + SHA256('secondary-wallet').toString().substring(0, 40),
+        balance: 250,
+        type: 'secondary',
+        label: 'Savings Wallet'
+      });
+    }
+    
+    return wallets;
+  }
+  
+  /**
+   * Initialize the blockchain service
+   */
+  public initialize() {
+    // Reset to initial state
+    this.chain = [];
+    this.pendingTransactions = [];
+    this.walletStatus = WalletConnectionStatus.DISCONNECTED;
+    this.walletAddress = null;
+    
+    // Create genesis block
+    this.initializeChain();
+    
+    // Set up Web3 listeners
+    this.setupWeb3Listeners();
+    
+    // Start block generation
+    this.startBlockGeneration();
+    
+    // Emit initialization event
+    this.emit('initialized', {
+      blockHeight: this.getBlockHeight(),
+      genesisBlock: this.chain[0],
+      timestamp: Date.now()
+    });
+    
+    this.notifyListeners('initialized', {
+      blockHeight: this.getBlockHeight(),
+      genesisBlock: this.chain[0],
+      timestamp: Date.now()
+    });
+    
+    return true;
+  }
 }
 
 // Export singleton instance
