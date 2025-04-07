@@ -51,7 +51,7 @@ This document provides comprehensive deployment instructions for the Aetherion b
 7. Follow the instructions in the generated deployment guides
 
 The application can be accessed via two endpoints:
-- Primary endpoint: `https://atc.aifreedomtrust.com/app` (recommended)
+- Primary endpoint: `https://atc.aifreedomtrust.com/dapp` (recommended)
 - Secondary endpoint: `https://atc.aifreedomtrust.com/wallet` (legacy support)
 
 ### Environment Variables

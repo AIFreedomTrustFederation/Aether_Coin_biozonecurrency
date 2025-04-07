@@ -28,6 +28,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Database migration tools with safety checks
 - Project structure documentation
 - Repository maintenance tools and scripts
+- Deployment scripts for traditional and decentralized hosting
+- VS Code deployment automation script
+- Simplified deployment guides for atc.aifreedomtrust.com
 
 ### Changed
 - Implemented open-source alternatives for key system components
@@ -39,6 +42,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Enhanced mobile responsiveness in dashboard views
 - Modular architecture with isolated component APIs
 - Enhanced transaction security with multiple validation layers
+- Updated deployment paths from /app to /dapp for primary endpoint
+- Improved server-redirect.js to support both /dapp and /wallet paths
+- Replaced useTransition with startTransition for React 18.3.1 compatibility
 
 ### Fixed
 - UI rendering issues causing white screens
@@ -46,6 +52,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Portfolio chart rendering inconsistencies
 - SMS notification delivery reliability
 - Database connection stability
+- React suspension error in wallet components
+- Path configuration in server-redirect.js for correct routing
+- Deployment script environment variable handling
+- Multiple security vulnerabilities in API endpoints
+- Web3 provider initialization issues
 
 ## [0.2.0] - 2025-04-03
 
