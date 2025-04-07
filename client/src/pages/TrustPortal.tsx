@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { useAuth } from '@/context/AuthContext';
-import TrustMemberGuard from '@/components/auth/TrustMemberGuard';
 import { format } from 'date-fns';
 import { 
   Layers, 
@@ -162,148 +161,146 @@ const TrustPortal = () => {
   };
 
   return (
-    <TrustMemberGuard>
-      <div className="min-h-screen bg-muted/10">
-        <div className="container mx-auto p-4 md:p-6 lg:p-8">
-          <header className="mb-8">
-            <div className="flex justify-between items-center mb-4">
-              <div>
-                <h1 className="text-3xl font-bold">AI Freedom Trust Portal</h1>
-                <p className="text-muted-foreground">Secure access for trust governance and operations</p>
-              </div>
-              <Button 
-                variant="outline" 
-                className="gap-2"
-                onClick={handleLogout}
-                disabled={isLoggingOut}
-              >
-                <LogOut className="h-4 w-4" />
-                {isLoggingOut ? 'Logging out...' : 'Sign Out'}
-              </Button>
+    <div className="min-h-screen bg-muted/10">
+      <div className="container mx-auto p-4 md:p-6 lg:p-8">
+        <header className="mb-8">
+          <div className="flex justify-between items-center mb-4">
+            <div>
+              <h1 className="text-3xl font-bold">AI Freedom Trust Portal</h1>
+              <p className="text-muted-foreground">Secure access for trust governance and operations</p>
             </div>
-            <div className="bg-primary/5 rounded-lg p-4 flex items-center">
-              <UserCheck className="h-5 w-5 mr-2 text-primary" />
-              <p>
-                Welcome back, <span className="font-medium">{user?.username}</span>. 
-                You're authenticated with {user?.trustMemberLevel || 'Member'} privileges.
-              </p>
-            </div>
-          </header>
+            <Button 
+              variant="outline" 
+              className="gap-2"
+              onClick={handleLogout}
+              disabled={isLoggingOut}
+            >
+              <LogOut className="h-4 w-4" />
+              {isLoggingOut ? 'Logging out...' : 'Sign Out'}
+            </Button>
+          </div>
+          <div className="bg-primary/5 rounded-lg p-4 flex items-center">
+            <UserCheck className="h-5 w-5 mr-2 text-primary" />
+            <p>
+              Welcome back, <span className="font-medium">{user?.username}</span>. 
+              You're authenticated with {user?.trustMemberLevel || 'Member'} privileges.
+            </p>
+          </div>
+        </header>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <div className="lg:col-span-4 space-y-6">
-              <TrustInfoCard />
-              
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg font-medium">Quick Actions</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <Button variant="outline" className="w-full justify-start">
-                    <Shield className="h-4 w-4 mr-2" />
-                    Security Protocols
-                  </Button>
-                  <Button variant="outline" className="w-full justify-start">
-                    <FileText className="h-4 w-4 mr-2" />
-                    View Trust Documents
-                  </Button>
-                  <Button variant="outline" className="w-full justify-start">
-                    <Database className="h-4 w-4 mr-2" />
-                    Quantum Data Vault
-                  </Button>
-                  <Button variant="outline" className="w-full justify-start">
-                    <Settings className="h-4 w-4 mr-2" />
-                    Account Settings
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div className="lg:col-span-4 space-y-6">
+            <TrustInfoCard />
             
-            <div className="lg:col-span-8">
-              <Tabs defaultValue="activity" className="w-full">
-                <TabsList className="grid grid-cols-3 mb-4">
-                  <TabsTrigger value="activity" className="flex items-center">
-                    <Clock className="h-4 w-4 mr-2" />
-                    Recent Activity
-                  </TabsTrigger>
-                  <TabsTrigger value="governance" className="flex items-center">
-                    <Users className="h-4 w-4 mr-2" />
-                    Governance
-                  </TabsTrigger>
-                  <TabsTrigger value="analytics" className="flex items-center">
-                    <BarChart3 className="h-4 w-4 mr-2" />
-                    Analytics
-                  </TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="activity" className="mt-0">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-xl">Activity Feed</CardTitle>
-                      <CardDescription>
-                        Your recent trust-related activities
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <ActivityFeed />
-                    </CardContent>
-                    <CardFooter className="border-t bg-muted/5 px-6 py-3">
-                      <Button variant="link" className="ml-auto">View All Activities</Button>
-                    </CardFooter>
-                  </Card>
-                </TabsContent>
-                
-                <TabsContent value="governance" className="mt-0">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-xl">Trust Governance</CardTitle>
-                      <CardDescription>
-                        Participate in trust decision-making and protocol management
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex items-center justify-center p-8 border-2 border-dashed rounded-lg">
-                        <div className="text-center">
-                          <Layers className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                          <h3 className="text-lg font-medium mb-2">Trust Governance Module</h3>
-                          <p className="text-muted-foreground mb-4">
-                            Access to advanced governance features requires additional authorization.
-                          </p>
-                          <Button variant="outline">Request Access</Button>
-                        </div>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-medium">Quick Actions</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Button variant="outline" className="w-full justify-start">
+                  <Shield className="h-4 w-4 mr-2" />
+                  Security Protocols
+                </Button>
+                <Button variant="outline" className="w-full justify-start">
+                  <FileText className="h-4 w-4 mr-2" />
+                  View Trust Documents
+                </Button>
+                <Button variant="outline" className="w-full justify-start">
+                  <Database className="h-4 w-4 mr-2" />
+                  Quantum Data Vault
+                </Button>
+                <Button variant="outline" className="w-full justify-start">
+                  <Settings className="h-4 w-4 mr-2" />
+                  Account Settings
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+          
+          <div className="lg:col-span-8">
+            <Tabs defaultValue="activity" className="w-full">
+              <TabsList className="grid grid-cols-3 mb-4">
+                <TabsTrigger value="activity" className="flex items-center">
+                  <Clock className="h-4 w-4 mr-2" />
+                  Recent Activity
+                </TabsTrigger>
+                <TabsTrigger value="governance" className="flex items-center">
+                  <Users className="h-4 w-4 mr-2" />
+                  Governance
+                </TabsTrigger>
+                <TabsTrigger value="analytics" className="flex items-center">
+                  <BarChart3 className="h-4 w-4 mr-2" />
+                  Analytics
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="activity" className="mt-0">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-xl">Activity Feed</CardTitle>
+                    <CardDescription>
+                      Your recent trust-related activities
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ActivityFeed />
+                  </CardContent>
+                  <CardFooter className="border-t bg-muted/5 px-6 py-3">
+                    <Button variant="link" className="ml-auto">View All Activities</Button>
+                  </CardFooter>
+                </Card>
+              </TabsContent>
+              
+              <TabsContent value="governance" className="mt-0">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-xl">Trust Governance</CardTitle>
+                    <CardDescription>
+                      Participate in trust decision-making and protocol management
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center justify-center p-8 border-2 border-dashed rounded-lg">
+                      <div className="text-center">
+                        <Layers className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                        <h3 className="text-lg font-medium mb-2">Trust Governance Module</h3>
+                        <p className="text-muted-foreground mb-4">
+                          Access to advanced governance features requires additional authorization.
+                        </p>
+                        <Button variant="outline">Request Access</Button>
                       </div>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-                
-                <TabsContent value="analytics" className="mt-0">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-xl">Trust Analytics</CardTitle>
-                      <CardDescription>
-                        Insights and metrics on trust operations
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex items-center justify-center p-8 border-2 border-dashed rounded-lg">
-                        <div className="text-center">
-                          <AlertCircle className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                          <h3 className="text-lg font-medium mb-2">Analytics Coming Soon</h3>
-                          <p className="text-muted-foreground mb-4">
-                            The analytics module is currently under development.
-                          </p>
-                          <Badge variant="outline">Coming Soon</Badge>
-                        </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
+              <TabsContent value="analytics" className="mt-0">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-xl">Trust Analytics</CardTitle>
+                    <CardDescription>
+                      Insights and metrics on trust operations
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center justify-center p-8 border-2 border-dashed rounded-lg">
+                      <div className="text-center">
+                        <AlertCircle className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                        <h3 className="text-lg font-medium mb-2">Analytics Coming Soon</h3>
+                        <p className="text-muted-foreground mb-4">
+                          The analytics module is currently under development.
+                        </p>
+                        <Badge variant="outline">Coming Soon</Badge>
                       </div>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-              </Tabs>
-            </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
           </div>
         </div>
       </div>
-    </TrustMemberGuard>
+    </div>
   );
 };
 
