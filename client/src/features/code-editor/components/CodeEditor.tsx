@@ -1,11 +1,11 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import Editor from '@monaco-editor/react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { Loader2, Play, Save, FileText, FolderOpen, RefreshCw } from 'lucide-react';
+import { Loader2, Play, Save, FileText, FolderOpen, RefreshCw, Menu } from 'lucide-react';
 
 // Default theme setup for the editor
 const lightTheme = 'vs';
@@ -75,6 +75,24 @@ const CodeEditor = () => {
   const [isCompiling, setIsCompiling] = useState(false);
   const [compilationResult, setCompilationResult] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [showExplorer, setShowExplorer] = useState(true);
+  
+  // Check if the screen size is mobile
+  useEffect(() => {
+    const checkIfMobile = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      setShowExplorer(!mobile);
+    };
+    
+    checkIfMobile();
+    window.addEventListener('resize', checkIfMobile);
+    
+    return () => {
+      window.removeEventListener('resize', checkIfMobile);
+    };
+  }, []);
 
   // Handle editor value change
   const handleEditorChange = (value: string | undefined) => {
@@ -215,25 +233,25 @@ Gas used: ${Math.floor(Math.random() * 1000000)}
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex justify-between items-center p-2 border-b">
+      <div className="flex justify-between items-center p-2 border-b overflow-x-auto">
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={createNewFile}>
-            <FileText className="h-4 w-4 mr-2" />
-            New File
+            <FileText className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">New File</span>
           </Button>
           <Button variant="outline" size="sm">
-            <FolderOpen className="h-4 w-4 mr-2" />
-            Open Folder
+            <FolderOpen className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Open Folder</span>
           </Button>
           <Button variant="outline" size="sm">
-            <Save className="h-4 w-4 mr-2" />
-            Save
+            <Save className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Save</span>
           </Button>
         </div>
         
         <div className="flex items-center gap-2">
           <Select value={language} onValueChange={handleLanguageChange}>
-            <SelectTrigger className="w-[150px]">
+            <SelectTrigger className={`${isMobile ? 'w-[90px]' : 'w-[150px]'}`}>
               <SelectValue placeholder="Language" />
             </SelectTrigger>
             <SelectContent>
@@ -253,13 +271,13 @@ Gas used: ${Math.floor(Math.random() * 1000000)}
           >
             {isCompiling ? (
               <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Compiling...
+                <Loader2 className="h-4 w-4 sm:mr-2 animate-spin" />
+                <span className="hidden sm:inline">Compiling...</span>
               </>
             ) : (
               <>
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Compile
+                <RefreshCw className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Compile</span>
               </>
             )}
           </Button>
@@ -272,68 +290,112 @@ Gas used: ${Math.floor(Math.random() * 1000000)}
           >
             {isLoading ? (
               <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Deploying...
+                <Loader2 className="h-4 w-4 sm:mr-2 animate-spin" />
+                <span className="hidden sm:inline">Deploying...</span>
               </>
             ) : (
               <>
-                <Play className="h-4 w-4 mr-2" />
-                Deploy
+                <Play className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Deploy</span>
               </>
             )}
           </Button>
         </div>
       </div>
       
-      <div className="grid grid-cols-12 h-[calc(100vh-13rem)]">
-        {/* File explorer */}
-        <div className="col-span-2 border-r overflow-y-auto">
-          <div className="p-2 font-semibold text-sm">Explorer</div>
-          <Separator />
-          <div className="p-1">
-            {Object.keys(files).map(fileName => (
-              <div 
-                key={fileName}
-                className={`p-2 text-sm rounded cursor-pointer flex items-center ${currentFile === fileName ? 'bg-accent' : 'hover:bg-muted'}`}
-                onClick={() => handleFileChange(fileName)}
-              >
-                <FileText className="h-4 w-4 mr-2" />
-                {fileName}
+      <div className="flex flex-col h-[calc(100vh-13rem)]">
+        <div className="flex flex-1 overflow-hidden relative">
+          {/* Toggle sidebar button for mobile */}
+          {isMobile && (
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="absolute left-2 top-2 z-10 bg-background/80 backdrop-blur-sm"
+              onClick={() => setShowExplorer(!showExplorer)}
+            >
+              <Menu className="h-4 w-4" />
+            </Button>
+          )}
+          
+          {/* File explorer */}
+          {showExplorer && (
+            <div className={`${isMobile ? 'absolute z-10 h-full bg-background shadow-lg' : ''} w-60 border-r overflow-y-auto`}>
+              <div className="p-2 font-semibold text-sm flex justify-between items-center">
+                <span>Explorer</span>
+                {isMobile && (
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-6 w-6" 
+                    onClick={() => setShowExplorer(false)}
+                  >
+                    <span className="sr-only">Close</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                  </Button>
+                )}
               </div>
-            ))}
+              <Separator />
+              <div className="p-1">
+                {Object.keys(files).map(fileName => (
+                  <div 
+                    key={fileName}
+                    className={`p-2 text-sm rounded cursor-pointer flex items-center ${currentFile === fileName ? 'bg-accent' : 'hover:bg-muted'}`}
+                    onClick={() => {
+                      handleFileChange(fileName);
+                      if (isMobile) setShowExplorer(false);
+                    }}
+                  >
+                    <FileText className="h-4 w-4 mr-2" />
+                    {fileName}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {/* Main edit area (Monaco Editor) */}
+          <div className="flex-1">
+            <Editor
+              height="100%"
+              theme={theme}
+              language={language}
+              value={value}
+              onChange={handleEditorChange}
+              options={{
+                minimap: { enabled: !isMobile },
+                lineNumbers: true,
+                fontSize: isMobile ? 12 : 14,
+                scrollBeyondLastLine: false,
+                automaticLayout: true,
+                quickSuggestions: true,
+              }}
+              loading={<div className="h-full w-full flex items-center justify-center">Loading editor...</div>}
+            />
           </div>
         </div>
         
-        {/* Editor */}
-        <div className="col-span-7 border-r">
-          <Editor
-            height="100%"
-            theme={theme}
-            language={language}
-            value={value}
-            onChange={handleEditorChange}
-            options={{
-              minimap: { enabled: true },
-              lineNumbers: 'on',
-              fontSize: 14,
-              scrollBeyondLastLine: false,
-              automaticLayout: true,
-            }}
-            loading={<div className="h-full w-full flex items-center justify-center">Loading editor...</div>}
-          />
-        </div>
-        
-        {/* Output and terminal */}
-        <div className="col-span-3 overflow-hidden">
-          <Tabs defaultValue="output" className="h-full">
+        {/* Terminal and output at the bottom */}
+        <div className="h-60 border-t">
+          <Tabs defaultValue="terminal" className="h-full">
             <TabsList className="w-full">
-              <TabsTrigger value="output" className="flex-1">Output</TabsTrigger>
               <TabsTrigger value="terminal" className="flex-1">Terminal</TabsTrigger>
+              <TabsTrigger value="output" className="flex-1">Output</TabsTrigger>
               <TabsTrigger value="problems" className="flex-1">Problems</TabsTrigger>
             </TabsList>
             
+            <TabsContent value="terminal" className="h-[calc(100%-40px)] p-2">
+              <div className="bg-black text-white p-3 h-full rounded font-mono text-xs overflow-y-auto">
+                <div>$ npx hardhat node</div>
+                <div>Started HTTP and WebSocket JSON-RPC server at http://127.0.0.1:8545/</div>
+                <div>Account #0: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266</div>
+                <div>Private Key: 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80</div>
+                <div className="text-green-400">Ready to deploy contracts.</div>
+                <div className="mt-2">$ _</div>
+              </div>
+            </TabsContent>
+            
             <TabsContent value="output" className="h-[calc(100%-40px)] overflow-y-auto p-2">
-              <Card>
+              <Card className="h-full">
                 <CardHeader className="p-3">
                   <CardTitle className="text-sm">Compilation Output</CardTitle>
                   <CardDescription className="text-xs">Results from smart contract compilation</CardDescription>
@@ -344,17 +406,6 @@ Gas used: ${Math.floor(Math.random() * 1000000)}
                   </pre>
                 </CardContent>
               </Card>
-            </TabsContent>
-            
-            <TabsContent value="terminal" className="h-[calc(100%-40px)] p-2">
-              <div className="bg-black text-white p-3 h-full rounded font-mono text-xs">
-                <div>$ npx hardhat node</div>
-                <div>Started HTTP and WebSocket JSON-RPC server at http://127.0.0.1:8545/</div>
-                <div>Account #0: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266</div>
-                <div>Private Key: 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80</div>
-                <div className="text-green-400">Ready to deploy contracts.</div>
-                <div className="mt-2">$ _</div>
-              </div>
             </TabsContent>
             
             <TabsContent value="problems" className="h-[calc(100%-40px)] p-2">
