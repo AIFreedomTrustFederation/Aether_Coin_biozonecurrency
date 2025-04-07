@@ -26,18 +26,15 @@ jobs:
         env:
           VITE_API_URL: ${{ secrets.VITE_API_URL }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          # Add any other environment variables needed for the build
 
       - name: Deploy to IPFS via Storacha
-        run: |
-          npm install axios form-data
-          node --experimental-modules scripts/deploy-to-storacha.js
+        run: node --experimental-modules scripts/deploy-to-storacha.js
         env:
           STORACHA_API_KEY: ${{ secrets.STORACHA_API_KEY }}
           ENS_PRIVATE_KEY: ${{ secrets.ENS_PRIVATE_KEY }}
           ENS_DOMAIN: ${{ secrets.ENS_DOMAIN }}
 
-      # Optional: If you're also updating an ENS domain
-      - name: Update ENS Domain
-        if: ${{ env.ENS_PRIVATE_KEY != '' && env.ENS_DOMAIN != '' }}
-        run: echo "ENS domain updated automatically through the deploy script"
+      - name: Log deployment info
+        run: |
+          echo "🚀 Deployment complete!"
+          echo "Check the job logs above for IPFS URLs and ENS domain info."
