@@ -1525,6 +1525,180 @@ export type InsertMysterionTrainingData = z.infer<typeof insertMysterionTraining
 
 // Types are now imported at the top of the file
 
+// FractalCoin Domain Hosting Schemas
+export const domainConfigurations = pgTable("domain_configurations", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  domainName: text("domain_name").notNull().unique(),
+  active: boolean("active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  expiresAt: timestamp("expires_at"),
+  nameservers: text("nameservers").array(),
+  contentCid: text("content_cid"), // IPFS CID for website content
+  ensRegistered: boolean("ens_registered").default(false),
+  domainType: text("domain_type").default("standard").notNull(), // standard, premium, enterprise
+  paymentStatus: text("payment_status").default("pending").notNull(), // pending, paid, failed, refunded
+  autoRenew: boolean("auto_renew").default(true),
+});
+
+export const domainConfigurationsRelations = relations(domainConfigurations, ({ one, many }) => ({
+  user: one(users, {
+    fields: [domainConfigurations.userId],
+    references: [users.id],
+  }),
+  filecoinStorageAllocations: many(filecoinStorageAllocations),
+  domainDeployments: many(domainDeployments),
+}));
+
+export const insertDomainConfigurationSchema = createInsertSchema(domainConfigurations).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type DomainConfiguration = typeof domainConfigurations.$inferSelect;
+export type InsertDomainConfiguration = z.infer<typeof insertDomainConfigurationSchema>;
+
+export const filecoinStorageAllocations = pgTable("filecoin_storage_allocations", {
+  id: serial("id").primaryKey(),
+  domainId: integer("domain_id").notNull().references(() => domainConfigurations.id),
+  storageBytes: integer("storage_bytes").notNull(),
+  allocationDate: timestamp("allocation_date").defaultNow().notNull(),
+  expirationDate: timestamp("expiration_date"),
+  bridgeCid: text("bridge_cid").notNull(), // Reference to the Filecoin-FractalCoin bridge
+  nodeCount: integer("node_count").default(3).notNull(), // Number of storage nodes
+  status: text("status").default("active").notNull(), // active, expired, pending, failed
+  bridgeConfig: jsonb("bridge_config").notNull(), // Configuration settings for the bridge
+  cost: decimal("cost", { precision: 18, scale: 6 }).notNull(), // Cost in FractalCoin
+});
+
+export const filecoinStorageAllocationsRelations = relations(filecoinStorageAllocations, ({ one }) => ({
+  domain: one(domainConfigurations, {
+    fields: [filecoinStorageAllocations.domainId],
+    references: [domainConfigurations.id],
+  }),
+}));
+
+export const insertFilecoinStorageAllocationSchema = createInsertSchema(filecoinStorageAllocations).omit({
+  id: true,
+  allocationDate: true,
+});
+
+export type FilecoinStorageAllocation = typeof filecoinStorageAllocations.$inferSelect;
+export type InsertFilecoinStorageAllocation = z.infer<typeof insertFilecoinStorageAllocationSchema>;
+
+export const domainDeployments = pgTable("domain_deployments", {
+  id: serial("id").primaryKey(),
+  domainId: integer("domain_id").notNull().references(() => domainConfigurations.id),
+  deploymentCid: text("deployment_cid").notNull(), // IPFS CID of the deployed website
+  deploymentDate: timestamp("deployment_date").defaultNow().notNull(),
+  status: text("status").default("processing").notNull(), // processing, success, failed
+  ipfsGatewayUrl: text("ipfs_gateway_url"), // Gateway URL for accessing the content
+  fileCounts: jsonb("file_counts"), // JSON object with file type counts
+  totalSizeBytes: integer("total_size_bytes"),
+  deploymentConfig: jsonb("deployment_config"), // Custom configuration for this deployment
+});
+
+export const domainDeploymentsRelations = relations(domainDeployments, ({ one }) => ({
+  domain: one(domainConfigurations, {
+    fields: [domainDeployments.domainId],
+    references: [domainConfigurations.id],
+  }),
+}));
+
+export const insertDomainDeploymentSchema = createInsertSchema(domainDeployments).omit({
+  id: true,
+  deploymentDate: true,
+});
+
+export type DomainDeployment = typeof domainDeployments.$inferSelect;
+export type InsertDomainDeployment = z.infer<typeof insertDomainDeploymentSchema>;
+
+export const domainActivityLogs = pgTable("domain_activity_logs", {
+  id: serial("id").primaryKey(),
+  domainId: integer("domain_id").notNull().references(() => domainConfigurations.id),
+  action: text("action").notNull(), // deploy, renew, update, delete, etc.
+  performedBy: integer("performed_by").notNull().references(() => users.id),
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+  details: jsonb("details"), // Additional details about the action
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+});
+
+export const domainActivityLogsRelations = relations(domainActivityLogs, ({ one }) => ({
+  domain: one(domainConfigurations, {
+    fields: [domainActivityLogs.domainId],
+    references: [domainConfigurations.id],
+  }),
+  user: one(users, {
+    fields: [domainActivityLogs.performedBy],
+    references: [users.id],
+  }),
+}));
+
+export const insertDomainActivityLogSchema = createInsertSchema(domainActivityLogs).omit({
+  id: true,
+  timestamp: true,
+});
+
+export type DomainActivityLog = typeof domainActivityLogs.$inferSelect;
+export type InsertDomainActivityLog = z.infer<typeof insertDomainActivityLogSchema>;
+
+export const storageProviderNodes = pgTable("storage_provider_nodes", {
+  id: serial("id").primaryKey(),
+  providerId: text("provider_id").notNull().unique(), // Unique ID of the storage provider
+  nodeType: text("node_type").notNull(), // fractalcoin, filecoin, hybrid
+  availableBytes: integer("available_bytes").notNull(),
+  totalBytes: integer("total_bytes").notNull(),
+  location: text("location"), // Geographic location
+  reliability: decimal("reliability", { precision: 5, scale: 2 }).default("99.9"),
+  activeDate: timestamp("active_date").defaultNow().notNull(),
+  lastHeartbeat: timestamp("last_heartbeat").defaultNow().notNull(),
+  status: text("status").default("active").notNull(), // active, offline, maintenance
+  endpoints: jsonb("endpoints").notNull(), // JSON array of endpoints
+  ownerAddress: text("owner_address"), // Wallet address of the node owner
+  rewards: decimal("rewards", { precision: 18, scale: 6 }).default("0"), // Earned rewards in FractalCoin
+});
+
+export const insertStorageProviderNodeSchema = createInsertSchema(storageProviderNodes).omit({
+  id: true,
+  activeDate: true,
+  lastHeartbeat: true,
+});
+
+export type StorageProviderNode = typeof storageProviderNodes.$inferSelect;
+export type InsertStorageProviderNode = z.infer<typeof insertStorageProviderNodeSchema>;
+
+export const nodeAllocationMapping = pgTable("node_allocation_mapping", {
+  id: serial("id").primaryKey(),
+  nodeId: integer("node_id").notNull().references(() => storageProviderNodes.id),
+  allocationId: integer("allocation_id").notNull().references(() => filecoinStorageAllocations.id),
+  allocationDate: timestamp("allocation_date").defaultNow().notNull(),
+  bytesAllocated: integer("bytes_allocated").notNull(),
+  status: text("status").default("active").notNull(), // active, terminated, error
+  shardInfo: jsonb("shard_info"), // Information about the data shards
+});
+
+export const nodeAllocationMappingRelations = relations(nodeAllocationMapping, ({ one }) => ({
+  node: one(storageProviderNodes, {
+    fields: [nodeAllocationMapping.nodeId],
+    references: [storageProviderNodes.id],
+  }),
+  allocation: one(filecoinStorageAllocations, {
+    fields: [nodeAllocationMapping.allocationId],
+    references: [filecoinStorageAllocations.id],
+  }),
+}));
+
+export const insertNodeAllocationMappingSchema = createInsertSchema(nodeAllocationMapping).omit({
+  id: true,
+  allocationDate: true,
+});
+
+export type NodeAllocationMapping = typeof nodeAllocationMapping.$inferSelect;
+export type InsertNodeAllocationMapping = z.infer<typeof insertNodeAllocationMappingSchema>;
+
 export const schema = {
   users,
   wallets,
@@ -1574,6 +1748,14 @@ export const schema = {
   bridgeValidators,
   bridgeSupportedTokens,
   bridgeTransactions,
+  
+  // Domain hosting schemas
+  domainConfigurations,
+  filecoinStorageAllocations,
+  domainDeployments,
+  domainActivityLogs,
+  storageProviderNodes,
+  nodeAllocationMapping,
   
   // DApp Builder and Marketplace schemas (imported from dapp-schema.ts)
   dappTemplates,

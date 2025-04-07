@@ -28,6 +28,7 @@ import mysterionRoutes from "./routes/mysterion";
 import aiGuidanceRoutes from "./routes/ai-guidance";
 import authRoutes from "./routes/auth-routes";
 import web3StorageRoutes from "./routes/web3-storage-routes";
+import domainHostingRoutes from "./routes/domain-hosting-routes";
 import { openSourcePaymentService } from "./services/openSourcePayment";
 
 /**
@@ -139,6 +140,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Mount authentication routes
   app.use('/api/auth', authRoutes(storage));
+  
+  // Mount domain hosting routes
+  app.use('/api/domain-hosting', domainHostingRoutes);
+  
+  // Mount Web3 storage routes
+  app.use('/api/web3-storage', web3StorageRoutes);
   
   // Whitepaper endpoint
   app.get("/api/whitepaper", (req: Request, res: Response) => {

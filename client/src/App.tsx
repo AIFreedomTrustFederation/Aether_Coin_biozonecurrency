@@ -64,6 +64,7 @@ const BridgeTestPage = lazy(() => import("./pages/BridgeTestPage"));
 const MobileFeatureDemo = lazy(() => import("@/components/mobile/MobileFeatureDemo"));
 const EscrowPage = lazy(() => import("./pages/Escrow"));
 const ThemePage = lazy(() => import("./pages/Theme"));
+const DomainHostingPage = lazy(() => import("./pages/DomainHosting"));
 const BottomNavigation = lazy(() => import("@/components/mobile/BottomNavigation"));
 
 // Trust member authentication pages
@@ -78,6 +79,7 @@ const navigationItems = [
   { name: "Wallet", path: "/wallet", icon: <Wallet className="h-5 w-5" /> },
   { name: "Payment", path: "/payment", icon: <CreditCard className="h-5 w-5" /> },
   { name: "Transactions", path: "/transactions", icon: <BarChart3 className="h-5 w-5" /> },
+  { name: "Domain Hosting", path: "/domain-hosting", icon: <Database className="h-5 w-5" /> },
   { name: "Bridge", path: "/bridge", icon: <ChevronRight className="h-5 w-5 rotate-90" /> },
   { name: "Bridge Test", path: "/bridge-test", icon: <TestTube className="h-5 w-5" /> },
   { name: "Escrow", path: "/escrow", icon: <Shield className="h-5 w-5" /> },
@@ -617,6 +619,11 @@ function App() {
             <Route path="/test">
               <Suspense fallback={<LoadingScreen message="Loading test page..." />}>
                 <TestPage />
+              </Suspense>
+            </Route>
+            <Route path="/domain-hosting">
+              <Suspense fallback={<LoadingScreen message="Loading domain hosting..." />}>
+                <DomainHostingPage />
               </Suspense>
             </Route>
             <Route path="/escrow">
