@@ -15,6 +15,12 @@ export interface Block {
   hash: string;
   nonce: number;
   difficulty: number;
+  // Additional properties used in BlockchainExplorer
+  merkleRoot?: string;
+  minerAddress?: string;
+  miningMethod?: string;
+  miningTime?: number;
+  hashrate?: number;
 }
 
 /**
@@ -28,6 +34,11 @@ export interface Transaction {
   timestamp: number;
   signature: string;
   data?: any;
+  // Additional fields used in the BlockchainExplorer
+  fromAddress?: string;
+  toAddress?: string;
+  fee?: number;
+  status?: 'pending' | 'confirmed' | 'failed';
 }
 
 /**
@@ -65,3 +76,27 @@ export enum BlockchainNetworkType {
  * Blockchain listener type
  */
 export type BlockchainEventListener = (data: any) => void;
+
+/**
+ * Blockchain state interface
+ */
+export interface BlockchainState {
+  chain: Block[];
+  pendingTransactions: Transaction[];
+  latestBlock?: Block;
+  blockHeight?: number;
+  walletStatus?: WalletConnectionStatus;
+  networkType?: BlockchainNetworkType;
+  currentDifficulty?: number;
+  isValid?: boolean;
+  difficulty?: number;
+  miningReward?: number;
+  lastBlockTime?: number;
+  nodes?: string[];
+  isMining?: boolean;
+  syncStatus?: string;
+  consensusType?: string;
+  networkHashrate?: number;
+  version?: string;
+  genesisBlock?: Block;
+}

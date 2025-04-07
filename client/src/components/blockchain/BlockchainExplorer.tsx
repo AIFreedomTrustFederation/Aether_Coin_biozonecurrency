@@ -6,7 +6,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { blockchainService } from '../../core/blockchain';
-import { Block, Transaction } from '../../core/blockchain/types';
+import { Block, Transaction, BlockchainState } from '../../core/blockchain/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -218,12 +218,12 @@ export default function BlockchainExplorer() {
                           <span>{truncateHash(tx.id)}</span>
                         </div>
                         <div className="flex justify-between">
-                          <div>From: {truncateHash(tx.fromAddress || 'System')}</div>
-                          <div>To: {truncateHash(tx.toAddress)}</div>
+                          <div>From: {truncateHash(tx.fromAddress || tx.from || 'System')}</div>
+                          <div>To: {truncateHash(tx.toAddress || tx.to)}</div>
                         </div>
                         <div className="flex justify-between">
                           <div>Amount: {tx.amount.toFixed(8)} AE</div>
-                          <div>Fee: {tx.fee.toFixed(8)} AE</div>
+                          <div>Fee: {(tx.fee || 0).toFixed(8)} AE</div>
                         </div>
                       </div>
                     </div>
@@ -307,12 +307,12 @@ export default function BlockchainExplorer() {
                               <span>{truncateHash(tx.id)}</span>
                             </div>
                             <div className="flex justify-between">
-                              <div>From: {truncateHash(tx.fromAddress || 'System')}</div>
-                              <div>To: {truncateHash(tx.toAddress)}</div>
+                              <div>From: {truncateHash(tx.fromAddress || tx.from || 'System')}</div>
+                              <div>To: {truncateHash(tx.toAddress || tx.to)}</div>
                             </div>
                             <div className="flex justify-between">
                               <div>Amount: {tx.amount.toFixed(8)} AE</div>
-                              <div>Fee: {tx.fee.toFixed(8)} AE</div>
+                              <div>Fee: {(tx.fee || 0).toFixed(8)} AE</div>
                             </div>
                           </div>
                         </div>
@@ -408,10 +408,10 @@ export default function BlockchainExplorer() {
                     {selectedBlock.transactions.map((tx: Transaction) => (
                       <TableRow key={tx.id}>
                         <TableCell className="font-mono">{truncateHash(tx.id)}</TableCell>
-                        <TableCell>{tx.fromAddress ? truncateHash(tx.fromAddress) : 'System'}</TableCell>
-                        <TableCell>{truncateHash(tx.toAddress)}</TableCell>
+                        <TableCell>{tx.fromAddress || tx.from ? truncateHash(tx.fromAddress || tx.from) : 'System'}</TableCell>
+                        <TableCell>{truncateHash(tx.toAddress || tx.to)}</TableCell>
                         <TableCell>{tx.amount.toFixed(8)} AE</TableCell>
-                        <TableCell>{tx.fee.toFixed(8)} AE</TableCell>
+                        <TableCell>{(tx.fee || 0).toFixed(8)} AE</TableCell>
                         <TableCell>
                           <Badge variant={tx.status === 'confirmed' ? "secondary" : "default"}>
                             {tx.status === 'confirmed' ? 'Confirmed' : 'Mining Reward'}

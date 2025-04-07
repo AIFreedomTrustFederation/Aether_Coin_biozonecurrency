@@ -625,6 +625,10 @@ class BlockchainService extends EventEmitter {
   /**
    * Get complete blockchain state including chain and pending transactions
    */
+  /**
+   * Get current blockchain state
+   * @returns Current blockchain state object
+   */
   public getBlockchainState() {
     return {
       chain: this.getChain(),
@@ -634,8 +638,47 @@ class BlockchainService extends EventEmitter {
       walletStatus: this.getWalletStatus(),
       networkType: this.getNetworkType(),
       currentDifficulty: this.config.difficulty,
-      isValid: this.isChainValid()
+      isValid: this.isChainValid(),
+      difficulty: this.config.difficulty,
+      miningReward: 5.0, // Default mining reward
+      lastBlockTime: this.getLatestBlock().timestamp,
+      nodes: [], // No peer nodes in this implementation
+      isMining: this.blockInterval !== null,
+      syncStatus: 'synchronized',
+      consensusType: 'proof-of-work',
+      networkHashrate: this.getEstimatedHashrate(),
+      version: '1.0.0',
+      genesisBlock: this.chain[0]
     };
+  }
+  
+  /**
+   * Estimate the network hashrate based on recent blocks
+   * @returns Estimated hashrate in hashes per second
+   */
+  private getEstimatedHashrate(): number {
+    if (this.chain.length < 2) {
+      return 0;
+    }
+    
+    // Use the last few blocks to estimate hashrate
+    const numBlocks = Math.min(10, this.chain.length - 1);
+    const recentBlocks = this.chain.slice(-numBlocks - 1);
+    
+    // Calculate average time between blocks
+    let totalTime = 0;
+    for (let i = 1; i < recentBlocks.length; i++) {
+      totalTime += recentBlocks[i].timestamp - recentBlocks[i - 1].timestamp;
+    }
+    
+    const avgTimeMs = totalTime / numBlocks;
+    if (avgTimeMs <= 0) return 0;
+    
+    // Estimate hashrate based on difficulty
+    const difficulty = this.config.difficulty;
+    const hashesPerBlock = Math.pow(2, difficulty * 4); // Approximate hashes needed
+    
+    return Math.floor(hashesPerBlock / (avgTimeMs / 1000));
   }
   
   /**
