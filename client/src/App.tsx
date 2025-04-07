@@ -11,7 +11,7 @@ import { Link } from "wouter";
 import { 
   Menu, X, Home, Layout, Wallet, Lock, Shield, Settings, AlertTriangle, ChevronRight, 
   BarChart3, Eye, Cpu, Bell, Zap, Coins, FileText, Database, Bot, TestTube, Blocks,
-  Smartphone, Lightbulb, CreditCard, Info, Palette, Loader2, UserCircle2, Globe
+  Smartphone, Lightbulb, CreditCard, Info, Palette, Loader2, UserCircle2, Globe, Code
 } from "lucide-react";
 import { AuthProvider } from "./context/AuthContext";
 import TrustMemberGuard from "./components/auth/TrustMemberGuard";
@@ -60,6 +60,9 @@ const TransactionsPage = lazy(() => import("./pages/TransactionsPage"));
 const BridgePage = lazy(() => import("./pages/BridgePage"));
 const BridgeTestPage = lazy(() => import("./pages/BridgeTestPage"));
 
+// VS Code Integration
+const CodeEditorPage = lazy(() => import("./features/code-editor").then(m => ({ default: m.CodeEditorPage })));
+
 // Lazy load Mobile Features Demo
 const MobileFeatureDemo = lazy(() => import("@/components/mobile/MobileFeatureDemo"));
 const EscrowPage = lazy(() => import("./pages/Escrow"));
@@ -80,6 +83,7 @@ const navigationItems = [
   { name: "Wallet", path: "/wallet", icon: <Wallet className="h-5 w-5" /> },
   { name: "Payment", path: "/payment", icon: <CreditCard className="h-5 w-5" /> },
   { name: "Transactions", path: "/transactions", icon: <BarChart3 className="h-5 w-5" /> },
+  { name: "Code Editor", path: "/code-editor", icon: <Code className="h-5 w-5" /> },
   { name: "Domain Hosting", path: "/domain-hosting", icon: <Database className="h-5 w-5" /> },
   { name: "Domain Wizard", path: "/domain-hosting-wizard", icon: <Globe className="h-5 w-5" /> },
   { name: "Bridge", path: "/bridge", icon: <ChevronRight className="h-5 w-5 rotate-90" /> },
@@ -623,6 +627,11 @@ function App() {
             <Route path="/test">
               <Suspense fallback={<LoadingScreen message="Loading test page..." />}>
                 <TestPage />
+              </Suspense>
+            </Route>
+            <Route path="/code-editor">
+              <Suspense fallback={<LoadingScreen message="Loading code editor..." />}>
+                <CodeEditorPage />
               </Suspense>
             </Route>
             <Route path="/domain-hosting">
