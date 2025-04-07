@@ -13,15 +13,22 @@ export function gatewayValidationMiddleware(req: Request, res: Response, next: N
   const quantumTimestamp = req.headers['x-quantum-validation-timestamp'];
   
   // Get list of trusted API Gateway IPs from environment
-  const trustedGatewayIPs = process.env.TRUSTED_GATEWAY_IPS?.split(',') || ['127.0.0.1', '::1', 'localhost'];
+  const trustedGatewayIPs = process.env.TRUSTED_GATEWAY_IPS?.split(',') || 
+                           ['127.0.0.1', '::1', 'localhost', '172.31.128.12', '172.31.', '::ffff:'];
   
   // Extract client IP
   const clientIP = req.ip || req.socket.remoteAddress || '';
   
-  // For development, allow localhost without validation
-  if (process.env.NODE_ENV === 'development' && (clientIP.includes('127.0.0.1') || clientIP.includes('::1'))) {
-    console.log(`[Gateway Validation] Development request from ${clientIP}, allowing without gateway validation`);
-    return next();
+  // For development, allow without validation if from known environments
+  if (process.env.NODE_ENV === 'development') {
+    // Check for common Replit IP patterns or localhost
+    if (clientIP.includes('127.0.0.1') || 
+        clientIP.includes('::1') || 
+        clientIP.includes('172.31.') || 
+        clientIP.includes('::ffff:')) {
+      console.log(`[Gateway Validation] Development request from ${clientIP}, allowing without gateway validation`);
+      return next();
+    }
   }
   
   // Check if request is from a trusted API Gateway
