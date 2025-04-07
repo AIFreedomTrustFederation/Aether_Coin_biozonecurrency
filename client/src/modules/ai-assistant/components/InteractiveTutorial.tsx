@@ -23,21 +23,96 @@ import {
 import { apiRequest } from '@/lib/queryClient';
 
 // Define tutorial step types for different interaction patterns
+interface BaseTutorialStep {
+  type: string;
+  instruction: string;
+}
+
+interface MessageStep extends BaseTutorialStep {
+  type: 'message';
+  element: string;
+}
+
+interface ClickStep extends BaseTutorialStep {
+  type: 'click';
+  element: string;
+}
+
+interface SelectStep extends BaseTutorialStep {
+  type: 'select';
+  options: string[];
+}
+
+interface RadioStep extends BaseTutorialStep {
+  type: 'radio';
+  options: string[];
+}
+
+interface CheckboxStep extends BaseTutorialStep {
+  type: 'checkbox';
+  elements: string[];
+}
+
+interface DragStep extends BaseTutorialStep {
+  type: 'drag';
+  elements: string[];
+  targets: string[];
+}
+
+interface SliderStep extends BaseTutorialStep {
+  type: 'slider';
+  min: number;
+  max: number;
+  step: number;
+  defaultValue: number;
+}
+
+interface FormStep extends BaseTutorialStep {
+  type: 'form';
+  fields: Array<{id: string, label: string, type: string, placeholder?: string}>;
+}
+
+interface InputStep extends BaseTutorialStep {
+  type: 'input';
+  id: string;
+  placeholder: string;
+}
+
+interface ObserveStep extends BaseTutorialStep {
+  type: 'observe';
+  id: string;
+  duration: number;
+}
+
+interface AiMessageStep extends BaseTutorialStep {
+  type: 'ai-message';
+  characterName: string;
+  message: string;
+}
+
 type TutorialStep = 
-  | { type: 'message', element: string, instruction: string }
-  | { type: 'click', element: string, instruction: string }
-  | { type: 'select', options: string[], instruction: string }
-  | { type: 'radio', options: string[], instruction: string }
-  | { type: 'checkbox', elements: string[], instruction: string }
-  | { type: 'drag', elements: string[], targets: string[], instruction: string }
-  | { type: 'slider', min: number, max: number, step: number, defaultValue: number, instruction: string }
-  | { type: 'form', fields: Array<{id: string, label: string, type: string, placeholder?: string}>, instruction: string }
-  | { type: 'input', id: string, placeholder: string, instruction: string }
-  | { type: 'observe', id: string, instruction: string, duration: number }
-  | { type: 'ai-message', instruction: string, characterName: string, message: string };
+  | MessageStep
+  | ClickStep
+  | SelectStep
+  | RadioStep
+  | CheckboxStep
+  | DragStep
+  | SliderStep
+  | FormStep
+  | InputStep
+  | ObserveStep
+  | AiMessageStep;
+
+// Define the tutorial section interface
+interface TutorialSection {
+  id: string;
+  title: string;
+  description: string;
+  steps: TutorialStep[];
+}
 
 // Define the complete tutorial structure
-const tutorialSections = [
+const tutorialSections: TutorialSection[] = [
   {
     id: 'welcome',
     title: 'Welcome to Aetherion',
@@ -47,18 +122,18 @@ const tutorialSections = [
         type: 'message',
         element: 'welcome-intro',
         instruction: 'Welcome to Aetherion! This tutorial will guide you through our quantum-resistant blockchain platform and wallet interface. Press Next to continue.'
-      },
+      } as MessageStep,
       {
         type: 'ai-message',
         instruction: 'Let me introduce myself. I\'m Mysterion, your AI assistant for all things Aetherion.',
         characterName: 'Mysterion',
         message: 'I\'m here to help you navigate this revolutionary Web3 platform. I can help with transactions, explain concepts, and guide you through our features.'
-      },
+      } as AiMessageStep,
       {
         type: 'message',
         element: 'tutorial-overview',
         instruction: 'This tutorial will cover the basics of using Aetherion, including wallet management, domain hosting, AI assistance, and the Fractal Reserve system.'
-      }
+      } as MessageStep
     ]
   },
   {
@@ -70,17 +145,17 @@ const tutorialSections = [
         type: 'message',
         element: 'wallet-intro',
         instruction: 'Your Aetherion wallet is secured by quantum-resistant cryptography. Let\'s learn how to use it.'
-      },
+      } as MessageStep,
       {
         type: 'click',
         element: '.wallet-section',
         instruction: 'Click on the wallet section to view your accounts'
-      },
+      } as ClickStep,
       {
         type: 'message',
         element: 'wallet-security',
         instruction: 'Notice the security indicators showing the quantum-resistance level of your wallet. All Aetherion wallets use post-quantum encryption algorithms.'
-      }
+      } as MessageStep
     ]
   },
   {
@@ -92,18 +167,18 @@ const tutorialSections = [
         type: 'message',
         element: 'fractal-intro',
         instruction: 'The Recurve Fractal Reserve is a revolutionary financial mechanism based on mathematical patterns found in nature.'
-      },
+      } as MessageStep,
       {
         type: 'observe',
         id: 'mandelbrot-visual',
         instruction: 'Watch how the Mandelbrot visualization represents the fractal nature of our reserve system.',
         duration: 5000
-      },
+      } as ObserveStep,
       {
         type: 'message',
         element: 'fractal-benefits',
         instruction: 'This system ensures fair value distribution and prevents the early-adopter advantage common in traditional cryptocurrencies.'
-      }
+      } as MessageStep
     ]
   },
   {
@@ -115,17 +190,17 @@ const tutorialSections = [
         type: 'message',
         element: 'domain-intro',
         instruction: 'Aetherion allows you to host websites on the decentralized .trust network, with integration to Filecoin for storage.'
-      },
+      } as MessageStep,
       {
         type: 'click',
         element: '.domain-hosting-tab',
         instruction: 'Click on the Domain Hosting tab to explore this feature'
-      },
+      } as ClickStep,
       {
         type: 'message',
         element: 'domain-wizard',
         instruction: 'The domain hosting wizard makes it easy to deploy websites with decentralized storage and hosting.'
-      }
+      } as MessageStep
     ]
   },
   {
@@ -137,18 +212,18 @@ const tutorialSections = [
         type: 'message',
         element: 'mysterion-intro',
         instruction: 'Mysterion is your AI assistant for navigating Aetherion. You can earn SING coins by helping train Mysterion.'
-      },
+      } as MessageStep,
       {
         type: 'click',
         element: '.chat-button',
         instruction: 'Click the chat button to start a conversation with Mysterion'
-      },
+      } as ClickStep,
       {
         type: 'input',
         id: 'chat-input',
         placeholder: 'Ask something about FractalCoin...',
         instruction: 'Try asking a question about FractalCoin to see how Mysterion responds'
-      }
+      } as InputStep
     ]
   },
   {
@@ -160,18 +235,18 @@ const tutorialSections = [
         type: 'message',
         element: 'conclusion-message',
         instruction: 'Congratulations! You have completed the Aetherion tutorial. You can now explore the platform on your own.'
-      },
+      } as MessageStep,
       {
         type: 'ai-message',
         instruction: 'Remember, I\'m always here to help if you have questions.',
         characterName: 'Mysterion',
         message: 'Don\'t hesitate to ask me for guidance as you explore Aetherion. You can also earn SING coins by helping train my responses through feedback.'
-      },
+      } as AiMessageStep,
       {
         type: 'message',
         element: 'final-step',
         instruction: 'Click Finish to complete the tutorial and start using Aetherion. You can always revisit this tutorial from the Help menu.'
-      }
+      } as MessageStep
     ]
   }
 ];
@@ -402,20 +477,21 @@ const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
 
   // Handle user skipping the tutorial
   const handleSkip = useCallback(() => {
-    // Save to localStorage first as a reliable fallback
+    // Save to localStorage first as a reliable fallback - mark as COMPLETED
     try {
-      localStorage.setItem('aetherion_tutorial_completed', 'false');
+      localStorage.setItem('aetherion_tutorial_completed', 'true');
       localStorage.setItem('aetherion_tutorial_last_section', currentSection.id);
     } catch (localError) {
       console.error('Failed to save tutorial skip status to localStorage:', localError);
     }
     
     // Try to save to the server if authenticated (but don't wait for it)
+    // Also mark as COMPLETED on the server
     apiRequest(
       '/api/tutorial/status', 
       'POST', 
       {
-        completed: false,
+        completed: true,
         lastSection: currentSection.id
       }
     ).catch(error => {
@@ -460,21 +536,23 @@ const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
         return <MessageStep instruction={currentStep.instruction} />;
         
       case 'ai-message': {
-        const aiStep = currentStep as { type: 'ai-message', instruction: string, characterName: string, message: string };
+        const aiMessageStep = currentStep as AiMessageStep;
         return (
           <AiMessageStep 
-            instruction={aiStep.instruction} 
-            characterName={aiStep.characterName} 
-            message={aiStep.message} 
+            instruction={aiMessageStep.instruction} 
+            characterName={aiMessageStep.characterName} 
+            message={aiMessageStep.message} 
           />
         );
       }
         
-      case 'click':
-        return <ClickStep instruction={currentStep.instruction} onComplete={completeStep} />;
+      case 'click': {
+        const clickStep = currentStep as ClickStep;
+        return <ClickStep instruction={clickStep.instruction} onComplete={completeStep} />;
+      }
         
       case 'select': {
-        const selectStep = currentStep as { type: 'select', instruction: string, options: string[] };
+        const selectStep = currentStep as SelectStep;
         return (
           <SelectStep 
             instruction={selectStep.instruction} 
@@ -485,7 +563,7 @@ const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
       }
         
       case 'radio': {
-        const radioStep = currentStep as { type: 'radio', instruction: string, options: string[] };
+        const radioStep = currentStep as RadioStep;
         return (
           <RadioStep 
             instruction={radioStep.instruction} 
@@ -496,7 +574,7 @@ const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
       }
         
       case 'checkbox': {
-        const checkboxStep = currentStep as { type: 'checkbox', instruction: string, elements: string[] };
+        const checkboxStep = currentStep as CheckboxStep;
         return (
           <CheckboxStep 
             instruction={checkboxStep.instruction} 
@@ -507,14 +585,7 @@ const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
       }
         
       case 'slider': {
-        const sliderStep = currentStep as { 
-          type: 'slider', 
-          instruction: string, 
-          min: number, 
-          max: number, 
-          step: number, 
-          defaultValue: number 
-        };
+        const sliderStep = currentStep as SliderStep;
         return (
           <SliderStep 
             instruction={sliderStep.instruction} 
@@ -528,11 +599,7 @@ const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
       }
         
       case 'form': {
-        const formStep = currentStep as { 
-          type: 'form', 
-          instruction: string, 
-          fields: Array<{id: string, label: string, type: string, placeholder?: string}>
-        };
+        const formStep = currentStep as FormStep;
         return (
           <FormStep 
             instruction={formStep.instruction} 
@@ -543,7 +610,7 @@ const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
       }
         
       case 'input': {
-        const inputStep = currentStep as { type: 'input', instruction: string, id: string, placeholder: string };
+        const inputStep = currentStep as InputStep;
         return (
           <InputStep 
             instruction={inputStep.instruction} 
@@ -555,7 +622,7 @@ const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
       }
         
       case 'observe': {
-        const observeStep = currentStep as { type: 'observe', instruction: string, id: string, duration: number };
+        const observeStep = currentStep as ObserveStep;
         return (
           <ObserveStep
             id={observeStep.id}
