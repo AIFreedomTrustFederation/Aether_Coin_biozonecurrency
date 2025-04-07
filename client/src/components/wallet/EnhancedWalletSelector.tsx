@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useTransition } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -39,6 +39,7 @@ const EnhancedWalletSelector: React.FC<EnhancedWalletSelectorProps> = ({
   className = '',
 }) => {
   const [open, setOpen] = React.useState(false);
+  const [isPending, startTransition] = useTransition();
   const { 
     isLiveMode,
     connectToWeb3, 
@@ -77,34 +78,54 @@ const EnhancedWalletSelector: React.FC<EnhancedWalletSelectorProps> = ({
   };
 
   // Handle wallet selection for desktop wallets
-  const handleDesktopWalletSelect = async (walletType: string) => {
-    const success = await connectToWeb3(walletType as any);
-    if (success) {
-      setOpen(false);
-      if (onConnect) {
-        onConnect();
-      }
-    }
+  const handleDesktopWalletSelect = (walletType: string) => {
+    // Use startTransition to prevent React concurrent mode errors
+    startTransition(() => {
+      // Handle the async operation inside the transition
+      const connectWallet = async () => {
+        const success = await connectToWeb3(walletType as any);
+        if (success) {
+          setOpen(false);
+          if (onConnect) {
+            onConnect();
+          }
+        }
+      };
+      
+      connectWallet();
+    });
   };
 
   // Handle when a mobile wallet is selected
-  const handleMobileSelect = async (wallet: any) => {
+  const handleMobileSelect = (wallet: any) => {
     handleWalletSelect(wallet);
-    // Use the wallet ID to determine which Web3 wallet to connect to
-    if (wallet.id === 'metamask') {
-      await connectToWeb3('MetaMask');
-    } else if (wallet.id === 'coinbasewallet') {
-      await connectToWeb3('Coinbase');
-    } else if (wallet.id === 'trustwallet') {
-      await connectToWeb3('Trust');
-    } else {
-      // Default to WalletConnect for other wallets
-      await connectToWeb3('WalletConnect');
-    }
     
-    if (onConnect) {
-      onConnect();
-    }
+    // Use startTransition to prevent React concurrent mode errors
+    startTransition(() => {
+      const connectMobileWallet = async () => {
+        // Use the wallet ID to determine which Web3 wallet to connect to
+        let walletType: any; // Using any to match the expected type
+        
+        if (wallet.id === 'metamask') {
+          walletType = 'MetaMask';
+        } else if (wallet.id === 'coinbasewallet') {
+          walletType = 'Coinbase';
+        } else if (wallet.id === 'trustwallet') {
+          walletType = 'Trust';
+        } else {
+          // Default to WalletConnect for other wallets
+          walletType = 'WalletConnect';
+        }
+        
+        await connectToWeb3(walletType);
+        
+        if (onConnect) {
+          onConnect();
+        }
+      };
+      
+      connectMobileWallet();
+    });
   };
 
   const formatAddress = (address: string | null) => {
@@ -176,7 +197,15 @@ const EnhancedWalletSelector: React.FC<EnhancedWalletSelectorProps> = ({
 
   // Default desktop wallet selection
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog 
+      open={open} 
+      onOpenChange={(isOpen) => {
+        // Use the startTransition from useTransition hook
+        startTransition(() => {
+          setOpen(isOpen);
+        });
+      }}
+    >
       <DialogTrigger asChild>
         <Button variant={variant} size={size} className={className} disabled={isConnecting}>
           {isConnecting ? (
