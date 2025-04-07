@@ -3,26 +3,22 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
 
-// Note: AI Assistant Schema imports have been temporarily commented out to resolve circular dependency
-// Will need to merge these schemas properly in a future refactoring
+// Import AI Assistant Schema
+import {
+  TrainingFeedbackType,
+  TrainingProcessingStatus,
+  aiTrainingData,
+  aiTrainingJobs,
+  aiTrainingContributors,
+  AiTrainingData,
+  InsertAiTrainingData,
+  AiTrainingJob,
+  InsertAiTrainingJob,
+  AiTrainingContributor,
+  InsertAiTrainingContributor
+} from "./ai-assistant-schema";
 
-// Training feedback types (duplicated here to resolve circular dependency)
-export enum TrainingFeedbackType {
-  HELPFUL = 'helpful',
-  NOT_HELPFUL = 'not_helpful',
-  INCORRECT = 'incorrect',
-  OFFENSIVE = 'offensive',
-  OTHER = 'other'
-}
-
-// Training data status types (duplicated here to resolve circular dependency)
-export enum TrainingProcessingStatus {
-  QUEUED = 'queued',
-  PROCESSING = 'processing',
-  COMPLETED = 'completed',
-  FAILED = 'failed',
-  REJECTED = 'rejected' // For content that doesn't meet quality guidelines
-}
+// AI Assistant Schema is already exported from ai-assistant-schema.ts
 
 // Import and re-export bridge schemas
 import { 

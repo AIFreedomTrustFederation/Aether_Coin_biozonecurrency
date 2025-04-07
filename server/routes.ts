@@ -26,8 +26,7 @@ import escrowRoutes from "./routes/escrow-routes";
 import dappBuilderEnhancements from "./routes/dapp-builder-enhancements";
 import mysterionRoutes from "./routes/mysterion";
 import aiGuidanceRoutes from "./routes/ai-guidance";
-// Commented out to resolve circular dependency issues
-// import aiTrainingRoutes from "./routes/ai-training-routes";
+import aiTrainingRoutes from "./routes/ai-training-routes";
 import authRoutes from "./routes/auth-routes";
 import web3StorageRoutes from "./routes/web3-storage-routes";
 import domainHostingRoutes from "./routes/domain-hosting-routes";
@@ -153,8 +152,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Mount Recurve Fractal Reserve routes
   app.use('/api/recurve', recurveRoutes);
   
-  // Mount AI Training Feedback routes - temporarily commented out to resolve circular dependencies
-  // app.use('/api/ai-training', aiTrainingRoutes);
+  // Mount AI Training Feedback routes
+  app.use('/api/ai-training', aiTrainingRoutes);
   
   // Whitepaper endpoint
   app.get("/api/whitepaper", (req: Request, res: Response) => {

@@ -1,40 +1,30 @@
-name: Build and Deploy
+name: Deploy Aetherion
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
         with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build application
-        run: npm run build
+          node-version: 18
+      - run: npm ci
+      - run: npm run build
+      - name: Deploy to IPFS/Filecoin
+        run: node scripts/deploy-to-web3.js
         env:
-          VITE_API_URL: ${{ secrets.VITE_API_URL }}
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-
-      - name: Deploy to IPFS via Storacha
-        run: node --experimental-modules scripts/deploy-to-storacha.js
-        env:
-          STORACHA_API_KEY: ${{ secrets.STORACHA_API_KEY }}
+          WEB3_STORAGE_TOKEN: ${{ secrets.WEB3_STORAGE_TOKEN }}
           ENS_PRIVATE_KEY: ${{ secrets.ENS_PRIVATE_KEY }}
           ENS_DOMAIN: ${{ secrets.ENS_DOMAIN }}
-
-      - name: Log deployment info
-        run: |
-          echo "🚀 Deployment complete!"
-          echo "Check the job logs above for IPFS URLs and ENS domain info."
+      - name: Setup FractalCoin Integration
+        if: ${{ secrets.SETUP_FILECOIN_INTEGRATION == 'true' }}
+        run: node scripts/fractalcoin-filecoin-bridge.js
+        env:
+          FRACTALCOIN_API_KEY: ${{ secrets.FRACTALCOIN_API_KEY }}
+          FRACTALCOIN_API_ENDPOINT: ${{ secrets.FRACTALCOIN_API_ENDPOINT }}
