@@ -13,7 +13,10 @@ import {
   paymentMethods, payments, userApiKeys, mysterionTrainingData,
   bridgeConfigurations, bridgeValidators, bridgeSupportedTokens, bridgeTransactions,
   insurancePolicies, recurveTokens, fractalLoans, torusSecurityNodes, 
-  networkInsurancePolicies, mandelbrotRecursionEvents
+  networkInsurancePolicies, mandelbrotRecursionEvents,
+  // AI Training tables
+  aiTrainingData, aiTrainingJobs, aiTrainingContributors,
+  TrainingFeedbackType, TrainingProcessingStatus
 } from '../shared/schema';
 
 /**
@@ -895,5 +898,195 @@ export class DatabaseStorage implements IStorage {
   async createMandelbrotRecursionEvent(event: schema.InsertMandelbrotRecursionEvent): Promise<schema.MandelbrotRecursionEvent> {
     const [result] = await db.insert(mandelbrotRecursionEvents).values(event).returning();
     return result;
+  }
+
+  // AI Assistant Training Data methods
+  async getAiTrainingData(id: number): Promise<schema.AiTrainingData | undefined> {
+    const [data] = await db.select().from(aiTrainingData).where(eq(aiTrainingData.id, id));
+    return data;
+  }
+
+  async getAiTrainingDataByUserId(userId: number): Promise<schema.AiTrainingData[]> {
+    return db
+      .select()
+      .from(aiTrainingData)
+      .where(eq(aiTrainingData.userId, userId))
+      .orderBy(desc(aiTrainingData.contributionDate));
+  }
+
+  async getAiTrainingDataByStatus(status: schema.TrainingProcessingStatus): Promise<schema.AiTrainingData[]> {
+    return db
+      .select()
+      .from(aiTrainingData)
+      .where(eq(aiTrainingData.processingStatus, status))
+      .orderBy(desc(aiTrainingData.contributionDate));
+  }
+
+  async getAiTrainingDataByFeedbackType(feedbackType: schema.TrainingFeedbackType): Promise<schema.AiTrainingData[]> {
+    return db
+      .select()
+      .from(aiTrainingData)
+      .where(eq(aiTrainingData.feedbackType, feedbackType))
+      .orderBy(desc(aiTrainingData.contributionDate));
+  }
+
+  async createAiTrainingData(data: schema.InsertAiTrainingData): Promise<schema.AiTrainingData> {
+    const [result] = await db.insert(aiTrainingData).values(data).returning();
+    return result;
+  }
+
+  async updateAiTrainingDataStatus(
+    id: number, 
+    status: schema.TrainingProcessingStatus, 
+    notes?: string
+  ): Promise<schema.AiTrainingData | undefined> {
+    const [data] = await db
+      .update(aiTrainingData)
+      .set({
+        processingStatus: status,
+        processingNotes: notes,
+        updatedAt: new Date()
+      })
+      .where(eq(aiTrainingData.id, id))
+      .returning();
+    return data;
+  }
+
+  async updateAiTrainingDataRewards(
+    id: number, 
+    points: number, 
+    singTokens?: number
+  ): Promise<schema.AiTrainingData | undefined> {
+    const updates: any = {
+      pointsAwarded: points,
+      updatedAt: new Date()
+    };
+    
+    if (singTokens !== undefined) {
+      updates.singTokensAwarded = singTokens;
+    }
+    
+    const [data] = await db
+      .update(aiTrainingData)
+      .set(updates)
+      .where(eq(aiTrainingData.id, id))
+      .returning();
+    return data;
+  }
+  
+  // AI Training Jobs methods
+  async getAiTrainingJob(id: number): Promise<schema.AiTrainingJob | undefined> {
+    const [job] = await db.select().from(aiTrainingJobs).where(eq(aiTrainingJobs.id, id));
+    return job;
+  }
+
+  async getAiTrainingJobsByStatus(status: string): Promise<schema.AiTrainingJob[]> {
+    return db
+      .select()
+      .from(aiTrainingJobs)
+      .where(eq(aiTrainingJobs.status, status))
+      .orderBy(desc(aiTrainingJobs.createdAt));
+  }
+
+  async createAiTrainingJob(job: schema.InsertAiTrainingJob): Promise<schema.AiTrainingJob> {
+    const [result] = await db.insert(aiTrainingJobs).values(job).returning();
+    return result;
+  }
+
+  async updateAiTrainingJobStatus(id: number, status: string): Promise<schema.AiTrainingJob | undefined> {
+    const [job] = await db
+      .update(aiTrainingJobs)
+      .set({
+        status,
+        updatedAt: new Date()
+      })
+      .where(eq(aiTrainingJobs.id, id))
+      .returning();
+    return job;
+  }
+
+  async completeAiTrainingJob(id: number, metrics: Record<string, any>): Promise<schema.AiTrainingJob | undefined> {
+    const [job] = await db
+      .update(aiTrainingJobs)
+      .set({
+        status: 'completed',
+        endTime: new Date(),
+        metrics,
+        updatedAt: new Date()
+      })
+      .where(eq(aiTrainingJobs.id, id))
+      .returning();
+    return job;
+  }
+  
+  // AI Training Contributors methods
+  async getAiTrainingContributor(id: number): Promise<schema.AiTrainingContributor | undefined> {
+    const [contributor] = await db.select().from(aiTrainingContributors).where(eq(aiTrainingContributors.id, id));
+    return contributor;
+  }
+
+  async getAiTrainingContributorByUserId(userId: number): Promise<schema.AiTrainingContributor | undefined> {
+    const [contributor] = await db
+      .select()
+      .from(aiTrainingContributors)
+      .where(eq(aiTrainingContributors.userId, userId));
+    return contributor;
+  }
+
+  async getTopAiTrainingContributors(limit: number): Promise<schema.AiTrainingContributor[]> {
+    return db
+      .select()
+      .from(aiTrainingContributors)
+      .orderBy(desc(aiTrainingContributors.totalPointsEarned))
+      .limit(limit);
+  }
+
+  async createAiTrainingContributor(contributor: schema.InsertAiTrainingContributor): Promise<schema.AiTrainingContributor> {
+    const [result] = await db.insert(aiTrainingContributors).values(contributor).returning();
+    return result;
+  }
+
+  async updateAiTrainingContributor(
+    id: number,
+    contributions: number,
+    points: number,
+    singTokens: number
+  ): Promise<schema.AiTrainingContributor | undefined> {
+    const [contributor] = await db
+      .update(aiTrainingContributors)
+      .set({
+        totalContributions: contributions,
+        totalPointsEarned: points,
+        totalSingTokens: singTokens,
+        lastContribution: new Date(),
+        updatedAt: new Date()
+      })
+      .where(eq(aiTrainingContributors.id, id))
+      .returning();
+    return contributor;
+  }
+
+  async updateAiTrainingContributorTier(id: number, tier: string): Promise<schema.AiTrainingContributor | undefined> {
+    const [contributor] = await db
+      .update(aiTrainingContributors)
+      .set({
+        contributorTier: tier,
+        updatedAt: new Date()
+      })
+      .where(eq(aiTrainingContributors.id, id))
+      .returning();
+    return contributor;
+  }
+
+  async updateAiTrainingContributorRank(id: number, rank: number): Promise<schema.AiTrainingContributor | undefined> {
+    const [contributor] = await db
+      .update(aiTrainingContributors)
+      .set({
+        contributorRank: rank,
+        updatedAt: new Date()
+      })
+      .where(eq(aiTrainingContributors.id, id))
+      .returning();
+    return contributor;
   }
 }

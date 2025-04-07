@@ -1,452 +1,463 @@
 /**
  * Mysterion AI Training Service
  * 
- * This service implements the training and evolution of the Mysterion AI system
- * based on transaction history and dispute resolutions.
+ * This service handles the processing of AI training data from users,
+ * evaluates contributions, and awards SING tokens as rewards.
  */
 
-import { db } from '../storage';
-import {
-  mysterionAssessments,
-  escrowTransactions,
-  escrowDisputes,
-  transactionRatings,
-  recursionLogs,
-  type MysterionAssessment
+import { storage } from '../storage';
+import { 
+  TrainingFeedbackType, 
+  TrainingProcessingStatus,
+  InsertAiTrainingData,
+  InsertAiTrainingContributor
 } from '@shared/schema';
-import { eq, and, desc, gt, sql } from 'drizzle-orm';
+import crypto from 'crypto';
 
-// Types for Mysterion AI training
-interface TrainingDataPoint {
-  disputeId: number;
-  transactionAmount: number;
-  buyerReputation: number;
-  sellerReputation: number;
-  proofCount: number;
-  resolution: string;
-  description: string;
-  successful: boolean;
-}
+// Constants for reward calculation
+const BASE_POINTS = {
+  [TrainingFeedbackType.HELPFUL]: 5,
+  [TrainingFeedbackType.NOT_HELPFUL]: 3,
+  [TrainingFeedbackType.INCORRECT]: 4,
+  [TrainingFeedbackType.OFFENSIVE]: 2,
+  [TrainingFeedbackType.OTHER]: 1
+};
 
-interface TrainingMetrics {
-  recordsProcessed: number;
-  successRate: number;
-  confidenceAverage: number;
-  recentDisputes: number;
-  learnedPatterns: string[];
-}
+// Constants for contributor tiers
+const CONTRIBUTOR_TIERS = {
+  BRONZE: { name: 'bronze', minPoints: 0, singTokenRate: 0.1 },
+  SILVER: { name: 'silver', minPoints: 100, singTokenRate: 0.15 },
+  GOLD: { name: 'gold', minPoints: 500, singTokenRate: 0.2 },
+  PLATINUM: { name: 'platinum', minPoints: 2000, singTokenRate: 0.25 }
+};
+
+// Helper to calculate tier based on points
+const calculateTierFromPoints = (points: number): string => {
+  if (points >= CONTRIBUTOR_TIERS.PLATINUM.minPoints) return CONTRIBUTOR_TIERS.PLATINUM.name;
+  if (points >= CONTRIBUTOR_TIERS.GOLD.minPoints) return CONTRIBUTOR_TIERS.GOLD.name;
+  if (points >= CONTRIBUTOR_TIERS.SILVER.minPoints) return CONTRIBUTOR_TIERS.SILVER.name;
+  return CONTRIBUTOR_TIERS.BRONZE.name;
+};
+
+// Helper to get token conversion rate based on tier
+const getTokenConversionRate = (tier: string): number => {
+  switch (tier) {
+    case CONTRIBUTOR_TIERS.PLATINUM.name: return CONTRIBUTOR_TIERS.PLATINUM.singTokenRate;
+    case CONTRIBUTOR_TIERS.GOLD.name: return CONTRIBUTOR_TIERS.GOLD.singTokenRate;
+    case CONTRIBUTOR_TIERS.SILVER.name: return CONTRIBUTOR_TIERS.SILVER.singTokenRate;
+    default: return CONTRIBUTOR_TIERS.BRONZE.singTokenRate;
+  }
+};
+
+// Helper to calculate data size in bytes
+const calculateDataSizeBytes = (data: InsertAiTrainingData): number => {
+  const userQueryBytes = Buffer.byteLength(data.userQuery, 'utf8');
+  const aiResponseBytes = Buffer.byteLength(data.aiResponse, 'utf8');
+  const feedbackDetailsBytes = data.feedbackDetails ? Buffer.byteLength(data.feedbackDetails, 'utf8') : 0;
+  const contextBytes = data.context ? Buffer.byteLength(JSON.stringify(data.context), 'utf8') : 0;
+  
+  return userQueryBytes + aiResponseBytes + feedbackDetailsBytes + contextBytes;
+};
+
+// Helper to generate a hash for deduplication
+const generateDataHash = (data: InsertAiTrainingData): string => {
+  const hashInput = `${data.userQuery}:${data.aiResponse}:${data.feedbackType}`;
+  return crypto.createHash('sha256').update(hashInput).digest('hex');
+};
+
+// Helper to calculate points based on feedback type and quality
+const calculateBasePoints = (
+  feedbackType: TrainingFeedbackType, 
+  qualityRating?: number | null, 
+  dataSize?: number
+): number => {
+  let points = BASE_POINTS[feedbackType] || 1;
+  
+  // Adjust based on quality rating if provided
+  if (qualityRating) {
+    points *= (qualityRating / 3); // Normalize by average rating
+  }
+  
+  // Bonus for detailed feedback (based on data size)
+  if (dataSize && dataSize > 1000) {
+    points += Math.min(5, Math.floor(dataSize / 1000));
+  }
+  
+  return Math.round(points);
+};
 
 /**
- * Mysterion AI Training Service
- * Manages the learning and evolution of the Mysterion AI ethics system
+ * Submit feedback for AI training
  */
-export class MysterionTrainingService {
-  /**
-   * Train the Mysterion AI model on historical dispute data
-   */
-  async trainOnHistoricalData(): Promise<TrainingMetrics> {
-    try {
-      console.log('Starting Mysterion AI training on historical data...');
-      
-      // Get all previously assessed disputes
-      const assessments = await db.query.mysterionAssessments.findMany({
-        with: {
-          dispute: {
-            with: {
-              escrowTransaction: true,
-            }
-          },
-        },
-        orderBy: (fields, { asc }) => [asc(fields.createdAt)],
+export const submitTrainingFeedback = async (
+  userId: number,
+  apiKeyId: number | null,
+  feedback: {
+    userQuery: string;
+    aiResponse: string;
+    feedbackType: TrainingFeedbackType;
+    feedbackDetails?: string;
+    qualityRating?: number;
+    context?: Record<string, any>;
+    interactionId?: string;
+  }
+): Promise<{ success: boolean; message: string; data?: any; error?: any }> => {
+  try {
+    // Create training data record
+    const trainingData: InsertAiTrainingData = {
+      userId,
+      userApiKeyId: apiKeyId,
+      userQuery: feedback.userQuery,
+      aiResponse: feedback.aiResponse,
+      feedbackType: feedback.feedbackType,
+      feedbackDetails: feedback.feedbackDetails,
+      qualityRating: feedback.qualityRating,
+      context: feedback.context,
+      interactionId: feedback.interactionId,
+      dataSizeBytes: 0, // Will be calculated
+      dataHash: '', // Will be generated
+      processingStatus: TrainingProcessingStatus.QUEUED
+    };
+    
+    // Calculate data size
+    trainingData.dataSizeBytes = calculateDataSizeBytes(trainingData);
+    
+    // Generate hash for deduplication
+    trainingData.dataHash = generateDataHash(trainingData);
+    
+    // Save training data
+    const savedData = await storage.createAiTrainingData(trainingData);
+    
+    // Process contributor profile/stats
+    if (userId) {
+      await updateContributorStats(userId, savedData.id, trainingData);
+    }
+    
+    // Queue for further processing
+    setTimeout(() => {
+      processTrainingData(savedData.id).catch(err => {
+        console.error(`Error processing training data ${savedData.id}:`, err);
       });
-      
-      console.log(`Found ${assessments.length} historical assessments for training`);
-      
-      // Collect training data points
-      const trainingData: TrainingDataPoint[] = [];
-      
-      for (const assessment of assessments) {
-        // Skip assessments without proper data
-        if (!assessment.dispute || !assessment.dispute.escrowTransaction) {
-          continue;
-        }
-        
-        // Extract relevant transaction data
-        const transaction = assessment.dispute.escrowTransaction;
-        const data = assessment.data as Record<string, any> || {};
-        
-        // Check if the assessment was successful
-        // In a real implementation, we would have feedback on dispute resolutions
-        // For this simulation, we'll consider it successful if the confidence score was high
-        const confidenceScore = parseFloat(assessment.confidenceScore || '0');
-        const successful = confidenceScore > 0.7;
-        
-        // Create training data point
-        trainingData.push({
-          disputeId: assessment.disputeId,
-          transactionAmount: parseFloat(transaction.amount),
-          buyerReputation: data.buyerReputation || 0.5,
-          sellerReputation: data.sellerReputation || 0.5,
-          proofCount: data.proofCount || 0,
-          resolution: assessment.decision,
-          description: assessment.rationale || '',
-          successful,
-        });
+    }, 100);
+    
+    return {
+      success: true,
+      message: 'Thank you for your feedback! Your contribution helps improve Mysterion AI.',
+      data: {
+        id: savedData.id,
+        status: savedData.processingStatus
       }
-      
-      console.log(`Prepared ${trainingData.length} data points for training`);
-      
-      // In a real implementation, this would feed data to a machine learning model
-      // For this simulation, we'll just calculate some basic metrics
-      
-      const confidenceScores = assessments.map(a => parseFloat(a.confidenceScore || '0'));
-      const avgConfidence = confidenceScores.length > 0
-        ? confidenceScores.reduce((sum, score) => sum + score, 0) / confidenceScores.length
-        : 0;
-      
-      const successfulAssessments = trainingData.filter(d => d.successful).length;
-      const successRate = trainingData.length > 0
-        ? successfulAssessments / trainingData.length
-        : 0;
-      
-      // Count recent disputes (last 30 days)
-      const recentDisputes = await db.query.escrowDisputes.findMany({
-        where: sql`created_at > NOW() - INTERVAL '30 days'`,
-      });
-      
-      // Extract patterns from successful resolutions
-      const patterns = this.extractPatterns(trainingData);
-      
-      // Log training process
-      await db.insert(recursionLogs).values({
-        logType: 'mysterion_training',
-        message: `Completed Mysterion AI training with ${trainingData.length} historical records`,
-        logLevel: 'info',
-        metadata: {
-          dataPoints: trainingData.length,
-          successRate,
-          avgConfidence,
-          patterns,
-        },
-      });
-      
-      return {
-        recordsProcessed: trainingData.length,
-        successRate,
-        confidenceAverage: avgConfidence,
-        recentDisputes: recentDisputes.length,
-        learnedPatterns: patterns,
-      };
-    } catch (error) {
-      console.error('Mysterion AI training failed:', error);
-      
-      // Log training failure
-      await db.insert(recursionLogs).values({
-        logType: 'mysterion_training_error',
-        message: `Mysterion AI training failed: ${error.message}`,
-        logLevel: 'error',
-        metadata: {
-          error: error.message,
-        },
-      });
-      
-      return {
-        recordsProcessed: 0,
-        successRate: 0,
-        confidenceAverage: 0,
-        recentDisputes: 0,
-        learnedPatterns: [],
-      };
-    }
+    };
+  } catch (error) {
+    console.error('Error submitting training feedback:', error);
+    return {
+      success: false,
+      message: 'Failed to submit training feedback',
+      error: error instanceof Error ? error.message : String(error)
+    };
   }
-  
-  /**
-   * Extract patterns from training data
-   * In a real implementation, this would use sophisticated pattern recognition
-   */
-  private extractPatterns(trainingData: TrainingDataPoint[]): string[] {
-    const patterns: string[] = [];
-    
-    // Only consider successful assessments
-    const successfulData = trainingData.filter(d => d.successful);
-    
-    // Pattern: High value transactions have more disputes
-    const highValueDisputes = successfulData.filter(d => d.transactionAmount > 1000);
-    if (highValueDisputes.length > 3) {
-      patterns.push('High value transactions (>1000) have higher dispute rates');
-    }
-    
-    // Pattern: More proofs correlate with successful dispute resolution
-    const withProofs = successfulData.filter(d => d.proofCount > 0);
-    const withoutProofs = successfulData.filter(d => d.proofCount === 0);
-    if (withProofs.length > withoutProofs.length) {
-      patterns.push('Transactions with proof evidence are more likely to reach resolution');
-    }
-    
-    // Pattern: Reputation significantly impacts dispute outcomes
-    const buyerFavor = successfulData.filter(d => d.resolution === 'buyer_favor');
-    const sellerFavor = successfulData.filter(d => d.resolution === 'seller_favor');
-    
-    const avgBuyerRepInBuyerFavor = buyerFavor.reduce((sum, d) => sum + d.buyerReputation, 0) / (buyerFavor.length || 1);
-    const avgSellerRepInSellerFavor = sellerFavor.reduce((sum, d) => sum + d.sellerReputation, 0) / (sellerFavor.length || 1);
-    
-    if (avgBuyerRepInBuyerFavor > 0.7) {
-      patterns.push('Buyers with reputation >0.7 are more likely to win disputes');
-    }
-    
-    if (avgSellerRepInSellerFavor > 0.7) {
-      patterns.push('Sellers with reputation >0.7 are more likely to win disputes');
-    }
-    
-    return patterns;
-  }
-  
-  /**
-   * Enhance Mysterion's libertarian ethics framework based on new dispute data
-   */
-  async enhanceLibertarianFramework(): Promise<string[]> {
-    try {
-      console.log('Enhancing Mysterion\'s libertarian ethics framework...');
-      
-      // Simplified simulation of ethics framework enhancement
-      // In a real implementation, this would involve sophisticated reasoning
-      
-      // Libertarian principles to reinforce
-      const principles = [
-        'Non-aggression principle (NAP)',
-        'Property rights',
-        'Voluntary exchange',
-        'Freedom of contract',
-        'Personal responsibility'
-      ];
-      
-      // Get recent disputes to analyze
-      const recentDisputes = await db.query.escrowDisputes.findMany({
-        where: sql`created_at > NOW() - INTERVAL '90 days'`,
-        with: {
-          mysterionAssessment: true,
-        },
-        orderBy: (fields, { desc }) => [desc(fields.createdAt)],
-      });
-      
-      console.log(`Analyzing ${recentDisputes.length} recent disputes for libertarian principles`);
-      
-      // Track enhanced principles
-      const enhancedPrinciples: string[] = [];
-      
-      // Analyze which principles need reinforcement based on dispute rationales
-      const assessments = recentDisputes
-        .filter(d => d.mysterionAssessment)
-        .map(d => d.mysterionAssessment!);
-      
-      // Count mentions of each principle in rationales
-      const principlesMentioned: Record<string, number> = {};
-      principles.forEach(p => {
-        principlesMentioned[p] = assessments.filter(a => 
-          a.rationale && a.rationale.toLowerCase().includes(p.toLowerCase())
-        ).length;
-      });
-      
-      // Identify principles that need reinforcement (mentioned less often)
-      for (const [principle, count] of Object.entries(principlesMentioned)) {
-        if (count < assessments.length * 0.3) { // Less than 30% of assessments mention this principle
-          enhancedPrinciples.push(`Reinforcing ${principle} application in dispute resolution`);
-        }
-      }
-      
-      // Add new enhancement based on patterns
-      if (enhancedPrinciples.length === 0) {
-        // If no specific reinforcements needed, add general enhancement
-        enhancedPrinciples.push('Refining balance between NAP and contract enforcement in digital disputes');
-      }
-      
-      // Log the enhancement process
-      await db.insert(recursionLogs).values({
-        logType: 'libertarian_ethics_enhancement',
-        message: `Enhanced Mysterion libertarian ethics framework with ${enhancedPrinciples.length} refinements`,
-        logLevel: 'info',
-        metadata: {
-          principles: enhancedPrinciples,
-          analyzedDisputes: recentDisputes.length,
-          principlesMentioned,
-        },
-      });
-      
-      return enhancedPrinciples;
-    } catch (error) {
-      console.error('Libertarian ethics enhancement failed:', error);
-      
-      // Log enhancement failure
-      await db.insert(recursionLogs).values({
-        logType: 'libertarian_ethics_error',
-        message: `Ethics enhancement failed: ${error.message}`,
-        logLevel: 'error',
-        metadata: {
-          error: error.message,
-        },
-      });
-      
-      return ['Error enhancing libertarian framework'];
-    }
-  }
-  
-  /**
-   * Analyze patterns of successful dispute resolutions
-   */
-  async analyzeResolutionPatterns(): Promise<any> {
-    try {
-      // Get all resolved disputes
-      const resolvedDisputes = await db.query.escrowDisputes.findMany({
-        where: eq(escrowDisputes.status, 'resolved'),
-        with: {
-          mysterionAssessment: true,
-          escrowTransaction: true,
-        },
-      });
-      
-      // Group by resolution type
-      const byResolution: Record<string, any[]> = {
-        buyer_favor: [],
-        seller_favor: [],
-        split: [],
-        need_more_info: [],
-      };
-      
-      for (const dispute of resolvedDisputes) {
-        if (dispute.mysterionAssessment && dispute.escrowTransaction) {
-          const resolution = dispute.mysterionAssessment.decision;
-          if (resolution in byResolution) {
-            byResolution[resolution].push({
-              transactionId: dispute.escrowTransactionId,
-              amount: dispute.escrowTransaction.amount,
-              confidenceScore: dispute.mysterionAssessment.confidenceScore,
-              data: dispute.mysterionAssessment.data,
-            });
-          }
-        }
-      }
-      
-      // Calculate metrics for each resolution type
-      const metrics: Record<string, any> = {};
-      
-      for (const [resolution, disputes] of Object.entries(byResolution)) {
-        if (disputes.length === 0) continue;
-        
-        const amounts = disputes.map(d => parseFloat(d.amount));
-        const avgAmount = amounts.reduce((sum, a) => sum + a, 0) / amounts.length;
-        
-        const confidences = disputes.map(d => parseFloat(d.confidenceScore));
-        const avgConfidence = confidences.reduce((sum, c) => sum + c, 0) / confidences.length;
-        
-        metrics[resolution] = {
-          count: disputes.length,
-          averageAmount: avgAmount,
-          averageConfidence: avgConfidence,
-          percentage: (disputes.length / resolvedDisputes.length) * 100,
-        };
-      }
-      
-      // Log the analysis
-      await db.insert(recursionLogs).values({
-        logType: 'resolution_pattern_analysis',
-        message: `Analyzed patterns across ${resolvedDisputes.length} resolved disputes`,
-        logLevel: 'info',
-        metadata: {
-          metrics,
-          totalDisputes: resolvedDisputes.length,
-        },
-      });
-      
-      return {
-        metrics,
-        totalDisputes: resolvedDisputes.length,
-      };
-    } catch (error) {
-      console.error('Resolution pattern analysis failed:', error);
-      return {
-        metrics: {},
-        totalDisputes: 0,
-        error: error.message,
-      };
-    }
-  }
-  
-  /**
-   * Record user feedback on Mysterion assessments for future training
-   */
-  async recordUserFeedback(
-    assessmentId: number,
-    userId: number,
-    feedback: 'positive' | 'negative',
-    comment: string
-  ): Promise<boolean> {
-    try {
-      // In a real implementation, this would store detailed feedback
-      // For this simulation, we'll just log it
-      
-      // Record the feedback in logs
-      await db.insert(recursionLogs).values({
-        userId,
-        logType: 'mysterion_feedback',
-        message: `User ${userId} provided ${feedback} feedback on assessment ${assessmentId}`,
-        logLevel: 'info',
-        metadata: {
-          assessmentId,
-          feedback,
-          comment,
-        },
-      });
-      
-      console.log(`Recorded ${feedback} feedback from user ${userId} on assessment ${assessmentId}`);
-      
-      return true;
-    } catch (error) {
-      console.error('Failed to record user feedback:', error);
-      return false;
-    }
-  }
-  
-  /**
-   * Get training statistics for Mysterion AI
-   */
-  async getTrainingStats(): Promise<any> {
-    try {
-      // Get total number of assessments
-      const totalAssessments = await db.query.mysterionAssessments.findMany();
-      
-      // Get total number of disputes
-      const totalDisputes = await db.query.escrowDisputes.findMany();
-      
-      // Get training logs
-      const trainingLogs = await db.query.recursionLogs.findMany({
-        where: eq(recursionLogs.logType, 'mysterion_training'),
-        orderBy: (fields, { desc }) => [desc(fields.timestamp)],
-        limit: 10,
-      });
-      
-      // Last training timestamp
-      const lastTraining = trainingLogs.length > 0 ? trainingLogs[0].timestamp : null;
-      
-      // Dispute resolution success rate (disputes with assessments / total disputes)
-      const successRate = totalDisputes.length > 0
-        ? (totalAssessments.length / totalDisputes.length) * 100
-        : 0;
-      
-      return {
-        totalAssessments: totalAssessments.length,
-        totalDisputes: totalDisputes.length,
-        lastTraining,
-        successRate,
-        recentTrainingLogs: trainingLogs,
-      };
-    } catch (error) {
-      console.error('Failed to get training stats:', error);
-      return {
-        error: error.message,
-      };
-    }
-  }
-}
+};
 
-// Singleton instance
-export const mysterionTraining = new MysterionTrainingService();
+/**
+ * Update contributor statistics after a new contribution
+ */
+const updateContributorStats = async (
+  userId: number,
+  trainingDataId: number,
+  trainingData: InsertAiTrainingData
+): Promise<void> => {
+  try {
+    // Get existing contributor record or create new one
+    let contributor = await storage.getAiTrainingContributorByUserId(userId);
+    
+    if (!contributor) {
+      // Create new contributor record
+      const newContributor: InsertAiTrainingContributor = {
+        userId,
+        totalContributions: 1,
+        totalPointsEarned: 0, // Will calculate and update later
+        totalSingTokens: 0,
+        contributorTier: CONTRIBUTOR_TIERS.BRONZE.name
+      };
+      
+      contributor = await storage.createAiTrainingContributor(newContributor);
+    } else {
+      // Update existing contributor stats
+      await storage.updateAiTrainingContributor(
+        contributor.id,
+        contributor.totalContributions + 1,
+        contributor.totalPointsEarned, // Unchanged until processed
+        contributor.totalSingTokens // Unchanged until processed
+      );
+    }
+  } catch (error) {
+    console.error(`Error updating contributor stats for user ${userId}:`, error);
+    // Don't throw error to prevent breaking the main flow
+  }
+};
+
+/**
+ * Process training data (called asynchronously after submission)
+ */
+const processTrainingData = async (trainingDataId: number): Promise<void> => {
+  try {
+    // Get training data record
+    const data = await storage.getAiTrainingData(trainingDataId);
+    if (!data) {
+      throw new Error(`Training data with ID ${trainingDataId} not found`);
+    }
+    
+    // Update status to processing
+    await storage.updateAiTrainingDataStatus(
+      trainingDataId,
+      TrainingProcessingStatus.PROCESSING,
+      'Initial quality evaluation in progress'
+    );
+    
+    // Simple content validation
+    if (!validateContentQuality(data.userQuery, data.aiResponse)) {
+      await storage.updateAiTrainingDataStatus(
+        trainingDataId,
+        TrainingProcessingStatus.REJECTED,
+        'Content quality does not meet minimum standards'
+      );
+      return;
+    }
+    
+    // Mark as completed and calculate rewards
+    await storage.updateAiTrainingDataStatus(
+      trainingDataId,
+      TrainingProcessingStatus.COMPLETED,
+      'Successfully processed and rewards calculated'
+    );
+    
+    // Calculate and award points
+    await calculateAndAwardPoints(trainingDataId, data.userId);
+    
+  } catch (error) {
+    console.error(`Error processing training data ${trainingDataId}:`, error);
+    
+    // Update status to failed
+    await storage.updateAiTrainingDataStatus(
+      trainingDataId,
+      TrainingProcessingStatus.FAILED,
+      `Processing error: ${error instanceof Error ? error.message : String(error)}`
+    );
+  }
+};
+
+/**
+ * Validate content quality with basic checks
+ */
+const validateContentQuality = (userQuery: string, aiResponse: string): boolean => {
+  // Skip validation for empty content
+  if (!userQuery || !aiResponse) {
+    return false;
+  }
+  
+  // Minimum length check
+  if (userQuery.length < 5 || aiResponse.length < 20) {
+    return false;
+  }
+  
+  // Repetitive content check (e.g., duplicate characters)
+  const repetitionThreshold = 0.7;
+  if (hasExcessiveRepetition(userQuery, repetitionThreshold) || 
+      hasExcessiveRepetition(aiResponse, repetitionThreshold)) {
+    return false;
+  }
+  
+  return true;
+};
+
+/**
+ * Check for excessive repetition in text
+ */
+const hasExcessiveRepetition = (text: string, threshold: number): boolean => {
+  const chars = text.split('');
+  const charCount: Record<string, number> = {};
+  
+  chars.forEach(char => {
+    charCount[char] = (charCount[char] || 0) + 1;
+  });
+  
+  const mostFrequentChar = Object.entries(charCount)
+    .sort((a, b) => b[1] - a[1])[0];
+    
+  return mostFrequentChar[1] / text.length > threshold;
+};
+
+/**
+ * Calculate and award points for a training data contribution
+ */
+const calculateAndAwardPoints = async (
+  trainingDataId: number,
+  userId: number | null | undefined
+): Promise<void> => {
+  if (!userId) return; // Skip for anonymous contributions
+  
+  try {
+    // Get training data record
+    const data = await storage.getAiTrainingData(trainingDataId);
+    if (!data) {
+      throw new Error(`Training data with ID ${trainingDataId} not found`);
+    }
+    
+    // Calculate base points
+    let points = calculateBasePoints(
+      data.feedbackType as TrainingFeedbackType,
+      data.qualityRating,
+      data.dataSizeBytes
+    );
+    
+    // Get contributor record
+    const contributor = await storage.getAiTrainingContributor(userId);
+    if (!contributor) {
+      throw new Error(`Contributor with user ID ${userId} not found`);
+    }
+    
+    // Determine contributor tier
+    const currentTier = contributor.contributorTier;
+    const newTotalPoints = contributor.totalPointsEarned + points;
+    const newTier = calculateTierFromPoints(newTotalPoints);
+    
+    // Update tier if changed
+    if (currentTier !== newTier) {
+      await storage.updateAiTrainingContributorTier(contributor.id, newTier);
+    }
+    
+    // Calculate SING tokens
+    const tokenRate = getTokenConversionRate(newTier);
+    const singTokens = Math.floor(points * tokenRate);
+    
+    // Award points and tokens
+    await storage.updateAiTrainingDataRewards(trainingDataId, points, singTokens);
+    
+    // Update contributor totals
+    await storage.updateAiTrainingContributor(
+      contributor.id,
+      contributor.totalContributions,
+      newTotalPoints,
+      contributor.totalSingTokens + singTokens
+    );
+    
+    // Refresh contributor rankings
+    await updateContributorRankings();
+    
+  } catch (error) {
+    console.error(`Error calculating rewards for training data ${trainingDataId}:`, error);
+  }
+};
+
+/**
+ * Update rankings for all contributors
+ */
+const updateContributorRankings = async (): Promise<void> => {
+  try {
+    // Get top contributors ordered by points
+    const topContributors = await storage.getTopAiTrainingContributors(1000);
+    
+    // Update ranks
+    for (let i = 0; i < topContributors.length; i++) {
+      const rank = i + 1;
+      await storage.updateAiTrainingContributorRank(topContributors[i].id, rank);
+    }
+  } catch (error) {
+    console.error('Error updating contributor rankings:', error);
+  }
+};
+
+/**
+ * Get user's contribution statistics
+ */
+export const getUserContributionStats = async (
+  userId: number
+): Promise<{ success: boolean; stats?: any; error?: string }> => {
+  try {
+    // Get contributor record
+    const contributor = await storage.getAiTrainingContributorByUserId(userId);
+    if (!contributor) {
+      return {
+        success: true,
+        stats: {
+          totalContributions: 0,
+          totalPointsEarned: 0,
+          totalSingTokens: 0,
+          contributorTier: CONTRIBUTOR_TIERS.BRONZE.name,
+          contributorRank: null,
+          lastContribution: null,
+          recentContributions: []
+        }
+      };
+    }
+    
+    // Get recent contributions
+    const recentContributions = await storage.getAiTrainingDataByUserId(userId);
+    
+    return {
+      success: true,
+      stats: {
+        totalContributions: contributor.totalContributions,
+        totalPointsEarned: contributor.totalPointsEarned,
+        totalSingTokens: contributor.totalSingTokens,
+        contributorTier: contributor.contributorTier,
+        contributorRank: contributor.contributorRank,
+        lastContribution: contributor.lastContribution,
+        recentContributions: recentContributions.slice(0, 10).map(c => ({
+          id: c.id,
+          date: c.contributionDate,
+          feedbackType: c.feedbackType,
+          pointsAwarded: c.pointsAwarded,
+          singTokensAwarded: c.singTokensAwarded
+        }))
+      }
+    };
+  } catch (error) {
+    console.error(`Error fetching contribution stats for user ${userId}:`, error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : String(error)
+    };
+  }
+};
+
+/**
+ * Get leaderboard of top contributors
+ */
+export const getContributorLeaderboard = async (
+  limit = 10
+): Promise<{ success: boolean; leaderboard?: any[]; error?: string }> => {
+  try {
+    // Get top contributors
+    const topContributors = await storage.getTopAiTrainingContributors(limit);
+    
+    // Format for display
+    const leaderboard = await Promise.all(
+      topContributors.map(async (contributor) => {
+        // Get user info
+        const user = await storage.getUser(contributor.userId);
+        
+        return {
+          rank: contributor.contributorRank,
+          userId: contributor.userId,
+          username: user?.username || 'Anonymous',
+          tier: contributor.contributorTier,
+          totalPoints: contributor.totalPointsEarned,
+          totalSingTokens: contributor.totalSingTokens,
+          totalContributions: contributor.totalContributions
+        };
+      })
+    );
+    
+    return {
+      success: true,
+      leaderboard
+    };
+  } catch (error) {
+    console.error('Error fetching contributor leaderboard:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : String(error)
+    };
+  }
+};

@@ -3,6 +3,23 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
 
+// Import AI Assistant Schema
+import {
+  TrainingFeedbackType,
+  TrainingProcessingStatus,
+  aiTrainingData,
+  aiTrainingJobs,
+  aiTrainingContributors,
+  AiTrainingData,
+  InsertAiTrainingData,
+  AiTrainingJob,
+  InsertAiTrainingJob,
+  AiTrainingContributor,
+  InsertAiTrainingContributor
+} from "./ai-assistant-schema";
+
+// AI Assistant Schema is already exported from ai-assistant-schema.ts
+
 // Import and re-export bridge schemas
 import { 
   BridgeStatus,

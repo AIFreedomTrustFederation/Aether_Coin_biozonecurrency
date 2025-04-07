@@ -34,7 +34,12 @@ export type { User, Wallet, Transaction, SmartContract, AiMonitoringLog, CidEntr
                NetworkInsurancePolicy, InsertNetworkInsurancePolicy, MandelbrotRecursionEvent, 
                InsertMandelbrotRecursionEvent, InsurancePolicyType, InsurancePolicyStatus,
                BeneficiaryType, FractalLoanStatus, FractalLoanCollateralType, RecurveSyncStatus,
-               RecurveTokenTier, TorusNodeType } from '../shared/schema';
+               RecurveTokenTier, TorusNodeType,
+               // AI Assistant Training types
+               TrainingFeedbackType, TrainingProcessingStatus,
+               AiTrainingData, InsertAiTrainingData,
+               AiTrainingJob, InsertAiTrainingJob,
+               AiTrainingContributor, InsertAiTrainingContributor } from '../shared/schema';
 
 // Export storage interface
 export interface IStorage {
@@ -181,4 +186,34 @@ export interface IStorage {
   getMandelbrotRecursionEvent(id: number): Promise<schema.MandelbrotRecursionEvent | undefined>;
   getMandelbrotRecursionEventsByType(type: string): Promise<schema.MandelbrotRecursionEvent[]>;
   createMandelbrotRecursionEvent(event: schema.InsertMandelbrotRecursionEvent): Promise<schema.MandelbrotRecursionEvent>;
+  
+  // AI Assistant Training Data methods
+  getAiTrainingData(id: number): Promise<schema.AiTrainingData | undefined>;
+  getAiTrainingDataByUserId(userId: number): Promise<schema.AiTrainingData[]>;
+  getAiTrainingDataByStatus(status: schema.TrainingProcessingStatus): Promise<schema.AiTrainingData[]>;
+  getAiTrainingDataByFeedbackType(feedbackType: schema.TrainingFeedbackType): Promise<schema.AiTrainingData[]>;
+  createAiTrainingData(data: schema.InsertAiTrainingData): Promise<schema.AiTrainingData>;
+  updateAiTrainingDataStatus(id: number, status: schema.TrainingProcessingStatus, notes?: string): Promise<schema.AiTrainingData | undefined>;
+  updateAiTrainingDataRewards(id: number, points: number, singTokens?: number): Promise<schema.AiTrainingData | undefined>;
+  
+  // AI Training Jobs methods
+  getAiTrainingJob(id: number): Promise<schema.AiTrainingJob | undefined>;
+  getAiTrainingJobsByStatus(status: string): Promise<schema.AiTrainingJob[]>;
+  createAiTrainingJob(job: schema.InsertAiTrainingJob): Promise<schema.AiTrainingJob>;
+  updateAiTrainingJobStatus(id: number, status: string): Promise<schema.AiTrainingJob | undefined>;
+  completeAiTrainingJob(id: number, metrics: Record<string, any>): Promise<schema.AiTrainingJob | undefined>;
+  
+  // AI Training Contributors methods
+  getAiTrainingContributor(id: number): Promise<schema.AiTrainingContributor | undefined>;
+  getAiTrainingContributorByUserId(userId: number): Promise<schema.AiTrainingContributor | undefined>;
+  getTopAiTrainingContributors(limit: number): Promise<schema.AiTrainingContributor[]>;
+  createAiTrainingContributor(contributor: schema.InsertAiTrainingContributor): Promise<schema.AiTrainingContributor>;
+  updateAiTrainingContributor(
+    id: number,
+    contributions: number,
+    points: number,
+    singTokens: number
+  ): Promise<schema.AiTrainingContributor | undefined>;
+  updateAiTrainingContributorTier(id: number, tier: string): Promise<schema.AiTrainingContributor | undefined>;
+  updateAiTrainingContributorRank(id: number, rank: number): Promise<schema.AiTrainingContributor | undefined>;
 }

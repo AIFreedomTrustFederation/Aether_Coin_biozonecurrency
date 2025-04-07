@@ -1,0 +1,97 @@
+openapi: 3.0.0
+info:
+  title: Aether Automation Assistant API
+  description: This API allows public users to interact with the Aether Automation Assistant for managing the Aether_Coin_biozonecurrency repository. All interactions are governed by the Terms of Service and Privacy Policy located at [Terms of Service](https://atc.aifreedomtrust.com/terms-of-service) and [Privacy Policy](https://atc.aifreedomtrust.com/privacy-policy).
+  version: 1.0.0
+
+servers:
+  - url: https://atc.aifreedomtrust.com/api
+
+paths:
+  /branches:
+    get:
+      summary: List all branches in the repository
+      responses:
+        '200':
+          description: A list of branches
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+        '401':
+          description: Unauthorized access
+
+    post:
+      summary: Create a new branch
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                branch_name:
+                  type: string
+      responses:
+        '201':
+          description: Branch created successfully
+        '400':
+          description: Invalid request data
+
+  /pull-request:
+    post:
+      summary: Create a pull request to merge changes
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                source_branch:
+                  type: string
+                target_branch:
+                  type: string
+                description:
+                  type: string
+      responses:
+        '201':
+          description: Pull request created successfully
+        '400':
+          description: Invalid request data
+        '401':
+          description: Unauthorized access
+
+  /terms-of-service:
+    get:
+      summary: Retrieve the Terms of Service
+      responses:
+        '200':
+          description: Returns the current Terms of Service document.
+          content:
+            application/json:
+              schema:
+                type: string
+
+  /privacy-policy:
+    get:
+      summary: Retrieve the Privacy Policy
+      responses:
+        '200':
+          description: Returns the current Privacy Policy document.
+          content:
+            application/json:
+              schema:
+                type: string
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - BearerAuth: []
