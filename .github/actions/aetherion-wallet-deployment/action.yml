@@ -1,0 +1,10 @@
+
+name: 'Aetherion Wallet Deployment'
+description: 'Loads encrypted secrets from FractalCoin/Filecoin'
+inputs:
+  ipfs_hash:
+    description: 'IPFS hash pointing to encrypted secrets'
+    required: true
+runs:
+  using: 'node16'
+  main: 'index.js'
