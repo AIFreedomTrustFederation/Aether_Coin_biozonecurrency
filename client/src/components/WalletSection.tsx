@@ -1,87 +1,110 @@
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { WalletIcon, ArrowRight, CreditCard, Landmark, History, ShieldCheck } from "lucide-react";
-import { Link } from "wouter";
+import { Wallet, ArrowRight } from 'lucide-react';
+import { Link } from 'wouter';
 
-interface WalletSectionProps {
-  balances?: Record<string, string>;
-  className?: string;
-}
-
-const WalletSection: React.FC<WalletSectionProps> = ({ 
-  balances = {
-    "AETHER": "12,450.00",
-    "ETH": "3.25",
-    "SINGULARITY": "5,000.00"
-  }, 
-  className = "" 
-}) => {
+/**
+ * WalletSection component
+ * Displays wallet features and benefits
+ */
+const WalletSection: React.FC = () => {
   return (
-    <section className={`mt-6 ${className}`}>
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <WalletIcon className="mr-2 h-5 w-5" />
-            Wallet Overview
-          </CardTitle>
-          <CardDescription>
-            Manage your wallets, crypto assets, and transactions
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {Object.entries(balances).map(([token, amount]) => (
-                <Card key={token} className="bg-secondary/30">
-                  <CardContent className="p-4">
-                    <div className="text-sm text-muted-foreground">{token}</div>
-                    <div className="text-2xl font-bold mt-1">{amount}</div>
-                  </CardContent>
-                </Card>
-              ))}
+    <section className="py-16 bg-gradient-to-r from-primary/5 to-primary/10">
+      <div className="container mx-auto px-4">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-10">
+          <div className="w-full md:w-1/2">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              Secure Wallet <span className="text-primary">Integration</span>
+            </h2>
+            <p className="text-lg mb-6 text-muted-foreground">
+              Experience the next generation of blockchain wallet technology with
+              seamless integration, quantum-resistant security, and intuitive user controls.
+            </p>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+              <div className="flex items-start gap-3 p-4 rounded-lg border bg-card/50">
+                <div className="bg-primary/10 p-2 rounded-full">
+                  <Wallet className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-medium">Multi-Chain Support</h3>
+                  <p className="text-sm text-muted-foreground">Connect to multiple blockchains seamlessly</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-3 p-4 rounded-lg border bg-card/50">
+                <div className="bg-primary/10 p-2 rounded-full">
+                  <Wallet className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-medium">Advanced Security</h3>
+                  <p className="text-sm text-muted-foreground">Quantum-resistant encryption standards</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-3 p-4 rounded-lg border bg-card/50">
+                <div className="bg-primary/10 p-2 rounded-full">
+                  <Wallet className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-medium">Easy Transactions</h3>
+                  <p className="text-sm text-muted-foreground">Send and receive with minimal steps</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-3 p-4 rounded-lg border bg-card/50">
+                <div className="bg-primary/10 p-2 rounded-full">
+                  <Wallet className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-medium">Asset Management</h3>
+                  <p className="text-sm text-muted-foreground">Track and manage all your tokens easily</p>
+                </div>
+              </div>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <Link href="/wallet">
-                <Button variant="outline" className="w-full flex items-center justify-between">
-                  <span className="flex items-center">
-                    <WalletIcon className="mr-2 h-4 w-4" /> My Wallets
-                  </span>
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
-              
-              <Link href="/payments">
-                <Button variant="outline" className="w-full flex items-center justify-between">
-                  <span className="flex items-center">
-                    <CreditCard className="mr-2 h-4 w-4" /> Payments
-                  </span>
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
-              
-              <Link href="/transactions">
-                <Button variant="outline" className="w-full flex items-center justify-between">
-                  <span className="flex items-center">
-                    <History className="mr-2 h-4 w-4" /> Transactions
-                  </span>
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
-              
-              <Link href="/security">
-                <Button variant="outline" className="w-full flex items-center justify-between">
-                  <span className="flex items-center">
-                    <ShieldCheck className="mr-2 h-4 w-4" /> Security
-                  </span>
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
+            <Link href="/wallet">
+              <a className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-primary text-white font-medium hover:bg-primary/90 transition-colors">
+                Connect Your Wallet <ArrowRight className="h-4 w-4" />
+              </a>
+            </Link>
+          </div>
+          
+          <div className="w-full md:w-1/2 flex justify-center">
+            <div className="relative w-full max-w-md aspect-square">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-primary/30 rounded-2xl transform rotate-3"></div>
+              <div className="absolute inset-0 bg-card border border-border rounded-2xl shadow-lg flex items-center justify-center p-8">
+                <div className="w-full max-w-xs">
+                  <div className="space-y-6">
+                    <div className="flex justify-center">
+                      <div className="p-4 bg-primary/10 rounded-full">
+                        <Wallet className="h-10 w-10 text-primary" />
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <div className="h-4 w-3/4 bg-muted rounded-full mx-auto"></div>
+                      <div className="h-3 w-1/2 bg-muted/70 rounded-full mx-auto"></div>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <div className="h-12 bg-muted/50 rounded-lg w-full"></div>
+                      <div className="h-12 bg-primary rounded-lg w-full flex items-center justify-center text-white font-medium">
+                        Connect
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="h-16 bg-muted/30 rounded-lg"></div>
+                      <div className="h-16 bg-muted/30 rounded-lg"></div>
+                      <div className="h-16 bg-muted/30 rounded-lg"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </section>
   );
 };
