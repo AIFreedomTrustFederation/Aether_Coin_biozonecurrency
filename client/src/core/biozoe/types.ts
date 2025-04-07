@@ -1,189 +1,203 @@
 /**
- * BioZoeCurrency Core Types
+ * AetherCoin BioZoeCurrency Types
  * 
- * Defines the data structures for AetherCoin (ATC) as the first BioZoeCurrency
- * implementation with Mandelbrot recursive, Fibonacci sequences, and Torus field
- * energy flows based on Golden Ratio principles.
+ * Contains all the type definitions for the AetherCoin BioZoeCurrency ecosystem.
+ * Defines the token lifecycle states, transaction types, and quantum entanglement types.
  */
 
-// Lifecycle states of a BioZoe token
+/**
+ * BioZoe Token Lifecycle States
+ * 
+ * Tokens progress through four stages following natural biological patterns:
+ * - SEED: Initial token creation state (like a seed in nature)
+ * - GROWTH: Developing token with increasing potential (growing plant)
+ * - FLOWERING: Peak value and energy state (flowering plant)
+ * - LEGACY: Transformed state that enables new generation (fruit/seed bearing)
+ */
 export enum BioZoeLifecycleState {
-  SEED = 'Seed',       // Initial state, newly created token
-  GROWTH = 'Growth',   // Active growth phase
-  FLOWERING = 'Flowering', // Peak value, ready for transformation
-  LEGACY = 'Legacy'    // Transformed state, contributing to ecosystem
+  SEED = 'seed',
+  GROWTH = 'growth',
+  FLOWERING = 'flowering',
+  LEGACY = 'legacy'
 }
 
-// Quantum entanglement types
+/**
+ * Quantum Entanglement Types
+ * 
+ * Defines how tokens can be quantum entangled with each other:
+ * - SYMBIOTIC: Both tokens grow together
+ * - COMPETITIVE: One token's growth can diminish the other
+ * - CATALYTIC: One token accelerates another's growth
+ * - REGENERATIVE: Tokens help each other recover
+ */
 export enum QuantumEntanglementType {
-  PARALLEL = 'Parallel',       // Direct 1:1 entanglement
-  FIBONACCI = 'Fibonacci',     // Fibonacci-based branching entanglement
-  MANDELBROT = 'Mandelbrot',   // Complex recursive entanglement
-  TOROIDAL = 'Toroidal'        // Circular flow entanglement
+  SYMBIOTIC = 'symbiotic',
+  COMPETITIVE = 'competitive',
+  CATALYTIC = 'catalytic',
+  REGENERATIVE = 'regenerative'
 }
 
-// AetherCoin Token (ATC) representing a BioZoeCurrency
-export interface AetherCoinToken {
-  // Core identifiers
-  id: string;                     // Unique token identifier
-  quantumSignature: string;       // Quantum-derived signature
-  ownerAddress: string;           // Current token owner's address
-  
-  // Life state properties
-  lifeState: BioZoeLifecycleState; // Current lifecycle state
-  birthBlock: number;             // Block when token was created
-  lifeCycles: number;             // Number of transformations undergone
-  age: number;                    // Age in blocks since creation
-  
-  // Quantum entanglement properties
-  entangledPairs: string[];       // IDs of entangled tokens
-  entanglementType: QuantumEntanglementType; // Type of quantum connection
-  entanglementStrength: number;   // 0-1 ratio of connection strength
-  
-  // Growth metrics based on natural patterns
-  baseValue: number;              // Initial quantum value
-  growthFactor: number;           // Current multiplier from life cycles
-  potentialEnergy: number;        // Stored energy for future growth
-  fibonacciIndex: number;         // Position in Fibonacci sequence
-  goldenRatioFactor: number;      // Golden Ratio multiplier (φ = 1.618...)
-  
-  // Biological properties
-  dnaSequence: string;            // Operational history hash
-  mutationRate: number;           // Adaptability factor
-  resilience: number;             // Ability to withstand network stress
-  entropy: number;                // Measure of disorder/energy potential
-  
-  // Merkle tree position (for fractal validation)
-  merkleProof: string[];          // Merkle proof for token verification
-  merklePosition: number;         // Position in the Merkle tree
-
-  // Torus field properties
-  toroidalCoordinates: {          // Position in the torus field
-    theta: number;                // Angular coordinate (0 to 2π)
-    phi: number;                  // Poloidal coordinate (0 to 2π)
-    r: number;                    // Radial distance from center
-  };
-  energyFlowDirection: number;    // Direction of energy flow in radians
-  energyFlowMagnitude: number;    // Magnitude of energy flow
-  
-  // Visualization properties
-  mandelbrotPosition: {           // Position in Mandelbrot set
-    re: number;                   // Real component
-    im: number;                   // Imaginary component
-  };
-  color: string;                  // Visual representation color
-}
-
-// BioZoe Transaction representing energy transfer between tokens
-export interface BioZoeTransaction {
-  id: string;                      // Transaction ID
-  type: BioZoeTransactionType;     // Transaction type
-  timestamp: number;               // When transaction occurred
-  sourceTokenId: string | null;    // Source token (null for genesis)
-  targetTokenId: string;           // Target token
-  energyTransferred: number;       // Amount of energy transferred
-  transformationFactor: number;    // How much the energy transforms during transfer
-  fibonacciIndex: number;          // Position in Fibonacci sequence
-  mandelbrotIterations: number;    // Depth in Mandelbrot recursion
-  signature: string;               // Cryptographic proof
-  quantumEntanglementEffect: number; // Effect on quantum entanglement
-}
-
-// Types of BioZoe transactions
+/**
+ * BioZoe Transaction Types
+ * 
+ * Defines the various operations that can occur in the ecosystem:
+ * - GENESIS: Creation of a new token
+ * - NURTURE: Transferring energy to accelerate growth
+ * - POLLINATE: Connecting tokens for entanglement
+ * - HARVEST: Transforming a flowering token to legacy
+ * - TRANSFER: Moving token between wallets
+ * - LEGACY_CONTRIBUTION: Energy contribution from legacy token
+ */
 export enum BioZoeTransactionType {
-  GENESIS = 'Genesis',             // Creation of new token
-  NURTURE = 'Nurture',             // Growth enhancement
-  POLLINATE = 'Pollinate',         // Creating entanglement between tokens
-  HARVEST = 'Harvest',             // Transformation of flowering token
-  LEGACY_CONTRIBUTION = 'Legacy'   // Ongoing contribution from legacy tokens
+  GENESIS = 'genesis',
+  NURTURE = 'nurture',
+  POLLINATE = 'pollinate',
+  HARVEST = 'harvest',
+  TRANSFER = 'transfer',
+  LEGACY_CONTRIBUTION = 'legacy_contribution'
 }
 
-// AetherCoin Wallet for managing BioZoeCurrency tokens
+/**
+ * Complex number position in Mandelbrot set
+ */
+export interface MandelbrotPosition {
+  re: number;  // Real part
+  im: number;  // Imaginary part
+}
+
+/**
+ * Position on the toroidal field
+ */
+export interface ToroidalCoordinates {
+  theta: number;  // Angle around the tube (0 to 2π)
+  phi: number;    // Angle around the circle (0 to 2π)
+}
+
+/**
+ * AetherCoin Token Interface
+ * 
+ * Represents a BioZoeCurrency token with all its properties
+ */
+export interface AetherCoinToken {
+  id: string;
+  quantumSignature: string;
+  ownerAddress: string;
+  lifeState: BioZoeLifecycleState;
+  birthBlock: number;
+  lifeCycles: number;
+  age: number;
+  entangledPairs: string[];
+  entanglementType: QuantumEntanglementType;
+  entanglementStrength: number;
+  baseValue: number;
+  growthFactor: number;
+  potentialEnergy: number;
+  fibonacciIndex: number;
+  goldenRatioFactor: number;
+  dnaSequence: string;
+  mutationRate: number;
+  resilience: number;
+  entropy: number;
+  merkleProof: string[];
+  merklePosition: number;
+  toroidalCoordinates: ToroidalCoordinates;
+  energyFlowDirection: number;
+  energyFlowMagnitude: number;
+  mandelbrotPosition: MandelbrotPosition;
+  color: string;
+}
+
+/**
+ * Structure for tracking token entanglement visualizations
+ */
+export interface EntanglementNetwork {
+  nodes: string[];
+  edges: Array<{source: string, target: string, strength: number}>;
+}
+
+/**
+ * AetherCoin Wallet Interface
+ * 
+ * Represents a user's wallet in the BioZoeCurrency ecosystem
+ */
 export interface AetherCoinWallet {
-  address: string;                 // Wallet address
-  privateKey?: string;             // Private key (should be encrypted)
-  publicKey?: string;              // Public key
-  tokens: AetherCoinToken[];       // Owned tokens
-  entanglementNetwork: {           // Visualization of quantum connections
-    nodes: string[];               // Token IDs
-    edges: {                       // Connections
-      source: string;
-      target: string;
-      strength: number;
-      type: QuantumEntanglementType;
-    }[];
+  address: string;
+  tokens: AetherCoinToken[];
+  entanglementNetwork: {
+    nodes: string[];
+    edges: Array<{source: string, target: string, strength: number}>;
   };
-  energyPool: number;              // Uncommitted energy
-  toroidalPosition: {              // Position in global torus field
-    theta: number;
-    phi: number;
-  };
-  fibonacciProgression: number[];  // Personal Fibonacci progression
+  energyPool: number;
+  toroidalPosition: ToroidalCoordinates;
+  fibonacciProgression: number[];
 }
 
-// BioZoe Network State
+/**
+ * BioZoe Transaction Interface
+ * 
+ * Represents operations in the BioZoeCurrency ecosystem
+ */
+export interface BioZoeTransaction {
+  id: string;
+  type: BioZoeTransactionType;
+  timestamp: number;
+  sourceTokenId: string | null;
+  targetTokenId: string;
+  energyTransferred: number;
+  transformationFactor: number;
+  fibonacciIndex: number;
+  mandelbrotIterations: number;
+  signature: string;
+  quantumEntanglementEffect: number;
+}
+
+/**
+ * Network state interface for ecosystem metrics
+ */
 export interface BioZoeNetworkState {
-  totalTokens: number;             // Total tokens in existence
-  activeTokens: number;            // Tokens in active states
-  lifecycleDistribution: {         // Distribution across lifecycle states
-    [BioZoeLifecycleState.SEED]: number;
-    [BioZoeLifecycleState.GROWTH]: number;
-    [BioZoeLifecycleState.FLOWERING]: number;
-    [BioZoeLifecycleState.LEGACY]: number;
+  totalTokens: number;
+  activeTokens: number;
+  lifecycleDistribution: {
+    [key in BioZoeLifecycleState]: number;
   };
-  totalEnergy: number;             // Total energy in the system
-  entanglementDensity: number;     // Average connections per token
-  toroidalFlowRate: number;        // Rate of energy circulation
-  mandelbrotDepth: number;         // Maximum recursion depth
-  fibonacciExpansion: number;      // Latest Fibonacci number reached
-  systemResilience: number;        // Overall system stability
-  goldenRatioAlignment: number;    // Alignment with golden ratio (0-1)
-  lastBlockHeight: number;         // Latest block height
-  genesisTimestamp: number;        // When the network was created
+  totalEnergy: number;
+  entanglementDensity: number;
+  toroidalFlowRate: number;
+  mandelbrotDepth: number;
+  fibonacciExpansion: number;
+  systemResilience: number;
+  goldenRatioAlignment: number;
+  lastBlockHeight: number;
+  genesisTimestamp: number;
 }
 
-// Growth Algorithm Parameters
-export interface GrowthParameters {
-  // Fibonacci sequence parameters
-  fibonacciBase: number;           // Starting value
-  fibonacciExpansionRate: number;  // How fast the sequence progresses
-  
-  // Mandelbrot parameters
-  mandelbrotDepthWeight: number;   // How much depth affects growth
-  mandelbrotBoundary: number;      // Boundary value for Mandelbrot set
-  
-  // Golden Ratio parameters
-  goldenRatio: number;             // Golden ratio constant (φ = 1.618...)
-  goldenRatioWeight: number;       // Impact of golden ratio on growth
-  
-  // Lifecycle parameters
-  seedMaturationRate: number;      // How fast seeds mature to growth
-  growthAccelerationFactor: number; // Acceleration during growth phase
-  floweringThreshold: number;      // When growth transitions to flowering
-  legacyContributionFactor: number; // How much legacy tokens contribute
-  
-  // Quantum entanglement parameters
-  entanglementStrengthGrowth: number; // How fast entanglement strengthens
-  entanglementEnergyTransfer: number; // Energy transfer efficiency
-  
-  // Torus field parameters
-  toroidalFlowResistance: number;  // Resistance to energy flow
-  toroidalFlowAcceleration: number; // How flow accelerates
-}
-
-// BioZoe Token Genesis Configuration
+/**
+ * Token genesis configuration
+ */
 export interface TokenGenesisConfig {
   initialLifeState: BioZoeLifecycleState;
   initialBaseValue: number;
   initialEntanglementType: QuantumEntanglementType;
   initialMutationRate: number;
   initialResilience: number;
-  mandelbrotPosition: {
-    re: number;
-    im: number;
-  };
-  dnaTemplate: string;          // Base DNA template to modify
-  toroidalSector: number;       // 0-7, defining the sector in torus
-  colorSpectrum: 'warm' | 'cool' | 'vibrant' | 'earthy' | 'quantum';
+  mandelbrotPosition?: MandelbrotPosition;
+  dnaTemplate?: string;
+  toroidalSector?: number;
+  colorSpectrum?: string;
 }
-`
+
+/**
+ * Growth parameters for the ecosystem
+ */
+export interface GrowthParameters {
+  lifecycleThresholds: {
+    [key in BioZoeLifecycleState]: number;
+  };
+  mandelbrotGrowthFactor: number;
+  entanglementAmplification: number;
+  fibonacciProgressionRate: number;
+  mutationProbability: number;
+  toroidalFlowStrength: number;
+  goldenRatioInfluence: number;
+  entropicDecayRate: number;
+}

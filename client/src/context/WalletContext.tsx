@@ -140,15 +140,17 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setAvailableWallets(getAvailableWallets());
     
     // Check for any previously connected wallet in local storage
+    // but do NOT auto-connect to prevent intrusive behavior especially on mobile
     const savedWallet = localStorage.getItem('connectedWallet');
     if (savedWallet) {
       try {
+        // Just store the wallet data for later manual connection
         const walletData = JSON.parse(savedWallet);
-        if (walletData && walletData.type) {
-          connect(walletData.type as WalletType).catch(console.error);
-        }
+        // We now only track the last wallet type but don't auto-connect
+        console.log('Previous wallet connection found:', walletData.type);
+        // Note: We no longer auto-connect here, user must explicitly connect
       } catch (error) {
-        console.error('Failed to restore wallet connection:', error);
+        console.error('Failed to parse wallet data:', error);
         localStorage.removeItem('connectedWallet');
       }
     }

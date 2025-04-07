@@ -39,6 +39,7 @@ const ICOPage = lazy(() => import("./pages/ICOPage"));
 const WhitepaperPage = lazy(() => import("./pages/WhitepaperPage"));
 const AboutPage = lazy(() => import("./pages/AboutPage"));
 const AdminPortal = lazy(() => import("./pages/AdminPortal"));
+const AetherCoinNetworkPage = lazy(() => import("./pages/AetherCoinNetworkPage"));
 
 // Lazy load new personalization pages
 const DashboardPage = lazy(() => import("./pages/DashboardPage"));
@@ -82,6 +83,7 @@ const navigationItems = [
   { name: "Blockchain Explorer", path: "/blockchain-explorer", icon: <Database className="h-5 w-5" /> },
   { name: "Blockchain Dashboard", path: "/blockchain-dashboard", icon: <Blocks className="h-5 w-5" /> },
   { name: "Singularity", path: "/singularity", icon: <Zap className="h-5 w-5" /> },
+  { name: "AetherCoin", path: "/aethercoin", icon: <Coins className="h-5 w-5" /> },
   { name: "ICO", path: "/ico", icon: <Coins className="h-5 w-5" /> },
   { name: "Whitepaper", path: "/whitepaper", icon: <FileText className="h-5 w-5" /> },
   { name: "About", path: "/about", icon: <Info className="h-5 w-5" /> },
@@ -531,6 +533,11 @@ function App() {
             <Route path="/singularity">
               <Suspense fallback={<LoadingScreen message="Loading singularity coin..." />}>
                 <SingularityCoinPage />
+              </Suspense>
+            </Route>
+            <Route path="/aethercoin">
+              <Suspense fallback={<LoadingScreen message="Loading AetherCoin Network..." />}>
+                <AetherCoinNetworkPage />
               </Suspense>
             </Route>
             <Route path="/ico">

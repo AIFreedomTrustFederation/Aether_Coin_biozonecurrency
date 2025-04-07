@@ -1,109 +1,94 @@
 /**
  * Fractal Algorithms for AetherCoin BioZoeCurrency
  * 
- * Contains mathematical functions based on:
- * - Fibonacci sequence
- * - Golden Ratio
- * - Mandelbrot set
- * - Toroidal flow dynamics
- * - Quantum entanglement
+ * Core mathematical functions implementing Mandelbrot set, Fibonacci sequence,
+ * Golden Ratio, and Toroidal flow calculations for the BioZoeCurrency system.
  */
 
-import { GrowthParameters, BioZoeLifecycleState } from './types';
+import { 
+  BioZoeLifecycleState,
+  MandelbrotPosition,
+  ToroidalCoordinates,
+  GrowthParameters
+} from './types';
 
-// Universal constants
+// Mathematical constants
 export const GOLDEN_RATIO = 1.618033988749895;
-export const PI = 3.14159265358979323846;
-export const PHI = GOLDEN_RATIO; // Alias for phi (φ)
-export const QUANTUM_CONSTANT = 137.035999084; // Fine structure constant (α⁻¹)
-export const MANDELBROT_MAX_ITERATIONS = 1000;
+export const PI = 3.141592653589793;
 
-// Default growth parameters based on natural constants
+// Maximum iterations for Mandelbrot calculations
+const MAX_MANDELBROT_ITERATIONS = 1000;
+
+// Default growth parameters
 export const DEFAULT_GROWTH_PARAMETERS: GrowthParameters = {
-  // Fibonacci
-  fibonacciBase: 1,
-  fibonacciExpansionRate: 0.05,
-  
-  // Mandelbrot
-  mandelbrotDepthWeight: 0.05,
-  mandelbrotBoundary: 2.0,
-  
-  // Golden Ratio
-  goldenRatio: GOLDEN_RATIO,
-  goldenRatioWeight: 0.618, // Golden ratio conjugate (1/φ)
-  
-  // Lifecycle
-  seedMaturationRate: 0.0314, // Based on π/100
-  growthAccelerationFactor: 0.05,
-  floweringThreshold: 2.618, // φ²
-  legacyContributionFactor: 0.1618, // φ/10
-  
-  // Quantum entanglement
-  entanglementStrengthGrowth: 0.01,
-  entanglementEnergyTransfer: 0.85,
-  
-  // Torus field
-  toroidalFlowResistance: 0.1,
-  toroidalFlowAcceleration: 0.05
+  lifecycleThresholds: {
+    [BioZoeLifecycleState.SEED]: 1.5,     // Growth threshold for seed
+    [BioZoeLifecycleState.GROWTH]: 3.0,   // Flowering threshold for growth
+    [BioZoeLifecycleState.FLOWERING]: 5.0, // Legacy threshold for flowering
+    [BioZoeLifecycleState.LEGACY]: 10.0   // Just for completeness
+  },
+  mandelbrotGrowthFactor: 0.05,          // How much Mandelbrot position affects growth
+  entanglementAmplification: 0.2,        // How much entanglement amplifies growth
+  fibonacciProgressionRate: 0.1,         // Rate of progression through Fibonacci sequence
+  mutationProbability: 0.05,             // Probability of mutation per block
+  toroidalFlowStrength: 0.15,            // Strength of toroidal energy flows
+  goldenRatioInfluence: 0.618,           // Influence of Golden Ratio (φ-1)
+  entropicDecayRate: 0.01                // Rate of entropy increase
 };
 
 /**
- * Generate Fibonacci sequence up to a certain length
- * @param length Number of elements in sequence
- * @returns Array of Fibonacci numbers
+ * Generate a Fibonacci sequence up to the specified number of elements
+ * @param count Number of elements
+ * @returns Array containing the Fibonacci sequence
  */
-export function generateFibonacciSequence(length: number): number[] {
-  if (length <= 0) return [];
-  if (length === 1) return [1];
+export function generateFibonacciSequence(count: number): number[] {
+  if (count <= 0) return [];
+  if (count === 1) return [1];
+  if (count === 2) return [1, 1];
   
   const sequence = [1, 1];
-  for (let i = 2; i < length; i++) {
-    sequence.push(sequence[i-1] + sequence[i-2]);
+  for (let i = 2; i < count; i++) {
+    sequence.push(sequence[i - 1] + sequence[i - 2]);
   }
   
   return sequence;
 }
 
 /**
- * Get nth Fibonacci number
- * @param n Position in sequence (0-indexed)
- * @returns The Fibonacci number at position n
+ * Get the nth Fibonacci number
+ * @param n Position in Fibonacci sequence (1-based)
+ * @returns The nth Fibonacci number
  */
 export function getFibonacciNumber(n: number): number {
   if (n <= 0) return 0;
   if (n === 1 || n === 2) return 1;
   
-  // For larger numbers, use Binet's formula with the golden ratio
-  // This is more efficient than computing the entire sequence
-  return Math.round((Math.pow(GOLDEN_RATIO, n) - Math.pow(1 - GOLDEN_RATIO, n)) / Math.sqrt(5));
+  let a = 1, b = 1;
+  for (let i = 3; i <= n; i++) {
+    const temp = a + b;
+    a = b;
+    b = temp;
+  }
+  
+  return b;
 }
 
 /**
- * Calculate the number of Mandelbrot iterations for a complex point
- * This determines if a point is in the Mandelbrot set and its "depth"
- * 
- * @param real Real component of complex number
- * @param imaginary Imaginary component of complex number
- * @param maxIterations Maximum iterations to check
- * @returns Number of iterations before escaping, or maxIterations if in set
+ * Calculate the number of iterations for a point to escape the Mandelbrot set
+ * @param real Real part of complex number
+ * @param imag Imaginary part of complex number
+ * @returns Number of iterations before escape (or MAX_ITERATIONS)
  */
-export function calculateMandelbrotIterations(
-  real: number, 
-  imaginary: number, 
-  maxIterations: number = MANDELBROT_MAX_ITERATIONS
-): number {
-  let x = 0;
-  let y = 0;
-  let x2 = 0;
-  let y2 = 0;
+export function calculateMandelbrotIterations(real: number, imag: number): number {
+  let zReal = 0;
+  let zImag = 0;
   let iteration = 0;
   
-  // Iterate z = z² + c until |z| > 2 or we reach max iterations
-  while (x2 + y2 <= 4 && iteration < maxIterations) {
-    y = 2 * x * y + imaginary;
-    x = x2 - y2 + real;
-    x2 = x * x;
-    y2 = y * y;
+  // z = z² + c until |z| > 2 or max iterations reached
+  while (zReal * zReal + zImag * zImag <= 4 && iteration < MAX_MANDELBROT_ITERATIONS) {
+    const nextZReal = zReal * zReal - zImag * zImag + real;
+    zImag = 2 * zReal * zImag + imag;
+    zReal = nextZReal;
     iteration++;
   }
   
@@ -111,434 +96,409 @@ export function calculateMandelbrotIterations(
 }
 
 /**
- * Get Mandelbrot set "potential" for a point
- * Represents how "deep" a point is in the set, normalized between 0-1
- * 
- * @param real Real component of complex number
- * @param imaginary Imaginary component of complex number
- * @returns Potential value between 0-1
+ * Get Mandelbrot potential based on position
+ * Higher values mean closer to the boundary of the set
+ * @param real Real part of complex number
+ * @param imag Imaginary part of complex number
+ * @returns Potential value (0-1 range)
  */
-export function getMandelbrotPotential(real: number, imaginary: number): number {
-  const iterations = calculateMandelbrotIterations(real, imaginary);
+export function getMandelbrotPotential(real: number, imag: number): number {
+  const iterations = calculateMandelbrotIterations(real, imag);
   
-  // Normalize to 0-1 range using logarithmic scaling for visual appeal
-  if (iterations < MANDELBROT_MAX_ITERATIONS) {
-    return Math.log(iterations + 1) / Math.log(MANDELBROT_MAX_ITERATIONS);
-  } else {
-    return 1.0; // In the set
+  // If inside the set, return 0
+  if (iterations === MAX_MANDELBROT_ITERATIONS) {
+    return 0;
   }
-}
-
-/**
- * Calculate a point on the edge of the Mandelbrot set cardioid
- * The main cardioid is the heart-shaped region of the Mandelbrot set
- * 
- * @param angle Angle in radians (0 to 2π)
- * @returns Complex point [real, imaginary]
- */
-export function getMandelbrotCardioidPoint(angle: number): [number, number] {
-  // Cardioid formula: r = 0.5 - 0.5 * cos(angle)
-  const r = 0.5 - 0.5 * Math.cos(angle);
-  const x = r * Math.cos(angle);
-  const y = r * Math.sin(angle);
   
-  // Adjust to center the cardioid at the standard position
-  return [x - 0.25, y];
+  // Calculate smooth potential based on escape iterations
+  // Higher = closer to boundary
+  return 1 - Math.log(iterations) / Math.log(MAX_MANDELBROT_ITERATIONS);
 }
 
 /**
- * Calculate token growth based on Fibonacci, Golden Ratio, and Mandelbrot principles
- * 
- * @param age Token age in blocks
+ * Calculate token growth based on multiple factors
+ * @param age Token age
  * @param lifeState Current lifecycle state
- * @param fibonacciIndex Position in Fibonacci sequence
- * @param mandelbrotPosition Complex position in Mandelbrot set
- * @param entanglementStrength Connection strength (0-1)
- * @param parameters Growth algorithm parameters
- * @returns Growth factor multiplier
+ * @param fibonacciIndex Current position in Fibonacci sequence
+ * @param mandelbrotPosition Position in Mandelbrot set
+ * @param entanglementStrength Strength of quantum entanglement
+ * @param params Growth parameters
+ * @returns Updated growth factor
  */
 export function calculateTokenGrowth(
   age: number,
   lifeState: BioZoeLifecycleState,
   fibonacciIndex: number,
-  mandelbrotPosition: { re: number, im: number },
+  mandelbrotPosition: MandelbrotPosition,
   entanglementStrength: number,
-  parameters: GrowthParameters = DEFAULT_GROWTH_PARAMETERS
+  params: GrowthParameters
 ): number {
-  // Base growth from Fibonacci progression
-  const fibonacciGrowth = getFibonacciNumber(fibonacciIndex) / 100;
+  // Base growth from age (logarithmic growth)
+  const baseGrowth = Math.log(age + 1) * 0.1;
   
-  // Mandelbrot influence
-  const mandelbrotIterations = calculateMandelbrotIterations(
+  // Fibonacci growth factor
+  const fibGrowth = getFibonacciNumber(fibonacciIndex) / 1000;
+  
+  // Mandelbrot-based growth
+  const mandelbrotPotential = getMandelbrotPotential(
     mandelbrotPosition.re,
     mandelbrotPosition.im
   );
-  const mandelbrotGrowth = mandelbrotIterations / MANDELBROT_MAX_ITERATIONS * parameters.mandelbrotDepthWeight;
+  const mandelbrotGrowth = mandelbrotPotential * params.mandelbrotGrowthFactor;
   
-  // Golden Ratio influence
-  const goldenRatioGrowth = Math.pow(parameters.goldenRatio, age / 1000) * parameters.goldenRatioWeight;
+  // Entanglement contribution
+  const entanglementGrowth = entanglementStrength * params.entanglementAmplification;
   
-  // Lifecycle state modifiers
-  let lifecycleModifier = 1.0;
+  // Golden Ratio influence (creates cyclical patterns)
+  const goldenRatioEffect = Math.sin(age * params.goldenRatioInfluence / GOLDEN_RATIO) * 0.1;
+  
+  // State-specific modifiers
+  let stateModifier = 1.0;
   switch (lifeState) {
     case BioZoeLifecycleState.SEED:
-      lifecycleModifier = 1.0 + (age * parameters.seedMaturationRate);
+      // Seeds grow slowly at first, then accelerate
+      stateModifier = 0.5 + (age / 100) * 0.5;
       break;
+      
     case BioZoeLifecycleState.GROWTH:
-      lifecycleModifier = 1.0 + (age * parameters.growthAccelerationFactor);
+      // Growth state has steady growth
+      stateModifier = 1.0;
       break;
+      
     case BioZoeLifecycleState.FLOWERING:
-      // Flowering growth follows golden ratio squared pattern
-      lifecycleModifier = Math.pow(parameters.goldenRatio, 2);
+      // Flowering has enhanced growth
+      stateModifier = 1.2;
       break;
+      
     case BioZoeLifecycleState.LEGACY:
-      // Legacy tokens contribute based on lifetime
-      lifecycleModifier = 1.0 + (parameters.legacyContributionFactor * Math.log(age + 1));
+      // Legacy tokens grow very slowly
+      stateModifier = 0.2;
       break;
   }
   
-  // Entanglement bonus (quantum connection boost)
-  const entanglementBonus = entanglementStrength * 0.5;
-  
-  // Combine all growth factors
+  // Combine all factors
   const totalGrowth = (
-    fibonacciGrowth + 
+    baseGrowth + 
+    fibGrowth + 
     mandelbrotGrowth + 
-    goldenRatioGrowth
-  ) * lifecycleModifier * (1 + entanglementBonus);
+    entanglementGrowth + 
+    goldenRatioEffect
+  ) * stateModifier;
   
-  return 1.0 + totalGrowth;
+  // Growth should always be positive to ensure progress
+  return Math.max(0.01, totalGrowth);
 }
 
 /**
- * Calculate a position in the toroidal field for token placement
- * 
- * @param seed Seed value for deterministic generation
- * @returns Toroidal coordinates {theta, phi, r}
+ * Calculate toroidal field position from a seed value
+ * @param seed Numeric seed
+ * @returns Torus coordinates
  */
-export function calculateToroidalPosition(seed: number): { theta: number, phi: number, r: number } {
-  // Create a deterministic but well-distributed value from the seed
-  const normalizedSeed = ((seed * 9301 + 49297) % 233280) / 233280;
+export function calculateToroidalPosition(seed: number): ToroidalCoordinates {
+  // Use Golden Ratio to distribute points evenly on torus
+  const goldenAngle = GOLDEN_RATIO * 2 * PI;
   
-  // Calculate toroidal coordinates
-  const theta = normalizedSeed * 2 * PI; // Angular coordinate (0 to 2π)
-  const phi = (normalizedSeed * 7919) % 1 * 2 * PI; // Poloidal coordinate (0 to 2π)
+  // Derive theta angle (around the tube)
+  const theta = (seed * goldenAngle) % (2 * PI);
   
-  // Radius follows golden ratio distribution
-  const r = 1 + (GOLDEN_RATIO - 1) * ((normalizedSeed * 104729) % 1);
+  // Derive phi angle (around the circle)
+  const phi = (seed * PI / GOLDEN_RATIO) % (2 * PI);
   
-  return { theta, phi, r };
+  return { theta, phi };
 }
 
 /**
- * Generate a Mandelbrot position based on a token's properties
- * 
- * @param seed Deterministic seed value
- * @param depth How deep in the set to target (0-1)
- * @returns Complex position in Mandelbrot set {re, im}
+ * Generate a position in the Mandelbrot set based on a seed
+ * @param seed Numeric seed value
+ * @returns Position in Mandelbrot set
  */
-export function generateMandelbrotPosition(seed: number, depth: number = 0.7): { re: number, im: number } {
-  // Generate a seeded random angle
-  const angle = ((seed * 9301 + 49297) % 233280) / 233280 * 2 * PI;
+export function generateMandelbrotPosition(seed: number): MandelbrotPosition {
+  // Generate a position that's likely to be in an interesting region
+  // Most interesting regions are near the boundary of the Mandelbrot set
   
-  // Get a point on the main cardioid
-  const [baseRe, baseIm] = getMandelbrotCardioidPoint(angle);
+  // Use seed to generate a value in the main cardioid or period-2 bulb
+  const t = (seed % 1000) / 1000 * 2 * Math.PI;
   
-  // Move toward the center based on depth to ensure interesting behavior
-  const centerRe = -0.75;
-  const centerIm = 0;
+  let re: number, im: number;
   
-  const finalRe = baseRe + (centerRe - baseRe) * (1 - depth);
-  const finalIm = baseIm + (centerIm - baseIm) * (1 - depth);
+  if (seed % 3 === 0) {
+    // Main cardioid: z = e^(it)/2 - e^(2it)/4
+    re = 0.5 * Math.cos(t) - 0.25 * Math.cos(2 * t);
+    im = 0.5 * Math.sin(t) - 0.25 * Math.sin(2 * t);
+  } else if (seed % 3 === 1) {
+    // Period-2 bulb: z = -1 + 0.25*e^(it)
+    re = -1 + 0.25 * Math.cos(t);
+    im = 0.25 * Math.sin(t);
+  } else {
+    // Slightly randomized position in the complex plane
+    re = -0.7 + (seed % 100) / 500;
+    im = (seed % 200) / 1000 - 0.1;
+  }
   
-  return { re: finalRe, im: finalIm };
+  return { re, im };
 }
 
 /**
- * Calculate energy flow in the torus field
- * 
- * @param position Current position in torus {theta, phi}
- * @param networkDensity Density of tokens in network (0-1)
- * @param parameters Growth parameters
- * @returns Flow vector {direction, magnitude}
+ * Calculate toroidal energy flow at a given position
+ * @param position Position on torus
+ * @param networkDensity Network density parameter
+ * @param params Growth parameters
+ * @returns Flow direction and magnitude
  */
 export function calculateToroidalFlow(
-  position: { theta: number, phi: number },
+  position: ToroidalCoordinates,
   networkDensity: number,
-  parameters: GrowthParameters = DEFAULT_GROWTH_PARAMETERS
+  params: GrowthParameters
 ): { direction: number, magnitude: number } {
-  // Direction follows a pattern based on position
-  const direction = (position.theta + position.phi / 2) % (2 * PI);
+  // Calculate base flow direction using position and Golden Ratio
+  const baseDirection = (position.theta + position.phi * GOLDEN_RATIO) % (2 * PI);
   
-  // Magnitude follows a fibonacci-related pattern
-  const phiNormalized = position.phi / (2 * PI);
-  const thetaNormalized = position.theta / (2 * PI);
+  // Perturb direction based on network density
+  const perturbation = Math.sin(position.phi * 3) * networkDensity * 0.2;
+  const direction = (baseDirection + perturbation) % (2 * PI);
   
-  const fibValue = getFibonacciNumber(Math.floor(thetaNormalized * 10) + 1);
-  const resistanceFactor = 1 / (1 + parameters.toroidalFlowResistance * networkDensity);
+  // Calculate flow magnitude using network density and position
+  let magnitude = params.toroidalFlowStrength * (0.5 + networkDensity * 0.5);
   
-  // Calculate flow magnitude based on position and network density
-  const magnitude = (
-    0.1 + // Base flow
-    0.2 * Math.sin(phiNormalized * 2 * PI) + // Sinusoidal component
-    0.1 * (fibValue % 10) / 10 // Fibonacci influence
-  ) * resistanceFactor * parameters.toroidalFlowAcceleration;
+  // Modify flow based on position (create vortices at specific points)
+  // Creates four vortices around the torus
+  for (let i = 0; i < 4; i++) {
+    const vortexTheta = i * PI / 2;
+    const vortexPhi = i * PI / 2;
+    
+    // Distance to vortex center
+    const thetaDiff = Math.min(
+      Math.abs(position.theta - vortexTheta),
+      2 * PI - Math.abs(position.theta - vortexTheta)
+    );
+    const phiDiff = Math.min(
+      Math.abs(position.phi - vortexPhi),
+      2 * PI - Math.abs(position.phi - vortexPhi)
+    );
+    
+    const distance = Math.sqrt(thetaDiff * thetaDiff + phiDiff * phiDiff);
+    
+    // Vortex effect decreases with distance
+    if (distance < PI / 2) {
+      // Inside vortex influence
+      const vortexStrength = (PI / 2 - distance) / (PI / 2) * 0.5;
+      magnitude += vortexStrength;
+    }
+  }
   
   return { direction, magnitude };
 }
 
 /**
- * Generate a DNA sequence for a token based on its properties
- * DNA represents the token's unique characteristics and history
- * 
- * @param tokenId Token identifier
- * @param mandelbrotPosition Position in Mandelbrot set
- * @param lifeState Current lifecycle state
+ * Generate a DNA-like sequence for a token based on its properties
+ * @param tokenId Token ID
+ * @param position Mandelbrot position
+ * @param lifecycleState Initial lifecycle state
  * @returns DNA sequence string
  */
 export function generateTokenDNA(
   tokenId: string,
-  mandelbrotPosition: { re: number, im: number },
-  lifeState: BioZoeLifecycleState
+  position: MandelbrotPosition,
+  lifecycleState: BioZoeLifecycleState
 ): string {
-  // Convert the token ID to a number for seeding
-  const seedValue = parseInt(tokenId.replace(/[^0-9]/g, '').substring(0, 10), 10) || 0;
+  // Initialize parts of the DNA
+  const dnaBase = tokenId.substring(0, 12); // First part from token ID
   
-  // Calculate Mandelbrot iterations for this position
-  const iterations = calculateMandelbrotIterations(
-    mandelbrotPosition.re,
-    mandelbrotPosition.im,
-    100 // Limit to 100 for DNA generation
-  );
+  // Convert position to DNA segments
+  const posPart = Math.abs(position.re).toFixed(6) + Math.abs(position.im).toFixed(6);
+  const positionDNA = posPart.replace(/\./g, '').substring(0, 8);
   
-  // Generate a binary pattern based on the iterations
-  let pattern = '';
-  for (let i = 0; i < 32; i++) {
-    const bitValue = (iterations >> i) & 1;
-    pattern += bitValue.toString();
+  // Lifecycle state encoding
+  let stateCode: string;
+  switch (lifecycleState) {
+    case BioZoeLifecycleState.SEED: stateCode = 'ATGC'; break;
+    case BioZoeLifecycleState.GROWTH: stateCode = 'GCTA'; break;
+    case BioZoeLifecycleState.FLOWERING: stateCode = 'TACG'; break;
+    case BioZoeLifecycleState.LEGACY: stateCode = 'CGAT'; break;
+    default: stateCode = 'ATGC';
   }
   
-  // Add lifecycle encoding
-  const lifecodeMap = {
-    [BioZoeLifecycleState.SEED]: 'AA',
-    [BioZoeLifecycleState.GROWTH]: 'GG',
-    [BioZoeLifecycleState.FLOWERING]: 'TT',
-    [BioZoeLifecycleState.LEGACY]: 'CC'
-  };
+  // Generate DNA with segments that encode different properties
+  let dna = '';
   
-  // Create segments with biological-like encoding
-  const segment1 = lifecodeMap[lifeState];
-  const segment2 = seedValue.toString(16).padStart(8, '0');
-  const segment3 = pattern.substring(0, 16);
-  const segment4 = (mandelbrotPosition.re * 1000).toFixed(0).padStart(4, '0');
-  const segment5 = (mandelbrotPosition.im * 1000).toFixed(0).padStart(4, '0');
+  // First segment: base ID segment
+  dna += dnaBase;
   
-  // Combine into DNA-like sequence
-  return `${segment1}-${segment2}-${segment3}-${segment4}-${segment5}`;
+  // Second segment: state code
+  dna += '-' + stateCode;
+  
+  // Third segment: position encoding
+  dna += '-' + positionDNA;
+  
+  // Fourth segment: Golden Ratio encoding
+  const goldenPart = (GOLDEN_RATIO * 1000000).toString().substring(0, 6);
+  dna += '-' + goldenPart;
+  
+  return dna;
 }
 
 /**
- * Determine the lifecycle transition threshold based on token properties
- * 
- * @param currentState Current lifecycle state
+ * Get threshold for transitioning to the next lifecycle state
+ * @param state Current lifecycle state
  * @param growthFactor Current growth factor
- * @param age Token age in blocks
- * @param parameters Growth parameters
- * @returns Threshold value for transition to next state
+ * @param age Token age
+ * @param params Growth parameters
+ * @returns Threshold value for transition
  */
 export function getLifecycleTransitionThreshold(
-  currentState: BioZoeLifecycleState,
+  state: BioZoeLifecycleState,
   growthFactor: number,
   age: number,
-  parameters: GrowthParameters = DEFAULT_GROWTH_PARAMETERS
+  params: GrowthParameters
 ): number {
-  switch (currentState) {
-    case BioZoeLifecycleState.SEED:
-      // Seeds transition to Growth based on maturation rate and age
-      return 1.0 + (parameters.seedMaturationRate * age);
-      
-    case BioZoeLifecycleState.GROWTH:
-      // Growth transitions to Flowering at golden ratio squared threshold
-      return parameters.floweringThreshold;
-      
-    case BioZoeLifecycleState.FLOWERING:
-      // Flowering transitions to Legacy based on energy potential
-      return 3.14159; // Pi-based threshold
-      
-    case BioZoeLifecycleState.LEGACY:
-      // Legacy tokens don't transition further
-      return Infinity;
-      
-    default:
-      return 1.0;
+  // Base threshold from parameters
+  let threshold = params.lifecycleThresholds[state];
+  
+  // Modify based on age
+  if (state === BioZoeLifecycleState.SEED) {
+    // Seeds need more time to mature as they age
+    threshold -= Math.min(0.5, age / 1000);
+  } else if (state === BioZoeLifecycleState.GROWTH) {
+    // Growth state has a steady threshold
+    threshold += Math.min(0.3, growthFactor / 10);
+  } else if (state === BioZoeLifecycleState.FLOWERING) {
+    // Flowering threshold increases with age
+    threshold += Math.min(1.0, age / 500);
   }
+  
+  // Ensure threshold is always positive
+  return Math.max(0.1, threshold);
 }
 
 /**
- * Calculate the lifecycle progress percentage
- * 
- * @param currentState Current lifecycle state
+ * Calculate lifecycle progress as percentage
+ * @param state Current lifecycle state
  * @param growthFactor Current growth factor
- * @param age Token age in blocks
- * @param parameters Growth parameters
+ * @param age Token age
+ * @param params Growth parameters
  * @returns Progress percentage (0-100)
  */
 export function calculateLifecycleProgress(
-  currentState: BioZoeLifecycleState,
+  state: BioZoeLifecycleState,
   growthFactor: number,
   age: number,
-  parameters: GrowthParameters = DEFAULT_GROWTH_PARAMETERS
+  params: GrowthParameters
 ): number {
-  const threshold = getLifecycleTransitionThreshold(
-    currentState,
-    growthFactor,
-    age,
-    parameters
-  );
+  const threshold = getLifecycleTransitionThreshold(state, growthFactor, age, params);
   
   let progress = 0;
   
-  switch (currentState) {
+  switch (state) {
     case BioZoeLifecycleState.SEED:
-      // Progress based on growth factor compared to threshold
-      progress = (growthFactor - 1.0) / (threshold - 1.0);
-      break;
-      
     case BioZoeLifecycleState.GROWTH:
-      // Progress based on growth factor compared to flowering threshold
-      progress = (growthFactor - 1.0) / (parameters.floweringThreshold - 1.0);
-      break;
-      
     case BioZoeLifecycleState.FLOWERING:
-      // Flowering progress based on energy accumulation
-      progress = (growthFactor - parameters.floweringThreshold) / 
-                (threshold - parameters.floweringThreshold);
+      progress = (growthFactor / threshold) * 100;
       break;
-      
     case BioZoeLifecycleState.LEGACY:
-      // Legacy tokens are always at 100%
-      progress = 1.0;
+      // Legacy tokens don't progress to another state, so use age instead
+      progress = Math.min(100, (age / 1000) * 100);
       break;
   }
   
-  // Ensure progress is between 0-100%
-  return Math.max(0, Math.min(1, progress)) * 100;
+  // Ensure progress is between 0-100
+  return Math.min(100, Math.max(0, progress));
 }
 
 /**
- * Calculate quantum entanglement strength growth between two tokens
- * 
- * @param initialStrength Starting entanglement strength
- * @param token1Position Position of first token in Mandelbrot set
- * @param token2Position Position of second token in Mandelbrot set 
- * @param blocksSinceConnection Number of blocks since connection was made
- * @param parameters Growth parameters
- * @returns New entanglement strength (0-1)
+ * Calculate entanglement strength growth between two tokens
+ * @param currentStrength Current entanglement strength
+ * @param position1 First token's Mandelbrot position
+ * @param position2 Second token's Mandelbrot position
+ * @param age Token age
+ * @param params Growth parameters
+ * @returns New entanglement strength
  */
 export function calculateEntanglementStrengthGrowth(
-  initialStrength: number,
-  token1Position: { re: number, im: number },
-  token2Position: { re: number, im: number },
-  blocksSinceConnection: number,
-  parameters: GrowthParameters = DEFAULT_GROWTH_PARAMETERS
+  currentStrength: number,
+  position1: MandelbrotPosition,
+  position2: MandelbrotPosition,
+  age: number,
+  params: GrowthParameters
 ): number {
-  // Calculate compatibility between the tokens based on Mandelbrot positions
-  const distance = Math.sqrt(
-    Math.pow(token1Position.re - token2Position.re, 2) +
-    Math.pow(token1Position.im - token2Position.im, 2)
-  );
+  // Calculate normalized distance between positions in Mandelbrot set
+  const dRe = position1.re - position2.re;
+  const dIm = position1.im - position2.im;
+  const distance = Math.sqrt(dRe * dRe + dIm * dIm);
   
-  // Closer tokens have better compatibility
-  const compatibility = 1 / (1 + distance * 10);
+  // Closer positions have stronger potential entanglement
+  const proximityFactor = 1 / (1 + distance * 5);
   
-  // Calculate growth over time using logistic function
-  const timeGrowth = parameters.entanglementStrengthGrowth * blocksSinceConnection;
-  const logisticGrowth = 1 / (1 + Math.exp(-timeGrowth));
+  // Calculate growth rate based on golden ratio
+  const growthRate = params.entanglementAmplification * proximityFactor * (1 / GOLDEN_RATIO);
   
-  // Combine factors for final strength
-  let newStrength = initialStrength + 
-                   (1 - initialStrength) * logisticGrowth * compatibility;
+  // Apply growth with diminishing returns as strength approaches 1
+  const newStrength = currentStrength + growthRate * (1 - currentStrength);
   
-  // Ensure strength stays between 0-1
-  return Math.max(0, Math.min(1, newStrength));
+  // Ensure strength is between 0-1
+  return Math.min(1, Math.max(0, newStrength));
 }
 
 /**
- * Calculate a visually pleasing color for a token based on its properties
- * 
- * @param mandelbrotPosition Position in Mandelbrot set
- * @param lifeState Current lifecycle state
- * @param entanglementStrength Quantum connection strength
- * @returns Hex color string
+ * Calculate a color for a token based on its properties
+ * @param position Mandelbrot position
+ * @param state Lifecycle state
+ * @param entanglementStrength Entanglement strength
+ * @returns CSS color string
  */
 export function calculateTokenColor(
-  mandelbrotPosition: { re: number, im: number },
-  lifeState: BioZoeLifecycleState,
+  position: MandelbrotPosition,
+  state: BioZoeLifecycleState,
   entanglementStrength: number
 ): string {
-  // Calculate Mandelbrot iterations for this position (normalized 0-1)
-  const iterations = calculateMandelbrotIterations(
-    mandelbrotPosition.re,
-    mandelbrotPosition.im
-  );
-  const iterationsNormalized = iterations / MANDELBROT_MAX_ITERATIONS;
+  // Get base color from lifecycle state
+  let r = 0, g = 0, b = 0;
   
-  // Base hue from Mandelbrot iterations (0-360)
-  let hue = iterationsNormalized * 360;
-  
-  // Adjust hue based on lifecycle state
-  switch (lifeState) {
+  switch (state) {
     case BioZoeLifecycleState.SEED:
-      // Seeds are in green spectrum
-      hue = (hue + 120) % 360;
+      // Green for seed
+      r = 50;
+      g = 205;
+      b = 50;
       break;
+      
     case BioZoeLifecycleState.GROWTH:
-      // Growth tokens in blue-green spectrum
-      hue = (hue + 180) % 360;
+      // Blue-green for growth
+      r = 0;
+      g = 150;
+      b = 200;
       break;
+      
     case BioZoeLifecycleState.FLOWERING:
-      // Flowering tokens in purple-pink spectrum
-      hue = (hue + 300) % 360;
+      // Purple for flowering
+      r = 186;
+      g = 85;
+      b = 211;
       break;
+      
     case BioZoeLifecycleState.LEGACY:
-      // Legacy tokens in blue spectrum
-      hue = (hue + 240) % 360;
+      // Blue for legacy
+      r = 65;
+      g = 105;
+      b = 225;
       break;
   }
   
-  // Saturation based on entanglement (more entangled = more vibrant)
-  const saturation = 0.5 + entanglementStrength * 0.5;
+  // Modify based on Mandelbrot position
+  const mandelbrotPotential = getMandelbrotPotential(position.re, position.im);
+  const potentialFactor = mandelbrotPotential * 0.3;
   
-  // Lightness based on mandelbrot position
-  const lightness = 0.3 + 0.4 * ((mandelbrotPosition.re + 2) / 4);
+  r = Math.min(255, r * (1 + potentialFactor));
+  g = Math.min(255, g * (1 + potentialFactor));
+  b = Math.min(255, b * (1 + potentialFactor));
   
-  // Convert HSL to RGB
-  const c = (1 - Math.abs(2 * lightness - 1)) * saturation;
-  const x = c * (1 - Math.abs((hue / 60) % 2 - 1));
-  const m = lightness - c / 2;
+  // Modify brightness based on entanglement strength
+  const brightnessFactor = 0.7 + entanglementStrength * 0.3;
   
-  let r, g, b;
+  r = Math.min(255, r * brightnessFactor);
+  g = Math.min(255, g * brightnessFactor);
+  b = Math.min(255, b * brightnessFactor);
   
-  if (hue < 60) {
-    [r, g, b] = [c, x, 0];
-  } else if (hue < 120) {
-    [r, g, b] = [x, c, 0];
-  } else if (hue < 180) {
-    [r, g, b] = [0, c, x];
-  } else if (hue < 240) {
-    [r, g, b] = [0, x, c];
-  } else if (hue < 300) {
-    [r, g, b] = [x, 0, c];
-  } else {
-    [r, g, b] = [c, 0, x];
-  }
-  
-  // Convert to hex
-  const toHex = (value: number) => {
-    const hex = Math.round((value + m) * 255).toString(16);
-    return hex.length === 1 ? '0' + hex : hex;
-  };
-  
-  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+  // Return as hex color
+  return `#${Math.round(r).toString(16).padStart(2, '0')}${Math.round(g).toString(16).padStart(2, '0')}${Math.round(b).toString(16).padStart(2, '0')}`;
 }
 `
