@@ -56,6 +56,17 @@ server {
     listen 80;
     server_name ${DOMAIN};
 
+    # Primary application path at /dapp
+    location /dapp {
+        proxy_pass http://localhost:3000/dapp;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+
+    # Secondary application path at /wallet (legacy support)
     location ${DEPLOY_PATH} {
         proxy_pass http://localhost:3000${DEPLOY_PATH};
         proxy_http_version 1.1;
@@ -65,9 +76,9 @@ server {
         proxy_cache_bypass $http_upgrade;
     }
 
-    # Redirect root to ${DEPLOY_PATH}
+    # Redirect root to /dapp
     location = / {
-        return 301 ${DEPLOY_PATH};
+        return 301 /dapp;
     }
 
     # For Let's Encrypt
@@ -114,7 +125,7 @@ WantedBy=multi-user.target
  */
 function generateDeploymentInstructions() {
   const instructions = `
-# Aetherion Deployment to ${DOMAIN}${DEPLOY_PATH}
+# Aetherion Deployment to ${DOMAIN}
 
 ## Files to Deploy
 1. Copy the entire 'dist' directory to your server
@@ -137,12 +148,14 @@ function generateDeploymentInstructions() {
 ## Verifying Deployment
 1. Check server status: sudo systemctl status aetherion
 2. Check application logs: journalctl -u aetherion
-3. Visit https://${DOMAIN}${DEPLOY_PATH} in your browser
+3. Visit https://${DOMAIN}/dapp in your browser (recommended)
+4. The application is also available at https://${DOMAIN}${DEPLOY_PATH} (legacy support)
 
 ## Troubleshooting
 - If Nginx shows 502 errors, ensure the Node.js server is running
 - If files aren't loading, check permissions on the dist directory
 - For SSL issues, verify Let's Encrypt certificates are properly installed
+- If redirects are happening to external sites, make sure your browser cache is cleared
 `;
 
   const instructionsPath = path.join('deployment-guides', 'deployment-instructions.md');
@@ -170,8 +183,10 @@ async function main() {
     // Output deployment summary
     console.log('\n--- Deployment Summary ---');
     console.log(`Target Domain: ${DOMAIN}`);
-    console.log(`Application Path: ${DEPLOY_PATH}`);
-    console.log(`Full URL: https://${DOMAIN}${DEPLOY_PATH}`);
+    console.log(`Primary Application Path: /dapp`);
+    console.log(`Secondary Application Path: ${DEPLOY_PATH}`);
+    console.log(`Primary URL: https://${DOMAIN}/dapp`);
+    console.log(`Secondary URL: https://${DOMAIN}${DEPLOY_PATH}`);
     console.log('\nDeployment guides generated in ./deployment-guides/');
     console.log('Follow the instructions in deployment-instructions.md to complete the setup');
     

@@ -29,7 +29,10 @@ export function getAvailableWallets(): WalletType[] {
   }
 
   // Check for Trust Wallet
-  if (typeof window !== 'undefined' && window.ethereum?.isTrust) {
+  // Trust Wallet doesn't have a specific identifier like isTrust
+  // We'll rely on other detection methods like mobile detection in the wallet component
+  if (typeof window !== 'undefined' && window.ethereum) {
+    // Always add Trust as an option for mobile users
     available.push('Trust');
   }
 
@@ -174,8 +177,9 @@ async function connectBinanceWallet(): Promise<WalletConnectionResponse> {
 
 // Connect to Trust Wallet
 async function connectTrustWallet(): Promise<WalletConnectionResponse> {
-  if (!window.ethereum?.isTrust) {
-    throw new Error('Trust Wallet is not installed');
+  // Trust wallet uses standard ethereum provider, we can't detect it specifically
+  if (!window.ethereum) {
+    throw new Error('No Web3 provider detected. Please install Trust Wallet');
   }
 
   try {
@@ -379,23 +383,28 @@ export const SUPPORTED_NETWORKS: {[chainId: number]: {name: string, symbol: stri
   }
 };
 
+// Type definition for Ethereum provider
+interface EthereumProvider {
+  isMetaMask?: boolean;
+  isCoinbaseWallet?: boolean;
+  request: (args: any) => Promise<any>;
+  on: (event: string, handler: (...args: any[]) => void) => void;
+  removeListener: (event: string, handler: (...args: any[]) => void) => void;
+  [key: string]: any;
+}
+
+// Type definition for Binance Chain provider
+interface BinanceChainProvider {
+  request: (args: any) => Promise<any>;
+  on: (event: string, handler: (...args: any[]) => void) => void;
+  removeListener: (event: string, handler: (...args: any[]) => void) => void;
+  [key: string]: any;
+}
+
 // Extend window interface to include wallet providers
 declare global {
   interface Window {
-    ethereum?: {
-      isMetaMask?: boolean;
-      isCoinbaseWallet?: boolean;
-      isTrust?: boolean;
-      request: (args: any) => Promise<any>;
-      on: (event: string, handler: (...args: any[]) => void) => void;
-      removeListener: (event: string, handler: (...args: any[]) => void) => void;
-      [key: string]: any;
-    };
-    BinanceChain?: {
-      request: (args: any) => Promise<any>;
-      on?: (event: string, handler: (...args: any[]) => void) => void;
-      removeListener?: (event: string, handler: (...args: any[]) => void) => void;
-      [key: string]: any;
-    };
+    ethereum?: EthereumProvider;
+    BinanceChain?: BinanceChainProvider;
   }
 }

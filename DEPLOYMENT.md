@@ -47,7 +47,12 @@ This document provides comprehensive deployment instructions for the Aetherion b
 3. Set up environment variables by creating a `.env` file based on `.env.example`
 4. Build the application
 5. Run database migrations
-6. Start the production server
+6. Run the deploy-to-domain.js script to generate deployment configurations
+7. Follow the instructions in the generated deployment guides
+
+The application can be accessed via two endpoints:
+- Primary endpoint: `https://atc.aifreedomtrust.com/app` (recommended)
+- Secondary endpoint: `https://atc.aifreedomtrust.com/wallet` (legacy support)
 
 ### Environment Variables
 
@@ -128,3 +133,4 @@ Ensure security best practices are applied to the deployed application
 ## Troubleshooting
 
 Common issues and their solutions for both traditional and decentralized deployment scenarios
+
