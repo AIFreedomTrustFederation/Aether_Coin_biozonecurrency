@@ -41,10 +41,19 @@ export function AIAssistant({ userId, className = '' }: AIAssistantProps) {
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const dragRef = useRef<HTMLDivElement>(null);
   
+  // State to track if the keyboard is visible
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+  const [windowHeight, setWindowHeight] = useState(0);
+  const [originalHeight, setOriginalHeight] = useState(0);
+  
   // Initialize position to bottom-right corner, adjusted for mobile devices
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const isMobileView = window.innerWidth < 768;
+      
+      // Store original window height for keyboard detection
+      setOriginalHeight(window.innerHeight);
+      setWindowHeight(window.innerHeight);
       
       // Adjust position based on device type
       setPosition({
@@ -52,19 +61,84 @@ export function AIAssistant({ userId, className = '' }: AIAssistantProps) {
         y: isMobileView ? window.innerHeight - 160 : window.innerHeight - 80 // Higher position on mobile to avoid bottom nav
       });
       
-      // Update position on resize
+      // Update position on resize and detect keyboard visibility
       const handleResize = () => {
         const isMobile = window.innerWidth < 768;
+        const currentHeight = window.innerHeight;
+        
+        // Store current window height
+        setWindowHeight(currentHeight);
+        
+        // If the height significantly decreased, assume keyboard opened
+        // Usually keyboard takes up about 30-40% of the screen
+        const heightDifference = originalHeight - currentHeight;
+        const heightRatio = heightDifference / originalHeight;
+        const keyboardVisible = heightRatio > 0.2; // 20% or more height reduction
+        
+        setIsKeyboardVisible(keyboardVisible);
+        
+        // When keyboard is shown, move the chat window up
+        // Calculate new Y position to keep the chat in view above keyboard
+        let newY = isMobile ? window.innerHeight - 160 : window.innerHeight - 80;
+        
+        if (keyboardVisible && isOpen) {
+          // Position the chat window near the top of the screen when keyboard is open
+          newY = isMobile ? 10 : 50; // Move it to the very top when keyboard is open
+        }
+        
         setPosition({
           x: window.innerWidth - 80,
-          y: isMobile ? window.innerHeight - 160 : window.innerHeight - 80
+          y: newY
         });
       };
       
+      // Different browsers / devices have different events for keyboard
       window.addEventListener('resize', handleResize);
-      return () => window.removeEventListener('resize', handleResize);
+      
+      // For iOS devices
+      const handleFocusIn = () => {
+        const activeElement = document.activeElement;
+        if (activeElement && 
+            (activeElement.tagName === 'INPUT' || 
+             activeElement.tagName === 'TEXTAREA')) {
+          setIsKeyboardVisible(true);
+          
+          // Move the chat window to the top when keyboard opens
+          const isMobile = window.innerWidth < 768;
+          setPosition({
+            x: window.innerWidth - 80,
+            y: isMobile ? 10 : 50
+          });
+        }
+      };
+      
+      // For when keyboard closes
+      const handleFocusOut = () => {
+        const activeElement = document.activeElement;
+        if (activeElement && 
+            activeElement.tagName !== 'INPUT' && 
+            activeElement.tagName !== 'TEXTAREA') {
+          setIsKeyboardVisible(false);
+          
+          // Restore normal position
+          const isMobile = window.innerWidth < 768;
+          setPosition({
+            x: window.innerWidth - 80,
+            y: isMobile ? window.innerHeight - 160 : window.innerHeight - 80
+          });
+        }
+      };
+      
+      document.addEventListener('focusin', handleFocusIn);
+      document.addEventListener('focusout', handleFocusOut);
+      
+      return () => {
+        window.removeEventListener('resize', handleResize);
+        document.removeEventListener('focusin', handleFocusIn);
+        document.removeEventListener('focusout', handleFocusOut);
+      };
     }
-  }, []);
+  }, [isOpen, originalHeight]);
 
   const toggleOpen = () => {
     setIsOpen(!isOpen);
@@ -180,7 +254,11 @@ export function AIAssistant({ userId, className = '' }: AIAssistantProps) {
         }}
       >
         {isOpen ? (
-          <Card className="shadow-lg border rounded-lg overflow-hidden w-80 md:w-96 h-[500px] flex flex-col relative">
+          <Card 
+            className={`shadow-lg border rounded-lg overflow-hidden w-80 md:w-96 flex flex-col relative ${
+              isKeyboardVisible ? 'h-[50vh]' : 'h-[500px]'
+            }`}
+          >
             {/* Chat header with drag handle and controls */}
             <div 
               className="p-2 border-b bg-primary/10 flex justify-between items-center cursor-move"
@@ -214,12 +292,22 @@ export function AIAssistant({ userId, className = '' }: AIAssistantProps) {
             </div>
             
             {/* Chat interface */}
-            <div className="flex-1 overflow-hidden">
+            <div className={`flex-1 overflow-hidden ${isKeyboardVisible ? 'max-h-[calc(50vh-90px)]' : ''}`}>
               <ChatInterface 
                 messages={initialMessages}
                 onSendMessage={(message) => {
                   console.log("Message sent:", message);
                   // In a real implementation, this would be handled by the AIContext
+                  
+                  // After sending a message, trigger a scroll to keep the interface in view
+                  if (isKeyboardVisible) {
+                    setTimeout(() => {
+                      const chatContainer = document.querySelector('.chat-messages-container');
+                      if (chatContainer) {
+                        chatContainer.scrollTop = chatContainer.scrollHeight;
+                      }
+                    }, 100);
+                  }
                 }}
                 isProcessing={false}
                 placeholder="Ask Mysterion anything..."
