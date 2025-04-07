@@ -3,13 +3,15 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
 
-// Import AI Assistant Schema
+// Import AI Assistant Schema 
 import {
   TrainingFeedbackType,
   TrainingProcessingStatus,
   aiTrainingData,
-  aiTrainingJobs,
-  aiTrainingContributors,
+  aiTrainingJobs, 
+  aiTrainingContributors
+} from "./ai-assistant-schema";
+import type {
   AiTrainingData,
   InsertAiTrainingData,
   AiTrainingJob,
@@ -18,7 +20,25 @@ import {
   InsertAiTrainingContributor
 } from "./ai-assistant-schema";
 
-// AI Assistant Schema is already exported from ai-assistant-schema.ts
+// Re-export AI Assistant Schema
+export {
+  // Tables
+  aiTrainingData,
+  aiTrainingJobs,
+  aiTrainingContributors,
+  
+  // Types
+  AiTrainingData,
+  InsertAiTrainingData,
+  AiTrainingJob,
+  InsertAiTrainingJob,
+  AiTrainingContributor,
+  InsertAiTrainingContributor,
+  
+  // Enums
+  TrainingFeedbackType,
+  TrainingProcessingStatus
+};
 
 // Import and re-export bridge schemas
 import { 
@@ -178,6 +198,8 @@ import {
   sandboxEnvironments,
   CodeGenResult
 } from './dapp-schema';
+
+// User API Keys and Mysterion training data types are already exported elsewhere
 
 // Escrow system types
 export enum EscrowStatus {
