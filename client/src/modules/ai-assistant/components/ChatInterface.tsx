@@ -5,6 +5,9 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 
+// Import mobile optimization styles
+import './chatInterface.css';
+
 export interface Message {
   id: string;
   role: 'user' | 'assistant' | 'system';
@@ -47,12 +50,42 @@ const ChatInterface = ({
     }
   }, [autoFocus]);
   
+  // Enhanced message sending function with mobile optimization
+  const sendMessage = () => {
+    if (inputValue.trim() && !isProcessing) {
+      // Get the current input value before it might be cleared by React's state update
+      const messageToSend = inputValue.trim();
+      
+      // Clear input immediately for better mobile UX
+      setInputValue('');
+      
+      // Send the message using the cached value
+      onSendMessage(messageToSend);
+      
+      // Focus back to the input after sending
+      setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.focus();
+        }
+      }, 50);
+      
+      return true;
+    }
+    return false;
+  };
+  
+  // Special handler for mobile touch events
+  const handleTouchStart = (e: React.TouchEvent) => {
+    // Prevent default only for the send button to avoid any conflicts
+    if ((e.target as HTMLElement).closest('button')) {
+      e.preventDefault();
+    }
+  };
+  
+  // Legacy form handler (no longer used but kept for backward compatibility)
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (inputValue.trim() && !isProcessing) {
-      onSendMessage(inputValue);
-      setInputValue('');
-    }
+    sendMessage();
   };
   
   return (
@@ -105,15 +138,8 @@ const ChatInterface = ({
         </div>
       </ScrollArea>
       
-      {/* Input area */}
-      <form 
-        onSubmit={handleSubmit} 
-        className="border-t p-3 flex gap-2"
-        onClick={(e) => {
-          // Prevent clicks on form from closing the keyboard on mobile
-          e.stopPropagation();
-        }}
-      >
+      {/* Input area - enhanced for mobile compatibility */}
+      <div className="border-t p-3 flex gap-2" onTouchStart={handleTouchStart}>
         <Input
           ref={inputRef}
           type="text"
@@ -126,29 +152,38 @@ const ChatInterface = ({
             // Handle Enter key for submission (mobile and desktop)
             if (e.key === 'Enter' && !e.shiftKey) {
               e.preventDefault();
-              if (inputValue.trim() && !isProcessing) {
-                onSendMessage(inputValue);
-                setInputValue('');
-              }
+              sendMessage();
+            }
+          }}
+          // Capture onBlur event to help with mobile keyboard issues
+          onBlur={(e) => {
+            // Prevent input from losing focus on mobile when the keyboard appears
+            if (/Mobi|Android/i.test(navigator.userAgent)) {
+              setTimeout(() => {
+                e.target.focus();
+              }, 10);
             }
           }}
         />
         <Button 
-          type="submit" 
-          size="icon" 
+          type="button" 
+          size="icon"
           disabled={!inputValue.trim() || isProcessing}
-          onClick={(e) => {
-            // Explicitly handle button clicks for mobile
-            if (inputValue.trim() && !isProcessing) {
-              e.preventDefault();
-              onSendMessage(inputValue);
-              setInputValue('');
+          onClick={() => {
+            // Use the unified sendMessage function
+            sendMessage();
+          }}
+          // Add extra mobile-specific events
+          onTouchEnd={(e) => {
+            e.preventDefault();
+            if (!isProcessing && inputValue.trim()) {
+              sendMessage();
             }
           }}
         >
           <Send className="h-4 w-4" />
         </Button>
-      </form>
+      </div>
     </div>
   );
 };
