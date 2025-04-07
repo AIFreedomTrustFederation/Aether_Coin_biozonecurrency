@@ -6,8 +6,7 @@ import { Lightbulb, Database, Wallet } from 'lucide-react';
 import LightweightLogo from '@/components/common/LightweightLogo';
 // Import the SimpleChatInterface component
 import SimpleChatInterface from '../components/SimpleChatInterface';
-// Import AIAssistant directly - we'll make performance improvements elsewhere
-import { AIAssistant } from '../modules/ai-assistant/components/AIAssistant';
+// AIAssistant is already added globally in App.tsx - no need to import it here
 
 const LandingPage: React.FC = () => {
   const [messages, setMessages] = useState<{
@@ -208,8 +207,7 @@ const LandingPage: React.FC = () => {
         </div>
       </footer>
       
-      {/* Add floating AI Assistant */}
-      <AIAssistant userId={1} />
+      {/* AIAssistant is now added globally in App.tsx */}
     </div>
   );
 };
