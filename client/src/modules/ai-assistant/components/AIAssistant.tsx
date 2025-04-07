@@ -259,8 +259,8 @@ export function AIAssistant({ userId, className = '' }: AIAssistantProps) {
       >
         {isOpen ? (
           <Card 
-            className={`shadow-lg border rounded-lg overflow-hidden w-80 md:w-96 flex flex-col relative ${
-              isKeyboardVisible ? 'h-[50vh]' : 'h-[500px]'
+            className={`shadow-lg border rounded-lg overflow-hidden w-[90vw] md:w-96 flex flex-col relative ${
+              isKeyboardVisible ? 'h-[80vh]' : 'h-[500px]'
             }`}
           >
             {/* Chat header with drag handle and controls */}
@@ -296,7 +296,7 @@ export function AIAssistant({ userId, className = '' }: AIAssistantProps) {
             </div>
             
             {/* Chat interface */}
-            <div className={`flex-1 overflow-hidden ${isKeyboardVisible ? 'max-h-[calc(50vh-90px)]' : ''}`}>
+            <div className="flex-1 overflow-hidden">
               <ChatInterface 
                 messages={initialMessages}
                 onSendMessage={(message) => {
