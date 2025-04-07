@@ -2,6 +2,31 @@
 
 This guide will help you set up automated deployment of Aetherion to atc.aifreedomtrust.com using VS Code.
 
+
+## Integrated VS Code Editor
+
+Aetherion includes a built-in VS Code-like editor for smart contract development directly within the application. This integration features:
+
+- Monaco Editor for code editing with syntax highlighting
+- Terminal at the bottom of the editor for running commands
+- Collapsible file explorer on the left side
+- Full mobile responsiveness on small screens
+- Support for Solidity and other blockchain development languages
+
+The editor is accessible through the "Code Editor" section in the application navigation and offers a seamless development experience similar to a desktop IDE. The layout has been optimized with the terminal positioned at the bottom and a collapsible file explorer to maximize screen real estate, especially on mobile devices.
+
+## Integrated VS Code Editor
+
+Aetherion includes a built-in VS Code-like editor for smart contract development directly within the application. This integration features:
+
+- Monaco Editor for code editing with syntax highlighting
+- Terminal at the bottom of the editor for running commands
+- Collapsible file explorer on the left side
+- Full mobile responsiveness on small screens
+- Support for Solidity and other blockchain development languages
+
+The editor is accessible through the "Code Editor" section in the application navigation and offers a seamless development experience similar to a desktop IDE. The layout has been optimized with the terminal positioned at the bottom and a collapsible file explorer to maximize screen real estate, especially on mobile devices.
+
 ## Setup Instructions
 
 ### 1. Create Deployment Script
@@ -274,3 +299,34 @@ If the deployment fails, check:
 Server logs can be viewed with:
 - Application logs: `sudo journalctl -u aetherion`
 - Nginx logs: `sudo tail /var/log/nginx/error.log`
+## Mobile-Specific Considerations
+
+The VS Code editor in Aetherion has been specifically optimized for mobile devices. When deploying, keep these considerations in mind:
+
+### Mobile Layout
+
+- **Responsive Design**: The editor automatically adjusts to different screen sizes
+- **Terminal Placement**: Terminal is positioned at the bottom for better thumb access on mobile
+- **Collapsible Panels**: File explorer and other panels can be collapsed to maximize editor space
+- **Touch-Friendly Controls**: Larger touch targets for buttons and controls
+- **Adaptive Toolbar**: Icon-only toolbar on small screens, full labels on larger screens
+
+### Testing Mobile Experience
+
+Before deployment, test the application on various mobile devices to ensure:
+
+1. Code editor loads properly and is responsive
+2. Terminal is usable on touch screens
+3. File explorer toggle works correctly
+4. Virtual keyboard doesn't obstruct critical UI elements
+5. Touch interactions work as expected
+
+### Mobile Performance Optimizations
+
+The deployment includes mobile-specific optimizations:
+
+- Delayed loading of non-critical editor features
+- Optimized rendering for mobile devices
+- Touch event handling for better mobile interaction
+- Virtual keyboard detection and UI adjustment
+

@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Integrated VS Code editor with Monaco for in-browser smart contract development
+- Mobile-responsive code editor with collapsible file explorer
+- Terminal integration at the bottom of the editor for development commands
+- Integrated VS Code editor with Monaco for in-browser smart contract development
+- Mobile-responsive code editor with collapsible file explorer
+- Terminal integration at the bottom of the editor for development commands
 - AI Assistant module with contextual chat interface
 - Secure credential storage with AES-256 encryption
 - Transaction verification and risk assessment system
@@ -45,6 +51,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated deployment paths from /app to /dapp for primary endpoint
 - Improved server-redirect.js to support both /dapp and /wallet paths
 - Replaced useTransition with startTransition for React 18.3.1 compatibility
+- Redesigned VS Code editor layout with improved responsiveness for mobile devices
+- Repositioned terminal to bottom of code editor for better usability
+- Enhanced file explorer with collapsible sidebar functionality
 
 ### Fixed
 - UI rendering issues causing white screens
@@ -57,6 +66,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Deployment script environment variable handling
 - Multiple security vulnerabilities in API endpoints
 - Web3 provider initialization issues
+- VS Code editor layout issues on mobile devices
+- Terminal visibility and usability in code editor
+- File explorer responsiveness on smaller screens
 
 ## [0.2.0] - 2025-04-03
 
