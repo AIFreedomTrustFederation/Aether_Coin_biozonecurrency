@@ -1,0 +1,16 @@
+
+[Unit]
+Description=Aetherion UI Wallet
+After=network.target
+
+[Service]
+Type=simple
+User=YOUR_USERNAME
+WorkingDirectory=/path/to/aetherion
+ExecStart=/usr/bin/node /path/to/aetherion/server-redirect.js
+Restart=on-failure
+Environment=PORT=3000
+Environment=NODE_ENV=production
+
+[Install]
+WantedBy=multi-user.target
