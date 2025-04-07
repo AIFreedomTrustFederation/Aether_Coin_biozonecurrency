@@ -182,8 +182,23 @@ export function AIAssistant({ userId, className = '' }: AIAssistantProps) {
     setIsDragging(false);
   };
   
-  // Touch drag handlers
+  // Touch drag handlers with improved differentiation between drag and tap
   const handleTouchStart = (e: React.TouchEvent) => {
+    // Skip handling if touch starts on chat interface elements
+    if (e.target instanceof HTMLElement) {
+      const target = e.target as HTMLElement;
+      // Don't initiate drag if clicking on input field, button, or chat content
+      if (
+        target.tagName === 'INPUT' || 
+        target.tagName === 'BUTTON' || 
+        target.closest('form') || 
+        target.closest('.chat-messages') ||
+        target.closest('button')
+      ) {
+        return;
+      }
+    }
+    
     if (dragRef.current && e.touches.length > 0) {
       const touch = e.touches[0];
       const rect = dragRef.current.getBoundingClientRect();
@@ -191,7 +206,11 @@ export function AIAssistant({ userId, className = '' }: AIAssistantProps) {
         x: touch.clientX - rect.left,
         y: touch.clientY - rect.top
       });
-      setIsDragging(true);
+      
+      // Use a small delay before confirming drag to differentiate from taps
+      setTimeout(() => {
+        setIsDragging(true);
+      }, 100);
     }
   };
   
@@ -215,8 +234,24 @@ export function AIAssistant({ userId, className = '' }: AIAssistantProps) {
     }
   };
   
-  const handleTouchEnd = () => {
+  // Enhanced touch end handler with better handling for mobile devices
+  const handleTouchEnd = (e: TouchEvent) => {
+    // If it was a short touch (potential tap), reset isDragging immediately
+    // to ensure the click handler fires correctly
     setIsDragging(false);
+    
+    // For mobile devices, manage focus on form inputs when chat is opened
+    if (isOpen) {
+      // Small delay to let the browser process the touch end
+      setTimeout(() => {
+        // Focus the chat input if it exists
+        const chatInput = document.querySelector('.chat-input') || 
+                          document.querySelector('input[type="text"]');
+        if (chatInput instanceof HTMLInputElement) {
+          chatInput.focus();
+        }
+      }, 100);
+    }
   };
   
   // Add and remove event listeners for dragging
@@ -296,7 +331,10 @@ export function AIAssistant({ userId, className = '' }: AIAssistantProps) {
             </div>
             
             {/* Chat interface */}
-            <div className="flex-1 overflow-hidden">
+            <div 
+              className="flex-1 overflow-hidden" 
+              onClick={(e) => e.stopPropagation()} // Prevent chat area clicks from triggering drag
+            >
               <ChatInterface 
                 messages={initialMessages}
                 onSendMessage={(message) => {

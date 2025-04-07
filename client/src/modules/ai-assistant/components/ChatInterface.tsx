@@ -106,7 +106,14 @@ const ChatInterface = ({
       </ScrollArea>
       
       {/* Input area */}
-      <form onSubmit={handleSubmit} className="border-t p-3 flex gap-2">
+      <form 
+        onSubmit={handleSubmit} 
+        className="border-t p-3 flex gap-2"
+        onClick={(e) => {
+          // Prevent clicks on form from closing the keyboard on mobile
+          e.stopPropagation();
+        }}
+      >
         <Input
           ref={inputRef}
           type="text"
@@ -114,12 +121,30 @@ const ChatInterface = ({
           onChange={(e) => setInputValue(e.target.value)}
           placeholder={placeholder}
           disabled={isProcessing}
-          className="flex-1"
+          className="flex-1 chat-input"
+          onKeyDown={(e) => {
+            // Handle Enter key for submission (mobile and desktop)
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              if (inputValue.trim() && !isProcessing) {
+                onSendMessage(inputValue);
+                setInputValue('');
+              }
+            }
+          }}
         />
         <Button 
           type="submit" 
           size="icon" 
           disabled={!inputValue.trim() || isProcessing}
+          onClick={(e) => {
+            // Explicitly handle button clicks for mobile
+            if (inputValue.trim() && !isProcessing) {
+              e.preventDefault();
+              onSendMessage(inputValue);
+              setInputValue('');
+            }
+          }}
         >
           <Send className="h-4 w-4" />
         </Button>
