@@ -57,7 +57,8 @@ export function AIAssistant({ userId, className = '' }: AIAssistantProps) {
       
       // Adjust position based on device type
       setPosition({
-        x: window.innerWidth - 80,
+        // For mobile devices, position on the left side of the screen
+        x: isMobileView ? 20 : window.innerWidth - 80,
         y: isMobileView ? window.innerHeight - 160 : window.innerHeight - 80 // Higher position on mobile to avoid bottom nav
       });
       
@@ -87,7 +88,8 @@ export function AIAssistant({ userId, className = '' }: AIAssistantProps) {
         }
         
         setPosition({
-          x: window.innerWidth - 80,
+          // Keep on left side for mobile devices
+          x: isMobile ? 20 : window.innerWidth - 80,
           y: newY
         });
       };
@@ -106,7 +108,8 @@ export function AIAssistant({ userId, className = '' }: AIAssistantProps) {
           // Move the chat window to the top when keyboard opens
           const isMobile = window.innerWidth < 768;
           setPosition({
-            x: window.innerWidth - 80,
+            // Keep on left side for mobile devices
+            x: isMobile ? 20 : window.innerWidth - 80,
             y: isMobile ? 10 : 50
           });
         }
@@ -123,7 +126,8 @@ export function AIAssistant({ userId, className = '' }: AIAssistantProps) {
           // Restore normal position
           const isMobile = window.innerWidth < 768;
           setPosition({
-            x: window.innerWidth - 80,
+            // Keep on left side for mobile devices
+            x: isMobile ? 20 : window.innerWidth - 80,
             y: isMobile ? window.innerHeight - 160 : window.innerHeight - 80
           });
         }
