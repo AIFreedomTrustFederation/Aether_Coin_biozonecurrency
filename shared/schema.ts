@@ -203,8 +203,6 @@ export const users = pgTable("users", {
   isTrustMember: boolean("is_trust_member").default(false), // Whether this user is an AI Freedom Trust member
   trustMemberSince: timestamp("trust_member_since"), // When the user became a trust member
   trustMemberLevel: text("trust_member_level"), // Level of trust membership: 'associate', 'full', 'governing'
-  tutorialCompleted: boolean("tutorial_completed").default(false), // Whether the user has completed the onboarding tutorial
-  tutorialLastSection: text("tutorial_last_section"), // Last tutorial section viewed to enable resuming
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
   lastLogin: timestamp("last_login"),

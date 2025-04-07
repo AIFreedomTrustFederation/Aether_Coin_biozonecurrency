@@ -30,7 +30,6 @@ import authRoutes from "./routes/auth-routes";
 import web3StorageRoutes from "./routes/web3-storage-routes";
 import domainHostingRoutes from "./routes/domain-hosting-routes";
 import recurveRoutes from "./routes/recurve-routes";
-import tutorialRoutes from "./routes/tutorial-routes";
 import { openSourcePaymentService } from "./services/openSourcePayment";
 
 /**
@@ -151,9 +150,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Mount Recurve Fractal Reserve routes
   app.use('/api/recurve', recurveRoutes);
-  
-  // Mount Tutorial routes
-  app.use('/api/tutorial', tutorialRoutes);
   
   // Whitepaper endpoint
   app.get("/api/whitepaper", (req: Request, res: Response) => {

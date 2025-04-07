@@ -21,7 +21,6 @@ import InteractiveTutorial from '../components/InteractiveTutorial';
 const initialState: AIState = {
   isEnabled: true,
   isProcessing: false,
-  isTutorialMode: false,
   messages: [],
   securityScans: [],
   credentials: [],
@@ -50,11 +49,6 @@ function aiReducer(state: AIState, action: AIAction): AIState {
       return {
         ...state,
         isProcessing: action.payload
-      };
-    case 'SET_TUTORIAL_MODE':
-      return {
-        ...state,
-        isTutorialMode: action.payload
       };
     case 'ADD_MESSAGE':
       const messages = [...state.messages, action.payload];
@@ -135,33 +129,8 @@ function aiReducer(state: AIState, action: AIAction): AIState {
 // Provider component
 export function AIProvider({ children, userId, initialState: customInitialState }: AIProviderProps) {
   const [state, dispatch] = useReducer(aiReducer, { ...initialState, ...customInitialState });
-  // Initialize tutorial state with localStorage fallback
-  const [isTutorialOpen, setIsTutorialOpen] = useState(() => {
-    // Try to get tutorial completion status from localStorage
-    try {
-      const tutorialCompleted = localStorage.getItem('aetherion_tutorial_completed');
-      // For first-time users, default to showing tutorial
-      if (tutorialCompleted === null) {
-        return true; // Open tutorial for new users
-      }
-      // If tutorial explicitly marked as completed, don't show it
-      return tutorialCompleted !== 'true';
-    } catch (error) {
-      console.error('Failed to load tutorial status from localStorage:', error);
-      return false;
-    }
-  });
-  
-  const [tutorialSection, setTutorialSection] = useState(() => {
-    // Try to get last tutorial section from localStorage
-    try {
-      const lastSection = localStorage.getItem('aetherion_tutorial_last_section');
-      return lastSection || "getting-started";
-    } catch (error) {
-      console.error('Failed to load tutorial section from localStorage:', error);
-      return "getting-started";
-    }
-  });
+  const [isTutorialOpen, setIsTutorialOpen] = useState(false);
+  const [tutorialSection, setTutorialSection] = useState("getting-started");
 
   // Initialize secure storage
   React.useEffect(() => {
@@ -514,44 +483,16 @@ export function AIProvider({ children, userId, initialState: customInitialState 
     dispatch({ type: 'CLEAR_MESSAGES' });
   }, []);
 
-  // Open tutorial with specific section and save to localStorage
+  // Open tutorial with specific section
   const openTutorialSection = useCallback((section: string) => {
     setTutorialSection(section);
     setIsTutorialOpen(true);
-    
-    // Save current section to localStorage for persistence
-    try {
-      localStorage.setItem('aetherion_tutorial_last_section', section);
-    } catch (error) {
-      console.error('Failed to save tutorial section to localStorage:', error);
-    }
   }, []);
   
-  // Close tutorial and save state to localStorage
+  // Close tutorial
   const closeTutorial = useCallback(() => {
     setIsTutorialOpen(false);
-    
-    // When tutorial is closed, try to mark as completed in localStorage
-    try {
-      localStorage.setItem('aetherion_tutorial_completed', 'true');
-      // Keep the last section in case user wants to resume later
-      const lastSection = localStorage.getItem('aetherion_tutorial_last_section');
-      if (!lastSection) {
-        localStorage.setItem('aetherion_tutorial_last_section', tutorialSection);
-      }
-    } catch (error) {
-      console.error('Failed to save tutorial completion to localStorage:', error);
-    }
-  }, [tutorialSection]);
-
-  // Tutorial mode functions
-  const enableTutorialMode = useCallback(() => {
-    dispatch({ type: 'SET_TUTORIAL_MODE', payload: true });
-  }, [dispatch]);
-
-  const disableTutorialMode = useCallback(() => {
-    dispatch({ type: 'SET_TUTORIAL_MODE', payload: false });
-  }, [dispatch]);
+  }, []);
 
   const contextValue = {
     state,
@@ -568,9 +509,7 @@ export function AIProvider({ children, userId, initialState: customInitialState 
     releaseTransaction,
     clearChat,
     openTutorialSection,
-    closeTutorial,
-    enableTutorialMode,
-    disableTutorialMode
+    closeTutorial
   };
 
   return (
