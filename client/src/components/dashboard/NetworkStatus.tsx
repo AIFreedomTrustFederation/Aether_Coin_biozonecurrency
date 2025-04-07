@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/componen
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '../../context/AuthContext';
-import { Network, Shield, Cpu, Activity, Users, ExternalLink } from 'lucide-react';
+import { Network, Shield, Cpu, Activity, Users, ExternalLink, HardDrive, Database } from 'lucide-react';
 
 interface NetworkHealthData {
   blockHeight: number;
@@ -16,6 +16,16 @@ interface NetworkHealthData {
   trustMembers: number;
   status: 'healthy' | 'warning' | 'critical';
   latestUpdate: string;
+  computeAllocation: {
+    total: number; // in CPU hours
+    active: number;
+    rate: number; // tokens per hour
+  };
+  storageAllocation: {
+    total: number; // in GB
+    active: number;
+    rate: number; // tokens per GB
+  };
 }
 
 // Sample data for demonstration
@@ -27,7 +37,17 @@ const sampleNetworkData: NetworkHealthData = {
   uptime: 99.98,
   trustMembers: 12,
   status: 'healthy',
-  latestUpdate: new Date().toISOString()
+  latestUpdate: new Date().toISOString(),
+  computeAllocation: {
+    total: 8426, // CPU hours
+    active: 3741,
+    rate: 0.12 // SING per hour
+  },
+  storageAllocation: {
+    total: 12860, // GB
+    active: 5723,
+    rate: 0.05 // FRAC per GB
+  }
 };
 
 const NetworkStatus: React.FC = () => {
@@ -98,14 +118,47 @@ const NetworkStatus: React.FC = () => {
             <span className="font-medium">{networkData.blockHeight.toLocaleString()}</span>
           </div>
           
-          {isTrustMember && (
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Trust Members:</span>
-              <div className="flex items-center">
-                <Users className="h-3 w-3 mr-1 text-primary" />
-                <span className="font-medium">{networkData.trustMembers}</span>
-              </div>
+          {/* Mining Info - SING Coin (Compute) and FractalCoin (Storage) */}
+          <div className="flex justify-between mb-1">
+            <span className="text-muted-foreground flex items-center">
+              <Cpu className="h-3 w-3 mr-1" /> Compute Mining:
+            </span>
+            <div className="flex items-center">
+              <span className="font-medium text-blue-500">{networkData.computeAllocation.rate} SING/hr</span>
             </div>
+          </div>
+
+          <div className="flex justify-between mb-1">
+            <span className="text-muted-foreground flex items-center">
+              <Database className="h-3 w-3 mr-1" /> Storage Mining:
+            </span>
+            <div className="flex items-center">
+              <span className="font-medium text-emerald-500">{networkData.storageAllocation.rate} FRAC/GB</span>
+            </div>
+          </div>
+          
+          {isTrustMember && (
+            <>
+              <div className="flex justify-between mb-1">
+                <span className="text-muted-foreground">Trust Members:</span>
+                <div className="flex items-center">
+                  <Users className="h-3 w-3 mr-1 text-primary" />
+                  <span className="font-medium">{networkData.trustMembers}</span>
+                </div>
+              </div>
+              
+              <div className="border-t border-border mt-2 pt-2">
+                <div className="text-xs text-muted-foreground mb-1">Network Resource Allocation</div>
+                <div className="flex justify-between text-xs">
+                  <span>Storage: {(networkData.storageAllocation.active / networkData.storageAllocation.total * 100).toFixed(1)}% used</span>
+                  <span>{networkData.storageAllocation.active.toLocaleString()} / {networkData.storageAllocation.total.toLocaleString()} GB</span>
+                </div>
+                <div className="flex justify-between text-xs mt-1">
+                  <span>Compute: {(networkData.computeAllocation.active / networkData.computeAllocation.total * 100).toFixed(1)}% used</span>
+                  <span>{networkData.computeAllocation.active.toLocaleString()} / {networkData.computeAllocation.total.toLocaleString()} hrs</span>
+                </div>
+              </div>
+            </>
           )}
         </div>
       </CardContent>

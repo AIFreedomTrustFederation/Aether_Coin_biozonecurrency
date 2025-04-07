@@ -30,23 +30,29 @@ const tokenData = [
     yourBalance: 500,
     color: 'bg-gradient-to-r from-purple-500 to-indigo-600',
     textColor: 'text-purple-600',
+    description: 'Governance token for the Aetherion ecosystem',
+    rewardType: null
   },
   {
     id: 2,
     name: 'FractalCoin',
     symbol: 'FRAC',
     price: 0.85,
-    change24h: -1.21,
+    change24h: 3.21,
     marketCap: 42500000,
     supply: 50000000,
     yourBalance: 1200,
     color: 'bg-gradient-to-r from-emerald-500 to-teal-600',
     textColor: 'text-emerald-600',
+    description: 'Storage allocation rewards',
+    rewardType: 'storage',
+    miningRate: 0.05, // FRAC per GB per day
+    totalMined: 235.8
   },
   {
     id: 3,
-    name: 'Mysterion',
-    symbol: 'MYAI',
+    name: 'SING Coin',
+    symbol: 'SING',
     price: 3.42,
     change24h: 12.58,
     marketCap: 68400000,
@@ -54,6 +60,10 @@ const tokenData = [
     yourBalance: 75,
     color: 'bg-gradient-to-r from-blue-500 to-cyan-600',
     textColor: 'text-blue-600',
+    description: 'AI training & processor allocation rewards',
+    rewardType: 'compute',
+    miningRate: 0.12, // SING per hour of compute
+    totalMined: 324.5
   }
 ];
 
@@ -97,6 +107,18 @@ const TokenSummary: React.FC = () => {
                 <div>
                   <div className="font-medium">{token.name}</div>
                   <div className="text-xs text-muted-foreground">{token.symbol}</div>
+                  {token.rewardType && (
+                    <div className="text-xs text-primary mt-0.5 flex items-center">
+                      {token.rewardType === 'storage' ? 'Storage rewards' : 'Compute rewards'}
+                      {token.miningRate && (
+                        <Badge variant="outline" className="ml-1 text-[0.6rem] px-1 py-0 h-auto">
+                          {token.rewardType === 'storage' 
+                            ? `${token.miningRate} ${token.symbol}/GB` 
+                            : `${token.miningRate} ${token.symbol}/hr`}
+                        </Badge>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
               
@@ -110,6 +132,11 @@ const TokenSummary: React.FC = () => {
                   )}
                   {token.change24h >= 0 ? '+' : ''}{token.change24h.toFixed(2)}%
                 </div>
+                {token.totalMined && (
+                  <div className="text-xs text-muted-foreground mt-0.5">
+                    Mined: {token.totalMined.toFixed(2)} {token.symbol}
+                  </div>
+                )}
               </div>
             </div>
           ))}
