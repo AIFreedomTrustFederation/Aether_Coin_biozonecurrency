@@ -18,12 +18,14 @@ import * as twilioService from "./services/twilio";
 import { matrixCommunication } from "./services/matrix-integration";
 import { z } from "zod";
 import Stripe from "stripe";
+import session from "express-session";
 import apiGateway from "../api-gateway";
 import apiServicesRouter from "./routes/api-services";
 import escrowRoutes from "./routes/escrow-routes";
 import dappBuilderEnhancements from "./routes/dapp-builder-enhancements";
 import mysterionRoutes from "./routes/mysterion";
 import aiGuidanceRoutes from "./routes/ai-guidance";
+import authRoutes from "./routes/auth-routes";
 import { openSourcePaymentService } from "./services/openSourcePayment";
 
 /**
@@ -132,6 +134,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Mount AI guidance routes for wallet assistance
   app.use('/api/ai', aiGuidanceRoutes);
+  
+  // Mount authentication routes
+  app.use('/api/auth', authRoutes);
   
   // Whitepaper endpoint
   app.get("/api/whitepaper", (req: Request, res: Response) => {

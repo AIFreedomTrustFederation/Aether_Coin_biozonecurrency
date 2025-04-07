@@ -45,8 +45,16 @@ export type { User, Wallet, Transaction, SmartContract, AiMonitoringLog, CidEntr
 export interface IStorage {
   // User methods
   getUser(id: number): Promise<schema.User | undefined>;
+  getUserById(id: number): Promise<schema.User | undefined>;
   getUserByUsername(username: string): Promise<schema.User | undefined>;
+  getUserByEmail(email: string): Promise<schema.User | undefined>;
   createUser(insertUser: schema.InsertUser): Promise<schema.User>;
+  updateUser(id: number, updates: Partial<schema.User>): Promise<schema.User | undefined>;
+  updateUserLastLogin(id: number): Promise<schema.User | undefined>;
+  verifyUserPassword(username: string, password: string): Promise<schema.User | null>;
+  getTrustMembers(): Promise<schema.User[]>;
+  setUserAsTrustMember(id: number, level: string): Promise<schema.User | undefined>;
+  isTrustMember(id: number): Promise<boolean>;
   
   // Wallet methods
   getWallet(id: number): Promise<schema.Wallet | undefined>;

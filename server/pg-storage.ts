@@ -46,9 +46,53 @@ export class PgStorage implements IStorage {
     return result.length ? result[0] : undefined;
   }
 
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
+    return result.length ? result[0] : undefined;
+  }
+
   async createUser(insertUser: InsertUser): Promise<User> {
     const result = await db.insert(users).values(insertUser).returning();
     return result[0];
+  }
+  
+  async updateUser(id: number, updates: Partial<User>): Promise<User | undefined> {
+    const result = await db.update(users)
+      .set({
+        ...updates,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, id))
+      .returning();
+    return result.length ? result[0] : undefined;
+  }
+  
+  async verifyUserPassword(username: string, password: string): Promise<User | null> {
+    // In a real implementation, we would hash the password with bcrypt and compare
+    // We're simplifying it here for now - we will handle this in the auth route instead
+    const user = await this.getUserByUsername(username);
+    if (!user) return null;
+    return user;
+  }
+  
+  async getTrustMembers(): Promise<User[]> {
+    const result = await db.select()
+      .from(users)
+      .where(eq(users.isTrustMember, true));
+    return result;
+  }
+  
+  async setUserAsTrustMember(id: number, level: string): Promise<User | undefined> {
+    const result = await db.update(users)
+      .set({
+        isTrustMember: true,
+        trustMemberSince: new Date(),
+        trustMemberLevel: level,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, id))
+      .returning();
+    return result.length ? result[0] : undefined;
   }
 
   // Wallet methods

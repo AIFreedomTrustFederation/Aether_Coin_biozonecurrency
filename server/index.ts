@@ -2,10 +2,27 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { gatewayValidationMiddleware } from "./middleware/gateway-validation";
+import session from "express-session";
+import crypto from "crypto";
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Generate a random secret for session
+const sessionSecret = process.env.SESSION_SECRET || crypto.randomBytes(64).toString('hex');
+
+// Set up session middleware
+app.use(session({
+  secret: sessionSecret,
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
+}));
 
 // Allow direct access to health check endpoint
 app.get('/health', (req, res) => {

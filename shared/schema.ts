@@ -132,6 +132,9 @@ export const users = pgTable("users", {
   email: text("email").notNull().unique(),
   passwordHash: text("password_hash").notNull(),
   role: text("role").notNull().default("user"), // 'user', 'admin', 'super_admin'
+  isTrustMember: boolean("is_trust_member").default(false), // Whether this user is an AI Freedom Trust member
+  trustMemberSince: timestamp("trust_member_since"), // When the user became a trust member
+  trustMemberLevel: text("trust_member_level"), // Level of trust membership: 'associate', 'full', 'governing'
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
   lastLogin: timestamp("last_login"),
@@ -163,6 +166,7 @@ export const insertUserSchema = createInsertSchema(users).omit({
   updatedAt: true,
   lastLogin: true,
   isActive: true,
+  trustMemberSince: true,
 });
 
 // Wallets schema

@@ -11,8 +11,9 @@ import { Link } from "wouter";
 import { 
   Menu, X, Home, Layout, Wallet, Lock, Shield, Settings, AlertTriangle, ChevronRight, 
   BarChart3, Eye, Cpu, Bell, Zap, Coins, FileText, Database, Bot, TestTube, Blocks,
-  Smartphone, Lightbulb, CreditCard, Info, Palette, Loader2
+  Smartphone, Lightbulb, CreditCard, Info, Palette, Loader2, UserCircle2
 } from "lucide-react";
+import { AuthProvider } from "./context/AuthContext";
 
 // Loading screen component for lazy-loaded routes
 const LoadingScreen = ({ message = "Loading..." }: { message?: string }) => (
@@ -62,6 +63,10 @@ const EscrowPage = lazy(() => import("./pages/Escrow"));
 const ThemePage = lazy(() => import("./pages/Theme"));
 const BottomNavigation = lazy(() => import("@/components/mobile/BottomNavigation"));
 
+// Trust member authentication pages
+const TrustLogin = lazy(() => import("./pages/TrustLogin"));
+const TrustPortal = lazy(() => import("./pages/TrustPortal"));
+
 // Define navigation items for both mobile and desktop
 const navigationItems = [
   { name: "Dashboard", path: "/dashboard", icon: <Layout className="h-5 w-5" /> },
@@ -71,6 +76,7 @@ const navigationItems = [
   { name: "Bridge", path: "/bridge", icon: <ChevronRight className="h-5 w-5 rotate-90" /> },
   { name: "Bridge Test", path: "/bridge-test", icon: <TestTube className="h-5 w-5" /> },
   { name: "Escrow", path: "/escrow", icon: <Shield className="h-5 w-5" /> },
+  { name: "Trust Portal", path: "/trust-portal", icon: <UserCircle2 className="h-5 w-5" /> },
   { name: "Blockchain Explorer", path: "/blockchain-explorer", icon: <Database className="h-5 w-5" /> },
   { name: "Blockchain Dashboard", path: "/blockchain-dashboard", icon: <Blocks className="h-5 w-5" /> },
   { name: "Singularity", path: "/singularity", icon: <Zap className="h-5 w-5" /> },
@@ -428,10 +434,11 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <LiveModeProvider>
-        {/* Add resource hints for faster page loading */}
-        <ResourceHints />
-        <div className={`app-container w-full h-full ${isMobile ? 'pb-16' : ''}`}>
+      <AuthProvider>
+        <LiveModeProvider>
+          {/* Add resource hints for faster page loading */}
+          <ResourceHints />
+          <div className={`app-container w-full h-full ${isMobile ? 'pb-16' : ''}`}>
         {/* Top Navigation Bar */}
         <header className="flex justify-between items-center p-2 sm:p-4 bg-background border-b fixed top-0 left-0 right-0 z-30">
           <div className="flex items-center">
@@ -625,6 +632,18 @@ function App() {
                 <ThemePage />
               </Suspense>
             </Route>
+            {/* Trust Member Pages */}
+            <Route path="/trust-login">
+              <Suspense fallback={<LoadingScreen message="Loading trust login..." />}>
+                <TrustLogin />
+              </Suspense>
+            </Route>
+            <Route path="/trust-portal">
+              <Suspense fallback={<LoadingScreen message="Loading trust portal..." />}>
+                <TrustPortal />
+              </Suspense>
+            </Route>
+
             <Route>
               <SimpleNotFound />
             </Route>
@@ -643,7 +662,8 @@ function App() {
           <AIAssistant userId={1} />
         )}
       </div>
-      </LiveModeProvider>
+        </LiveModeProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

@@ -5,6 +5,7 @@ import {
   walletHealthScores, walletHealthIssues, notificationPreferences
 } from "../shared/schema";
 import { sql } from "drizzle-orm";
+import bcrypt from "bcryptjs";
 
 async function migrate() {
   console.log("Starting database migration...");
@@ -17,7 +18,14 @@ async function migrate() {
         username VARCHAR(255) NOT NULL UNIQUE,
         email VARCHAR(255) NOT NULL UNIQUE,
         password_hash VARCHAR(255) NOT NULL,
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        role VARCHAR(50) NOT NULL DEFAULT 'user',
+        is_trust_member BOOLEAN NOT NULL DEFAULT FALSE,
+        trust_member_since TIMESTAMP WITH TIME ZONE,
+        trust_member_level VARCHAR(50),
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        last_login TIMESTAMP WITH TIME ZONE,
+        is_active BOOLEAN NOT NULL DEFAULT TRUE
       );
 
       CREATE TABLE IF NOT EXISTS wallets (
@@ -129,8 +137,24 @@ async function migrate() {
       const [demoUser] = await db.insert(users).values({
         username: 'demo',
         email: 'demo@aetherion.wallet',
-        passwordHash: 'demo_password_hash' // In a real app, this would be securely hashed
+        passwordHash: 'demo_password_hash', // In a real app, this would be securely hashed
+        role: 'user'
       }).returning();
+      
+      // Create a sample Trust Member user
+      const [trustMember] = await db.insert(users).values({
+        username: 'trustmember',
+        email: 'trustmember@aifreedom.trust',
+        passwordHash: await bcrypt.hash('AIFreedomTrust2025', 10), // Properly hashed password
+        role: 'user',
+        isTrustMember: true,
+        trustMemberSince: new Date(),
+        trustMemberLevel: 'governing'
+      }).returning();
+      
+      if (trustMember) {
+        console.log(`Created AI Freedom Trust member with ID: ${trustMember.id}`);
+      }
 
       if (demoUser) {
         const userId = demoUser.id;
