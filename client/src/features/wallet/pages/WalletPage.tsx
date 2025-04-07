@@ -1,4 +1,4 @@
-import React, { useState, useCallback, lazy, Suspense, useTransition, useEffect } from 'react';
+import React, { useState, useCallback, lazy, Suspense, useEffect, startTransition } from 'react';
 import MainLayout from '@/core/layout/MainLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -24,7 +24,7 @@ const WalletPage = () => {
   const [sendAddress, setSendAddress] = useState('');
   const [showOnboarding, setShowOnboarding] = useState(false); // Start with false
   const [readyToShowOnboarding, setReadyToShowOnboarding] = useState(false);
-  const [isPending, startTransition] = useTransition();
+  const [isPending, setIsPending] = useState(false);
   
   // Simulate loading wallet data
   const { data: walletData, isLoading: isLoadingWallet } = useQuery({
@@ -36,9 +36,15 @@ const WalletPage = () => {
   useEffect(() => {
     // Use requestAnimationFrame to ensure we're in a non-blocking cycle
     const timer = requestAnimationFrame(() => {
+      // Set pending state before starting the transition
+      setIsPending(true);
+      
+      // Use the startTransition function
       startTransition(() => {
         setReadyToShowOnboarding(true);
         setShowOnboarding(true);
+        // Clear pending state after the transition
+        setTimeout(() => setIsPending(false), 100);
       });
     });
     
@@ -75,12 +81,16 @@ const WalletPage = () => {
   }, []);
   
   const handleOnboardingComplete = useCallback(() => {
+    // Set a pending state first
+    setIsPending(true);
+    
     // Use startTransition to tell React this state update might cause a Suspense boundary
     startTransition(() => {
       setShowOnboarding(false);
+      setIsPending(false);
       console.log('Onboarding completed');
     });
-  }, [startTransition]);
+  }, []);
 
   return (
     <MainLayout>
