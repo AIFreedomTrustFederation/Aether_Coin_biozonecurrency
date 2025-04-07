@@ -80,6 +80,9 @@ const AccessDenied = lazy(() => import("./pages/AccessDenied"));
 // AetherCoin DApp integration
 const AetherCoinDApp = lazy(() => import("./pages/AetherCoinDApp"));
 
+// Quantum Security
+const QuantumSecurityPage = lazy(() => import("./pages/QuantumSecurityPage"));
+
 // Define navigation items for both mobile and desktop
 const navigationItems = [
   { name: "Dashboard", path: "/dashboard", icon: <Layout className="h-5 w-5" /> },
@@ -108,6 +111,7 @@ const navigationItems = [
   { name: "AI Assistant Demo", path: "/ai-assistant-onboarding", icon: <Lightbulb className="h-5 w-5" /> },
   { name: "Mobile Features", path: "/mobile-feature", icon: <Smartphone className="h-5 w-5" /> },
   { name: "Security", path: "/security", icon: <Shield className="h-5 w-5" /> },
+  { name: "Quantum Security", path: "/quantum-security", icon: <Cpu className="h-5 w-5" /> },
   { name: "Settings", path: "/settings", icon: <Settings className="h-5 w-5" /> },
   { name: "Test Mode", path: "/test", icon: <TestTube className="h-5 w-5" /> },
 ];
@@ -545,6 +549,11 @@ function App() {
             <Route path="/security">
               <Suspense fallback={<LoadingScreen message="Loading security page..." />}>
                 <SecurityPage />
+              </Suspense>
+            </Route>
+            <Route path="/quantum-security">
+              <Suspense fallback={<LoadingScreen message="Loading quantum security dashboard..." />}>
+                <QuantumSecurityPage />
               </Suspense>
             </Route>
             <Route path="/singularity">
