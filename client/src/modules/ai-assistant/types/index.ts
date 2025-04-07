@@ -16,6 +16,7 @@ export interface AIAssistantProps {
 export interface AIState {
   isEnabled: boolean;
   isProcessing: boolean;
+  isTutorialMode: boolean;
   messages: ChatMessage[];
   securityScans: SecurityScan[];
   credentials: Credential[];
@@ -117,12 +118,15 @@ export interface AIContextType {
   clearChat: () => void;
   openTutorialSection: (section: string) => void;
   closeTutorial: () => void;
+  enableTutorialMode: () => void;
+  disableTutorialMode: () => void;
 }
 
 // AI Actions
 export type AIAction =
   | { type: 'TOGGLE_AI'; payload: boolean }
   | { type: 'SET_PROCESSING'; payload: boolean }
+  | { type: 'SET_TUTORIAL_MODE'; payload: boolean }
   | { type: 'ADD_MESSAGE'; payload: ChatMessage }
   | { type: 'CLEAR_MESSAGES' }
   | { type: 'ADD_SCAN'; payload: SecurityScan }

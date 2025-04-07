@@ -21,6 +21,7 @@ import InteractiveTutorial from '../components/InteractiveTutorial';
 const initialState: AIState = {
   isEnabled: true,
   isProcessing: false,
+  isTutorialMode: false,
   messages: [],
   securityScans: [],
   credentials: [],
@@ -49,6 +50,11 @@ function aiReducer(state: AIState, action: AIAction): AIState {
       return {
         ...state,
         isProcessing: action.payload
+      };
+    case 'SET_TUTORIAL_MODE':
+      return {
+        ...state,
+        isTutorialMode: action.payload
       };
     case 'ADD_MESSAGE':
       const messages = [...state.messages, action.payload];
@@ -494,6 +500,15 @@ export function AIProvider({ children, userId, initialState: customInitialState 
     setIsTutorialOpen(false);
   }, []);
 
+  // Tutorial mode functions
+  const enableTutorialMode = useCallback(() => {
+    dispatch({ type: 'SET_TUTORIAL_MODE', payload: true });
+  }, [dispatch]);
+
+  const disableTutorialMode = useCallback(() => {
+    dispatch({ type: 'SET_TUTORIAL_MODE', payload: false });
+  }, [dispatch]);
+
   const contextValue = {
     state,
     dispatch,
@@ -509,7 +524,9 @@ export function AIProvider({ children, userId, initialState: customInitialState 
     releaseTransaction,
     clearChat,
     openTutorialSection,
-    closeTutorial
+    closeTutorial,
+    enableTutorialMode,
+    disableTutorialMode
   };
 
   return (

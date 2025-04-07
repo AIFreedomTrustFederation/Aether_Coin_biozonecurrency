@@ -97,6 +97,44 @@ export class DatabaseStorage implements IStorage {
     return user?.isTrustMember || false;
   }
 
+  // Tutorial methods
+  async getTutorialStatus(userId: number): Promise<{completed: boolean, lastSection: string | null}> {
+    try {
+      const [user] = await db.select({
+        tutorialCompleted: users.tutorialCompleted,
+        tutorialLastSection: users.tutorialLastSection
+      })
+      .from(users)
+      .where(eq(users.id, userId));
+
+      return {
+        completed: user?.tutorialCompleted || false,
+        lastSection: user?.tutorialLastSection || null
+      };
+    } catch (error) {
+      console.error('Error getting tutorial status:', error);
+      return { completed: false, lastSection: null };
+    }
+  }
+
+  async updateTutorialStatus(userId: number, completed: boolean, lastSection?: string): Promise<boolean> {
+    try {
+      const updateData: any = { tutorialCompleted: completed };
+      if (lastSection !== undefined) {
+        updateData.tutorialLastSection = lastSection;
+      }
+
+      await db.update(users)
+        .set(updateData)
+        .where(eq(users.id, userId));
+
+      return true;
+    } catch (error) {
+      console.error('Error updating tutorial status:', error);
+      return false;
+    }
+  }
+
   // Wallet methods
   async getWallet(id: number): Promise<schema.Wallet | undefined> {
     const [wallet] = await db.select().from(wallets).where(eq(wallets.id, id));

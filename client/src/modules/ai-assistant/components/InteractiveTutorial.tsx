@@ -1,576 +1,689 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Progress } from "@/components/ui/progress";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChevronRight, ChevronLeft, Play, Pause, Volume2, VolumeX, X } from "lucide-react";
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useAI } from '../contexts/AIContext';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { Slider } from '@/components/ui/slider';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
+import { 
+  ChevronRight, 
+  ChevronLeft, 
+  X, 
+  Volume2, 
+  VolumeX,
+  PlayCircle,
+  PauseCircle,
+  Sparkles,
+  HelpCircle
+} from 'lucide-react';
+import { apiRequest } from '@/lib/queryClient';
 
-// Tutorial content by section
+// Define tutorial step types for different interaction patterns
+type TutorialStep = 
+  | { type: 'message', element: string, instruction: string }
+  | { type: 'click', element: string, instruction: string }
+  | { type: 'select', options: string[], instruction: string }
+  | { type: 'radio', options: string[], instruction: string }
+  | { type: 'checkbox', elements: string[], instruction: string }
+  | { type: 'drag', elements: string[], targets: string[], instruction: string }
+  | { type: 'slider', min: number, max: number, step: number, defaultValue: number, instruction: string }
+  | { type: 'form', fields: Array<{id: string, label: string, type: string, placeholder?: string}>, instruction: string }
+  | { type: 'input', id: string, placeholder: string, instruction: string }
+  | { type: 'observe', id: string, instruction: string, duration: number }
+  | { type: 'ai-message', instruction: string, characterName: string, message: string };
+
+// Define the complete tutorial structure
 const tutorialSections = [
   {
-    id: "getting-started",
-    title: "Getting Started",
-    description: "Learn the basics of Aetherion and how to set up your account",
+    id: 'welcome',
+    title: 'Welcome to Aetherion',
+    description: 'Let\'s explore the revolutionary quantum-resistant blockchain platform',
     steps: [
       {
-        title: "Welcome to Aetherion",
-        content: "Aetherion is a quantum-resistant blockchain ecosystem that combines advanced security with powerful features for Web3 users. This tutorial will guide you through all major features.",
-        audioSrc: "/tutorial/audio/welcome.mp3",
-        image: "/tutorial/images/welcome.svg",
-        interactions: [{
-          type: "click",
-          element: "#wallet-connect-button",
-          instruction: "Click here to connect your wallet"
-        }]
+        type: 'message',
+        element: 'welcome-intro',
+        instruction: 'Welcome to Aetherion! This tutorial will guide you through our quantum-resistant blockchain platform and wallet interface. Press Next to continue.'
       },
       {
-        title: "Connecting Your Wallet",
-        content: "Aetherion supports various wallets including MetaMask, Coinbase, and Trust Wallet. Select your preferred wallet to connect securely to the platform.",
-        audioSrc: "/tutorial/audio/connect-wallet.mp3",
-        image: "/tutorial/images/wallet-connect.svg",
-        interactions: [{
-          type: "select",
-          options: ["MetaMask", "Coinbase", "Trust Wallet", "Other"],
-          instruction: "Select your preferred wallet"
-        }]
+        type: 'ai-message',
+        instruction: 'Let me introduce myself. I\'m Mysterion, your AI assistant for all things Aetherion.',
+        characterName: 'Mysterion',
+        message: 'I\'m here to help you navigate this revolutionary Web3 platform. I can help with transactions, explain concepts, and guide you through our features.'
       },
       {
-        title: "Dashboard Overview",
-        content: "Your dashboard is your command center for all Aetherion activities. Here you can monitor your assets, track mining rewards, manage domains, and access all platform features.",
-        audioSrc: "/tutorial/audio/dashboard.mp3",
-        image: "/tutorial/images/dashboard.svg",
-        interactions: [{
-          type: "hover",
-          elements: ["#asset-panel", "#mining-panel", "#domains-panel"],
-          instruction: "Hover over each panel to learn more"
-        }]
+        type: 'message',
+        element: 'tutorial-overview',
+        instruction: 'This tutorial will cover the basics of using Aetherion, including wallet management, domain hosting, AI assistance, and the Fractal Reserve system.'
       }
     ]
   },
   {
-    id: "quantum-security",
-    title: "Quantum Security",
-    description: "Understand Aetherion's quantum-resistant technology",
+    id: 'wallet-basics',
+    title: 'Wallet Management',
+    description: 'Learn how to manage your quantum-secured wallet',
     steps: [
       {
-        title: "Quantum Resistance Basics",
-        content: "Aetherion uses post-quantum cryptography to secure your assets against both current and future quantum computing threats, ensuring your holdings remain safe even as computing advances.",
-        audioSrc: "/tutorial/audio/quantum-basics.mp3",
-        image: "/tutorial/images/quantum-security.svg",
-        interactions: [{
-          type: "click",
-          element: "#quantum-status-indicator",
-          instruction: "Click to check your wallet's quantum security status"
-        }]
+        type: 'message',
+        element: 'wallet-intro',
+        instruction: 'Your Aetherion wallet is secured by quantum-resistant cryptography. Let\'s learn how to use it.'
       },
       {
-        title: "Security Layers",
-        content: "Multiple security layers protect your assets: CRYSTAL-Kyber encryption, SPHINCS+ signatures, Recursive Merkle trees, and zero-knowledge proofs all work together to create comprehensive protection.",
-        audioSrc: "/tutorial/audio/security-layers.mp3",
-        image: "/tutorial/images/security-layers.svg",
-        interactions: [{
-          type: "drag",
-          elements: ["#layer1", "#layer2", "#layer3", "#layer4"],
-          targets: ["#target1", "#target2", "#target3", "#target4"],
-          instruction: "Drag each security layer to its correct position"
-        }]
+        type: 'click',
+        element: '.wallet-section',
+        instruction: 'Click on the wallet section to view your accounts'
       },
       {
-        title: "Quantum Vault",
-        content: "The Quantum Vault provides enhanced security for your most valuable assets using fractal sharding to distribute encrypted data across the network.",
-        audioSrc: "/tutorial/audio/quantum-vault.mp3",
-        image: "/tutorial/images/quantum-vault.svg",
-        interactions: [{
-          type: "click",
-          element: "#enable-vault-button",
-          instruction: "Click to enable your Quantum Vault"
-        }]
+        type: 'message',
+        element: 'wallet-security',
+        instruction: 'Notice the security indicators showing the quantum-resistance level of your wallet. All Aetherion wallets use post-quantum encryption algorithms.'
       }
     ]
   },
   {
-    id: "recurve-system",
-    title: "Recurve Fractal Reserve",
-    description: "Learn about Aetherion's innovative financial system",
+    id: 'fractal-reserve',
+    title: 'Recurve Fractal Reserve',
+    description: 'Understanding the innovative Recurve Fractal Reserve mechanism',
     steps: [
       {
-        title: "Recurve System Introduction",
-        content: "The Recurve Fractal Reserve system allows you to mint cryptocurrency tokens backed by real-world insurance policies, creating a stable and secure financial foundation.",
-        audioSrc: "/tutorial/audio/recurve-intro.mp3",
-        image: "/tutorial/images/recurve-system.svg",
-        interactions: [{
-          type: "click",
-          element: "#recurve-dashboard-button",
-          instruction: "Click to open the Recurve dashboard"
-        }]
+        type: 'message',
+        element: 'fractal-intro',
+        instruction: 'The Recurve Fractal Reserve is a revolutionary financial mechanism based on mathematical patterns found in nature.'
       },
       {
-        title: "Connecting Insurance Policies",
-        content: "Connect your insurance policy to mint Recurve Tokens. The system supports whole life and indexed universal life policies, creating a bridge between traditional finance and cryptocurrency.",
-        audioSrc: "/tutorial/audio/insurance-connect.mp3",
-        image: "/tutorial/images/insurance-policy.svg",
-        interactions: [{
-          type: "input",
-          fields: [
-            { id: "policy-number", label: "Policy Number" },
-            { id: "provider", label: "Insurance Provider" }
-          ],
-          instruction: "Enter your policy details (demo only)"
-        }]
+        type: 'observe',
+        id: 'mandelbrot-visual',
+        instruction: 'Watch how the Mandelbrot visualization represents the fractal nature of our reserve system.',
+        duration: 5000
       },
       {
-        title: "Minting Recurve Tokens",
-        content: "Mint Recurve Tokens backed by your policy's cash value. You can choose different collateralization ratios, affecting both security and potential returns.",
-        audioSrc: "/tutorial/audio/mint-tokens.mp3",
-        image: "/tutorial/images/mint-tokens.svg",
-        interactions: [{
-          type: "slider",
-          id: "collateralization-ratio",
-          min: 100,
-          max: 300,
-          step: 25,
-          defaultValue: 150,
-          instruction: "Adjust the collateralization ratio"
-        }]
-      },
-      {
-        title: "Taking Fractal Loans",
-        content: "Fractal Loans allow you to borrow against your Recurve Tokens without risk of liquidation. These non-recourse loans maintain your policy's integrity while providing capital access.",
-        audioSrc: "/tutorial/audio/fractal-loans.mp3", 
-        image: "/tutorial/images/fractal-loan.svg",
-        interactions: [{
-          type: "input",
-          fields: [
-            { id: "loan-amount", label: "Loan Amount" },
-            { id: "loan-term", label: "Term (months)" }
-          ],
-          instruction: "Enter loan parameters (demo only)"
-        }]
+        type: 'message',
+        element: 'fractal-benefits',
+        instruction: 'This system ensures fair value distribution and prevents the early-adopter advantage common in traditional cryptocurrencies.'
       }
     ]
   },
   {
-    id: "token-mining",
-    title: "Mining & Staking",
-    description: "Learn how to earn SING and FractalCoin",
+    id: 'domain-hosting',
+    title: 'Domain Hosting',
+    description: 'How to host websites on the decentralized .trust network',
     steps: [
       {
-        title: "SING Coin Mining",
-        content: "Earn SING coins by contributing processing power to train the Mysterion AI. Unlike traditional mining, your resources directly improve the platform's intelligence.",
-        audioSrc: "/tutorial/audio/sing-mining.mp3",
-        image: "/tutorial/images/sing-mining.svg",
-        interactions: [{
-          type: "click",
-          element: "#start-mining-button",
-          instruction: "Click to simulate starting mining"
-        }]
+        type: 'message',
+        element: 'domain-intro',
+        instruction: 'Aetherion allows you to host websites on the decentralized .trust network, with integration to Filecoin for storage.'
       },
       {
-        title: "FractalCoin Storage Contribution",
-        content: "Earn FractalCoin by allocating storage space to the network. Your contribution helps host websites, store data, and power the decentralized infrastructure.",
-        audioSrc: "/tutorial/audio/fractalcoin.mp3",
-        image: "/tutorial/images/storage-allocation.svg",
-        interactions: [{
-          type: "slider",
-          id: "storage-allocation",
-          min: 50,
-          max: 1000,
-          step: 50,
-          defaultValue: 100,
-          instruction: "Adjust storage allocation (GB)"
-        }]
+        type: 'click',
+        element: '.domain-hosting-tab',
+        instruction: 'Click on the Domain Hosting tab to explore this feature'
       },
       {
-        title: "Staking & Liquidity Pools",
-        content: "Provide liquidity in paired trading pools or stake your tokens to earn rewards. Different pools and staking options offer varying risk and return profiles.",
-        audioSrc: "/tutorial/audio/staking.mp3",
-        image: "/tutorial/images/liquidity-pools.svg",
-        interactions: [{
-          type: "select",
-          options: ["SING/ETH Pool", "FTC/USDC Pool", "SING Staking", "FTC Staking"],
-          instruction: "Select a staking or liquidity option"
-        }]
+        type: 'message',
+        element: 'domain-wizard',
+        instruction: 'The domain hosting wizard makes it easy to deploy websites with decentralized storage and hosting.'
       }
     ]
   },
   {
-    id: "domain-hosting",
-    title: "Domain Hosting",
-    description: "Host websites on the decentralized network",
+    id: 'ai-assistant',
+    title: 'Mysterion AI Assistant',
+    description: 'Working with your AI assistant and earning SING coins',
     steps: [
       {
-        title: "Domain Hosting Introduction",
-        content: "Host websites on Aetherion's decentralized network with high performance, censorship resistance, and quantum security. Support both .trust domains and traditional domains.",
-        audioSrc: "/tutorial/audio/domain-intro.mp3",
-        image: "/tutorial/images/domain-hosting.svg",
-        interactions: [{
-          type: "click",
-          element: "#domain-dashboard-button",
-          instruction: "Click to open the Domain dashboard"
-        }]
+        type: 'message',
+        element: 'mysterion-intro',
+        instruction: 'Mysterion is your AI assistant for navigating Aetherion. You can earn SING coins by helping train Mysterion.'
       },
       {
-        title: "Registering a Domain",
-        content: "Register a .trust domain native to the Aetherion ecosystem, or connect a traditional domain like .com or .org that you already own.",
-        audioSrc: "/tutorial/audio/register-domain.mp3",
-        image: "/tutorial/images/domain-register.svg",
-        interactions: [{
-          type: "input",
-          fields: [
-            { id: "domain-name", label: "Domain Name" },
-            { id: "domain-extension", label: "Extension" }
-          ],
-          instruction: "Enter domain details (demo only)"
-        }]
+        type: 'click',
+        element: '.chat-button',
+        instruction: 'Click the chat button to start a conversation with Mysterion'
       },
       {
-        title: "AI Website Generator",
-        content: "Create complete websites by simply describing what you want in plain language. The AI will generate designs, layouts, and content based on your specifications.",
-        audioSrc: "/tutorial/audio/ai-website.mp3",
-        image: "/tutorial/images/ai-generator.svg",
-        interactions: [{
-          type: "textarea",
-          id: "website-description",
-          placeholder: "Describe the website you want to create...",
-          instruction: "Enter a website description (demo only)"
-        }]
+        type: 'input',
+        id: 'chat-input',
+        placeholder: 'Ask something about FractalCoin...',
+        instruction: 'Try asking a question about FractalCoin to see how Mysterion responds'
       }
     ]
   },
   {
-    id: "mysterion-assistant",
-    title: "Mysterion AI",
-    description: "Work with your AI assistant effectively",
+    id: 'conclusion',
+    title: 'Ready to Begin',
+    description: 'You\'re now ready to explore Aetherion',
     steps: [
       {
-        title: "Mysterion Introduction",
-        content: "Mysterion is your AI assistant in the Aetherion ecosystem. Ask questions, verify transactions, get recommendations, and receive personalized assistance throughout your journey.",
-        audioSrc: "/tutorial/audio/mysterion-intro.mp3",
-        image: "/tutorial/images/mysterion.svg",
-        interactions: [{
-          type: "click",
-          element: "#chat-with-mysterion",
-          instruction: "Click to start chatting with Mysterion"
-        }]
+        type: 'message',
+        element: 'conclusion-message',
+        instruction: 'Congratulations! You have completed the Aetherion tutorial. You can now explore the platform on your own.'
       },
       {
-        title: "Training Mysterion",
-        content: "Help improve Mysterion by contributing training data and processing power. You'll earn SING tokens while making the AI more helpful for everyone.",
-        audioSrc: "/tutorial/audio/training.mp3",
-        image: "/tutorial/images/mysterion-training.svg",
-        interactions: [{
-          type: "toggle",
-          id: "enable-training",
-          label: "Enable AI Training",
-          instruction: "Toggle to enable or disable training"
-        }]
+        type: 'ai-message',
+        instruction: 'Remember, I\'m always here to help if you have questions.',
+        characterName: 'Mysterion',
+        message: 'Don\'t hesitate to ask me for guidance as you explore Aetherion. You can also earn SING coins by helping train my responses through feedback.'
       },
       {
-        title: "Advanced Prompting",
-        content: "Learn how to effectively communicate with Mysterion using specific prompts that get better results. Mastering these techniques will make the AI more helpful.",
-        audioSrc: "/tutorial/audio/advanced-prompting.mp3",
-        image: "/tutorial/images/prompt-techniques.svg",
-        interactions: [{
-          type: "select",
-          options: [
-            "Tell me about...",
-            "I need help with...",
-            "How do I...?",
-            "Compare X and Y"
-          ],
-          instruction: "Select a prompt template"
-        }]
+        type: 'message',
+        element: 'final-step',
+        instruction: 'Click Finish to complete the tutorial and start using Aetherion. You can always revisit this tutorial from the Help menu.'
       }
     ]
   }
 ];
 
 interface InteractiveTutorialProps {
-  isOpen: boolean;
-  onClose: () => void;
+  onComplete: () => void;
+  onSkip: () => void;
   initialSection?: string;
 }
 
-const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
-  isOpen,
-  onClose,
-  initialSection = "getting-started"
+const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({ 
+  onComplete,
+  onSkip,
+  initialSection
 }) => {
-  const [activeSection, setActiveSection] = useState(initialSection);
-  const [step, setStep] = useState(0);
-  const [muted, setMuted] = useState(false);
-  const [playing, setPlaying] = useState(true);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const { enableTutorialMode, disableTutorialMode } = useAI();
+  const [currentSectionIndex, setCurrentSectionIndex] = useState(() => {
+    if (initialSection) {
+      const index = tutorialSections.findIndex(section => section.id === initialSection);
+      return index >= 0 ? index : 0;
+    }
+    return 0;
+  });
   
-  const currentSection = tutorialSections.find(section => section.id === activeSection);
-  const currentStep = currentSection?.steps[step];
-  const totalSteps = currentSection?.steps.length || 0;
-  const progress = totalSteps > 0 ? ((step + 1) / totalSteps) * 100 : 0;
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [progress, setProgress] = useState(0);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [autoAdvance, setAutoAdvance] = useState(false);
+  const [stepCompleted, setStepCompleted] = useState(false);
   
+  // Audio refs
+  const nextSoundRef = useRef<HTMLAudioElement | null>(null);
+  const completeSoundRef = useRef<HTMLAudioElement | null>(null);
+  
+  const currentSection = tutorialSections[currentSectionIndex];
+  const currentStep = currentSection?.steps[currentStepIndex];
+  const totalSections = tutorialSections.length;
+  const totalStepsInCurrentSection = currentSection?.steps.length || 0;
+
+  // Calculate overall progress
   useEffect(() => {
-    // Reset step when changing sections
-    setStep(0);
-  }, [activeSection]);
-  
+    const stepIndex = currentStepIndex + 1;
+    const sectionIndex = currentSectionIndex;
+    
+    // Calculate how many steps we've gone through in all previous sections
+    let previousSteps = 0;
+    for (let i = 0; i < sectionIndex; i++) {
+      previousSteps += tutorialSections[i].steps.length;
+    }
+    
+    // Add the current steps
+    const currentSteps = stepIndex;
+    
+    // Total steps across all sections
+    let totalSteps = 0;
+    tutorialSections.forEach(section => {
+      totalSteps += section.steps.length;
+    });
+    
+    // Calculate progress percentage
+    const progressValue = ((previousSteps + currentSteps) / totalSteps) * 100;
+    setProgress(progressValue);
+  }, [currentSectionIndex, currentStepIndex]);
+
+  // Enable tutorial mode when component mounts
   useEffect(() => {
-    // Handle audio playback based on playing state
-    if (audioRef.current) {
-      if (playing) {
-        audioRef.current.play().catch(e => console.error("Audio play error:", e));
-      } else {
-        audioRef.current.pause();
+    enableTutorialMode();
+    
+    // Set up audio elements
+    nextSoundRef.current = new Audio('/sounds/next.mp3');
+    completeSoundRef.current = new Audio('/sounds/complete.mp3');
+    
+    // Save tutorial progress to the server
+    const saveTutorialProgress = async () => {
+      try {
+        await apiRequest('/api/tutorial/status', {
+          method: 'POST',
+          body: JSON.stringify({
+            completed: false,
+            lastSection: currentSection.id
+          })
+        });
+      } catch (error) {
+        console.error('Failed to save tutorial progress:', error);
       }
+    };
+    
+    saveTutorialProgress();
+    
+    return () => {
+      disableTutorialMode();
+    };
+  }, [enableTutorialMode, disableTutorialMode, currentSection]);
+
+  // Function to play sound based on action
+  const playSound = (type: 'next' | 'complete') => {
+    if (!soundEnabled) return;
+    
+    if (type === 'next' && nextSoundRef.current) {
+      nextSoundRef.current.currentTime = 0;
+      nextSoundRef.current.play().catch(err => console.error('Error playing sound:', err));
+    } else if (type === 'complete' && completeSoundRef.current) {
+      completeSoundRef.current.currentTime = 0;
+      completeSoundRef.current.play().catch(err => console.error('Error playing sound:', err));
     }
-  }, [playing, step, activeSection]);
-  
-  const handleNext = () => {
-    if (step < (totalSteps - 1)) {
-      setStep(step + 1);
+  };
+
+  // Move to the next step or section
+  const nextStep = () => {
+    // Play sound
+    playSound('next');
+    
+    // Reset step completion status
+    setStepCompleted(false);
+    
+    if (currentStepIndex < totalStepsInCurrentSection - 1) {
+      // Move to next step in current section
+      setCurrentStepIndex(currentStepIndex + 1);
+    } else if (currentSectionIndex < totalSections - 1) {
+      // Move to next section, reset step index
+      setCurrentSectionIndex(currentSectionIndex + 1);
+      setCurrentStepIndex(0);
+      
+      // Save tutorial progress to the server
+      const saveTutorialProgress = async () => {
+        try {
+          await apiRequest('/api/tutorial/status', {
+            method: 'POST',
+            body: JSON.stringify({
+              completed: false,
+              lastSection: tutorialSections[currentSectionIndex + 1].id
+            })
+          });
+        } catch (error) {
+          console.error('Failed to save tutorial progress:', error);
+        }
+      };
+      
+      saveTutorialProgress();
     } else {
-      // Find the next section
-      const currentIndex = tutorialSections.findIndex(section => section.id === activeSection);
-      if (currentIndex < tutorialSections.length - 1) {
-        setActiveSection(tutorialSections[currentIndex + 1].id);
-      }
+      // Tutorial completed
+      playSound('complete');
+      
+      // Save completed status to the server
+      const saveTutorialCompletion = async () => {
+        try {
+          await apiRequest('/api/tutorial/status', {
+            method: 'POST',
+            body: JSON.stringify({
+              completed: true,
+              lastSection: currentSection.id
+            })
+          });
+        } catch (error) {
+          console.error('Failed to save tutorial completion:', error);
+        }
+      };
+      
+      saveTutorialCompletion();
+      onComplete();
     }
   };
-  
-  const handlePrevious = () => {
-    if (step > 0) {
-      setStep(step - 1);
-    } else {
-      // Find the previous section
-      const currentIndex = tutorialSections.findIndex(section => section.id === activeSection);
-      if (currentIndex > 0) {
-        const prevSection = tutorialSections[currentIndex - 1];
-        setActiveSection(prevSection.id);
-        setStep(prevSection.steps.length - 1);
-      }
+
+  // Move to the previous step or section
+  const prevStep = () => {
+    // Play sound
+    playSound('next');
+    
+    // Reset step completion status
+    setStepCompleted(false);
+    
+    if (currentStepIndex > 0) {
+      // Move to previous step in current section
+      setCurrentStepIndex(currentStepIndex - 1);
+    } else if (currentSectionIndex > 0) {
+      // Move to previous section, set step index to last step of that section
+      setCurrentSectionIndex(currentSectionIndex - 1);
+      setCurrentStepIndex(tutorialSections[currentSectionIndex - 1].steps.length - 1);
+    }
+    // If we're already at the first step of the first section, do nothing
+  };
+
+  // Handle user skipping the tutorial
+  const handleSkip = async () => {
+    try {
+      await apiRequest('/api/tutorial/status', {
+        method: 'POST',
+        body: JSON.stringify({
+          completed: false,
+          lastSection: currentSection.id
+        })
+      });
+      onSkip();
+    } catch (error) {
+      console.error('Failed to save tutorial skip status:', error);
+      onSkip();
     }
   };
-  
-  const toggleAudio = () => {
-    if (audioRef.current) {
-      audioRef.current.muted = !muted;
-      setMuted(!muted);
+
+  // Auto-advance timer
+  useEffect(() => {
+    let timer: NodeJS.Timeout | null = null;
+    
+    if (autoAdvance && stepCompleted) {
+      timer = setTimeout(() => {
+        nextStep();
+      }, 3000); // Auto advance after 3 seconds
     }
-  };
-  
-  const togglePlayback = () => {
-    setPlaying(!playing);
-  };
-  
-  if (!isOpen) return null;
-  
-  // Mock function to simulate interaction
-  const handleInteraction = (type: string) => {
-    console.log(`Simulated ${type} interaction`);
-    // In a real implementation, this would track progress and possibly change content
-  };
-  
-  return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto">
-        <DialogHeader>
-          <DialogTitle className="text-2xl flex items-center justify-between">
-            <span>Interactive Aetherion Tutorial</span>
+    
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [autoAdvance, stepCompleted]);
+
+  // Handle step completion based on step type
+  const completeStep = useCallback(() => {
+    setStepCompleted(true);
+    
+    // If auto-advance is enabled, the useEffect will handle moving to the next step
+    if (!autoAdvance) {
+      // Optional: Maybe add a visual indicator that the step is ready to advance
+    }
+  }, [autoAdvance]);
+
+  // Render different types of interactive elements based on step type
+  const renderStepContent = () => {
+    if (!currentStep) return null;
+    
+    switch (currentStep.type) {
+      case 'message':
+        return (
+          <div className="tutorial-message">
+            <p>{currentStep.instruction}</p>
+          </div>
+        );
+        
+      case 'ai-message':
+        return (
+          <div className="tutorial-ai-message flex flex-col space-y-4">
             <div className="flex items-center space-x-2">
+              <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+                <Sparkles className="text-primary-foreground w-4 h-4" />
+              </div>
+              <span className="font-bold">{currentStep.characterName}</span>
+            </div>
+            <p className="pl-10">{currentStep.message}</p>
+            <p className="text-sm text-muted-foreground mt-2">{currentStep.instruction}</p>
+          </div>
+        );
+        
+      case 'click':
+        return (
+          <div className="tutorial-click">
+            <p>{currentStep.instruction}</p>
+            <div className="mt-4">
               <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={toggleAudio} 
-                aria-label={muted ? "Unmute" : "Mute"}
+                onClick={completeStep}
+                className="simulate-click-btn"
               >
-                {muted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={togglePlayback} 
-                aria-label={playing ? "Pause" : "Play"}
-              >
-                {playing ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={onClose} 
-                aria-label="Close"
-              >
-                <X className="h-5 w-5" />
+                Simulate Click
               </Button>
             </div>
-          </DialogTitle>
-          <DialogDescription>
-            Explore Aetherion's features through this interactive tutorial. Navigate between sections and steps to learn at your own pace.
-          </DialogDescription>
-        </DialogHeader>
+          </div>
+        );
         
-        <Tabs value={activeSection} onValueChange={setActiveSection} className="mt-4">
-          <TabsList className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
-            {tutorialSections.map(section => (
-              <TabsTrigger key={section.id} value={section.id} className="text-xs md:text-sm">
-                {section.title}
-              </TabsTrigger>
-            ))}
-          </TabsList>
+      case 'select':
+        return (
+          <div className="tutorial-select">
+            <p>{currentStep.instruction}</p>
+            <div className="mt-4 space-y-2">
+              {currentStep.options.map((option, index) => (
+                <Button 
+                  key={index} 
+                  variant="outline" 
+                  className="w-full justify-start text-left"
+                  onClick={() => completeStep()}
+                >
+                  {option}
+                </Button>
+              ))}
+            </div>
+          </div>
+        );
+        
+      case 'radio':
+        return (
+          <div className="tutorial-radio">
+            <p>{currentStep.instruction}</p>
+            <RadioGroup className="mt-4 space-y-2" onValueChange={() => completeStep()}>
+              {currentStep.options.map((option, index) => (
+                <div key={index} className="flex items-center space-x-2">
+                  <RadioGroupItem value={option} id={`option-${index}`} />
+                  <Label htmlFor={`option-${index}`}>{option}</Label>
+                </div>
+              ))}
+            </RadioGroup>
+          </div>
+        );
+        
+      case 'checkbox':
+        return (
+          <div className="tutorial-checkbox">
+            <p>{currentStep.instruction}</p>
+            <div className="mt-4 space-y-2">
+              {currentStep.elements.map((element, index) => (
+                <div key={index} className="flex items-center space-x-2">
+                  <Checkbox id={`checkbox-${index}`} onCheckedChange={() => completeStep()} />
+                  <label
+                    htmlFor={`checkbox-${index}`}
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    {element}
+                  </label>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+        
+      case 'slider':
+        return (
+          <div className="tutorial-slider">
+            <p>{currentStep.instruction}</p>
+            <div className="mt-6">
+              <Slider
+                defaultValue={[currentStep.defaultValue]}
+                max={currentStep.max}
+                min={currentStep.min}
+                step={currentStep.step}
+                onValueChange={() => completeStep()}
+              />
+            </div>
+          </div>
+        );
+        
+      case 'form':
+        return (
+          <div className="tutorial-form">
+            <p>{currentStep.instruction}</p>
+            <div className="mt-4 space-y-4">
+              {currentStep.fields.map((field, index) => (
+                <div key={index} className="space-y-2">
+                  <Label htmlFor={field.id}>{field.label}</Label>
+                  <Input 
+                    id={field.id} 
+                    type={field.type} 
+                    placeholder={field.placeholder}
+                    onChange={() => completeStep()} 
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+        
+      case 'input':
+        return (
+          <div className="tutorial-input">
+            <p>{currentStep.instruction}</p>
+            <div className="mt-4">
+              <Input 
+                id={currentStep.id} 
+                placeholder={currentStep.placeholder}
+                onChange={() => completeStep()} 
+              />
+            </div>
+          </div>
+        );
+        
+      case 'observe':
+        // Auto-complete after duration
+        useEffect(() => {
+          const timer = setTimeout(() => {
+            completeStep();
+          }, currentStep.duration);
           
-          {tutorialSections.map(section => (
-            <TabsContent key={section.id} value={section.id} className="mt-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>{section.title}</CardTitle>
-                  <CardDescription>{section.description}</CardDescription>
-                  <Progress value={progress} className="h-2 mt-2" />
-                </CardHeader>
+          return () => clearTimeout(timer);
+        }, [currentStep]);
+        
+        return (
+          <div className="tutorial-observe">
+            <p>{currentStep.instruction}</p>
+            <div className="mt-4 flex justify-center">
+              <div className="relative w-12 h-12">
+                <motion.div
+                  className="absolute inset-0 border-4 rounded-full"
+                  initial={{ borderColor: "rgba(255, 255, 255, 0.2)" }}
+                  animate={{
+                    borderColor: ["rgba(255, 255, 255, 0.2)", "rgba(99, 102, 241, 1)", "rgba(255, 255, 255, 0.2)"],
+                  }}
+                  transition={{
+                    repeat: Infinity,
+                    duration: 2,
+                  }}
+                />
+                <motion.div
+                  className="absolute inset-2 bg-primary rounded-full opacity-50"
+                  animate={{
+                    scale: [1, 1.2, 1],
+                  }}
+                  transition={{
+                    repeat: Infinity,
+                    duration: 2,
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        );
+        
+      default:
+        return <p>Unknown step type</p>;
+    }
+  };
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+      >
+        <motion.div
+          className="relative w-full max-w-3xl"
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.9, opacity: 0 }}
+          transition={{ type: "spring", damping: 20 }}
+        >
+          <Card className="overflow-hidden">
+            <CardHeader className="relative pb-2">
+              <div className="absolute right-4 top-4 flex space-x-2">
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  onClick={() => setSoundEnabled(!soundEnabled)}
+                >
+                  {soundEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
+                </Button>
                 
-                <CardContent className="space-y-6">
-                  {section.id === activeSection && currentStep && (
-                    <div className="space-y-4">
-                      <h3 className="text-xl font-semibold">{currentStep.title}</h3>
-                      <div className="flex flex-col md:flex-row gap-6">
-                        <div className="flex-1">
-                          <p className="text-base mb-4">{currentStep.content}</p>
-                          
-                          {/* Audio element (hidden) */}
-                          <audio 
-                            ref={audioRef} 
-                            src={currentStep.audioSrc} 
-                            muted={muted}
-                            onEnded={() => console.log("Audio ended")}
-                            className="hidden"
-                          />
-                          
-                          {/* Interactive elements */}
-                          <div className="mt-6 p-4 border rounded-lg bg-muted/50">
-                            <h4 className="font-medium mb-2">Try it yourself:</h4>
-                            
-                            {currentStep.interactions.map((interaction, idx) => (
-                              <div key={idx} className="my-3">
-                                {interaction.type === 'click' && (
-                                  <Button onClick={() => handleInteraction('click')}>
-                                    {interaction.instruction}
-                                  </Button>
-                                )}
-                                
-                                {interaction.type === 'select' && (
-                                  <div className="space-y-2">
-                                    <p className="text-sm">{interaction.instruction}</p>
-                                    <select 
-                                      className="w-full p-2 border rounded"
-                                      onChange={() => handleInteraction('select')}
-                                    >
-                                      <option value="">-- Select an option --</option>
-                                      {interaction.options.map(option => (
-                                        <option key={option} value={option}>{option}</option>
-                                      ))}
-                                    </select>
-                                  </div>
-                                )}
-                                
-                                {interaction.type === 'slider' && (
-                                  <div className="space-y-2">
-                                    <p className="text-sm">{interaction.instruction}</p>
-                                    <input 
-                                      type="range" 
-                                      min={interaction.min} 
-                                      max={interaction.max} 
-                                      step={interaction.step}
-                                      defaultValue={interaction.defaultValue}
-                                      className="w-full"
-                                      onChange={() => handleInteraction('slider')}
-                                    />
-                                  </div>
-                                )}
-                                
-                                {interaction.type === 'input' && (
-                                  <div className="space-y-3">
-                                    <p className="text-sm">{interaction.instruction}</p>
-                                    {interaction.fields.map(field => (
-                                      <div key={field.id} className="space-y-1">
-                                        <label htmlFor={field.id} className="text-sm font-medium">
-                                          {field.label}
-                                        </label>
-                                        <input 
-                                          id={field.id}
-                                          type="text" 
-                                          className="w-full p-2 border rounded"
-                                          onChange={() => handleInteraction('input')}
-                                        />
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
-                                
-                                {interaction.type === 'textarea' && (
-                                  <div className="space-y-2">
-                                    <p className="text-sm">{interaction.instruction}</p>
-                                    <textarea 
-                                      id={interaction.id}
-                                      placeholder={interaction.placeholder}
-                                      className="w-full p-2 border rounded h-24"
-                                      onChange={() => handleInteraction('textarea')}
-                                    />
-                                  </div>
-                                )}
-                                
-                                {interaction.type === 'toggle' && (
-                                  <div className="flex items-center space-x-2">
-                                    <input 
-                                      type="checkbox" 
-                                      id={interaction.id}
-                                      className="rounded"
-                                      onChange={() => handleInteraction('toggle')}
-                                    />
-                                    <label htmlFor={interaction.id} className="text-sm">
-                                      {interaction.label}
-                                    </label>
-                                  </div>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                        
-                        {/* Visual demonstration */}
-                        <div className="flex-1 flex justify-center items-center">
-                          <div className="w-full max-w-sm aspect-square bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
-                            <div className="text-center text-gray-500">
-                              <p>[Visual Demonstration]</p>
-                              <p className="text-sm">({currentStep.image})</p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  onClick={() => setAutoAdvance(!autoAdvance)}
+                >
+                  {autoAdvance ? <PauseCircle size={18} /> : <PlayCircle size={18} />}
+                </Button>
                 
-                <CardFooter className="flex justify-between">
-                  <Button 
-                    variant="outline" 
-                    onClick={handlePrevious}
-                    disabled={step === 0 && activeSection === tutorialSections[0].id}
-                  >
-                    <ChevronLeft className="mr-2 h-4 w-4" />
-                    Previous
-                  </Button>
-                  
-                  <Button 
-                    onClick={handleNext}
-                    disabled={step === totalSteps - 1 && activeSection === tutorialSections[tutorialSections.length - 1].id}
-                  >
-                    Next
-                    <ChevronRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </CardFooter>
-              </Card>
-            </TabsContent>
-          ))}
-        </Tabs>
-      </DialogContent>
-    </Dialog>
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  onClick={handleSkip}
+                >
+                  <X size={18} />
+                </Button>
+              </div>
+              
+              <CardTitle className="text-xl">
+                {currentSection?.title}
+              </CardTitle>
+              <p className="text-muted-foreground">{currentSection?.description}</p>
+              
+              <div className="mt-4 flex items-center">
+                <p className="text-sm mr-2">Progress:</p>
+                <Progress value={progress} className="flex-1" />
+                <p className="text-sm ml-2">{Math.round(progress)}%</p>
+              </div>
+              
+              <div className="mt-2 flex justify-between text-sm text-muted-foreground">
+                <span>Section {currentSectionIndex + 1} of {totalSections}</span>
+                <span>Step {currentStepIndex + 1} of {totalStepsInCurrentSection}</span>
+              </div>
+            </CardHeader>
+            
+            <CardContent className="pt-4 pb-6 min-h-[200px]">
+              {renderStepContent()}
+            </CardContent>
+            
+            <CardFooter className="flex justify-between border-t p-4">
+              <Button
+                variant="outline"
+                onClick={prevStep}
+                disabled={currentSectionIndex === 0 && currentStepIndex === 0}
+              >
+                <ChevronLeft className="mr-2 h-4 w-4" />
+                Previous
+              </Button>
+              
+              <div className="flex space-x-2">
+                <Button 
+                  variant="ghost" 
+                  onClick={handleSkip}
+                >
+                  Skip Tutorial
+                </Button>
+                
+                <Button 
+                  onClick={nextStep}
+                  disabled={!stepCompleted && currentStep?.type !== 'message' && currentStep?.type !== 'ai-message'}
+                >
+                  {currentSectionIndex === totalSections - 1 && currentStepIndex === totalStepsInCurrentSection - 1
+                    ? "Finish"
+                    : "Next"}
+                  <ChevronRight className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
+            </CardFooter>
+          </Card>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
   );
 };
 

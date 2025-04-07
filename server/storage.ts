@@ -51,6 +51,10 @@ export interface IStorage {
   setUserAsTrustMember(id: number, level: string): Promise<schema.User | undefined>;
   isTrustMember(id: number): Promise<boolean>;
   
+  // Tutorial methods
+  getTutorialStatus(userId: number): Promise<{completed: boolean, lastSection: string | null}>;
+  updateTutorialStatus(userId: number, completed: boolean, lastSection?: string): Promise<boolean>;
+  
   // Wallet methods
   getWallet(id: number): Promise<schema.Wallet | undefined>;
   getWalletsByUserId(userId: number): Promise<schema.Wallet[]>;
