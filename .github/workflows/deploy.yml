@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  deploy:
+  deploy-web3:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -28,3 +28,126 @@ jobs:
         env:
           FRACTALCOIN_API_KEY: ${{ secrets.FRACTALCOIN_API_KEY }}
           FRACTALCOIN_API_ENDPOINT: ${{ secrets.FRACTALCOIN_API_ENDPOINT }}
+          
+  deploy-traditional:
+    runs-on: ubuntu-latest
+    needs: deploy-web3
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - run: npm ci
+      - run: npm run build
+      
+      # Create necessary deployment files
+      - name: Prepare deployment package
+        run: |
+          tar -czf deploy-package.tar.gz dist server-redirect.js package.json
+      
+      # Set up SSH key from secrets
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.DEPLOY_SSH_HOST }} >> ~/.ssh/known_hosts
+      
+      # Deploy to server via SSH
+      - name: Deploy to server
+        run: |
+          scp deploy-package.tar.gz ${{ secrets.DEPLOY_SSH_USER }}@${{ secrets.DEPLOY_SSH_HOST }}:~/
+          ssh ${{ secrets.DEPLOY_SSH_USER }}@${{ secrets.DEPLOY_SSH_HOST }} << 'EOF'
+            mkdir -p ~/aetherion
+            tar -xzf deploy-package.tar.gz -C ~/aetherion
+            cd ~/aetherion
+            
+            # Install production dependencies
+            npm install --production
+            
+            # Create systemd service file if it doesn't exist
+            if [ ! -f /etc/systemd/system/aetherion.service ]; then
+              echo "Setting up systemd service..."
+              sudo tee /etc/systemd/system/aetherion.service > /dev/null << 'SERVICEEOF'
+          [Unit]
+          Description=Aetherion UI Wallet
+          After=network.target
+
+          [Service]
+          Type=simple
+          User=$USER
+          WorkingDirectory=$HOME/aetherion
+          ExecStart=/usr/bin/node $HOME/aetherion/server-redirect.js
+          Restart=on-failure
+          Environment=PORT=3000
+          Environment=NODE_ENV=production
+
+          [Install]
+          WantedBy=multi-user.target
+          SERVICEEOF
+
+              sudo systemctl daemon-reload
+              sudo systemctl enable aetherion
+            fi
+            
+            # Restart the service
+            sudo systemctl restart aetherion
+            
+            # Set up nginx config if it doesn't exist
+            if [ ! -f /etc/nginx/sites-available/aetherion ]; then
+              echo "Setting up Nginx configuration..."
+              sudo tee /etc/nginx/sites-available/aetherion > /dev/null << 'NGINXEOF'
+          server {
+              listen 80;
+              server_name atc.aifreedomtrust.com;
+
+              # Primary application path at /dapp
+              location /dapp {
+                  proxy_pass http://localhost:3000/dapp;
+                  proxy_http_version 1.1;
+                  proxy_set_header Upgrade \$http_upgrade;
+                  proxy_set_header Connection 'upgrade';
+                  proxy_set_header Host \$host;
+                  proxy_cache_bypass \$http_upgrade;
+              }
+
+              # Secondary application path at /wallet (legacy support)
+              location /wallet {
+                  proxy_pass http://localhost:3000/wallet;
+                  proxy_http_version 1.1;
+                  proxy_set_header Upgrade \$http_upgrade;
+                  proxy_set_header Connection 'upgrade';
+                  proxy_set_header Host \$host;
+                  proxy_cache_bypass \$http_upgrade;
+              }
+
+              # Redirect root to /dapp
+              location = / {
+                  return 301 /dapp;
+              }
+
+              # For Let's Encrypt
+              location ~ /.well-known {
+                  allow all;
+              }
+          }
+          NGINXEOF
+
+              sudo ln -sf /etc/nginx/sites-available/aetherion /etc/nginx/sites-enabled/
+              
+              # Check Nginx config
+              sudo nginx -t
+              
+              # Restart Nginx
+              sudo systemctl restart nginx
+              
+              # Setup SSL with Let's Encrypt
+              sudo certbot --nginx -d atc.aifreedomtrust.com --non-interactive --agree-tos
+            else
+              # Just restart Nginx if the config already exists
+              sudo systemctl restart nginx
+            fi
+          EOF
+        env:
+          DEPLOY_SSH_HOST: ${{ secrets.DEPLOY_SSH_HOST }}
+          DEPLOY_SSH_USER: ${{ secrets.DEPLOY_SSH_USER }}

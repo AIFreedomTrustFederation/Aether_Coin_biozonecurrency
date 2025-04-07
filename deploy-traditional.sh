@@ -1,13 +1,17 @@
 #!/bin/bash
 # Traditional deployment script for Aetherion
-# Deploys the application to be served at https://atc.aifreedomtrust.com/wallet
+# Deploys the application to be served at https://atc.aifreedomtrust.com/dapp
+# Also available at the legacy path https://atc.aifreedomtrust.com/wallet
 
 # Load environment variables
-source .env
+if [ -f .env ]; then
+  source .env
+fi
 
 # Set variables
 DOMAIN="atc.aifreedomtrust.com"
-DEPLOY_PATH="/wallet"
+PRIMARY_PATH="/dapp"
+LEGACY_PATH="/wallet"
 OUTPUT_DIR="dist"
 DEPLOY_SCRIPT="server-redirect.js"
 
