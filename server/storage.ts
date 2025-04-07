@@ -3,30 +3,15 @@
  * This module provides a unified interface for interacting with the database.
  */
 
-import { drizzle } from 'drizzle-orm/postgres-js';
-import postgres from 'postgres';
 import dotenv from 'dotenv';
 import * as schema from '../shared/schema';
-import { PgStorage } from './pg-storage';
+import { DatabaseStorage } from './storage-database';
 
 // Load environment variables
 dotenv.config();
 
-// Get database URL from environment
-const databaseUrl = process.env.DATABASE_URL;
-
-if (!databaseUrl) {
-  throw new Error('DATABASE_URL is not defined');
-}
-
-// Create postgres connection
-const client = postgres(databaseUrl, { max: 1 });
-
-// Create drizzle instance with our schema
-export const db = drizzle(client, { schema });
-
 // Create and export the storage instance
-export const storage = new PgStorage();
+export const storage = new DatabaseStorage();
 
 // Export schema types for convenience
 export type { User, Wallet, Transaction, SmartContract, AiMonitoringLog, CidEntry, PaymentMethod, Payment, 

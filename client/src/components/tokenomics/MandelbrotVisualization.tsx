@@ -5,7 +5,7 @@
  * showing fractal patterns, Fibonacci sequences, and recursive growth.
  */
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, memo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Slider } from '@/components/ui/slider';
@@ -18,7 +18,7 @@ import { BioZoeLifecycleState } from '../../core/biozoe/types';
 const MAX_ITERATIONS = 100;
 const CANVAS_SIZE = 500;
 
-export function MandelbrotVisualization() {
+export const MandelbrotVisualization = memo(function MandelbrotVisualization() {
   const mandelbrotCanvasRef = useRef<HTMLCanvasElement>(null);
   const torusCanvasRef = useRef<HTMLCanvasElement>(null);
   const [zoomLevel, setZoomLevel] = useState<number>(1);
@@ -715,6 +715,7 @@ export function MandelbrotVisualization() {
       </CardContent>
     </Card>
   );
-}
+});
 
+// Export the memoized component
 export default MandelbrotVisualization;
