@@ -18,6 +18,21 @@ declare global {
   }
 }
 
+// Add 'user' property to session object to fix type issues
+declare module 'express-session' {
+  interface SessionData {
+    userId?: number;
+    user?: {
+      id: number;
+      username: string;
+      email: string;
+      name?: string;
+      isTrustMember: boolean;
+      role?: string;
+    };
+  }
+}
+
 /**
  * Middleware to authenticate users based on session data
  */
@@ -124,4 +139,37 @@ export function hasAdminPermission(permissionName: string) {
       res.status(500).json({ message: 'Server error during permission check' });
     }
   };
+}
+
+/**
+ * Middleware that requires authentication to access a route
+ * This is a simple wrapper around authenticateUser that can be used in routes
+ */
+export function requireAuth(req: Request, res: Response, next: NextFunction) {
+  // Check if there's a user in the session
+  if (!req.session || !req.session.userId) {
+    return res.status(401).json({ message: 'Authentication required' });
+  }
+  
+  // If user is already set on request, proceed
+  if (req.user) {
+    return next();
+  }
+  
+  // Otherwise, authenticate the user
+  authenticateUser(req, res, next);
+}
+
+/**
+ * Middleware that requires both authentication and trust member status
+ * Use this for routes that should only be accessible to trust members
+ */
+export function requireTrustMember(req: Request, res: Response, next: NextFunction) {
+  // First check authentication
+  requireAuth(req, res, (err) => {
+    if (err) return next(err);
+    
+    // Then check if user is a trust member
+    isTrustMember(req, res, next);
+  });
 }

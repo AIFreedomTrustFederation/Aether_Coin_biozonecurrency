@@ -23,6 +23,39 @@ import {
   FeeEstimateType
 } from "./bridge-schema";
 
+// Import Recurve Fractal Reserve schemas
+import type {
+  InsurancePolicyType,
+  InsurancePolicyStatus,
+  BeneficiaryType,
+  FractalLoanStatus,
+  FractalLoanCollateralType,
+  RecurveSyncStatus,
+  RecurveTokenTier,
+  TorusNodeType,
+  InsurancePolicy,
+  InsertInsurancePolicy,
+  RecurveToken,
+  InsertRecurveToken,
+  FractalLoan,
+  InsertFractalLoan,
+  TorusSecurityNode,
+  InsertTorusSecurityNode,
+  NetworkInsurancePolicy,
+  InsertNetworkInsurancePolicy,
+  MandelbrotRecursionEvent,
+  InsertMandelbrotRecursionEvent
+} from "./recurve-schema";
+
+import {
+  insurancePolicies,
+  recurveTokens,
+  fractalLoans,
+  torusSecurityNodes,
+  networkInsurancePolicies,
+  mandelbrotRecursionEvents
+} from "./recurve-schema";
+
 // Import interface types
 import type {
   BridgeHealth,
@@ -74,6 +107,41 @@ export {
   BridgeValidatorType,
   BridgeSupportedTokenType,
   BridgeTransactionType
+};
+
+// Re-export Recurve Fractal Reserve types
+export {
+  // Types
+  InsurancePolicy,
+  InsertInsurancePolicy,
+  RecurveToken,
+  InsertRecurveToken,
+  FractalLoan,
+  InsertFractalLoan,
+  TorusSecurityNode,
+  InsertTorusSecurityNode,
+  NetworkInsurancePolicy,
+  InsertNetworkInsurancePolicy,
+  MandelbrotRecursionEvent,
+  InsertMandelbrotRecursionEvent,
+  
+  // Enums
+  InsurancePolicyType,
+  InsurancePolicyStatus,
+  BeneficiaryType,
+  FractalLoanStatus,
+  FractalLoanCollateralType,
+  RecurveSyncStatus,
+  RecurveTokenTier,
+  TorusNodeType,
+  
+  // Tables
+  insurancePolicies,
+  recurveTokens,
+  fractalLoans,
+  torusSecurityNodes,
+  networkInsurancePolicies,
+  mandelbrotRecursionEvents
 };
 
 // Import all DApp Builder and Marketplace schema elements
@@ -194,6 +262,8 @@ export const walletsRelations = relations(wallets, ({ one, many }) => ({
   stakingRecords: many(stakingRecords),
   votes: many(votes),
   bridgeTransactions: many(bridgeTransactions),
+  fractalLoans: many(fractalLoans),
+  domainTrustWalletConnections: many(domainTrustWalletConnections),
 }));
 
 export const insertWalletSchema = createInsertSchema(wallets).omit({
@@ -1445,6 +1515,13 @@ export const usersExtendedRelations = relations(users, ({ many, one }) => ({
   recursionRequests: many(recursionLogs),
   aiCoinCompensations: many(aiCoinCompensation),
   
+  // Recurve Fractal Reserve relations
+  insurancePolicies: many(insurancePolicies),
+  recurveTokens: many(recurveTokens),
+  fractalLoans: many(fractalLoans),
+  torusSecurityNodes: many(torusSecurityNodes),
+  mandelbrotRecursionEvents: many(mandelbrotRecursionEvents),
+  
   // DApp Builder and Marketplace relations
   userDapps: many(userDapps),
   dappListings: many(marketplaceListings),
@@ -1839,4 +1916,12 @@ export const schema = {
   securityAuditTemplates,
   browserUsers,
   sandboxEnvironments,
+  
+  // Recurve Fractal Reserve schemas (imported from recurve-schema.ts)
+  insurancePolicies,
+  recurveTokens,
+  fractalLoans,
+  torusSecurityNodes,
+  networkInsurancePolicies,
+  mandelbrotRecursionEvents,
 };

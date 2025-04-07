@@ -27,7 +27,14 @@ export type { User, Wallet, Transaction, SmartContract, AiMonitoringLog, CidEntr
                BridgeNetwork, BridgeStatus, BridgeTransactionStatus,
                // Domain Hosting types
                DomainConfiguration, DomainDeployment, FilecoinStorageAllocation, 
-               DomainTrustWalletConnection, DomainActivityLog, DnsRecord } from '../shared/schema';
+               DomainTrustWalletConnection, DomainActivityLog, DnsRecord,
+               // Recurve Fractal Reserve types
+               InsurancePolicy, InsertInsurancePolicy, RecurveToken, InsertRecurveToken,
+               FractalLoan, InsertFractalLoan, TorusSecurityNode, InsertTorusSecurityNode,
+               NetworkInsurancePolicy, InsertNetworkInsurancePolicy, MandelbrotRecursionEvent, 
+               InsertMandelbrotRecursionEvent, InsurancePolicyType, InsurancePolicyStatus,
+               BeneficiaryType, FractalLoanStatus, FractalLoanCollateralType, RecurveSyncStatus,
+               RecurveTokenTier, TorusNodeType } from '../shared/schema';
 
 // Export storage interface
 export interface IStorage {
@@ -125,4 +132,53 @@ export interface IStorage {
   completeBridgeTransaction(id: number, targetTransactionHash: string): Promise<schema.BridgeTransaction | undefined>;
   
   // And other necessary methods...
+  
+  // Recurve Fractal Reserve System methods
+  
+  // Insurance Policy methods
+  getInsurancePolicy(id: number): Promise<schema.InsurancePolicy | undefined>;
+  getInsurancePoliciesByUserId(userId: number): Promise<schema.InsurancePolicy[]>;
+  getInsurancePoliciesByStatus(status: schema.InsurancePolicyStatus): Promise<schema.InsurancePolicy[]>;
+  createInsurancePolicy(policy: schema.InsertInsurancePolicy): Promise<schema.InsurancePolicy>;
+  updateInsurancePolicyStatus(id: number, status: schema.InsurancePolicyStatus): Promise<schema.InsurancePolicy | undefined>;
+  updateInsuranceCashValue(id: number, cashValue: number): Promise<schema.InsurancePolicy | undefined>;
+  updateInsuranceSyncStatus(id: number, status: schema.RecurveSyncStatus): Promise<schema.InsurancePolicy | undefined>;
+  
+  // Recurve Tokens methods
+  getRecurveToken(id: number): Promise<schema.RecurveToken | undefined>;
+  getRecurveTokensByUserId(userId: number): Promise<schema.RecurveToken[]>;
+  getRecurveTokensByPolicyId(policyId: number): Promise<schema.RecurveToken[]>;
+  getRecurveTokensByTier(tier: schema.RecurveTokenTier): Promise<schema.RecurveToken[]>;
+  createRecurveToken(token: schema.InsertRecurveToken): Promise<schema.RecurveToken>;
+  updateRecurveTokenStatus(id: number, status: string): Promise<schema.RecurveToken | undefined>;
+  updateRecurveTokenAmount(id: number, amount: number): Promise<schema.RecurveToken | undefined>;
+  
+  // Fractal Loans methods
+  getFractalLoan(id: number): Promise<schema.FractalLoan | undefined>;
+  getFractalLoansByUserId(userId: number): Promise<schema.FractalLoan[]>;
+  getFractalLoansByStatus(status: schema.FractalLoanStatus): Promise<schema.FractalLoan[]>;
+  getFractalLoansByPolicyId(policyId: number): Promise<schema.FractalLoan[]>;
+  createFractalLoan(loan: schema.InsertFractalLoan): Promise<schema.FractalLoan>;
+  updateFractalLoanStatus(id: number, status: schema.FractalLoanStatus): Promise<schema.FractalLoan | undefined>;
+  
+  // Torus Security nodes methods
+  getTorusSecurityNode(id: number): Promise<schema.TorusSecurityNode | undefined>;
+  getTorusSecurityNodesByUserId(userId: number): Promise<schema.TorusSecurityNode[]>;
+  getTorusSecurityNodesByTokenId(tokenId: number): Promise<schema.TorusSecurityNode[]>;
+  getTorusSecurityNodesByType(nodeType: schema.TorusNodeType): Promise<schema.TorusSecurityNode[]>;
+  createTorusSecurityNode(node: schema.InsertTorusSecurityNode): Promise<schema.TorusSecurityNode>;
+  updateTorusSecurityNodeStatus(id: number, status: string): Promise<schema.TorusSecurityNode | undefined>;
+  updateTorusNodeLastVerified(id: number): Promise<schema.TorusSecurityNode | undefined>;
+  
+  // Network Insurance Policies methods
+  getNetworkInsurancePolicy(id: number): Promise<schema.NetworkInsurancePolicy | undefined>;
+  getNetworkInsurancePoliciesByStatus(status: schema.InsurancePolicyStatus): Promise<schema.NetworkInsurancePolicy[]>;
+  getNetworkInsurancePoliciesByPurpose(purpose: string): Promise<schema.NetworkInsurancePolicy[]>;
+  createNetworkInsurancePolicy(policy: schema.InsertNetworkInsurancePolicy): Promise<schema.NetworkInsurancePolicy>;
+  updateNetworkInsurancePolicyStatus(id: number, status: schema.InsurancePolicyStatus): Promise<schema.NetworkInsurancePolicy | undefined>;
+  
+  // Mandelbrot Recursion Events methods
+  getMandelbrotRecursionEvent(id: number): Promise<schema.MandelbrotRecursionEvent | undefined>;
+  getMandelbrotRecursionEventsByType(type: string): Promise<schema.MandelbrotRecursionEvent[]>;
+  createMandelbrotRecursionEvent(event: schema.InsertMandelbrotRecursionEvent): Promise<schema.MandelbrotRecursionEvent>;
 }
