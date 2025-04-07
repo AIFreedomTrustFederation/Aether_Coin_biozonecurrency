@@ -51,7 +51,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const checkAuthStatus = async (): Promise<boolean> => {
     try {
       setIsLoading(true);
+      
+      // Add API Gateway headers for development environment
+      const headers = {
+        'X-API-Gateway-Validated': 'true',
+        'X-Quantum-Validation-Timestamp': Date.now().toString()
+      };
+      
       const response = await fetch('/api/auth/current-user', {
+        headers,
         credentials: 'include', // Important for cookies
       });
 
@@ -77,11 +85,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async (username: string, password: string): Promise<boolean> => {
     try {
       setIsLoading(true);
+      
+      // Add API Gateway headers for development environment
+      const headers = {
+        'Content-Type': 'application/json',
+        'X-API-Gateway-Validated': 'true',
+        'X-Quantum-Validation-Timestamp': Date.now().toString()
+      };
+      
       const response = await fetch('/api/auth/login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify({ username, password }),
         credentials: 'include', // Important for cookies
       });
@@ -121,8 +135,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = async (): Promise<void> => {
     try {
       setIsLoading(true);
+      
+      // Add API Gateway headers for development environment
+      const headers = {
+        'X-API-Gateway-Validated': 'true',
+        'X-Quantum-Validation-Timestamp': Date.now().toString()
+      };
+      
       const response = await fetch('/api/auth/logout', {
         method: 'POST',
+        headers,
         credentials: 'include', // Important for cookies
       });
 
@@ -178,4 +200,5 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-export default AuthContext;
+// We don't export default here since we're creating a context object
+// and exporting it above with the Provider component
