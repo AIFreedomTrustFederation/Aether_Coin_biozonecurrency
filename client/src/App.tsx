@@ -77,6 +77,9 @@ const TrustPortal = lazy(() => import("./pages/TrustPortal"));
 const AIFreedomTrustLogin = lazy(() => import("./pages/AIFreedomTrustLogin"));
 const AccessDenied = lazy(() => import("./pages/AccessDenied"));
 
+// AetherCoin DApp integration
+const AetherCoinDApp = lazy(() => import("./pages/AetherCoinDApp"));
+
 // Define navigation items for both mobile and desktop
 const navigationItems = [
   { name: "Dashboard", path: "/dashboard", icon: <Layout className="h-5 w-5" /> },
@@ -95,6 +98,7 @@ const navigationItems = [
   { name: "Blockchain Dashboard", path: "/blockchain-dashboard", icon: <Blocks className="h-5 w-5" /> },
   { name: "Singularity", path: "/singularity", icon: <Zap className="h-5 w-5" /> },
   { name: "AetherCoin", path: "/aethercoin", icon: <Coins className="h-5 w-5" /> },
+  { name: "AetherCoin DApp", path: "/dapp", icon: <Blocks className="h-5 w-5" /> },
   { name: "ICO", path: "/ico", icon: <Coins className="h-5 w-5" /> },
   { name: "Whitepaper", path: "/whitepaper", icon: <FileText className="h-5 w-5" /> },
   { name: "About", path: "/about", icon: <Info className="h-5 w-5" /> },
@@ -697,6 +701,13 @@ function App() {
             <Route path="/access-denied">
               <Suspense fallback={<LoadingScreen message="Loading..." />}>
                 <AccessDenied />
+              </Suspense>
+            </Route>
+            
+            {/* AetherCoin DApp Integration */}
+            <Route path="/dapp">
+              <Suspense fallback={<LoadingScreen message="Loading AetherCoin DApp..." />}>
+                <AetherCoinDApp />
               </Suspense>
             </Route>
 
