@@ -13,10 +13,11 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Server, Database, Upload, HardDrive, RefreshCw, Check, ChevronRight, Cloud, Globe, Shield } from 'lucide-react';
+import { Loader2, Server, Database, Upload, HardDrive, RefreshCw, Check, ChevronRight, Cloud, Globe, Shield, Sparkles, Bot } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { FilecoinStorageIntegration } from './FilecoinStorageIntegration';
 import { ResourceAllocationFeedback } from './ResourceAllocationFeedback';
+import { AIWebsiteGenerator } from './AIWebsiteGenerator';
 import { apiRequest } from '@/lib/queryClient';
 
 // Form schema
@@ -956,61 +957,114 @@ export function DomainHostingWizard() {
   );
   
   // Step 3: Upload Website
-  const renderStep3 = () => (
-    <div className="space-y-6">
-      <div className="rounded-lg border p-6">
-        <div className="flex items-center mb-4">
-          <Check className="h-6 w-6 text-green-500 mr-2" />
-          <h3 className="text-lg font-medium">Resources Allocated Successfully</h3>
-        </div>
-        
-        <p className="text-muted-foreground mb-4">
-          Resources have been allocated to your domain. Now, upload your website files.
-        </p>
-        
-        <div className="space-y-4">
-          <p className="text-sm">
-            Upload a zip file containing your website files. The root of the zip file will be the root of your website.
-          </p>
-          <div className="border-2 border-dashed rounded-lg p-6 text-center">
-            <Upload className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
-            <p className="text-sm text-muted-foreground mb-2">
-              Drag and drop your zip file here, or click to browse
-            </p>
-            <Input
-              id="website-file"
-              type="file"
-              accept=".zip"
-              className="hidden"
-              onChange={handleFileChange}
-            />
-            <Button
-              variant="outline"
-              onClick={() => document.getElementById('website-file')?.click()}
-            >
-              Select Zip File
-            </Button>
-            {selectedFile && (
-              <p className="mt-2 text-sm">Selected: {selectedFile.name}</p>
-            )}
+  const renderStep3 = () => {
+    const [deployMethod, setDeployMethod] = useState<'upload' | 'ai'>('upload');
+    
+    return (
+      <div className="space-y-6">
+        <div className="rounded-lg border p-6">
+          <div className="flex items-center mb-4">
+            <Check className="h-6 w-6 text-green-500 mr-2" />
+            <h3 className="text-lg font-medium">Resources Allocated Successfully</h3>
           </div>
+          
+          <p className="text-muted-foreground mb-4">
+            Resources have been allocated to your domain. Now, create or upload your website files.
+          </p>
+          
+          <div className="flex space-x-4 mb-6">
+            <Button
+              variant={deployMethod === 'upload' ? 'default' : 'outline'}
+              onClick={() => setDeployMethod('upload')}
+              className="flex-1"
+            >
+              <Upload className="mr-2 h-4 w-4" />
+              Upload Files
+            </Button>
+            <Button
+              variant={deployMethod === 'ai' ? 'default' : 'outline'}
+              onClick={() => setDeployMethod('ai')}
+              className="flex-1"
+            >
+              <Sparkles className="mr-2 h-4 w-4" />
+              Generate with AI
+            </Button>
+          </div>
+          
+          {deployMethod === 'upload' ? (
+            <div className="space-y-4">
+              <p className="text-sm">
+                Upload a zip file containing your website files. The root of the zip file will be the root of your website.
+              </p>
+              <div className="border-2 border-dashed rounded-lg p-6 text-center">
+                <Upload className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
+                <p className="text-sm text-muted-foreground mb-2">
+                  Drag and drop your zip file here, or click to browse
+                </p>
+                <Input
+                  id="website-file"
+                  type="file"
+                  accept=".zip"
+                  className="hidden"
+                  onChange={handleFileChange}
+                />
+                <Button
+                  variant="outline"
+                  onClick={() => document.getElementById('website-file')?.click()}
+                >
+                  Select Zip File
+                </Button>
+                {selectedFile && (
+                  <p className="mt-2 text-sm">Selected: {selectedFile.name}</p>
+                )}
+              </div>
+              
+              <Button
+                onClick={handleDeployWebsite}
+                className="w-full mt-4"
+                disabled={isSubmitting || !selectedFile}
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Deploying... ({uploadProgress}%)
+                  </>
+                ) : 'Deploy Website'}
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="bg-muted p-4 rounded-md mb-2">
+                <div className="flex items-start gap-3">
+                  <Bot className="h-5 w-5 text-primary mt-1" />
+                  <div>
+                    <h4 className="text-sm font-medium">AI-Powered Website Generator</h4>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Describe your website in plain language, and our open-source AI will generate it for you, ready to deploy on the FractalCoin blockchain.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              <AIWebsiteGenerator
+                onWebsiteGenerated={(file) => {
+                  setSelectedFile(file);
+                  toast({
+                    title: "Website Generated",
+                    description: "Your AI-generated website is ready to deploy.",
+                  });
+                  // After a short delay, deploy the website
+                  setTimeout(() => {
+                    handleDeployWebsite();
+                  }, 1500);
+                }}
+              />
+            </div>
+          )}
         </div>
-        
-        <Button
-          onClick={handleDeployWebsite}
-          className="w-full mt-4"
-          disabled={isSubmitting || !selectedFile}
-        >
-          {isSubmitting ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Deploying... ({uploadProgress}%)
-            </>
-          ) : 'Deploy Website'}
-        </Button>
       </div>
-    </div>
-  );
+    );
+  };
   
   // Step 4: Deployment Complete
   const renderStep4 = () => (
