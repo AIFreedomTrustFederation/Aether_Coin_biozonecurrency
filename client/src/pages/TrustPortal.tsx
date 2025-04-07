@@ -1,527 +1,305 @@
-import React, { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
-import TrustMemberGuard from '../components/auth/TrustMemberGuard';
+import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
-
+import { useAuth } from '@/context/AuthContext';
+import TrustMemberGuard from '@/components/auth/TrustMemberGuard';
+import { format } from 'date-fns';
 import { 
-  Shield, 
-  UserCircle2, 
-  FileText, 
+  Layers, 
   Settings, 
+  Users, 
+  FileText, 
+  Shield, 
   LogOut, 
-  Clock, 
-  Zap,
   BarChart3,
-  ArrowRight,
-  Users,
-  CheckCircle,
-  BadgeCheck,
-  Bell
+  Database,
+  AlertCircle,
+  Clock,
+  UserCheck
 } from 'lucide-react';
 
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardFooter, 
-  CardHeader, 
-  CardTitle 
-} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Table, 
-  TableBody, 
-  TableCaption, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
-const TrustPortal: React.FC = () => {
+// Mock trust activity data for demonstration purposes
+const trustActivities = [
+  { 
+    id: 1, 
+    type: 'validation', 
+    description: 'Validated quantum transaction buffer', 
+    timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 mins ago 
+    status: 'completed'
+  },
+  { 
+    id: 2, 
+    type: 'governance', 
+    description: 'Voted on protocol update FRC-291', 
+    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 3), // 3 hours ago
+    status: 'completed'
+  },
+  { 
+    id: 3, 
+    type: 'security', 
+    description: 'Reviewed access patterns for neural bridge', 
+    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 6), // 6 hours ago
+    status: 'completed'
+  },
+  { 
+    id: 4, 
+    type: 'governance', 
+    description: 'Monthly resource allocation audit', 
+    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
+    status: 'pending'
+  },
+];
+
+// Component to display user trust information
+const TrustInfoCard = () => {
+  const { user } = useAuth();
+
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-lg font-medium">Trust Status</CardTitle>
+        <CardDescription>Your membership information</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="flex items-center space-x-4 mb-4">
+          <Avatar className="h-20 w-20 border-2 border-primary">
+            <AvatarFallback className="text-xl bg-primary/10 text-primary">
+              {user?.username?.substring(0, 2).toUpperCase() || 'TM'}
+            </AvatarFallback>
+          </Avatar>
+          <div>
+            <h3 className="text-lg font-medium">{user?.username}</h3>
+            <p className="text-sm text-muted-foreground">{user?.email}</p>
+            <div className="flex items-center mt-1">
+              <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
+                {user?.trustMemberLevel || 'Member'}
+              </Badge>
+            </div>
+          </div>
+        </div>
+        
+        <Separator className="my-4" />
+        
+        <div className="space-y-2">
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">Member since</span>
+            <span className="font-medium">
+              {user?.trustMemberSince && user.trustMemberSince !== null ? format(new Date(user.trustMemberSince), 'PPP') : 'N/A'}
+            </span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">Last login</span>
+            <span className="font-medium">
+              {user?.lastLogin && user.lastLogin !== null ? format(new Date(user.lastLogin), 'PPP HH:mm') : 'N/A'}
+            </span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">Status</span>
+            <span className="font-medium flex items-center">
+              <span className="h-2 w-2 rounded-full bg-green-500 mr-2 animate-pulse"></span>
+              Active
+            </span>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+// Activity feed component
+const ActivityFeed = () => {
+  return (
+    <div className="space-y-4">
+      {trustActivities.map(activity => (
+        <Card key={activity.id} className="overflow-hidden">
+          <div className="flex">
+            <div className={`w-2 ${
+              activity.type === 'validation' ? 'bg-blue-500' : 
+              activity.type === 'governance' ? 'bg-purple-500' : 
+              'bg-yellow-500'
+            }`}></div>
+            <div className="flex-1 p-4">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h4 className="font-medium">{activity.description}</h4>
+                  <p className="text-sm text-muted-foreground">
+                    {activity.type.charAt(0).toUpperCase() + activity.type.slice(1)} activity
+                  </p>
+                </div>
+                <Badge variant={activity.status === 'completed' ? 'outline' : 'secondary'}>
+                  {activity.status}
+                </Badge>
+              </div>
+              <div className="mt-2 flex items-center text-xs text-muted-foreground">
+                <Clock className="h-3 w-3 mr-1" />
+                {format(activity.timestamp, 'PPP p')}
+              </div>
+            </div>
+          </div>
+        </Card>
+      ))}
+    </div>
+  );
+};
+
+// Main portal component
+const TrustPortal = () => {
   const { user, logout } = useAuth();
-  const [activeTab, setActiveTab] = useState('dashboard');
-  const [, setLocation] = useLocation();
+  const [, navigate] = useLocation();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  // Handle logout
   const handleLogout = async () => {
-    try {
-      await logout();
-      setLocation('/');
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
+    setIsLoggingOut(true);
+    await logout();
+    navigate('/trust/login');
+    setIsLoggingOut(false);
   };
 
-  // Format date to readable string
-  const formatDate = (date: Date | undefined | string) => {
-    if (!date) return 'N/A';
-    return new Date(date).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-  };
-
-  // Mock data for recent trust activities
-  const recentActivities = [
-    { 
-      id: 1, 
-      type: 'Proposal Vote', 
-      description: 'Voted on AI Safety Proposal #28', 
-      date: new Date(2025, 3, 4), 
-      status: 'Approved'
-    },
-    { 
-      id: 2, 
-      type: 'Verification', 
-      description: 'Verified new member certification', 
-      date: new Date(2025, 3, 2), 
-      status: 'Completed'
-    },
-    { 
-      id: 3, 
-      type: 'Document Review', 
-      description: 'Reviewed AI Ethics Guidelines v3.2', 
-      date: new Date(2025, 3, 1), 
-      status: 'Completed'
-    },
-    { 
-      id: 4, 
-      type: 'Contribution', 
-      description: 'Contributed to Governance Framework', 
-      date: new Date(2025, 2, 28), 
-      status: 'Published'
-    },
-  ];
-
-  // Mock data for upcoming events
-  const upcomingEvents = [
-    {
-      id: 1,
-      title: 'Quarterly Trust Member Meeting',
-      date: new Date(2025, 3, 15),
-      time: '10:00 AM PST',
-      location: 'Virtual',
-      required: true,
-    },
-    {
-      id: 2,
-      title: 'AI Safety Working Group',
-      date: new Date(2025, 3, 18),
-      time: '2:00 PM PST',
-      location: 'Virtual',
-      required: false,
-    },
-    {
-      id: 3,
-      title: 'Trust Governance Review',
-      date: new Date(2025, 3, 25),
-      time: '1:00 PM PST',
-      location: 'Virtual',
-      required: true,
-    },
-  ];
-
-  // Mock data for trust documents
-  const trustDocuments = [
-    {
-      id: 1,
-      title: 'AI Freedom Trust Charter',
-      type: 'Governance',
-      lastUpdated: new Date(2025, 1, 15),
-      version: '2.3',
-    },
-    {
-      id: 2,
-      title: 'Member Responsibilities',
-      type: 'Policy',
-      lastUpdated: new Date(2025, 2, 10),
-      version: '1.7',
-    },
-    {
-      id: 3,
-      title: 'AI Safety Guidelines',
-      type: 'Technical',
-      lastUpdated: new Date(2025, 3, 1),
-      version: '3.2',
-    },
-    {
-      id: 4,
-      title: 'Ethical Framework for AI Development',
-      type: 'Ethics',
-      lastUpdated: new Date(2025, 2, 22),
-      version: '2.1',
-    },
-    {
-      id: 5,
-      title: 'Trust Member Onboarding Guide',
-      type: 'Process',
-      lastUpdated: new Date(2025, 2, 5),
-      version: '1.4',
-    },
-  ];
-
-  // Return the protected portal content wrapped in TrustMemberGuard
   return (
     <TrustMemberGuard>
-      <div className="container mx-auto p-4 py-6 max-w-7xl">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-          <div>
-            <h1 className="text-3xl font-bold flex items-center gap-2">
-              <Shield className="h-8 w-8 text-primary" />
-              Trust Member Portal
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Welcome back, {user?.username} | Trust Member since {formatDate(user?.trustMemberSince)}
-            </p>
-          </div>
-          <Button variant="outline" size="sm" onClick={handleLogout}>
-            <LogOut className="h-4 w-4 mr-2" />
-            Logout
-          </Button>
-        </div>
+      <div className="min-h-screen bg-muted/10">
+        <div className="container mx-auto p-4 md:p-6 lg:p-8">
+          <header className="mb-8">
+            <div className="flex justify-between items-center mb-4">
+              <div>
+                <h1 className="text-3xl font-bold">AI Freedom Trust Portal</h1>
+                <p className="text-muted-foreground">Secure access for trust governance and operations</p>
+              </div>
+              <Button 
+                variant="outline" 
+                className="gap-2"
+                onClick={handleLogout}
+                disabled={isLoggingOut}
+              >
+                <LogOut className="h-4 w-4" />
+                {isLoggingOut ? 'Logging out...' : 'Sign Out'}
+              </Button>
+            </div>
+            <div className="bg-primary/5 rounded-lg p-4 flex items-center">
+              <UserCheck className="h-5 w-5 mr-2 text-primary" />
+              <p>
+                Welcome back, <span className="font-medium">{user?.username}</span>. 
+                You're authenticated with {user?.trustMemberLevel || 'Member'} privileges.
+              </p>
+            </div>
+          </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          {/* Left sidebar with member info */}
-          <div className="md:col-span-1">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-xl">Member Profile</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-col items-center mb-4">
-                  <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-3">
-                    <UserCircle2 className="h-12 w-12 text-primary" />
-                  </div>
-                  <h3 className="font-medium text-lg">{user?.username}</h3>
-                  <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                    <BadgeCheck className="h-4 w-4 text-blue-500" />
-                    <span>{user?.trustMemberLevel || 'Full Member'}</span>
-                  </div>
-                </div>
-
-                <div className="space-y-3 text-sm">
-                  <div className="flex justify-between items-center pb-2 border-b">
-                    <span className="text-muted-foreground">Email</span>
-                    <span className="font-medium">{user?.email}</span>
-                  </div>
-                  <div className="flex justify-between items-center pb-2 border-b">
-                    <span className="text-muted-foreground">Member Since</span>
-                    <span className="font-medium">{formatDate(user?.trustMemberSince)}</span>
-                  </div>
-                  <div className="flex justify-between items-center pb-2 border-b">
-                    <span className="text-muted-foreground">Role</span>
-                    <span className="font-medium">{user?.role}</span>
-                  </div>
-                  <div className="flex justify-between items-center pb-2 border-b">
-                    <span className="text-muted-foreground">Status</span>
-                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
-                      Active
-                    </span>
-                  </div>
-                </div>
-              </CardContent>
-              <CardFooter className="pt-1">
-                <Button variant="outline" className="w-full text-sm" size="sm">
-                  <Settings className="h-4 w-4 mr-2" />
-                  Manage Profile
-                </Button>
-              </CardFooter>
-            </Card>
-
-            <Card className="mt-4">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-xl">Quick Links</CardTitle>
-              </CardHeader>
-              <CardContent className="pb-2">
-                <nav className="space-y-1">
-                  {[
-                    { name: 'Trust Documentation', icon: <FileText className="h-4 w-4" /> },
-                    { name: 'Voting Dashboard', icon: <BarChart3 className="h-4 w-4" /> },
-                    { name: 'AI Safety Working Group', icon: <Shield className="h-4 w-4" /> },
-                    { name: 'Member Directory', icon: <Users className="h-4 w-4" /> },
-                    { name: 'Announcements', icon: <Bell className="h-4 w-4" /> },
-                  ].map((item, index) => (
-                    <Button 
-                      key={index} 
-                      variant="ghost" 
-                      className="w-full justify-start text-sm h-9" 
-                      size="sm"
-                    >
-                      {item.icon}
-                      <span className="ml-2">{item.name}</span>
-                    </Button>
-                  ))}
-                </nav>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Main content area with tabs */}
-          <div className="md:col-span-3">
-            <Tabs defaultValue="dashboard" value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="mb-6">
-                <TabsTrigger value="dashboard" className="flex items-center gap-1">
-                  <Zap className="h-4 w-4" />
-                  <span>Dashboard</span>
-                </TabsTrigger>
-                <TabsTrigger value="activity" className="flex items-center gap-1">
-                  <Clock className="h-4 w-4" />
-                  <span>Activity</span>
-                </TabsTrigger>
-                <TabsTrigger value="documents" className="flex items-center gap-1">
-                  <FileText className="h-4 w-4" />
-                  <span>Documents</span>
-                </TabsTrigger>
-              </TabsList>
-
-              {/* Dashboard Tab */}
-              <TabsContent value="dashboard">
-                <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div className="lg:col-span-4 space-y-6">
+              <TrustInfoCard />
+              
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg font-medium">Quick Actions</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <Button variant="outline" className="w-full justify-start">
+                    <Shield className="h-4 w-4 mr-2" />
+                    Security Protocols
+                  </Button>
+                  <Button variant="outline" className="w-full justify-start">
+                    <FileText className="h-4 w-4 mr-2" />
+                    View Trust Documents
+                  </Button>
+                  <Button variant="outline" className="w-full justify-start">
+                    <Database className="h-4 w-4 mr-2" />
+                    Quantum Data Vault
+                  </Button>
+                  <Button variant="outline" className="w-full justify-start">
+                    <Settings className="h-4 w-4 mr-2" />
+                    Account Settings
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+            
+            <div className="lg:col-span-8">
+              <Tabs defaultValue="activity" className="w-full">
+                <TabsList className="grid grid-cols-3 mb-4">
+                  <TabsTrigger value="activity" className="flex items-center">
+                    <Clock className="h-4 w-4 mr-2" />
+                    Recent Activity
+                  </TabsTrigger>
+                  <TabsTrigger value="governance" className="flex items-center">
+                    <Users className="h-4 w-4 mr-2" />
+                    Governance
+                  </TabsTrigger>
+                  <TabsTrigger value="analytics" className="flex items-center">
+                    <BarChart3 className="h-4 w-4 mr-2" />
+                    Analytics
+                  </TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="activity" className="mt-0">
                   <Card>
                     <CardHeader>
-                      <CardTitle className="text-xl">Your Trust Status</CardTitle>
-                      <CardDescription>Current member standing and participation</CardDescription>
+                      <CardTitle className="text-xl">Activity Feed</CardTitle>
+                      <CardDescription>
+                        Your recent trust-related activities
+                      </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <div className="space-y-4">
-                        <div>
-                          <div className="flex justify-between mb-1">
-                            <span className="text-sm font-medium">Participation Score</span>
-                            <span className="text-sm text-muted-foreground">92%</span>
-                          </div>
-                          <div className="w-full bg-muted rounded-full h-2">
-                            <div className="bg-green-500 h-2 rounded-full" style={{ width: '92%' }}></div>
-                          </div>
-                          <p className="text-xs text-muted-foreground mt-1">Based on meeting attendance and contributions</p>
-                        </div>
-
-                        <div>
-                          <div className="flex justify-between mb-1">
-                            <span className="text-sm font-medium">Voting Activity</span>
-                            <span className="text-sm text-muted-foreground">87%</span>
-                          </div>
-                          <div className="w-full bg-muted rounded-full h-2">
-                            <div className="bg-blue-500 h-2 rounded-full" style={{ width: '87%' }}></div>
-                          </div>
-                          <p className="text-xs text-muted-foreground mt-1">Based on governance proposal voting participation</p>
-                        </div>
-
-                        <div className="pt-2">
-                          <h4 className="font-medium text-sm mb-2">Current Responsibilities</h4>
-                          <ul className="space-y-2">
-                            <li className="flex items-start gap-2">
-                              <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 shrink-0" />
-                              <span className="text-sm">Technical Committee Member</span>
-                            </li>
-                            <li className="flex items-start gap-2">
-                              <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 shrink-0" />
-                              <span className="text-sm">AI Safety Documentation Reviewer</span>
-                            </li>
-                            <li className="flex items-start gap-2">
-                              <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 shrink-0" />
-                              <span className="text-sm">New Member Verification Panel</span>
-                            </li>
-                          </ul>
-                        </div>
-                      </div>
+                      <ActivityFeed />
                     </CardContent>
+                    <CardFooter className="border-t bg-muted/5 px-6 py-3">
+                      <Button variant="link" className="ml-auto">View All Activities</Button>
+                    </CardFooter>
                   </Card>
-
+                </TabsContent>
+                
+                <TabsContent value="governance" className="mt-0">
                   <Card>
                     <CardHeader>
-                      <CardTitle className="text-xl">Upcoming Events</CardTitle>
-                      <CardDescription>Trust meetings and responsibilities</CardDescription>
+                      <CardTitle className="text-xl">Trust Governance</CardTitle>
+                      <CardDescription>
+                        Participate in trust decision-making and protocol management
+                      </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <div className="space-y-4">
-                        {upcomingEvents.map((event) => (
-                          <div key={event.id} className="flex items-start gap-3 pb-4 border-b last:border-0 last:pb-0">
-                            <div className="bg-primary/10 text-primary rounded p-2 shrink-0">
-                              <Clock className="h-5 w-5" />
-                            </div>
-                            <div>
-                              <h4 className="font-medium">{event.title}</h4>
-                              <p className="text-sm text-muted-foreground">
-                                {formatDate(event.date)} | {event.time}
-                              </p>
-                              <div className="flex items-center gap-1 mt-1">
-                                <span className={`text-xs px-1.5 py-0.5 rounded-sm font-medium ${
-                                  event.required 
-                                    ? 'bg-red-100 text-red-800' 
-                                    : 'bg-blue-100 text-blue-800'
-                                }`}>
-                                  {event.required ? 'Required' : 'Optional'}
-                                </span>
-                                <span className="text-xs text-muted-foreground">{event.location}</span>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
+                      <div className="flex items-center justify-center p-8 border-2 border-dashed rounded-lg">
+                        <div className="text-center">
+                          <Layers className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                          <h3 className="text-lg font-medium mb-2">Trust Governance Module</h3>
+                          <p className="text-muted-foreground mb-4">
+                            Access to advanced governance features requires additional authorization.
+                          </p>
+                          <Button variant="outline">Request Access</Button>
+                        </div>
                       </div>
                     </CardContent>
-                    <CardFooter>
-                      <Button variant="outline" className="w-full text-sm" size="sm">
-                        View Full Calendar
-                        <ArrowRight className="ml-2 h-4 w-4" />
-                      </Button>
-                    </CardFooter>
                   </Card>
-
-                  <Card className="md:col-span-2">
+                </TabsContent>
+                
+                <TabsContent value="analytics" className="mt-0">
+                  <Card>
                     <CardHeader>
-                      <CardTitle className="text-xl">Recent Trust Activity</CardTitle>
-                      <CardDescription>Your recent actions and contributions</CardDescription>
+                      <CardTitle className="text-xl">Trust Analytics</CardTitle>
+                      <CardDescription>
+                        Insights and metrics on trust operations
+                      </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <div className="space-y-4">
-                        {recentActivities.map((activity) => (
-                          <div key={activity.id} className="flex items-start gap-3 pb-4 border-b last:border-0 last:pb-0">
-                            <div className="bg-primary/10 text-primary rounded p-2 shrink-0">
-                              {activity.type === 'Proposal Vote' && <BarChart3 className="h-5 w-5" />}
-                              {activity.type === 'Verification' && <CheckCircle className="h-5 w-5" />}
-                              {activity.type === 'Document Review' && <FileText className="h-5 w-5" />}
-                              {activity.type === 'Contribution' && <Zap className="h-5 w-5" />}
-                            </div>
-                            <div className="flex-1">
-                              <div className="flex justify-between">
-                                <h4 className="font-medium">{activity.type}</h4>
-                                <span className="text-sm text-muted-foreground">
-                                  {formatDate(activity.date)}
-                                </span>
-                              </div>
-                              <p className="text-sm">{activity.description}</p>
-                              <span className="text-xs bg-green-100 text-green-800 px-1.5 py-0.5 rounded-sm inline-block mt-1">
-                                {activity.status}
-                              </span>
-                            </div>
-                          </div>
-                        ))}
+                      <div className="flex items-center justify-center p-8 border-2 border-dashed rounded-lg">
+                        <div className="text-center">
+                          <AlertCircle className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                          <h3 className="text-lg font-medium mb-2">Analytics Coming Soon</h3>
+                          <p className="text-muted-foreground mb-4">
+                            The analytics module is currently under development.
+                          </p>
+                          <Badge variant="outline">Coming Soon</Badge>
+                        </div>
                       </div>
                     </CardContent>
-                    <CardFooter>
-                      <Button variant="outline" className="w-full text-sm" size="sm">
-                        View All Activity
-                        <ArrowRight className="ml-2 h-4 w-4" />
-                      </Button>
-                    </CardFooter>
                   </Card>
-                </div>
-              </TabsContent>
-
-              {/* Activity Tab */}
-              <TabsContent value="activity">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Your Trust Member Activity</CardTitle>
-                    <CardDescription>
-                      Comprehensive view of your contributions and participation
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Table>
-                      <TableCaption>A list of your recent trust activity.</TableCaption>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Type</TableHead>
-                          <TableHead>Description</TableHead>
-                          <TableHead>Date</TableHead>
-                          <TableHead>Status</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {recentActivities.map((activity) => (
-                          <TableRow key={activity.id}>
-                            <TableCell className="font-medium">{activity.type}</TableCell>
-                            <TableCell>{activity.description}</TableCell>
-                            <TableCell>{formatDate(activity.date)}</TableCell>
-                            <TableCell>
-                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
-                                {activity.status}
-                              </span>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                        {/* Add more mock data to fill out the table */}
-                        <TableRow>
-                          <TableCell className="font-medium">Meeting</TableCell>
-                          <TableCell>Attended monthly trust member meeting</TableCell>
-                          <TableCell>{formatDate(new Date(2025, 2, 25))}</TableCell>
-                          <TableCell>
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
-                              Attended
-                            </span>
-                          </TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="font-medium">Training</TableCell>
-                          <TableCell>Completed AI safety certification</TableCell>
-                          <TableCell>{formatDate(new Date(2025, 2, 20))}</TableCell>
-                          <TableCell>
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
-                              Completed
-                            </span>
-                          </TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="font-medium">Proposal</TableCell>
-                          <TableCell>Submitted enhancement to governance framework</TableCell>
-                          <TableCell>{formatDate(new Date(2025, 2, 15))}</TableCell>
-                          <TableCell>
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                              Under Review
-                            </span>
-                          </TableCell>
-                        </TableRow>
-                      </TableBody>
-                    </Table>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              {/* Documents Tab */}
-              <TabsContent value="documents">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Trust Documentation</CardTitle>
-                    <CardDescription>
-                      Access important trust documents and policies
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Table>
-                      <TableCaption>Trust documents available to members.</TableCaption>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Document</TableHead>
-                          <TableHead>Type</TableHead>
-                          <TableHead>Last Updated</TableHead>
-                          <TableHead>Version</TableHead>
-                          <TableHead>Action</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {trustDocuments.map((doc) => (
-                          <TableRow key={doc.id}>
-                            <TableCell className="font-medium">{doc.title}</TableCell>
-                            <TableCell>{doc.type}</TableCell>
-                            <TableCell>{formatDate(doc.lastUpdated)}</TableCell>
-                            <TableCell>v{doc.version}</TableCell>
-                            <TableCell>
-                              <Button variant="ghost" size="sm">
-                                <FileText className="h-4 w-4 mr-1" /> View
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </Tabs>
+                </TabsContent>
+              </Tabs>
+            </div>
           </div>
         </div>
       </div>

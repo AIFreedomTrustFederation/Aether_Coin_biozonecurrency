@@ -1,68 +1,49 @@
-import React, { useEffect } from 'react';
-import { useLocation } from 'wouter';
-import { useAuth } from '../../context/AuthContext';
-import { Shield, AlertTriangle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { ReactNode, useEffect } from 'react';
+import { useLocation, useRoute } from 'wouter';
+import { useAuth } from '@/context/AuthContext';
+import { Loader2 } from 'lucide-react';
 
-/**
- * Props for the TrustMemberGuard component
- */
 interface TrustMemberGuardProps {
-  children: React.ReactNode;
+  children: ReactNode;
+  fallbackPath?: string;
 }
 
 /**
- * A component that protects routes, ensuring only trust members can access them
- * If user is not authenticated or not a trust member, redirects to login or shows access denied
+ * TrustMemberGuard component to protect routes that should only be accessible
+ * to AI Freedom Trust members.
+ * 
+ * Redirects non-trust members to the login page or another specified page.
  */
-export const TrustMemberGuard: React.FC<TrustMemberGuardProps> = ({ children }) => {
-  const { isAuthenticated, isTrustMember, isLoading } = useAuth();
+const TrustMemberGuard = ({ 
+  children, 
+  fallbackPath = '/trust/login' 
+}: TrustMemberGuardProps) => {
+  const { isTrustMember, isLoading, isAuthenticated } = useAuth();
   const [, setLocation] = useLocation();
 
   useEffect(() => {
-    // If auth check is complete and user is not authenticated, redirect to login
-    if (!isLoading && !isAuthenticated) {
-      setLocation('/trust-login');
+    // Only redirect after we're done loading and confirmed not a trust member
+    if (!isLoading) {
+      if (!isAuthenticated) {
+        // Not logged in, redirect to login
+        setLocation(fallbackPath);
+      } else if (!isTrustMember) {
+        // Logged in but not a trust member
+        setLocation('/access-denied');
+      }
     }
-  }, [isLoading, isAuthenticated, setLocation]);
+  }, [isLoading, isAuthenticated, isTrustMember, fallbackPath, setLocation]);
 
-  // Show loading state while auth is being checked
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[70vh]">
-        <div className="animate-spin w-10 h-10 border-4 border-primary border-t-transparent rounded-full" />
-        <p className="mt-4 text-muted-foreground">Verifying credentials...</p>
+      <div className="flex justify-center items-center min-h-screen">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <p className="ml-2 text-lg">Verifying trust membership...</p>
       </div>
     );
   }
 
-  // If authenticated but not a trust member, show access denied
-  if (isAuthenticated && !isTrustMember) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[70vh] p-4">
-        <div className="bg-card border rounded-lg p-6 max-w-md w-full text-center">
-          <div className="bg-red-100 dark:bg-red-900/20 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-            <AlertTriangle className="h-8 w-8 text-red-600 dark:text-red-400" />
-          </div>
-          <h2 className="text-2xl font-bold mb-2">Access Denied</h2>
-          <p className="text-muted-foreground mb-6">
-            This area is restricted to AI Freedom Trust members only. If you believe this is an error, please contact support.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-2 justify-center">
-            <Button onClick={() => setLocation('/')} variant="outline">
-              Return Home
-            </Button>
-            <Button onClick={() => setLocation('/trust-login')} variant="default">
-              Return to Login
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // If authenticated and is a trust member, render the protected content
-  return <>{children}</>;
+  return isTrustMember ? <>{children}</> : null;
 };
 
 export default TrustMemberGuard;

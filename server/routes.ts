@@ -136,7 +136,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/api/ai', aiGuidanceRoutes);
   
   // Mount authentication routes
-  app.use('/api/auth', authRoutes);
+  app.use('/api/auth', authRoutes(storage));
   
   // Whitepaper endpoint
   app.get("/api/whitepaper", (req: Request, res: Response) => {

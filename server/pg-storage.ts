@@ -41,6 +41,11 @@ export class PgStorage implements IStorage {
     return result.length ? result[0] : undefined;
   }
 
+  async getUserById(id: number): Promise<User | undefined> {
+    const result = await db.select().from(users).where(eq(users.id, id)).limit(1);
+    return result.length ? result[0] : undefined;
+  }
+
   async getUserByUsername(username: string): Promise<User | undefined> {
     const result = await db.select().from(users).where(eq(users.username, username)).limit(1);
     return result.length ? result[0] : undefined;
@@ -93,6 +98,22 @@ export class PgStorage implements IStorage {
       .where(eq(users.id, id))
       .returning();
     return result.length ? result[0] : undefined;
+  }
+  
+  async updateUserLastLogin(id: number): Promise<User | undefined> {
+    const result = await db.update(users)
+      .set({
+        lastLogin: new Date(),
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, id))
+      .returning();
+    return result.length ? result[0] : undefined;
+  }
+  
+  async isTrustMember(id: number): Promise<boolean> {
+    const user = await this.getUser(id);
+    return user ? user.isTrustMember : false;
   }
 
   // Wallet methods

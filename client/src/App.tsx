@@ -14,6 +14,7 @@ import {
   Smartphone, Lightbulb, CreditCard, Info, Palette, Loader2, UserCircle2
 } from "lucide-react";
 import { AuthProvider } from "./context/AuthContext";
+import TrustMemberGuard from "./components/auth/TrustMemberGuard";
 
 // Loading screen component for lazy-loaded routes
 const LoadingScreen = ({ message = "Loading..." }: { message?: string }) => (
@@ -66,6 +67,7 @@ const BottomNavigation = lazy(() => import("@/components/mobile/BottomNavigation
 // Trust member authentication pages
 const TrustLogin = lazy(() => import("./pages/TrustLogin"));
 const TrustPortal = lazy(() => import("./pages/TrustPortal"));
+const AccessDenied = lazy(() => import("./pages/AccessDenied"));
 
 // Define navigation items for both mobile and desktop
 const navigationItems = [
@@ -76,7 +78,7 @@ const navigationItems = [
   { name: "Bridge", path: "/bridge", icon: <ChevronRight className="h-5 w-5 rotate-90" /> },
   { name: "Bridge Test", path: "/bridge-test", icon: <TestTube className="h-5 w-5" /> },
   { name: "Escrow", path: "/escrow", icon: <Shield className="h-5 w-5" /> },
-  { name: "Trust Portal", path: "/trust-portal", icon: <UserCircle2 className="h-5 w-5" /> },
+  { name: "Trust Portal", path: "/trust/portal", icon: <UserCircle2 className="h-5 w-5" /> },
   { name: "Blockchain Explorer", path: "/blockchain-explorer", icon: <Database className="h-5 w-5" /> },
   { name: "Blockchain Dashboard", path: "/blockchain-dashboard", icon: <Blocks className="h-5 w-5" /> },
   { name: "Singularity", path: "/singularity", icon: <Zap className="h-5 w-5" /> },
@@ -633,14 +635,21 @@ function App() {
               </Suspense>
             </Route>
             {/* Trust Member Pages */}
-            <Route path="/trust-login">
+            <Route path="/trust/login">
               <Suspense fallback={<LoadingScreen message="Loading trust login..." />}>
                 <TrustLogin />
               </Suspense>
             </Route>
-            <Route path="/trust-portal">
+            <Route path="/trust/portal">
               <Suspense fallback={<LoadingScreen message="Loading trust portal..." />}>
-                <TrustPortal />
+                <TrustMemberGuard fallbackPath="/access-denied">
+                  <TrustPortal />
+                </TrustMemberGuard>
+              </Suspense>
+            </Route>
+            <Route path="/access-denied">
+              <Suspense fallback={<LoadingScreen message="Loading..." />}>
+                <AccessDenied />
               </Suspense>
             </Route>
 

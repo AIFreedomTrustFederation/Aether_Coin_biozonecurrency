@@ -1,70 +1,98 @@
-import React from 'react';
+import { useState } from 'react';
 import { useLocation } from 'wouter';
+import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '@/context/AuthContext';
+import { Loader2, KeyRound, UserCheck, AlertTriangle } from 'lucide-react';
 
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { UserCircle2, LogIn, Shield } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
-// Form validation schema using zod
-const formSchema = z.object({
-  username: z.string().min(3, 'Username must be at least 3 characters'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+// Login form schema with validation
+const loginFormSchema = z.object({
+  username: z.string().min(3, {
+    message: 'Username must be at least 3 characters.',
+  }),
+  password: z.string().min(6, {
+    message: 'Password must be at least 6 characters.',
+  }),
 });
 
-// Type for form values
-type FormValues = z.infer<typeof formSchema>;
+type LoginFormValues = z.infer<typeof loginFormSchema>;
 
-const TrustLogin: React.FC = () => {
-  const { login, isLoading, isAuthenticated, isTrustMember } = useAuth();
-  const [, setLocation] = useLocation();
+const TrustLogin = () => {
+  const { login, isLoading, user } = useAuth();
+  const [, navigate] = useLocation();
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Initialize react-hook-form
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+  // Form definition using react-hook-form with zod validation
+  const form = useForm<LoginFormValues>({
+    resolver: zodResolver(loginFormSchema),
     defaultValues: {
       username: '',
       password: '',
     },
   });
 
-  // If already authenticated and is a trust member, redirect to portal
-  React.useEffect(() => {
-    if (isAuthenticated && isTrustMember) {
-      setLocation('/trust-portal');
-    }
-  }, [isAuthenticated, isTrustMember, setLocation]);
-
   // Handle form submission
-  const onSubmit = async (values: FormValues) => {
+  const onSubmit = async (data: LoginFormValues) => {
     try {
-      await login(values.username, values.password);
-      // If login is successful, AuthContext will update isAuthenticated,
-      // and the effect above will handle the redirect
+      setIsSubmitting(true);
+      setError(null);
+      
+      const success = await login(data.username, data.password);
+      
+      if (success) {
+        // Redirect to trust portal on successful login
+        navigate('/trust/portal');
+      }
     } catch (error) {
-      // Error is already handled by the AuthContext
-      console.error('Login submission error:', error);
+      setError('An unexpected error occurred. Please try again.');
+      console.error('Login error:', error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
+  // If user is already logged in and is a trust member, redirect to portal
+  if (user && user.isTrustMember && !isSubmitting) {
+    navigate('/trust/portal');
+    return null;
+  }
+
   return (
-    <div className="flex flex-col items-center justify-center min-h-[70vh] p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="w-12 h-12 bg-primary/10 text-primary rounded-full flex items-center justify-center mx-auto mb-4">
-            <Shield className="h-6 w-6" />
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-muted/20">
+      <Card className="w-full max-w-md mx-auto shadow-xl">
+        <CardHeader className="space-y-1 text-center">
+          <div className="mx-auto bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mb-2">
+            <KeyRound className="h-8 w-8 text-primary" />
           </div>
-          <CardTitle className="text-2xl">AI Freedom Trust Login</CardTitle>
+          <CardTitle className="text-2xl font-bold">AI Freedom Trust</CardTitle>
           <CardDescription>
-            Access the Trust Member portal with your credentials
+            Enter your credentials to access the Trust portal
           </CardDescription>
         </CardHeader>
+        
         <CardContent>
+          {error && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+          
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
@@ -74,21 +102,17 @@ const TrustLogin: React.FC = () => {
                   <FormItem>
                     <FormLabel>Username</FormLabel>
                     <FormControl>
-                      <div className="relative">
-                        <UserCircle2 className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
-                        <Input
-                          placeholder="Enter your username"
-                          className="pl-10"
-                          disabled={isLoading}
-                          {...field}
-                        />
-                      </div>
+                      <Input 
+                        placeholder="Enter your username" 
+                        {...field} 
+                        disabled={isSubmitting || isLoading}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-
+              
               <FormField
                 control={form.control}
                 name="password"
@@ -96,35 +120,31 @@ const TrustLogin: React.FC = () => {
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <div className="relative">
-                        <Shield className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
-                        <Input
-                          type="password"
-                          placeholder="Enter your password"
-                          className="pl-10"
-                          disabled={isLoading}
-                          {...field}
-                        />
-                      </div>
+                      <Input 
+                        type="password" 
+                        placeholder="Enter your password" 
+                        {...field} 
+                        disabled={isSubmitting || isLoading}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={isLoading}
+              
+              <Button 
+                type="submit" 
+                className="w-full" 
+                disabled={isSubmitting || isLoading}
               >
-                {isLoading ? (
+                {isSubmitting || isLoading ? (
                   <>
-                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                    Logging in...
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Authenticating...
                   </>
                 ) : (
                   <>
-                    <LogIn className="mr-2 h-4 w-4" />
+                    <UserCheck className="mr-2 h-4 w-4" />
                     Login to Trust Portal
                   </>
                 )}
@@ -132,15 +152,16 @@ const TrustLogin: React.FC = () => {
             </form>
           </Form>
         </CardContent>
-        <CardFooter className="flex flex-col text-center text-sm text-muted-foreground border-t pt-4">
-          <p>
-            Only verified AI Freedom Trust members can access this portal.
-          </p>
-          <p className="mt-2">
-            <Button variant="link" className="h-auto p-0" onClick={() => setLocation('/')}>
-              Return to Main Site
-            </Button>
-          </p>
+        
+        <CardFooter className="text-center text-sm text-muted-foreground flex flex-col space-y-2">
+          <p>The Trust portal is accessible to authorized members only.</p>
+          <Button 
+            variant="link" 
+            onClick={() => navigate('/')}
+            className="text-sm"
+          >
+            Return to Main Platform
+          </Button>
         </CardFooter>
       </Card>
     </div>

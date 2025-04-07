@@ -1,66 +1,56 @@
-import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
-/**
- * User interface representing the authenticated user data
- */
+// Type for the authenticated user
 export interface User {
   id: number;
   username: string;
   email: string;
   role: string;
   isTrustMember: boolean;
-  trustMemberSince?: Date;
-  trustMemberLevel?: string;
-  createdAt?: Date;
-  updatedAt?: Date;
-  lastLogin?: Date;
+  trustMemberSince: string | null;
+  trustMemberLevel: string | null;
+  createdAt: string;
+  updatedAt: string;
+  lastLogin: string | null;
   isActive: boolean;
 }
 
-/**
- * Authentication context interface defining the shape of our context
- */
+// Interface for the authentication context
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
   isTrustMember: boolean;
-  login: (username: string, password: string) => Promise<void>;
+  login: (username: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
-  checkAuth: () => Promise<void>;
+  checkAuthStatus: () => Promise<boolean>;
 }
 
-// Create the context with a default value
+// Create context with default values
 const AuthContext = createContext<AuthContextType>({
   user: null,
   isLoading: true,
   isAuthenticated: false,
   isTrustMember: false,
-  login: async () => {},
+  login: async () => false,
   logout: async () => {},
-  checkAuth: async () => {},
+  checkAuthStatus: async () => false,
 });
 
-/**
- * Custom hook to use the auth context
- */
+// Hook to use the auth context
 export const useAuth = () => useContext(AuthContext);
 
-/**
- * AuthProvider component to wrap around components that need authentication
- */
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+// Provider component
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const { toast } = useToast();
 
-  /**
-   * Check if the user is currently authenticated
-   */
-  const checkAuth = async () => {
-    setIsLoading(true);
+  // Check if user is authenticated
+  const checkAuthStatus = async (): Promise<boolean> => {
     try {
+      setIsLoading(true);
       const response = await fetch('/api/auth/current-user', {
         credentials: 'include', // Important for cookies
       });
@@ -68,23 +58,25 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (response.ok) {
         const data = await response.json();
         setUser(data.user);
+        return true;
       } else {
+        // Not authenticated or error
         setUser(null);
+        return false;
       }
     } catch (error) {
-      console.error('Auth check error:', error);
+      console.error('Auth status check error:', error);
       setUser(null);
+      return false;
     } finally {
       setIsLoading(false);
     }
   };
 
-  /**
-   * Log the user in
-   */
-  const login = async (username: string, password: string) => {
-    setIsLoading(true);
+  // Login function
+  const login = async (username: string, password: string): Promise<boolean> => {
     try {
+      setIsLoading(true);
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
@@ -99,51 +91,61 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (response.ok) {
         setUser(data.user);
         toast({
-          title: 'Login successful',
+          title: 'Login Successful',
           description: `Welcome back, ${data.user.username}!`,
         });
+        return true;
       } else {
-        throw new Error(data.message || 'Login failed');
+        // Display error message
+        toast({
+          title: 'Login Failed',
+          description: data.message || 'Invalid username or password',
+          variant: 'destructive',
+        });
+        return false;
       }
     } catch (error) {
       console.error('Login error:', error);
       toast({
-        title: 'Login failed',
-        description: error instanceof Error ? error.message : 'Please check your credentials and try again',
+        title: 'Login Error',
+        description: 'An unexpected error occurred. Please try again.',
         variant: 'destructive',
       });
-      throw error;
+      return false;
     } finally {
       setIsLoading(false);
     }
   };
 
-  /**
-   * Log the user out
-   */
-  const logout = async () => {
-    setIsLoading(true);
+  // Logout function
+  const logout = async (): Promise<void> => {
     try {
+      setIsLoading(true);
       const response = await fetch('/api/auth/logout', {
         method: 'POST',
-        credentials: 'include',
+        credentials: 'include', // Important for cookies
       });
 
       if (response.ok) {
         setUser(null);
         toast({
-          title: 'Logout successful',
-          description: 'You have been logged out successfully',
+          title: 'Logout Successful',
+          description: 'You have been logged out.',
         });
       } else {
+        // Handle logout error
         const data = await response.json();
-        throw new Error(data.message || 'Logout failed');
+        toast({
+          title: 'Logout Error',
+          description: data.message || 'Error logging out',
+          variant: 'destructive',
+        });
       }
     } catch (error) {
       console.error('Logout error:', error);
       toast({
-        title: 'Logout failed',
-        description: 'There was an issue logging you out',
+        title: 'Logout Error',
+        description: 'An unexpected error occurred.',
         variant: 'destructive',
       });
     } finally {
@@ -151,23 +153,29 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  // Check authentication status when the component mounts
+  // Check auth status on initial load
   useEffect(() => {
-    checkAuth();
+    checkAuthStatus();
   }, []);
 
-  // Context value
+  const isAuthenticated = !!user;
+  const isTrustMember = isAuthenticated && user?.isTrustMember;
+
   const contextValue: AuthContextType = {
     user,
     isLoading,
-    isAuthenticated: !!user,
-    isTrustMember: user?.isTrustMember || false,
+    isAuthenticated,
+    isTrustMember,
     login,
     logout,
-    checkAuth,
+    checkAuthStatus,
   };
 
-  return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={contextValue}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
 export default AuthContext;
