@@ -91,29 +91,43 @@ const MysterionAI: React.FC<MysterionAIProps> = ({
     }
   }, [activeTab]);
 
-  // Handle message submission
+  // Handle message submission - enhanced for mobile compatibility
   const handleSendMessage = useCallback(() => {
     if (!inputValue.trim() || isProcessing) return;
+    
+    // Cache the input value before clearing it to prevent race conditions
+    const messageText = inputValue.trim();
     
     // Add user message
     const userMessage: Message = {
       id: uuidv4(),
       role: 'user',
-      content: inputValue,
+      content: messageText,
       timestamp: new Date()
     };
     
-    setMessages(prev => [...prev, userMessage]);
+    // Clear input immediately for better mobile UX
     setInputValue('');
+    
+    // Update messages
+    setMessages(prev => [...prev, userMessage]);
     setIsProcessing(true);
     
     // Process the message and generate a response
     setTimeout(() => {
-      const response = generateAIResponse(inputValue);
+      const response = generateAIResponse(messageText);
       setMessages(prev => [...prev, response]);
       setIsProcessing(false);
+      
+      // Ensure scroll to bottom happens after message is rendered
+      setTimeout(scrollToBottom, 100);
+      
+      // Refocus the input field on mobile
+      if (inputRef.current && /Mobi|Android/i.test(navigator.userAgent)) {
+        inputRef.current.focus();
+      }
     }, 1500);
-  }, [inputValue, isProcessing]);
+  }, [inputValue, isProcessing, scrollToBottom]);
   
   // Handle keyboard shortcuts
   const handleKeyDown = (e: React.KeyboardEvent) => {
