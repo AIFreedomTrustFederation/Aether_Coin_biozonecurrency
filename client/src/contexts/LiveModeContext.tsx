@@ -40,8 +40,9 @@ export const LiveModeProvider: React.FC<LiveModeProviderProps> = ({ children }) 
   // Get the stored mode from localStorage, defaulting to false (test mode)
   const [isLiveMode, setIsLiveMode] = useState<boolean>(() => {
     try {
-      const storedMode = localStorage.getItem('aetherion-live-mode');
-      return storedMode ? JSON.parse(storedMode) : false;
+      // Always default to test mode (false) regardless of localStorage
+      // This is intentional to prevent auto-connect to wallets
+      return false;
     } catch (e) {
       console.error('Error reading live mode from localStorage:', e);
       return false;

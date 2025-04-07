@@ -34,14 +34,22 @@ export function getAvailableWallets(): WalletType[] {
   }
 
   // Most wallets don't expose a unique identifier
-  // So we add WalletConnect as an option if we have an injected provider
-  // It will handle the connection if available
+  // So we add WalletConnect and other options if we have an injected provider
   if (typeof window !== 'undefined' && window.ethereum) {
     available.push('WalletConnect');
     
     // 1inch is a popular DEX aggregator wallet
     available.push('1inch');
   }
+  
+  // Always add all major wallet types so users have options
+  // even if not detected directly
+  if (!available.includes('MetaMask')) available.push('MetaMask');
+  if (!available.includes('Coinbase')) available.push('Coinbase');
+  if (!available.includes('Binance')) available.push('Binance');
+  if (!available.includes('Trust')) available.push('Trust');
+  if (!available.includes('WalletConnect')) available.push('WalletConnect');
+  if (!available.includes('1inch')) available.push('1inch');
 
   return available;
 }
@@ -374,7 +382,20 @@ export const SUPPORTED_NETWORKS: {[chainId: number]: {name: string, symbol: stri
 // Extend window interface to include wallet providers
 declare global {
   interface Window {
-    ethereum?: any;
-    BinanceChain?: any;
+    ethereum?: {
+      isMetaMask?: boolean;
+      isCoinbaseWallet?: boolean;
+      isTrust?: boolean;
+      request: (args: any) => Promise<any>;
+      on: (event: string, handler: (...args: any[]) => void) => void;
+      removeListener: (event: string, handler: (...args: any[]) => void) => void;
+      [key: string]: any;
+    };
+    BinanceChain?: {
+      request: (args: any) => Promise<any>;
+      on?: (event: string, handler: (...args: any[]) => void) => void;
+      removeListener?: (event: string, handler: (...args: any[]) => void) => void;
+      [key: string]: any;
+    };
   }
 }

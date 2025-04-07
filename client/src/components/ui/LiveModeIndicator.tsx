@@ -28,28 +28,15 @@ export function LiveModeIndicator({
   
   const { toast } = useToast();
   
-  // When switching to Live Mode, attempt to connect to Web3 if we have a previous wallet type stored
+  // Note: We intentionally do NOT auto-connect when switching to live mode
+  // This is to prevent automatic wallet popups which can be disruptive
+  // Users must explicitly connect their wallet after entering live mode
   useEffect(() => {
-    const attemptConnection = async () => {
-      if (isLiveMode && !connectedAddress && !isConnecting) {
-        // Check if we have a stored wallet type preference
-        const storedWalletType = localStorage.getItem('aetherion-wallet-type');
-        
-        if (storedWalletType) {
-          const success = await connectToWeb3(storedWalletType as WalletType);
-          if (!success) {
-            toast({
-              title: "Connection Failed",
-              description: "Could not reconnect to your previously used wallet. Please connect manually.",
-              variant: "destructive"
-            });
-          }
-        }
-      }
-    };
-    
-    attemptConnection();
-  }, [isLiveMode, connectedAddress, isConnecting]);
+    // If user has previously connected and we switch back to test mode, disconnect
+    if (!isLiveMode && connectedAddress) {
+      // We don't need to show a toast for this, it's expected behavior
+    }
+  }, [isLiveMode, connectedAddress]);
   
   // Helper function to truncate address
   const truncateAddress = (address: string) => {
