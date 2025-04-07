@@ -115,12 +115,12 @@ export function MandelbrotVisualization() {
               const normalizedFib = (fib % 144) / 144; // Normalize using 12th Fibonacci number
               
               // Create a gold-purple scheme based on Fibonacci values
-              const hue = normalizedFib * 260 + 40; // 40-300 range (gold to purple)
-              const [r, g, b] = hslToRgb(hue / 360, 0.8, 0.5);
+              const fibHue = normalizedFib * 260 + 40; // 40-300 range (gold to purple)
+              const [fibR, fibG, fibB] = hslToRgb(fibHue / 360, 0.8, 0.5);
               
-              data[pixelIndex] = r;
-              data[pixelIndex + 1] = g;
-              data[pixelIndex + 2] = b;
+              data[pixelIndex] = fibR;
+              data[pixelIndex + 1] = fibG;
+              data[pixelIndex + 2] = fibB;
               data[pixelIndex + 3] = 255;
               break;
               
@@ -130,22 +130,22 @@ export function MandelbrotVisualization() {
               const goldenAngle = golden * 2 * Math.PI;
               
               // Use golden angle to create harmonious colors
-              const [r, g, b] = hslToRgb(golden, 0.8, 0.5);
+              const [goldenR, goldenG, goldenB] = hslToRgb(golden, 0.8, 0.5);
               
-              data[pixelIndex] = r;
-              data[pixelIndex + 1] = g;
-              data[pixelIndex + 2] = b;
+              data[pixelIndex] = goldenR;
+              data[pixelIndex + 1] = goldenG;
+              data[pixelIndex + 2] = goldenB;
               data[pixelIndex + 3] = 255;
               break;
               
             default:
               // Default rainbow coloring
-              const hue = (iteration / MAX_ITERATIONS) * 360;
-              const [r, g, b] = hslToRgb(hue / 360, 0.8, 0.5);
+              const defaultHue = (iteration / MAX_ITERATIONS) * 360;
+              const [defaultR, defaultG, defaultB] = hslToRgb(defaultHue / 360, 0.8, 0.5);
               
-              data[pixelIndex] = r;
-              data[pixelIndex + 1] = g;
-              data[pixelIndex + 2] = b;
+              data[pixelIndex] = defaultR;
+              data[pixelIndex + 1] = defaultG;
+              data[pixelIndex + 2] = defaultB;
               data[pixelIndex + 3] = 255;
           }
         }
