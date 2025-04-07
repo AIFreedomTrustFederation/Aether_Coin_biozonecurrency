@@ -1,14 +1,50 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import WalletCreation from '../components/wallet/WalletCreation';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { useLiveMode } from '../contexts/LiveModeContext';
-import { Wallet, Zap } from 'lucide-react';
+import { Wallet, Zap, ExternalLink, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+
+// Configuration for the external wallet app
+const EXTERNAL_WALLET_URL = "https://github.com/AIFreedomTrustFederation/Aether_Coin_biozonecurrency";
+// Use the deployed URL when available, you will need to update this with the actual URL
+const DEPLOYED_WALLET_URL = ""; // e.g., "https://aether-coin.example.com"
 
 const WalletPage: React.FC = () => {
   const { isLiveMode, toggleLiveMode, connectToWeb3, connectedAddress } = useLiveMode();
   const { toast } = useToast();
+  const [isRedirecting, setIsRedirecting] = useState(false);
+  const [externalWalletUrl, setExternalWalletUrl] = useState("");
+  
+  // Check if we should redirect to external wallet app
+  useEffect(() => {
+    // Prioritize the deployed URL if available
+    const targetUrl = DEPLOYED_WALLET_URL || EXTERNAL_WALLET_URL;
+    
+    // Store the URL for use in the interface
+    setExternalWalletUrl(targetUrl);
+    
+    // Automatic redirect option - uncomment if you want automatic redirect
+    // window.location.href = targetUrl;
+  }, []);
+  
+  // Handle redirect to external wallet
+  const handleRedirectToExternalWallet = () => {
+    setIsRedirecting(true);
+    
+    // Show toast notification
+    toast({
+      title: "Redirecting to Aether Coin Wallet",
+      description: "You'll be taken to the external wallet application shortly."
+    });
+    
+    // Redirect after a short delay to allow toast to be seen
+    setTimeout(() => {
+      window.open(externalWalletUrl, '_blank');
+      setIsRedirecting(false);
+    }, 1500);
+  };
 
   const handleConnectWallet = async () => {
     if (!isLiveMode) {
@@ -34,7 +70,62 @@ const WalletPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">Wallet Management</h1>
+        <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-8">
+          <h1 className="text-3xl font-bold">Wallet Management</h1>
+          
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Button 
+              variant="outline" 
+              className="gap-2"
+              onClick={handleRedirectToExternalWallet}
+              disabled={isRedirecting}
+            >
+              {isRedirecting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Redirecting...
+                </>
+              ) : (
+                <>
+                  <ExternalLink className="h-4 w-4" />
+                  Open Aether Coin Wallet
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+        
+        {/* External Wallet Banner */}
+        <div className="mb-8 bg-primary/10 border border-primary/20 rounded-lg p-6">
+          <div className="flex flex-col md:flex-row items-center gap-6">
+            <div className="bg-primary/20 p-4 rounded-full">
+              <Wallet className="h-8 w-8 text-primary" />
+            </div>
+            <div className="flex-1">
+              <h2 className="text-xl font-medium mb-2">Aether Coin Wallet Now Available</h2>
+              <p className="text-muted-foreground mb-4">
+                Experience our new dedicated Aether Coin wallet application with enhanced features and improved security.
+              </p>
+              <Button 
+                onClick={handleRedirectToExternalWallet}
+                className="gap-2"
+                disabled={isRedirecting}
+              >
+                {isRedirecting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Redirecting...
+                  </>
+                ) : (
+                  <>
+                    Launch Aether Coin Wallet
+                    <ExternalLink className="h-4 w-4" />
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
         
         <Tabs defaultValue="create-wallet" className="w-full">
           <TabsList className="mb-6">
