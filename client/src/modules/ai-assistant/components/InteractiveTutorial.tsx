@@ -401,32 +401,30 @@ const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
   };
 
   // Handle user skipping the tutorial
-  const handleSkip = async () => {
+  const handleSkip = useCallback(() => {
+    // Save to localStorage first as a reliable fallback
     try {
-      // Try to save to the server if authenticated
-      await apiRequest(
-        '/api/tutorial/status', 
-        'POST', 
-        {
-          completed: false,
-          lastSection: currentSection.id
-        }
-      );
-      onClose();
-    } catch (error) {
-      console.error('Failed to save tutorial skip status:', error);
-      
-      // Fallback: Save to localStorage if server save fails (e.g., not authenticated)
-      try {
-        localStorage.setItem('aetherion_tutorial_completed', 'false');
-        localStorage.setItem('aetherion_tutorial_last_section', currentSection.id);
-      } catch (localError) {
-        console.error('Failed to save tutorial skip status to localStorage:', localError);
-      }
-      
-      onClose();
+      localStorage.setItem('aetherion_tutorial_completed', 'false');
+      localStorage.setItem('aetherion_tutorial_last_section', currentSection.id);
+    } catch (localError) {
+      console.error('Failed to save tutorial skip status to localStorage:', localError);
     }
-  };
+    
+    // Try to save to the server if authenticated (but don't wait for it)
+    apiRequest(
+      '/api/tutorial/status', 
+      'POST', 
+      {
+        completed: false,
+        lastSection: currentSection.id
+      }
+    ).catch(error => {
+      console.error('Failed to save tutorial skip status to server:', error);
+    });
+    
+    // Always close the tutorial, regardless of save status
+    onClose();
+  }, [currentSection, onClose]);
 
   // Auto-advance timer
   useEffect(() => {
@@ -461,110 +459,112 @@ const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
       case 'message':
         return <MessageStep instruction={currentStep.instruction} />;
         
-      case 'ai-message':
-        if ('characterName' in currentStep && 'message' in currentStep) {
-          return (
-            <AiMessageStep 
-              instruction={currentStep.instruction} 
-              characterName={currentStep.characterName} 
-              message={currentStep.message} 
-            />
-          );
-        }
-        return null;
+      case 'ai-message': {
+        const aiStep = currentStep as { type: 'ai-message', instruction: string, characterName: string, message: string };
+        return (
+          <AiMessageStep 
+            instruction={aiStep.instruction} 
+            characterName={aiStep.characterName} 
+            message={aiStep.message} 
+          />
+        );
+      }
         
       case 'click':
         return <ClickStep instruction={currentStep.instruction} onComplete={completeStep} />;
         
-      case 'select':
-        if ('options' in currentStep) {
-          return (
-            <SelectStep 
-              instruction={currentStep.instruction} 
-              options={currentStep.options} 
-              onComplete={completeStep} 
-            />
-          );
-        }
-        return null;
+      case 'select': {
+        const selectStep = currentStep as { type: 'select', instruction: string, options: string[] };
+        return (
+          <SelectStep 
+            instruction={selectStep.instruction} 
+            options={selectStep.options} 
+            onComplete={completeStep} 
+          />
+        );
+      }
         
-      case 'radio':
-        if ('options' in currentStep) {
-          return (
-            <RadioStep 
-              instruction={currentStep.instruction} 
-              options={currentStep.options} 
-              onComplete={completeStep} 
-            />
-          );
-        }
-        return null;
+      case 'radio': {
+        const radioStep = currentStep as { type: 'radio', instruction: string, options: string[] };
+        return (
+          <RadioStep 
+            instruction={radioStep.instruction} 
+            options={radioStep.options} 
+            onComplete={completeStep} 
+          />
+        );
+      }
         
-      case 'checkbox':
-        if ('elements' in currentStep) {
-          return (
-            <CheckboxStep 
-              instruction={currentStep.instruction} 
-              elements={currentStep.elements} 
-              onComplete={completeStep} 
-            />
-          );
-        }
-        return null;
+      case 'checkbox': {
+        const checkboxStep = currentStep as { type: 'checkbox', instruction: string, elements: string[] };
+        return (
+          <CheckboxStep 
+            instruction={checkboxStep.instruction} 
+            elements={checkboxStep.elements} 
+            onComplete={completeStep} 
+          />
+        );
+      }
         
-      case 'slider':
-        if ('min' in currentStep && 'max' in currentStep && 
-            'step' in currentStep && 'defaultValue' in currentStep) {
-          return (
-            <SliderStep 
-              instruction={currentStep.instruction} 
-              min={currentStep.min}
-              max={currentStep.max}
-              step={currentStep.step}
-              defaultValue={currentStep.defaultValue}
-              onComplete={completeStep} 
-            />
-          );
-        }
-        return null;
+      case 'slider': {
+        const sliderStep = currentStep as { 
+          type: 'slider', 
+          instruction: string, 
+          min: number, 
+          max: number, 
+          step: number, 
+          defaultValue: number 
+        };
+        return (
+          <SliderStep 
+            instruction={sliderStep.instruction} 
+            min={sliderStep.min}
+            max={sliderStep.max}
+            step={sliderStep.step}
+            defaultValue={sliderStep.defaultValue}
+            onComplete={completeStep} 
+          />
+        );
+      }
         
-      case 'form':
-        if ('fields' in currentStep) {
-          return (
-            <FormStep 
-              instruction={currentStep.instruction} 
-              fields={currentStep.fields} 
-              onComplete={completeStep} 
-            />
-          );
-        }
-        return null;
+      case 'form': {
+        const formStep = currentStep as { 
+          type: 'form', 
+          instruction: string, 
+          fields: Array<{id: string, label: string, type: string, placeholder?: string}>
+        };
+        return (
+          <FormStep 
+            instruction={formStep.instruction} 
+            fields={formStep.fields} 
+            onComplete={completeStep} 
+          />
+        );
+      }
         
-      case 'input':
-        if ('id' in currentStep && 'placeholder' in currentStep) {
-          return (
-            <InputStep 
-              instruction={currentStep.instruction} 
-              id={currentStep.id}
-              placeholder={currentStep.placeholder}
-              onComplete={completeStep} 
-            />
-          );
-        }
-        return null;
+      case 'input': {
+        const inputStep = currentStep as { type: 'input', instruction: string, id: string, placeholder: string };
+        return (
+          <InputStep 
+            instruction={inputStep.instruction} 
+            id={inputStep.id}
+            placeholder={inputStep.placeholder}
+            onComplete={completeStep} 
+          />
+        );
+      }
         
-      case 'observe':
-        if ('id' in currentStep && 'duration' in currentStep) {
-          return (
-            <ObserveStep
-              id={currentStep.id}
-              instruction={currentStep.instruction}
-              duration={currentStep.duration}
-              onComplete={completeStep}
-            />
-          );
-        }
-        return null;
+      case 'observe': {
+        const observeStep = currentStep as { type: 'observe', instruction: string, id: string, duration: number };
+        return (
+          <ObserveStep
+            id={observeStep.id}
+            instruction={observeStep.instruction}
+            duration={observeStep.duration}
+            onComplete={completeStep}
+          />
+        );
+      }
         
       default:
         return <p>Unknown step type</p>;
