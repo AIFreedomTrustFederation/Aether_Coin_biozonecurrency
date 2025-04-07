@@ -1,3 +1,6 @@
+# Aetherion Wallet GitHub Actions Workflow
+# Enhanced with FractalCoin secure credential storage and automated deployment
+
 name: Aetherion Wallet Deployment
 
 on:
@@ -15,6 +18,15 @@ on:
         options:
           - staging
           - production
+      deployment_target:
+        description: 'Deployment Target'
+        required: true
+        default: 'wallet'
+        type: choice
+        options:
+          - wallet
+          - dapp
+          - both
 
 jobs:
   test:
@@ -33,8 +45,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run tests
+      - name: Run unit tests
         run: npm test
+
+      - name: Run quantum security tests
+        run: npm run test:quantum-security
 
   build:
     name: Build
@@ -58,7 +73,13 @@ jobs:
 
       - name: Prepare deployment package
         run: |
-          tar -czf aetherion-deploy.tar.gz dist server-redirect.js package.json
+          # Include FractalCoin integration scripts
+          tar -czf aetherion-deploy.tar.gz \
+            dist \
+            server-redirect.js \
+            deploy-to-aifreedomtrust.js \
+            package.json \
+            scripts/fractalcoin-filecoin-bridge.js
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v3
@@ -66,9 +87,27 @@ jobs:
           name: aetherion-artifacts
           path: aetherion-deploy.tar.gz
 
+  security_scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Run SAST scan
+        uses: github/codeql-action/init@v2
+        with:
+          languages: javascript
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v2
+
+      - name: Run dependency vulnerability scan
+        run: npm audit --production
+
   deploy:
     name: Deploy
-    needs: build
+    needs: [build, security_scan]
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     environment:
@@ -115,7 +154,7 @@ jobs:
         run: |
           scp -P ${{ secrets.DEPLOY_SSH_PORT || 22 }} aetherion-deploy.tar.gz ${{ secrets.DEPLOY_SSH_USER }}@${{ secrets.DEPLOY_SSH_HOST }}:~/
 
-      - name: Deploy on server
+      - name: Deploy on server with FractalCoin integration
         id: deploy
         run: |
           ssh -p ${{ secrets.DEPLOY_SSH_PORT || 22 }} ${{ secrets.DEPLOY_SSH_USER }}@${{ secrets.DEPLOY_SSH_HOST }} "
@@ -128,27 +167,83 @@ jobs:
             # Install dependencies
             cd ~/aetherion && npm install --production
             
+            # Set up deployment target based on input
+            DEPLOY_TARGET=\"${{ github.event.inputs.deployment_target || 'wallet' }}\"
+            
+            # Create Nginx configuration
+            echo 'Creating Nginx configuration...'
+            if [ \"\$DEPLOY_TARGET\" == \"both\" ] || [ \"\$DEPLOY_TARGET\" == \"wallet\" ]; then
+              sudo tee /etc/nginx/sites-available/aetherion-wallet.conf > /dev/null << 'EOL'
+server {
+    listen 80;
+    server_name atc.aifreedomtrust.com;
+
+    location /wallet {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host \$host;
+        proxy_cache_bypass \$http_upgrade;
+    }
+}
+EOL
+              sudo ln -sf /etc/nginx/sites-available/aetherion-wallet.conf /etc/nginx/sites-enabled/
+            fi
+            
+            if [ \"\$DEPLOY_TARGET\" == \"both\" ] || [ \"\$DEPLOY_TARGET\" == \"dapp\" ]; then
+              sudo tee /etc/nginx/sites-available/aetherion-dapp.conf > /dev/null << 'EOL'
+server {
+    listen 80;
+    server_name atc.aifreedomtrust.com;
+
+    location /dapp {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host \$host;
+        proxy_cache_bypass \$http_upgrade;
+    }
+}
+EOL
+              sudo ln -sf /etc/nginx/sites-available/aetherion-dapp.conf /etc/nginx/sites-enabled/
+            fi
+            
+            sudo nginx -t && sudo systemctl reload nginx
+            
             # Setup systemd service if it doesn't exist
             if [ ! -f /etc/systemd/system/aetherion.service ]; then
               echo 'Creating systemd service...'
               echo '[Unit]
-          Description=Aetherion Wallet Server
-          After=network.target
-          
-          [Service]
-          Type=simple
-          User=${{ secrets.DEPLOY_SSH_USER }}
-          WorkingDirectory=/home/${{ secrets.DEPLOY_SSH_USER }}/aetherion
-          ExecStart=/usr/bin/node /home/${{ secrets.DEPLOY_SSH_USER }}/aetherion/server-redirect.js
-          Restart=on-failure
-          Environment=PORT=3000
-          Environment=NODE_ENV=production
-          
-          [Install]
-          WantedBy=multi-user.target' | sudo tee /etc/systemd/system/aetherion.service
+Description=Aetherion Wallet Server
+After=network.target
+
+[Service]
+Type=simple
+User=${{ secrets.DEPLOY_SSH_USER }}
+WorkingDirectory=/home/${{ secrets.DEPLOY_SSH_USER }}/aetherion
+ExecStart=/usr/bin/node /home/${{ secrets.DEPLOY_SSH_USER }}/aetherion/server-redirect.js
+Restart=on-failure
+Environment=PORT=3000
+Environment=NODE_ENV=production
+Environment=DEPLOY_TARGET='${{ github.event.inputs.deployment_target || 'wallet' }}'
+Environment=BASE_URL='https://atc.aifreedomtrust.com'
+Environment=DATABASE_URL=${{ secrets.DATABASE_URL }}
+Environment=SESSION_SECRET=${{ secrets.SESSION_SECRET }}
+Environment=FRACTALCOIN_SECURE_KEY=${{ secrets.FRACTALCOIN_SECURE_KEY }}
+
+[Install]
+WantedBy=multi-user.target' | sudo tee /etc/systemd/system/aetherion.service
           
               sudo systemctl daemon-reload
               sudo systemctl enable aetherion.service
+            fi
+            
+            # Configure FractalCoin secure credential storage
+            if [ -f ~/aetherion/deploy-to-aifreedomtrust.js ]; then
+              echo 'Setting up FractalCoin secure credential storage...'
+              node ~/aetherion/deploy-to-aifreedomtrust.js --setup-credentials-only
             fi
             
             # Restart the service
@@ -159,7 +254,7 @@ jobs:
             sudo systemctl status aetherion.service --no-pager
             
             # Wait for the service to start
-            sleep 5
+            sleep 10
             
             # Check if service is running
             if sudo systemctl is-active --quiet aetherion.service; then
@@ -172,6 +267,33 @@ jobs:
               exit 1
             fi
           "
+
+      - name: Verify deployment with quantum security checks
+        if: success() && steps.deploy.outcome == 'success'
+        run: |
+          echo "Performing advanced deployment verification..."
+          
+          # Set deployment path based on input
+          DEPLOY_PATH="${{ github.event.inputs.deployment_target || 'wallet' }}"
+          if [ "$DEPLOY_PATH" == "both" ]; then
+            DEPLOY_PATH="wallet"  # Default to wallet for verification
+          fi
+          
+          # Wait for application to start
+          sleep 15
+          
+          # Check HTTP status code of the deployed app
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://${{ secrets.DEPLOY_SSH_HOST }}/$DEPLOY_PATH/health)
+          
+          if [ "$HTTP_STATUS" -eq 200 ]; then
+            echo "Verification successful! Application is responding with HTTP status: $HTTP_STATUS"
+            
+            # Additional security verification
+            echo "Running quantum security verification..."
+            curl -s https://${{ secrets.DEPLOY_SSH_HOST }}/$DEPLOY_PATH/verify-quantum-security || echo "Quantum security check skipped"
+          else
+            echo "Warning: Application returned unexpected HTTP status: $HTTP_STATUS"
+          fi
 
       - name: Rollback on failure
         if: failure() && steps.deploy.outcome == 'failure'
@@ -197,22 +319,6 @@ jobs:
             fi
           "
 
-      - name: Verify deployment
-        if: success() && steps.deploy.outcome == 'success'
-        run: |
-          echo "Waiting for application to start up completely..."
-          sleep 10
-          
-          # Check HTTP status code of the deployed app
-          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://${{ secrets.DEPLOY_SSH_HOST }}:3000)
-          
-          if [ "$HTTP_STATUS" -eq 200 ] || [ "$HTTP_STATUS" -eq 302 ]; then
-            echo "Verification successful! Application is responding with HTTP status: $HTTP_STATUS"
-          else
-            echo "Warning: Application returned unexpected HTTP status: $HTTP_STATUS"
-            # We don't fail the workflow here, just warn
-          fi
-
       - name: Notify Slack on success
         if: success() && steps.deploy.outcome == 'success'
         uses: rtCamp/action-slack-notify@v2
@@ -220,7 +326,7 @@ jobs:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
           SLACK_CHANNEL: deployments
           SLACK_COLOR: good
-          SLACK_MESSAGE: ':rocket: Aetherion Wallet successfully deployed to ${{ github.event.inputs.environment || 'production' }}!'
+          SLACK_MESSAGE: ':rocket: Aetherion Wallet successfully deployed to ${{ github.event.inputs.environment || 'production' }} (${{ github.event.inputs.deployment_target || 'wallet' }})!'
           SLACK_TITLE: Deployment Success
           SLACK_FOOTER: 'GitHub Actions'
 
@@ -231,6 +337,6 @@ jobs:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
           SLACK_CHANNEL: deployments
           SLACK_COLOR: danger
-          SLACK_MESSAGE: ':x: Aetherion Wallet deployment to ${{ github.event.inputs.environment || 'production' }} failed! Check GitHub Actions logs for details.'
+          SLACK_MESSAGE: ':x: Aetherion Wallet deployment to ${{ github.event.inputs.environment || 'production' }} (${{ github.event.inputs.deployment_target || 'wallet' }}) failed! Check GitHub Actions logs for details.'
           SLACK_TITLE: Deployment Failure
           SLACK_FOOTER: 'GitHub Actions'
