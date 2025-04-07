@@ -10,11 +10,11 @@ export function MobileNav() {
 
   return (
     <>
-      {/* Fixed button in bottom right */}
+      {/* Fixed button in bottom right - hide on medium screens and larger */}
       <Button
         variant="default"
         size="lg"
-        className="fixed bottom-6 right-6 z-50 rounded-full w-14 h-14 shadow-lg flex items-center justify-center bg-primary hover:bg-primary/90"
+        className="fixed bottom-6 right-6 z-50 rounded-full w-14 h-14 shadow-lg flex items-center justify-center bg-primary hover:bg-primary/90 md:hidden"
         onClick={() => setOpen(true)}
       >
         <Menu className="h-6 w-6" />

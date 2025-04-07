@@ -112,17 +112,15 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, className }) => {
       <header className="bg-background/80 backdrop-blur-sm border-b border-border/40 px-4 py-3 z-10">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            {isMobile && (
-              <Button
-                variant="ghost" 
-                size="icon"
-                onClick={() => setIsMobileMenuOpen(true)}
-                aria-label="Open menu"
-                className="text-foreground"
-              >
-                <Menu className="w-5 h-5" />
-              </Button>
-            )}
+            <Button
+              variant="ghost" 
+              size="icon"
+              onClick={() => setIsMobileMenuOpen(true)}
+              aria-label="Open menu"
+              className="text-foreground md:hidden"
+            >
+              <Menu className="w-5 h-5" />
+            </Button>
             <h1 className="text-xl font-bold text-foreground">{pageTitle}</h1>
           </div>
           
