@@ -424,7 +424,7 @@ export const AetherCoinNetworkManager: React.FC = () => {
                     <Label htmlFor="symbol">Symbol</Label>
                     <Input
                       id="symbol"
-                      placeholder="Symbol"
+                      placeholder="Token Symbol"
                       value={customSymbol}
                       onChange={(e) => setCustomSymbol(e.target.value)}
                       required
@@ -432,9 +432,9 @@ export const AetherCoinNetworkManager: React.FC = () => {
                   </div>
                   
                   <div className="grid w-full max-w-sm items-center gap-1.5">
-                    <Label htmlFor="explorer-url">Block Explorer URL</Label>
+                    <Label htmlFor="explorer">Explorer URL (Optional)</Label>
                     <Input
-                      id="explorer-url"
+                      id="explorer"
                       placeholder="https://"
                       value={customExplorerUrl}
                       onChange={(e) => setCustomExplorerUrl(e.target.value)}
@@ -446,7 +446,7 @@ export const AetherCoinNetworkManager: React.FC = () => {
                     disabled={isAdding || !customRpcUrl || !customChainId || !customSymbol}
                     className="w-full mt-2"
                   >
-                    {isAdding ? 'Adding...' : 'Save Custom Network'}
+                    {isAdding ? 'Adding...' : 'Add Custom Network'}
                   </Button>
                 </div>
               </CardContent>
@@ -470,4 +470,3 @@ export const AetherCoinNetworkManager: React.FC = () => {
 };
 
 export default AetherCoinNetworkManager;
-`

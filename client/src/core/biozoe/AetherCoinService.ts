@@ -943,4 +943,3 @@ export class AetherCoinService extends EventEmitter {
 
 // Export singleton instance
 export const aetherCoinService = new AetherCoinService();
-`

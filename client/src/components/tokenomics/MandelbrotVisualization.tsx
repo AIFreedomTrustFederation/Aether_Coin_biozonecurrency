@@ -718,4 +718,3 @@ export function MandelbrotVisualization() {
 }
 
 export default MandelbrotVisualization;
-`

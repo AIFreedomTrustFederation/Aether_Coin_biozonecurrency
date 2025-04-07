@@ -1268,4 +1268,3 @@ class BioZoeService extends EventEmitter {
 
 // Export singleton instance
 export const bioZoeService = new BioZoeService();
-`
