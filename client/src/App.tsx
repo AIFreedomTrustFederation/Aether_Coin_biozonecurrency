@@ -702,9 +702,12 @@ function App() {
           <BottomNavigation />
         )}
         
-        {/* Add floating Mysterion AI Assistant to all pages except the AI Assistant page itself */}
+        {/* Add floating Mysterion AI Assistant to all pages except the AI Assistant page itself 
+           Ensure it's visible on both desktop and mobile */}
         {location !== '/ai-assistant' && (
-          <AIAssistant userId={1} />
+          <div className={`${isMobile ? 'z-50 mb-16' : ''}`}>
+            <AIAssistant userId={1} />
+          </div>
         )}
       </div>
         </LiveModeProvider>
