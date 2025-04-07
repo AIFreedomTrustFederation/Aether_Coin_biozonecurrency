@@ -11,7 +11,7 @@ import { Link } from "wouter";
 import { 
   Menu, X, Home, Layout, Wallet, Lock, Shield, Settings, AlertTriangle, ChevronRight, 
   BarChart3, Eye, Cpu, Bell, Zap, Coins, FileText, Database, Bot, TestTube, Blocks,
-  Smartphone, Lightbulb, CreditCard, Info, Palette, Loader2, UserCircle2
+  Smartphone, Lightbulb, CreditCard, Info, Palette, Loader2, UserCircle2, Globe
 } from "lucide-react";
 import { AuthProvider } from "./context/AuthContext";
 import TrustMemberGuard from "./components/auth/TrustMemberGuard";
@@ -65,6 +65,7 @@ const MobileFeatureDemo = lazy(() => import("@/components/mobile/MobileFeatureDe
 const EscrowPage = lazy(() => import("./pages/Escrow"));
 const ThemePage = lazy(() => import("./pages/Theme"));
 const DomainHostingPage = lazy(() => import("./pages/DomainHosting"));
+const DomainHostingWizardPage = lazy(() => import("./pages/DomainHostingWizardPage"));
 const BottomNavigation = lazy(() => import("@/components/mobile/BottomNavigation"));
 
 // Trust member authentication pages
@@ -80,6 +81,7 @@ const navigationItems = [
   { name: "Payment", path: "/payment", icon: <CreditCard className="h-5 w-5" /> },
   { name: "Transactions", path: "/transactions", icon: <BarChart3 className="h-5 w-5" /> },
   { name: "Domain Hosting", path: "/domain-hosting", icon: <Database className="h-5 w-5" /> },
+  { name: "Domain Wizard", path: "/domain-hosting-wizard", icon: <Globe className="h-5 w-5" /> },
   { name: "Bridge", path: "/bridge", icon: <ChevronRight className="h-5 w-5 rotate-90" /> },
   { name: "Bridge Test", path: "/bridge-test", icon: <TestTube className="h-5 w-5" /> },
   { name: "Escrow", path: "/escrow", icon: <Shield className="h-5 w-5" /> },
@@ -624,6 +626,12 @@ function App() {
             <Route path="/domain-hosting">
               <Suspense fallback={<LoadingScreen message="Loading domain hosting..." />}>
                 <DomainHostingPage />
+              </Suspense>
+            </Route>
+            
+            <Route path="/domain-hosting-wizard">
+              <Suspense fallback={<LoadingScreen message="Loading domain hosting wizard..." />}>
+                <DomainHostingWizardPage />
               </Suspense>
             </Route>
             <Route path="/escrow">
