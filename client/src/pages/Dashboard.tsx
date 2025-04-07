@@ -6,6 +6,9 @@ import RecentTransactions from '@/components/dashboard/RecentTransactions';
 import SmartContracts from '@/components/dashboard/SmartContracts';
 import CIDManagement from '@/components/dashboard/CIDManagement';
 import WalletHealthScore from '@/components/dashboard/WalletHealthScore';
+import DomainSummary from '@/components/dashboard/DomainSummary';
+import TokenSummary from '@/components/dashboard/TokenSummary';
+import NetworkStatus from '@/components/dashboard/NetworkStatus';
 
 const Dashboard = () => {
   const isMobile = useIsMobile();
@@ -29,6 +32,13 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <PortfolioChart />
         <AIMonitoring />
+      </div>
+      
+      {/* Summary Cards Section - Domains, Tokens, Network */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <DomainSummary />
+        <TokenSummary />
+        <NetworkStatus />
       </div>
       
       {/* Recent Transactions and Smart Contracts Section */}

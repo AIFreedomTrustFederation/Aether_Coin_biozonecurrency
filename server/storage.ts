@@ -24,7 +24,10 @@ export type { User, Wallet, Transaction, SmartContract, AiMonitoringLog, CidEntr
                TransactionRating, RecursionLog, AiCoinCompensation, UserApiKey, MysterionTrainingData,
                // Bridge types
                BridgeConfiguration, BridgeValidator, BridgeSupportedToken, BridgeTransaction,
-               BridgeNetwork, BridgeStatus, BridgeTransactionStatus } from '../shared/schema';
+               BridgeNetwork, BridgeStatus, BridgeTransactionStatus,
+               // Domain Hosting types
+               DomainConfiguration, DomainDeployment, FilecoinStorageAllocation, 
+               DomainTrustWalletConnection, DomainActivityLog, DnsRecord } from '../shared/schema';
 
 // Export storage interface
 export interface IStorage {
