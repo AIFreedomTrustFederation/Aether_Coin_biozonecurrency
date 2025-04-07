@@ -1,0 +1,60 @@
+# GitHub CI/CD Pipeline Setup Guide for Aetherion Wallet
+
+This document provides instructions for setting up a CI/CD pipeline using GitHub Actions for the Aetherion Wallet application.
+
+## 1. Create GitHub Actions Workflow File
+
+Create the file `.github/workflows/deploy.yml` with the following content:
+
+- Main trigger events: push to main branch, pull requests, manual trigger
+- Jobs: test, build, deploy
+- Features: automated testing, artifact management, backup/rollback, deployment verification, notifications
+
+## 2. Setting Up GitHub Secrets
+
+Add these secrets to your GitHub repository:
+
+- DEPLOY_SSH_USER - Your SSH username for atc.aifreedomtrust.com
+- DEPLOY_SSH_HOST - The host address (atc.aifreedomtrust.com)
+- DEPLOY_SSH_PORT - The SSH port (usually 22)
+- SSH_PRIVATE_KEY - Private SSH key used to connect to the server
+- SLACK_WEBHOOK_URL - Webhook URL for Slack notifications (optional)
+
+## 3. Key Features of the CI/CD Pipeline
+
+- Automated Testing: Runs tests before deployment
+- Artifact Management: Packages application for deployment
+- Backup & Rollback: Creates backups and includes rollback mechanisms
+- Deployment Verification: Checks if deployment was successful
+- Slack Notifications: Sends notifications about deployment status
+
+## 4. Workflow Process
+
+1. Test Stage:
+   - Checkout code
+   - Install dependencies
+   - Run tests
+
+2. Build Stage:
+   - Build the application
+   - Create deployment package
+   - Upload as artifact
+
+3. Deploy Stage:
+   - Setup SSH connection
+   - Backup existing deployment
+   - Upload and extract package
+   - Install dependencies
+   - Configure and restart service
+   - Verify deployment
+   - Send notifications
+
+## 5. Additional Customizations
+
+- Add environment variables
+- Create custom deployment strategies
+- Implement security enhancements
+
+## 6. For Detailed Instructions
+
+For the complete workflow implementation, including the full YAML file, please refer to the GitHub CI/CD Setup documentation.

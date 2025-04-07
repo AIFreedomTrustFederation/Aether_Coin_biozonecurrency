@@ -1,3 +1,17 @@
+# GitHub CI/CD Pipeline Setup for Aetherion Wallet
+
+This guide walks you through setting up a comprehensive CI/CD pipeline for the Aetherion Wallet using GitHub Actions.
+
+## Step 1: Create GitHub Actions Workflow File
+
+Create a new file in your repository at the following path:
+```
+.github/workflows/deploy.yml
+```
+
+Copy and paste the following content into the file:
+
+```yaml
 name: Aetherion Wallet Deployment
 
 on:
@@ -234,3 +248,116 @@ jobs:
           SLACK_MESSAGE: ':x: Aetherion Wallet deployment to ${{ github.event.inputs.environment || 'production' }} failed! Check GitHub Actions logs for details.'
           SLACK_TITLE: Deployment Failure
           SLACK_FOOTER: 'GitHub Actions'
+```
+
+## Step 2: Setting Up GitHub Secrets
+
+To secure your deployment process, set up the following secrets in your GitHub repository:
+
+1. Go to your repository on GitHub
+2. Click on `Settings > Secrets and variables > Actions > New secret`
+3. Add the following secrets:
+
+| Secret Name | Description |
+|-------------|-------------|
+| `DEPLOY_SSH_USER` | Your SSH username for atc.aifreedomtrust.com |
+| `DEPLOY_SSH_HOST` | The host address (atc.aifreedomtrust.com) |
+| `DEPLOY_SSH_PORT` | The SSH port (usually 22 unless configured otherwise) |
+| `SSH_PRIVATE_KEY` | The private SSH key used to connect to the server |
+| `SLACK_WEBHOOK_URL` | Webhook URL for Slack notifications (optional) |
+
+## Step 3: Features of this CI/CD Pipeline
+
+### Automated Testing
+The pipeline runs all tests before building and deploying, ensuring code quality:
+```yaml
+- name: Run tests
+  run: npm test
+```
+
+### Artifact Management
+It builds and packages the application, storing artifacts for deployment:
+```yaml
+- name: Prepare deployment package
+  run: |
+    tar -czf aetherion-deploy.tar.gz dist server-redirect.js package.json
+```
+
+### Backup and Rollback
+The pipeline automatically backs up existing deployments and includes rollback mechanisms:
+```yaml
+- name: Backup existing deployment
+  # (code for backup)
+
+- name: Rollback on failure
+  if: failure() && steps.deploy.outcome == 'failure'
+  # (code for rollback)
+```
+
+### Deployment Verification
+It verifies that the deployment was successful:
+```yaml
+- name: Verify deployment
+  if: success() && steps.deploy.outcome == 'success'
+  # (code for verification)
+```
+
+### Slack Notifications
+It sends notifications to Slack for both successful and failed deployments:
+```yaml
+- name: Notify Slack on success
+  # (notification configuration)
+
+- name: Notify Slack on failure
+  # (notification configuration)
+```
+
+## Step 4: Testing the CI/CD Pipeline
+
+To test the CI/CD pipeline:
+
+1. Push changes to the main branch or create a pull request
+2. Monitor progress on the Actions tab in your repository
+3. Check the deployment on atc.aifreedomtrust.com/dapp and atc.aifreedomtrust.com/wallet
+
+## Step 5: Additional Customizations
+
+### Environment Variables
+You can add environment variables to the systemd service by modifying the service creation section:
+```yaml
+Environment=PORT=3000
+Environment=NODE_ENV=production
+# Add more environment variables here
+```
+
+### Custom Deployment Strategies
+You can customize the deployment process by modifying the deploy job. For example, you could:
+- Add more deployment environments (staging, development, etc.)
+- Implement canary deployments
+- Add database migration steps
+
+### Security Enhancements
+Consider enhancing security with:
+- Code scanning with GitHub Security features
+- Dependency vulnerability scanning
+- Secret scanning for accidental secret exposure
+
+## Troubleshooting
+
+### SSH Connection Issues
+If the deployment fails due to SSH connection issues:
+1. Verify that the SSH key has correct permissions on the server
+2. Check that the SSH port is correctly configured
+3. Ensure the server is accessible from GitHub's IP ranges
+
+### Build Failures
+If the build process fails:
+1. Check the build logs in GitHub Actions
+2. Verify that all dependencies are correctly installed
+3. Ensure that the build script in package.json is correct
+
+### Deployment Failures
+If the deployment itself fails:
+1. Check the systemd service logs on the server: `sudo journalctl -u aetherion`
+2. Verify that the server has sufficient disk space and memory
+3. Ensure that all required environment variables are set correctly
