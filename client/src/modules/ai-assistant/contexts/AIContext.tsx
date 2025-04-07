@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useCallback } from 'react';
+import React, { createContext, useContext, useReducer, useCallback, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { 
   AIState, 
@@ -15,6 +15,7 @@ import { transactionVerifier } from '../utils/TransactionVerifier';
 import { secureStorage } from '../utils/SecureStorage';
 import { formatTimestamp } from '../utils/formatters';
 import { trainingData } from '../data/training-data';
+import InteractiveTutorial from '../components/InteractiveTutorial';
 
 // Initial AI state
 const initialState: AIState = {
@@ -128,6 +129,8 @@ function aiReducer(state: AIState, action: AIAction): AIState {
 // Provider component
 export function AIProvider({ children, userId, initialState: customInitialState }: AIProviderProps) {
   const [state, dispatch] = useReducer(aiReducer, { ...initialState, ...customInitialState });
+  const [isTutorialOpen, setIsTutorialOpen] = useState(false);
+  const [tutorialSection, setTutorialSection] = useState("getting-started");
 
   // Initialize secure storage
   React.useEffect(() => {
@@ -322,7 +325,32 @@ export function AIProvider({ children, userId, initialState: customInitialState 
       }
     });
 
-    // Process message (would connect to backend AI in real implementation)
+    // Check for tutorial command
+    const lowercaseMessage = message.toLowerCase().trim();
+    if (lowercaseMessage === '/tutorial' || 
+        lowercaseMessage === 'start tutorial' || 
+        lowercaseMessage === 'start interactive tutorial' ||
+        lowercaseMessage === 'launch tutorial' ||
+        lowercaseMessage === 'show tutorial') {
+      
+      // Respond to tutorial request
+      dispatch({
+        type: 'ADD_MESSAGE',
+        payload: {
+          id: uuidv4(),
+          sender: 'ai',
+          content: "I'm launching the interactive tutorial for you now. This guided tour will walk you through all Aetherion features with voice narration and interactive demonstrations. You can pause at any time by saying 'pause' or clicking the pause button.",
+          timestamp: new Date().toISOString()
+        }
+      });
+      
+      // Launch the tutorial
+      setIsTutorialOpen(true);
+      dispatch({ type: 'SET_PROCESSING', payload: false });
+      return;
+    }
+    
+    // Process regular messages (would connect to backend AI in real implementation)
     dispatch({ type: 'SET_PROCESSING', payload: true });
     
     // Search for related training data
@@ -382,11 +410,10 @@ export function AIProvider({ children, userId, initialState: customInitialState 
       // Determine the specific response for greeting messages
       let responseContent = trainedResponse;
       if (!responseContent) {
-        const lowercaseMessage = message.toLowerCase();
         if (lowercaseMessage.includes('hello') || lowercaseMessage.includes('hi') || lowercaseMessage.includes('hey')) {
           responseContent = "Hello! I'm Mysterion, your AI assistant for the Aetherion platform. I can help with questions about quantum security, blockchain features, and much more. How can I assist you today?";
         } else if (lowercaseMessage.includes('help') || lowercaseMessage.includes('assist')) {
-          responseContent = "I can help with various topics related to Aetherion, including quantum security features, wallet management, Singularity Coin details, and transaction verification. What would you like to know more about?";
+          responseContent = "I can help with various topics related to Aetherion, including quantum security features, wallet management, Singularity Coin details, and transaction verification. What would you like to know more about? You can also type '/tutorial' to start an interactive guided tour.";
         } else if (lowercaseMessage.includes('thank')) {
           responseContent = "You're welcome! I'm here to assist with any other questions you might have about Aetherion's features and capabilities.";
         } else {
@@ -407,7 +434,7 @@ export function AIProvider({ children, userId, initialState: customInitialState 
       
       dispatch({ type: 'SET_PROCESSING', payload: false });
     }, 1000);
-  }, []);
+  }, [setIsTutorialOpen]);
 
   // Put a transaction on hold
   const holdTransaction = useCallback((tx: Transaction, reason: string, duration = 24): Transaction => {
@@ -456,6 +483,17 @@ export function AIProvider({ children, userId, initialState: customInitialState 
     dispatch({ type: 'CLEAR_MESSAGES' });
   }, []);
 
+  // Open tutorial with specific section
+  const openTutorialSection = useCallback((section: string) => {
+    setTutorialSection(section);
+    setIsTutorialOpen(true);
+  }, []);
+  
+  // Close tutorial
+  const closeTutorial = useCallback(() => {
+    setIsTutorialOpen(false);
+  }, []);
+
   const contextValue = {
     state,
     dispatch,
@@ -469,12 +507,19 @@ export function AIProvider({ children, userId, initialState: customInitialState 
     handleChatMessage,
     holdTransaction,
     releaseTransaction,
-    clearChat
+    clearChat,
+    openTutorialSection,
+    closeTutorial
   };
 
   return (
     <AIContext.Provider value={contextValue}>
       {children}
+      <InteractiveTutorial 
+        isOpen={isTutorialOpen} 
+        onClose={closeTutorial} 
+        initialSection={tutorialSection} 
+      />
     </AIContext.Provider>
   );
 }

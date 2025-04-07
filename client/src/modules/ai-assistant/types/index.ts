@@ -115,6 +115,8 @@ export interface AIContextType {
   holdTransaction: (tx: Transaction, reason: string, duration?: number) => Transaction;
   releaseTransaction: (txId: number) => void;
   clearChat: () => void;
+  openTutorialSection: (section: string) => void;
+  closeTutorial: () => void;
 }
 
 // AI Actions
