@@ -1,0 +1,130 @@
+#!/bin/bash
+# Enhanced Automated Deployment Script for Aetherion Wallet with FractalCoin Integration
+# Target: atc.aifreedomtrust.com/dapp and /wallet
+
+# Colors for better readability
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+NC='\033[0m' # No Color
+
+LOG_FILE="aetherion_deployment_$(date +%Y%m%d%H%M%S).log"
+exec &> >(tee -a "$LOG_FILE")
+
+echo -e "${BLUE}==============================================${NC}"
+echo -e "${BLUE}    AETHERION WALLET DEPLOYMENT SCRIPT        ${NC}"
+echo -e "${BLUE}    Target: atc.aifreedomtrust.com            ${NC}"
+echo -e "${BLUE}==============================================${NC}"
+echo
+
+# Load .env variables if they exist
+if [ -f .env ]; then
+  echo -e "Loading environment variables from .env file..."
+  source .env
+fi
+
+# Collect Secrets from User
+read -p "Enter your SSH Username: " SSH_USER
+read -p "Enter your SSH Host (e.g., atc.aifreedomtrust.com): " SSH_HOST
+read -p "Enter your SSH Port (default 22): " SSH_PORT
+SSH_PORT=${SSH_PORT:-22}
+
+read -p "Enter your Slack Webhook URL: " SLACK_WEBHOOK_URL
+
+# Save secrets to encrypted file for FractalCoin storage
+SECRET_FILE="aetherion_secrets.json"
+echo -e "{\n  \"SSH_USER\": \"$SSH_USER\",\n  \"SSH_HOST\": \"$SSH_HOST\",\n  \"SSH_PORT\": \"$SSH_PORT\",\n  \"SLACK_WEBHOOK_URL\": \"$SLACK_WEBHOOK_URL\"\n}" > $SECRET_FILE
+
+echo -e "${GREEN}Secrets collected successfully! Encrypting for FractalCoin storage...${NC}"
+
+# Encrypt and store secrets on FractalCoin/Filecoin
+ipfs add -q $SECRET_FILE > ipfs_hash.txt
+IPFS_HASH=$(cat ipfs_hash.txt)
+echo -e "${GREEN}Secrets stored successfully! IPFS Hash: $IPFS_HASH${NC}"
+
+# Pin IPFS hash for long-term storage
+ipfs pin add $IPFS_HASH
+
+echo -e "${GREEN}IPFS Hash successfully pinned for permanent access.${NC}"
+
+# Step 1: Backup existing deployment
+BACKUP_DIR="aetherion_backup_$(date +%Y%m%d%H%M%S)"
+ssh -p $SSH_PORT $SSH_USER@$SSH_HOST "
+  if [ -d ~/aetherion ]; then
+    echo 'Backing up existing deployment...'
+    mv ~/aetherion ~/$BACKUP_DIR
+    echo 'Backup completed: ~/$BACKUP_DIR'
+  fi
+"
+
+# Step 2: Build the application
+echo -e "${BLUE}==== STEP 2: Building Aetherion Wallet Application ====${NC}"
+npm install
+npm run test
+if [ $? -ne 0 ]; then
+  echo -e "${RED}Tests failed! Aborting deployment.${NC}"
+  exit 1
+fi
+npm run build
+
+if [ ! -d "dist" ]; then
+  echo -e "${RED}Build failed! The dist directory was not created.${NC}"
+  exit 1
+fi
+
+echo -e "${GREEN}Application build completed successfully!${NC}"
+echo
+
+# Step 3: Create deployment package
+DEPLOY_PACKAGE="aetherion-deploy.tar.gz"
+tar -czf $DEPLOY_PACKAGE dist server-redirect.js package.json
+
+if [ ! -f "$DEPLOY_PACKAGE" ]; then
+  echo -e "${RED}Failed to create deployment package!${NC}"
+  exit 1
+fi
+
+echo -e "${GREEN}Deployment package created: $DEPLOY_PACKAGE${NC}"
+echo
+
+# Step 4: Upload to server
+echo -e "${BLUE}==== STEP 4: Uploading to Server ====${NC}"
+echo -e "Uploading package to ${SSH_HOST}..."
+scp -P $SSH_PORT $DEPLOY_PACKAGE $SSH_USER@$SSH_HOST:~/
+
+if [ $? -ne 0 ]; then
+  echo -e "${RED}Failed to upload package to server!${NC}"
+  exit 1
+fi
+
+echo -e "${GREEN}Package uploaded successfully!${NC}"
+echo
+
+# Step 5: Deploy on the server
+ssh -p $SSH_PORT $SSH_USER@$SSH_HOST "
+  echo 'Starting deployment on server...'
+
+  # Extract deployment package
+  tar -xzf ~/$DEPLOY_PACKAGE -C ~/aetherion
+
+  # Install dependencies
+  cd ~/aetherion && npm install --production
+
+  # Cleanup
+  rm ~/$DEPLOY_PACKAGE
+  echo 'Deployment completed!'
+"
+
+if [ $? -ne 0 ]; then
+  echo -e "${RED}Deployment failed! Please check the log file: $LOG_FILE${NC}"
+  exit 1
+fi
+
+# Step 6: Cleanup local package
+rm $DEPLOY_PACKAGE
+rm $SECRET_FILE
+rm ipfs_hash.txt
+
+echo -e "${GREEN}Deployment process completed! Log file: $LOG_FILE${NC}"
+echo
