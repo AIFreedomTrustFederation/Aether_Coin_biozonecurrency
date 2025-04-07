@@ -365,12 +365,24 @@ const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
   const playSound = (type: 'next' | 'complete') => {
     if (!soundEnabled) return;
     
-    if (type === 'next' && nextSoundRef.current) {
-      nextSoundRef.current.currentTime = 0;
-      nextSoundRef.current.play().catch(err => console.error('Error playing sound:', err));
-    } else if (type === 'complete' && completeSoundRef.current) {
-      completeSoundRef.current.currentTime = 0;
-      completeSoundRef.current.play().catch(err => console.error('Error playing sound:', err));
+    try {
+      if (type === 'next' && nextSoundRef.current) {
+        nextSoundRef.current.currentTime = 0;
+        // Silently catch any sound errors - don't log to console
+        nextSoundRef.current.play().catch(() => {
+          // Audio play failed - often happens due to browser autoplay restrictions
+          // We'll silently ignore this error
+        });
+      } else if (type === 'complete' && completeSoundRef.current) {
+        completeSoundRef.current.currentTime = 0;
+        // Silently catch any sound errors - don't log to console
+        completeSoundRef.current.play().catch(() => {
+          // Audio play failed - often happens due to browser autoplay restrictions
+          // We'll silently ignore this error
+        });
+      }
+    } catch (error) {
+      // Silently catch any other audio errors as well
     }
   };
 
@@ -413,28 +425,31 @@ const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
       // Tutorial completed
       playSound('complete');
       
-      // Save to localStorage first as primary storage - mark as COMPLETED
+      console.log("Finish button clicked, closing tutorial...");
+      
+      // First, immediately close the tutorial without waiting for any async operations
+      onClose();
+      
+      // Then try to save the state - this happens after the UI has already closed
       try {
+        // Mark as completed to prevent reopening
         localStorage.setItem('aetherion_tutorial_completed', 'true');
         localStorage.setItem('aetherion_tutorial_last_section', currentSection.id);
-      } catch (localError) {
-        console.error('Failed to save tutorial completion to localStorage:', localError);
+        
+        // Silently try to save to the server if authenticated
+        apiRequest(
+          '/api/tutorial/status', 
+          'POST', 
+          {
+            completed: true,
+            lastSection: currentSection.id
+          }
+        ).catch(() => {
+          // Silent catch - no error messages displayed
+        });
+      } catch (error) {
+        // Silent catch for localStorage too - tutorial is already closed so no need to log
       }
-      
-      // Silently try to save to the server if authenticated
-      apiRequest(
-        '/api/tutorial/status', 
-        'POST', 
-        {
-          completed: true,
-          lastSection: currentSection.id
-        }
-      ).catch(() => {
-        // Silently ignore API errors since we've already saved to localStorage
-      });
-      
-      // Always close the tutorial immediately
-      onClose();
     }
   };
 
@@ -459,14 +474,18 @@ const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
 
   // Handle user skipping the tutorial
   const handleSkip = useCallback(() => {
-    // Save to localStorage first as a reliable fallback - mark as COMPLETED
+    console.log("Skip button clicked, closing tutorial...");
+    
+    // First, immediately close the tutorial without waiting for any async operations
+    onClose();
+    
+    // Then try to save the state - this happens after the UI has already closed
     try {
       // Mark as completed to prevent reopening
       localStorage.setItem('aetherion_tutorial_completed', 'true');
       localStorage.setItem('aetherion_tutorial_last_section', currentSection.id);
       
       // Silently try to save to the server if authenticated, but don't show errors
-      // Also mark as COMPLETED on the server
       apiRequest(
         '/api/tutorial/status', 
         'POST', 
@@ -475,16 +494,10 @@ const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
           lastSection: currentSection.id
         }
       ).catch(() => {
-        // Suppress error messages - we already saved to localStorage which is sufficient
-        // This avoids error messages in the console that might worry users
+        // Silent catch - no error messages displayed
       });
-      
-      // Always close the tutorial immediately
-      onClose();
-    } catch (localError) {
-      // In the rare case localStorage fails, still close the tutorial
-      console.error('Failed to save tutorial skip status to localStorage:', localError);
-      onClose();
+    } catch (error) {
+      // Silent catch for localStorage too - tutorial is already closed so no need to log
     }
   }, [currentSection, onClose]);
 
