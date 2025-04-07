@@ -13,10 +13,14 @@ import {
   paymentMethods, payments, userApiKeys, mysterionTrainingData,
   bridgeConfigurations, bridgeValidators, bridgeSupportedTokens, bridgeTransactions,
   insurancePolicies, recurveTokens, fractalLoans, torusSecurityNodes, 
-  networkInsurancePolicies, mandelbrotRecursionEvents,
+  networkInsurancePolicies, mandelbrotRecursionEvents
+  // Temporarily commented out to resolve circular dependency
   // AI Training tables
-  aiTrainingData, aiTrainingJobs, aiTrainingContributors,
-  TrainingFeedbackType, TrainingProcessingStatus
+  // aiTrainingData, aiTrainingJobs, aiTrainingContributors,
+  // TrainingFeedbackType, TrainingProcessingStatus,
+  // AiTrainingData, InsertAiTrainingData,
+  // AiTrainingJob, InsertAiTrainingJob,
+  // AiTrainingContributor, InsertAiTrainingContributor
 } from '../shared/schema';
 
 /**
@@ -900,7 +904,8 @@ export class DatabaseStorage implements IStorage {
     return result;
   }
 
-  // AI Assistant Training Data methods
+  // AI Assistant Training Data methods - temporarily commented out to resolve circular dependency
+  /*
   async getAiTrainingData(id: number): Promise<schema.AiTrainingData | undefined> {
     const [data] = await db.select().from(aiTrainingData).where(eq(aiTrainingData.id, id));
     return data;
@@ -934,7 +939,9 @@ export class DatabaseStorage implements IStorage {
     const [result] = await db.insert(aiTrainingData).values(data).returning();
     return result;
   }
+  */
 
+  /*
   async updateAiTrainingDataStatus(
     id: number, 
     status: schema.TrainingProcessingStatus, 
@@ -1089,4 +1096,5 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return contributor;
   }
+  */
 }

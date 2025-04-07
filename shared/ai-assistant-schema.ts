@@ -22,6 +22,9 @@ export enum TrainingProcessingStatus {
   REJECTED = 'rejected' // For content that doesn't meet quality guidelines
 }
 
+// Import tables from schema but define types to break circular dependency
+import type { PgTableWithColumns } from "drizzle-orm/pg-core";
+
 // AI Assistant training data
 export const aiTrainingData = pgTable("ai_training_data", {
   id: serial("id").primaryKey(),
