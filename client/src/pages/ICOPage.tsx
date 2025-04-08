@@ -34,7 +34,7 @@ import {
 
 import { WalletProvider } from '../context/WalletContext';
 import ICOParticipation from '../components/wallet/ICOParticipation';
-import WalletConnector from '../components/wallet/WalletConnector';
+import CelebratingWalletConnector from '../components/wallet/CelebratingWalletConnector';
 
 const ICOPage: React.FC = () => {
   return (
@@ -363,7 +363,7 @@ const ICOPage: React.FC = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <WalletConnector />
+                <CelebratingWalletConnector />
               </CardContent>
             </Card>
             
