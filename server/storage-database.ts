@@ -230,6 +230,13 @@ export class DatabaseStorage implements IStorage {
       .from(payments)
       .where(eq(payments.providerPaymentId, providerPaymentId));
   }
+  
+  async getPaymentByExternalId(externalId: string): Promise<schema.Payment[]> {
+    return db
+      .select()
+      .from(payments)
+      .where(eq(payments.externalId, externalId));
+  }
 
   async createPayment(payment: schema.InsertPayment): Promise<schema.Payment> {
     const [result] = await db.insert(payments).values(payment).returning();

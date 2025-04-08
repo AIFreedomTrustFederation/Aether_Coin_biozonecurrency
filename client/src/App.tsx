@@ -59,6 +59,7 @@ const PaymentPage = lazy(() => import("./pages/PaymentPage").then(m => ({ defaul
 const TransactionsPage = lazy(() => import("./pages/TransactionsPage"));
 const BridgePage = lazy(() => import("./pages/BridgePage"));
 const BridgeTestPage = lazy(() => import("./pages/BridgeTestPage"));
+const QuantumSecurePaymentPage = lazy(() => import("./pages/QuantumSecurePaymentPage"));
 
 // VS Code Integration
 const CodeEditorPage = lazy(() => import("./features/code-editor").then(m => ({ default: m.CodeEditorPage })));
@@ -88,6 +89,7 @@ const navigationItems = [
   { name: "Dashboard", path: "/dashboard", icon: <Layout className="h-5 w-5" /> },
   { name: "Wallet", path: "/wallet", icon: <Wallet className="h-5 w-5" /> },
   { name: "Payment", path: "/payment", icon: <CreditCard className="h-5 w-5" /> },
+  { name: "Quantum Payment", path: "/quantum-secure-payment", icon: <Shield className="h-5 w-5" /> },
   { name: "Transactions", path: "/transactions", icon: <BarChart3 className="h-5 w-5" /> },
   { name: "Code Editor", path: "/code-editor", icon: <Code className="h-5 w-5" /> },
   { name: "Domain Hosting", path: "/domain-hosting", icon: <Database className="h-5 w-5" /> },
@@ -554,6 +556,12 @@ function App() {
             <Route path="/quantum-security">
               <Suspense fallback={<LoadingScreen message="Loading quantum security dashboard..." />}>
                 <QuantumSecurityPage />
+              </Suspense>
+            </Route>
+            
+            <Route path="/quantum-secure-payment">
+              <Suspense fallback={<LoadingScreen message="Loading quantum secure payment..." />}>
+                <QuantumSecurePaymentPage />
               </Suspense>
             </Route>
             <Route path="/singularity">

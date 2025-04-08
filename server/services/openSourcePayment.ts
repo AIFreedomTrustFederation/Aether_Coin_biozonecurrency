@@ -1,180 +1,143 @@
-import crypto from 'crypto';
-import { Payment } from '@shared/schema';
+import { InsertPayment, Payment } from '../../shared/schema';
 import { storage } from '../storage';
-
-interface ProcessPaymentParams {
-  userId: number;
-  amount: number;
-  currency: string;
-  description: string;
-  paymentMethod: string;
-  walletId?: number;
-  metadata?: Record<string, any>;
-}
+import { v4 as uuidv4 } from 'uuid';
 
 /**
- * OpenSourcePaymentService handles all integrations with open-source payment processors
- * such as OpenCollective or self-hosted payment solutions
+ * Open Source Payment Service
+ * Handles payments through open source / free software funding channels
+ * like Open Collective, GitHub Sponsors, etc.
  */
-class OpenSourcePaymentService {
+export const openSourcePaymentService = {
   /**
-   * Process an open-source payment
+   * Process an open source payment
    * 
-   * @param params Payment parameters 
-   * @returns The payment details
+   * @param amount The payment amount
+   * @param currency The currency code
+   * @param description The payment description
+   * @param userId The user ID making the payment
+   * @param walletId The optional wallet ID to associate with the payment
+   * @param metadata Additional metadata
+   * @returns Payment details with ID and status
    */
-  async processPayment(params: ProcessPaymentParams): Promise<{
-    id: string;
-    status: string;
-    amount: number;
-    currency: string;
-    description: string;
-  }> {
+  async processPayment(
+    amount: string,
+    currency: string,
+    description: string,
+    userId: number,
+    walletId?: number,
+    metadata: Record<string, any> = {}
+  ): Promise<{ id: string; status: string }> {
     try {
-      const {
+      // Generate a unique transaction ID for the open source payment
+      const transactionId = uuidv4();
+      
+      // Create the payment record in our database
+      const paymentData: InsertPayment = {
         userId,
         amount,
         currency,
-        description,
-        paymentMethod,
-        walletId,
-        metadata
-      } = params;
-
-      // Generate a unique ID for this payment (would normally come from the payment processor)
-      const paymentId = this.generatePaymentId();
-      
-      // Store the payment in our database
-      await storage.createPayment({
-        userId,
-        amount: amount.toString(),
-        currency,
-        description,
-        provider: 'open_source',
-        providerPaymentId: paymentId,
-        paymentMethodId: null, // Using null since we don't have a stored payment method
-        walletId: walletId || null,
         status: 'pending',
+        provider: 'open_collective',
+        providerPaymentId: `oc_${transactionId}`,
+        externalId: transactionId,
+        description,
         metadata: {
           ...metadata,
-          customPaymentMethod: paymentMethod // Store the payment method type in metadata
-        }
-      });
-
-      // In a real implementation, we would initiate the payment with the actual processor
-      // For this example, we'll simulate a successfully initiated payment
-      return {
-        id: paymentId,
-        status: 'pending',
-        amount,
-        currency,
-        description
+          processor: 'open_collective',
+          transactionId,
+          userId: userId.toString(),
+          walletId: walletId ? walletId.toString() : null,
+        },
+        walletId,
       };
-    } catch (error) {
-      console.error('Error processing open-source payment:', error);
-      throw new Error('Failed to process open-source payment');
-    }
-  }
-
-  /**
-   * Check the status of a payment
-   * 
-   * @param paymentId The payment ID
-   * @returns The payment status
-   */
-  async checkPaymentStatus(paymentId: string): Promise<{ status: string }> {
-    try {
-      // Find the payment in our database
-      const payments = await storage.getPaymentsByProviderPaymentId(paymentId);
       
-      if (!payments || payments.length === 0) {
-        throw new Error('Payment not found');
-      }
+      const payment = await storage.createPayment(paymentData);
+      
+      // For demo purposes, simulate a payment success
+      // In a real implementation, this would interact with the open source
+      // payment processor's API or redirect to their payment page
+      
+      // Update the payment to completed status
+      await storage.updatePaymentStatus(payment.id, 'completed', new Date());
       
       return {
-        status: payments[0].status
+        id: transactionId,
+        status: 'completed'
       };
     } catch (error) {
-      console.error('Error checking payment status:', error);
-      throw new Error('Failed to check payment status');
+      console.error('Error processing open source payment:', error);
+      throw error;
     }
-  }
-
+  },
+  
   /**
-   * Verify a payment (mark it as successful)
+   * Verify an open source payment
    * 
-   * @param paymentId The payment ID
-   * @returns The updated payment
+   * @param transactionId The payment transaction ID to verify
+   * @returns The verification result
    */
-  async verifyPayment(paymentId: string): Promise<Payment | null> {
+  async verifyPayment(transactionId: string): Promise<{ 
+    verified: boolean; 
+    payment?: Payment 
+  }> {
     try {
-      // Find the payment in our database
-      const payments = await storage.getPaymentsByProviderPaymentId(paymentId);
+      // Retrieve the payment by its external transaction ID
+      const payments = await storage.getPaymentByExternalId(transactionId);
       
       if (!payments || payments.length === 0) {
-        throw new Error('Payment not found');
+        return { verified: false };
       }
       
       const payment = payments[0];
       
-      // Update the payment status
-      const updatedPayment = await storage.updatePaymentStatus(
-        payment.id,
-        'completed', // Changed from 'succeeded' to 'completed' for consistency with Stripe
-        new Date()
-      );
+      // If payment is completed, it's verified
+      const verified = payment.status === 'completed';
       
-      // If payment is completed and has a wallet ID, update wallet balance
-      if (payment.walletId) {
-        const wallet = await storage.getWallet(payment.walletId);
-        if (wallet) {
-          const amount = parseFloat(payment.amount);
-          const currentBalance = parseFloat(wallet.balance);
-          const newBalance = currentBalance + (amount / 100); // amount is in cents
-          await storage.updateWalletBalance(payment.walletId, newBalance.toString());
-        }
-      }
-      
-      return updatedPayment || null;
+      return {
+        verified,
+        payment
+      };
     } catch (error) {
-      console.error('Error verifying payment:', error);
-      throw new Error('Failed to verify payment');
+      console.error('Error verifying open source payment:', error);
+      throw error;
     }
-  }
-
+  },
+  
   /**
-   * Handle a webhook event from the payment processor
+   * Get supported open source funding platforms
    * 
-   * @param payload The webhook payload
-   * @param signature The webhook signature for verification
-   * @returns The updated payment or null
+   * @returns List of supported platforms with details
    */
-  async handleWebhookEvent(payload: string, signature: string): Promise<Payment | null> {
-    try {
-      // Normally we would verify the signature
-      // For this example, we'll just parse the payload
-      const data = JSON.parse(payload);
-      
-      // Check if this is a payment confirmation
-      if (data.type === 'payment.succeeded' && data.paymentId) {
-        return this.verifyPayment(data.paymentId);
+  async getSupportedPlatforms(): Promise<Array<{
+    id: string;
+    name: string;
+    description: string;
+    url: string;
+    logoUrl: string;
+  }>> {
+    // Return a list of supported open source funding platforms
+    return [
+      {
+        id: 'open_collective',
+        name: 'Open Collective',
+        description: 'Transparent funding for open source',
+        url: 'https://opencollective.com',
+        logoUrl: '/assets/logos/opencollective.svg'
+      },
+      {
+        id: 'github_sponsors',
+        name: 'GitHub Sponsors',
+        description: 'Financially support open source developers',
+        url: 'https://github.com/sponsors',
+        logoUrl: '/assets/logos/github-sponsors.svg'
+      },
+      {
+        id: 'liberapay',
+        name: 'Liberapay',
+        description: 'Recurrent donations platform',
+        url: 'https://liberapay.com',
+        logoUrl: '/assets/logos/liberapay.svg'
       }
-      
-      return null;
-    } catch (error) {
-      console.error('Error handling webhook event:', error);
-      throw new Error('Failed to handle webhook event');
-    }
+    ];
   }
-
-  /**
-   * Generate a unique payment ID
-   * 
-   * @returns A unique payment ID
-   */
-  private generatePaymentId(): string {
-    return `os_${crypto.randomBytes(16).toString('hex')}`;
-  }
-}
-
-export const openSourcePaymentService = new OpenSourcePaymentService();
+};

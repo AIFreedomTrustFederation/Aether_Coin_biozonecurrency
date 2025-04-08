@@ -80,6 +80,7 @@ export interface IStorage {
   getPayment(id: number): Promise<schema.Payment | undefined>;
   getPaymentsByUserId(userId: number): Promise<schema.Payment[]>;
   getPaymentsByProviderPaymentId(providerPaymentId: string): Promise<schema.Payment[]>;
+  getPaymentByExternalId(externalId: string): Promise<schema.Payment[]>;
   createPayment(payment: schema.InsertPayment): Promise<schema.Payment>;
   updatePaymentStatus(id: number, status: string, processedAt?: Date): Promise<schema.Payment | undefined>;
   

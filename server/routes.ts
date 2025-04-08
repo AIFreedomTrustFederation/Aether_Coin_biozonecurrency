@@ -28,6 +28,7 @@ import mysterionRoutes from "./routes/mysterion";
 import aiGuidanceRoutes from "./routes/ai-guidance";
 import aiTrainingRoutes from "./routes/ai-training-routes";
 import authRoutes from "./routes/auth-routes";
+import { registerQuantumSecurePaymentRoutes } from "./routes/quantum-secure-payment";
 import web3StorageRoutes from "./routes/web3-storage-routes";
 import domainHostingRoutes from "./routes/domain-hosting-routes";
 import recurveRoutes from "./routes/recurve-routes";
@@ -154,6 +155,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Mount AI Training Feedback routes
   app.use('/api/ai-training', aiTrainingRoutes);
+  
+  // Register quantum secure payment routes
+  registerQuantumSecurePaymentRoutes(app);
   
   // Whitepaper endpoint
   app.get("/api/whitepaper", (req: Request, res: Response) => {
