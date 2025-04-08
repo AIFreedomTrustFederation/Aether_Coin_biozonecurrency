@@ -1,0 +1,34 @@
+PS C:\Users\AI Freedom Trust\OneDrive\AI Freedom Trust\.venv\Aether_Coin_biozonecurrency\Aether_Coin_biozonecurrency> npm install concat-stream@2.0.0 --save-exact
+
+added 8 packages, removed 4 packages, changed 1 package, and audited 1604 packages in 13s
+
+230 packages are looking for funding
+  run `npm fund` for details
+
+26 vulnerabilities (10 moderate, 16 high)
+
+To address issues that do not require attention, run:
+  npm audit fix
+To address all issues possible (including breaking changes), run:
+
+a different dependency.
+Run `npm audit` for details.
+rency> # Set npm to avoid using Git for dependencies
+rency> npm config set git-tag-version false
+rency>
+rency> # Install packages without Git
+PS C:\Users\AI Freedom Trust\OneDrive\AI Freedom Trust\.venv\Aether_Coin_biozonecurrency\Aether_Coin_biozonecurrency> npm config set registry https://registry.npmjs.org/
+PS C:\Users\AI Freedom Trust\OneDrive\AI Freedom Trust\.venv\Aether_Coin_biozonecurrency\Aether_Coin_biozonecurrency>
+PS C:\Users\AI Freedom Trust\OneDrive\AI Freedom Trust\.venv\Aether_Coin_biozonecurrency\Aether_Coin_biozonecurrency> # Try a more targeted approach for fixing vulnerabilities
+PS C:\Users\AI Freedom Trust\OneDrive\AI Freedom Trust\.venv\Aether_Coin_biozonecurrency\Aether_Coin_biozonecurrency> npm audit fix --force --production
+npm warn config production Use `--omit=dev` instead.
+npm warn using --force Recommended protections disabled.
+npm warn audit Updating ipfs-http-client to 39.0.2, which is a SemVer major change.
+npm warn audit No fix available for @walletconnect/web3-provider@*
+npm warn audit No fix available for web3.storage@*
+npm error code 1
+npm error The git reference could not be found
+npm error command git --no-replace-objects checkout feat/smaller
+npm error error: pathspec 'feat/smaller' did not match any file(s) known to git
+npm error A complete log of this run can be found in: C:\Users\AI Freedom Trust\AppData\Local\npm-cache\_logs\2025-04-08T03_36_52_830Z-debug-0.log
+PS C:\Users\AI Freedom Trust\OneDrive\AI Freedom Trust\.venv\Aether_Coin_biozonecurrency\Aether_Coin_biozonecurrency>
