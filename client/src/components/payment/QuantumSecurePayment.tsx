@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Card,
   CardContent, 
@@ -36,6 +36,17 @@ const QuantumSecurePayment: React.FC<QuantumSecurePaymentProps> = ({ onPaymentCo
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [paymentDetails, setPaymentDetails] = useState<any>(null);
   const [verificationStatus, setVerificationStatus] = useState<any>(null);
+  
+  // Update currency when payment type changes to set appropriate defaults
+  useEffect(() => {
+    if (paymentType === 'fractalcoin') {
+      setCurrency('FRC');
+    } else if (paymentType === 'crypto' && !['ETH', 'BTC', 'USDT', 'USDC'].includes(currency)) {
+      setCurrency('ETH');
+    } else if ((paymentType === 'stripe' || paymentType === 'open-source') && !['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY'].includes(currency)) {
+      setCurrency('USD');
+    }
+  }, [paymentType]);
   
   const handleStripePayment = async () => {
     if (!amount || parseFloat(amount) <= 0) {
@@ -95,6 +106,157 @@ const QuantumSecurePayment: React.FC<QuantumSecurePaymentProps> = ({ onPaymentCo
       setPaymentDetails(simulatedResponse);
       setPaymentSuccess(true);
       toast({ title: 'Demo Payment', description: 'Simulated quantum secured payment successful' });
+      
+      if (onPaymentCompleted) {
+        onPaymentCompleted(simulatedResponse);
+      }
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+  
+  const handleCryptoPayment = async () => {
+    if (!amount || parseFloat(amount) <= 0) {
+      toast({ title: 'Invalid amount', description: 'Please enter a valid payment amount', variant: 'destructive' });
+      return;
+    }
+    
+    setIsProcessing(true);
+    try {
+      // Use demo wallet ID if no wallet is selected
+      const walletId = selectedWallet?.id || 'demo-wallet';
+      
+      const response = await apiRequest({
+        url: '/api/payments/quantum-secure/crypto',
+        method: 'POST',
+        data: {
+          amount,
+          currency,
+          description,
+          securityLevel,
+          walletId,
+          metadata: {
+            processor: 'crypto',
+            cryptoNetwork: currency === 'ETH' ? 'ethereum' : currency === 'BTC' ? 'bitcoin' : 'polygon',
+            userId: 1, // Demo user
+          }
+        }
+      });
+      
+      // If we're not connected to a real backend, create a simulated response
+      const result = response || {
+        transactionId: `tx_${Date.now()}`,
+        status: 'succeeded',
+        temporalEntanglementId: `te_${Date.now()}`,
+        quantumSignature: `qs_${Math.random().toString(36).substring(2, 15)}`,
+        securityLevel,
+        platform: currency === 'ETH' ? 'Ethereum' : currency === 'BTC' ? 'Bitcoin' : 'Polygon',
+        txHash: `0x${Math.random().toString(36).substring(2, 15)}${Math.random().toString(36).substring(2, 15)}`
+      };
+      
+      setPaymentDetails(result);
+      setPaymentSuccess(true);
+      toast({ title: 'Crypto Payment Processed', description: `Your quantum secured ${result.platform} payment was successful` });
+      
+      if (onPaymentCompleted) {
+        onPaymentCompleted(result);
+      }
+    } catch (error) {
+      console.error('Crypto payment processing error:', error);
+      
+      // Create a simulated success response for demonstration purposes
+      const simulatedResponse = {
+        transactionId: `tx_${Date.now()}`,
+        status: 'succeeded',
+        temporalEntanglementId: `te_${Date.now()}`,
+        quantumSignature: `qs_${Math.random().toString(36).substring(2, 15)}`,
+        securityLevel,
+        platform: currency === 'ETH' ? 'Ethereum' : currency === 'BTC' ? 'Bitcoin' : 'Polygon',
+        txHash: `0x${Math.random().toString(36).substring(2, 15)}${Math.random().toString(36).substring(2, 15)}`
+      };
+      
+      setPaymentDetails(simulatedResponse);
+      setPaymentSuccess(true);
+      toast({ title: 'Demo Crypto Payment', description: `Simulated quantum secured ${simulatedResponse.platform} payment successful` });
+      
+      if (onPaymentCompleted) {
+        onPaymentCompleted(simulatedResponse);
+      }
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+  
+  const handleFractalCoinPayment = async () => {
+    if (!amount || parseFloat(amount) <= 0) {
+      toast({ title: 'Invalid amount', description: 'Please enter a valid payment amount', variant: 'destructive' });
+      return;
+    }
+    
+    setIsProcessing(true);
+    try {
+      // Use demo wallet ID if no wallet is selected
+      const walletId = selectedWallet?.id || 'demo-wallet';
+      
+      const response = await apiRequest({
+        url: '/api/payments/quantum-secure/fractalcoin',
+        method: 'POST',
+        data: {
+          amount,
+          currency: 'FRC', // Always use FractalCoin currency code
+          description,
+          securityLevel,
+          walletId,
+          metadata: {
+            processor: 'fractalcoin',
+            recurveFactors: {
+              depth: securityLevel === 'quantum' ? 3 : securityLevel === 'enhanced' ? 2 : 1,
+              entanglementFactor: securityLevel === 'quantum' ? 0.95 : securityLevel === 'enhanced' ? 0.75 : 0.5,
+            },
+            userId: 1, // Demo user
+          }
+        }
+      });
+      
+      // If we're not connected to a real backend, create a simulated response
+      const result = response || {
+        transactionId: `frc_${Date.now()}`,
+        status: 'succeeded',
+        temporalEntanglementId: `te_${Date.now()}`,
+        quantumSignature: `qs_${Math.random().toString(36).substring(2, 15)}`,
+        securityLevel,
+        platform: 'FractalCoin',
+        txHash: `0x${Math.random().toString(36).substring(2, 15)}${Math.random().toString(36).substring(2, 15)}`,
+        recurveDepth: securityLevel === 'quantum' ? 3 : securityLevel === 'enhanced' ? 2 : 1,
+        mandelbrotFactor: Math.random().toFixed(4)
+      };
+      
+      setPaymentDetails(result);
+      setPaymentSuccess(true);
+      toast({ title: 'FractalCoin Payment Processed', description: `Your quantum secured FractalCoin payment was successful with recurve depth ${result.recurveDepth}` });
+      
+      if (onPaymentCompleted) {
+        onPaymentCompleted(result);
+      }
+    } catch (error) {
+      console.error('FractalCoin payment processing error:', error);
+      
+      // Create a simulated success response for demonstration purposes
+      const simulatedResponse = {
+        transactionId: `frc_${Date.now()}`,
+        status: 'succeeded',
+        temporalEntanglementId: `te_${Date.now()}`,
+        quantumSignature: `qs_${Math.random().toString(36).substring(2, 15)}`,
+        securityLevel,
+        platform: 'FractalCoin',
+        txHash: `0x${Math.random().toString(36).substring(2, 15)}${Math.random().toString(36).substring(2, 15)}`,
+        recurveDepth: securityLevel === 'quantum' ? 3 : securityLevel === 'enhanced' ? 2 : 1,
+        mandelbrotFactor: Math.random().toFixed(4)
+      };
+      
+      setPaymentDetails(simulatedResponse);
+      setPaymentSuccess(true);
+      toast({ title: 'Demo FractalCoin Payment', description: `Simulated quantum secured FractalCoin payment successful with recurve depth ${simulatedResponse.recurveDepth}` });
       
       if (onPaymentCompleted) {
         onPaymentCompleted(simulatedResponse);
@@ -303,14 +465,26 @@ const QuantumSecurePayment: React.FC<QuantumSecurePaymentProps> = ({ onPaymentCo
               <SelectValue placeholder="Currency" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="USD">USD</SelectItem>
-              <SelectItem value="EUR">EUR</SelectItem>
-              <SelectItem value="GBP">GBP</SelectItem>
-              <SelectItem value="CAD">CAD</SelectItem>
-              <SelectItem value="AUD">AUD</SelectItem>
-              <SelectItem value="JPY">JPY</SelectItem>
-              <SelectItem value="ETH">ETH</SelectItem>
-              <SelectItem value="BTC">BTC</SelectItem>
+              {paymentType === 'stripe' || paymentType === 'open-source' ? (
+                <>
+                  <SelectItem value="USD">USD</SelectItem>
+                  <SelectItem value="EUR">EUR</SelectItem>
+                  <SelectItem value="GBP">GBP</SelectItem>
+                  <SelectItem value="CAD">CAD</SelectItem>
+                  <SelectItem value="AUD">AUD</SelectItem>
+                  <SelectItem value="JPY">JPY</SelectItem>
+                </>
+              ) : paymentType === 'crypto' ? (
+                <>
+                  <SelectItem value="ETH">ETH (Ethereum)</SelectItem>
+                  <SelectItem value="BTC">BTC (Bitcoin)</SelectItem>
+                  <SelectItem value="USDT">USDT (Tether)</SelectItem>
+                  <SelectItem value="USDC">USDC (USD Coin)</SelectItem>
+                  <SelectItem value="MATIC">MATIC (Polygon)</SelectItem>
+                </>
+              ) : (
+                <SelectItem value="FRC">FRC (FractalCoin)</SelectItem>
+              )}
             </SelectContent>
           </Select>
         </div>
@@ -331,7 +505,7 @@ const QuantumSecurePayment: React.FC<QuantumSecurePaymentProps> = ({ onPaymentCo
         <Select 
           value={selectedWallet?.id.toString() || ''} 
           onValueChange={(val) => {
-            const wallet = wallets.find(w => w.id.toString() === val);
+            const wallet = wallets.find((w: Wallet) => w.id.toString() === val);
             if (wallet) setSelectedWallet(wallet);
           }}
         >
@@ -386,11 +560,33 @@ const QuantumSecurePayment: React.FC<QuantumSecurePaymentProps> = ({ onPaymentCo
       
       <div className="pt-4">
         <Button 
-          onClick={paymentType === 'stripe' ? handleStripePayment : handleOpenSourcePayment} 
+          onClick={() => {
+            switch(paymentType) {
+              case 'stripe':
+                handleStripePayment();
+                break;
+              case 'open-source':
+                handleOpenSourcePayment();
+                break;
+              case 'crypto':
+                handleCryptoPayment();
+                break;
+              case 'fractalcoin':
+                handleFractalCoinPayment();
+                break;
+              default:
+                handleStripePayment();
+            }
+          }} 
           disabled={isProcessing || !amount}
           className="w-full"
         >
-          {isProcessing ? 'Processing...' : 'Process Quantum Secured Payment'}
+          {isProcessing ? 'Processing...' : `Process Quantum Secured ${
+            paymentType === 'stripe' ? 'Card Payment' : 
+            paymentType === 'open-source' ? 'Open Source Payment' : 
+            paymentType === 'crypto' ? 'Crypto Payment' : 
+            'FractalCoin Payment'
+          }`}
         </Button>
       </div>
     </div>
@@ -409,15 +605,34 @@ const QuantumSecurePayment: React.FC<QuantumSecurePaymentProps> = ({ onPaymentCo
       <div className="rounded-md bg-slate-50 p-4 border border-slate-200">
         <h4 className="font-medium mb-2">Payment Details</h4>
         <ul className="space-y-1 text-sm">
-          <li><span className="font-medium">Amount:</span> {amount} {currency}</li>
+          <li><span className="font-medium">Amount:</span> {amount} {paymentType === 'fractalcoin' ? 'FRC' : currency}</li>
           <li><span className="font-medium">Security Level:</span> {securityLevel}</li>
           <li><span className="font-medium">Temporal Entanglement ID:</span> {paymentDetails?.temporalEntanglementId?.substring(0, 12)}...</li>
-          <li><span className="font-medium">Payment Type:</span> {paymentType === 'stripe' ? 'Credit Card' : 'Open Source'}</li>
+          <li>
+            <span className="font-medium">Payment Type:</span> {
+              paymentType === 'stripe' ? 'Credit Card' : 
+              paymentType === 'open-source' ? 'Open Source' :
+              paymentType === 'crypto' ? paymentDetails?.platform || 'Cryptocurrency' :
+              'FractalCoin'
+            }
+          </li>
           {paymentDetails?.paymentIntentId && (
             <li><span className="font-medium">Payment ID:</span> {paymentDetails.paymentIntentId.substring(0, 12)}...</li>
           )}
           {paymentDetails?.transactionId && (
             <li><span className="font-medium">Transaction ID:</span> {paymentDetails.transactionId.substring(0, 12)}...</li>
+          )}
+          {paymentDetails?.txHash && (
+            <li><span className="font-medium">Transaction Hash:</span> {paymentDetails.txHash.substring(0, 16)}...</li>
+          )}
+          {paymentDetails?.recurveDepth && (
+            <li><span className="font-medium">Recurve Depth:</span> {paymentDetails.recurveDepth}</li>
+          )}
+          {paymentDetails?.mandelbrotFactor && (
+            <li><span className="font-medium">Mandelbrot Factor:</span> {paymentDetails.mandelbrotFactor}</li>
+          )}
+          {paymentDetails?.quantumSignature && (
+            <li><span className="font-medium">Quantum Signature:</span> {paymentDetails.quantumSignature.substring(0, 10)}...</li>
           )}
         </ul>
       </div>
@@ -453,14 +668,22 @@ const QuantumSecurePayment: React.FC<QuantumSecurePaymentProps> = ({ onPaymentCo
       </CardHeader>
       <CardContent>
         <Tabs defaultValue={paymentType} onValueChange={(val) => setPaymentType(val)}>
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="stripe">Stripe Payment</TabsTrigger>
             <TabsTrigger value="open-source">Open Source</TabsTrigger>
+            <TabsTrigger value="crypto">Crypto</TabsTrigger>
+            <TabsTrigger value="fractalcoin">FractalCoin</TabsTrigger>
           </TabsList>
           <TabsContent value="stripe" className="space-y-4 mt-4">
             {paymentSuccess ? renderPaymentSuccess() : renderPaymentForm()}
           </TabsContent>
           <TabsContent value="open-source" className="space-y-4 mt-4">
+            {paymentSuccess ? renderPaymentSuccess() : renderPaymentForm()}
+          </TabsContent>
+          <TabsContent value="crypto" className="space-y-4 mt-4">
+            {paymentSuccess ? renderPaymentSuccess() : renderPaymentForm()}
+          </TabsContent>
+          <TabsContent value="fractalcoin" className="space-y-4 mt-4">
             {paymentSuccess ? renderPaymentSuccess() : renderPaymentForm()}
           </TabsContent>
         </Tabs>
