@@ -16,10 +16,11 @@
  * $ node fix-git-conflicts.js
  */
 
-const { execSync } = require('child_process');
-const readline = require('readline');
-const fs = require('fs');
-const path = require('path');
+import { execSync } from 'child_process';
+import readline from 'readline';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 const rl = readline.createInterface({
   input: process.stdin,

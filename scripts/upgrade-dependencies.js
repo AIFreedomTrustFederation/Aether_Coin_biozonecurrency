@@ -18,10 +18,11 @@
  * $ node upgrade-dependencies.js
  */
 
-const { execSync } = require('child_process');
-const fs = require('fs');
-const path = require('path');
-const readline = require('readline');
+import { execSync } from 'child_process';
+import fs from 'fs';
+import path from 'path';
+import readline from 'readline';
+import { fileURLToPath } from 'url';
 
 const rl = readline.createInterface({
   input: process.stdin,
