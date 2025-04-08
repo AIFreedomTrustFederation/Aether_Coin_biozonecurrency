@@ -86,7 +86,7 @@ const MOBILE_WALLETS: Omit<DetectedWallet, 'installed'>[] = [
     id: 'aetherion',
     icon: 'aetherion',
     deepLink: 'aetherion://',
-    download: '/download',
+    download: '/wallet/download',
     forceCheck: true  // Always check the native Aetherion wallet
   }
 ];
@@ -101,6 +101,7 @@ export function isMobileDevice(): boolean {
 /**
  * Check if a specific mobile wallet is installed by testing its deep link
  * Uses a more reliable detection method that doesn't redirect users
+ * Prioritizes Aetherion native provider
  */
 export async function isWalletInstalled(deepLink: string): Promise<boolean> {
   // Improved detection logic - uses multiple methods
@@ -109,88 +110,126 @@ export async function isWalletInstalled(deepLink: string): Promise<boolean> {
     const providers = detectProvidersFromWindow();
     const walletId = deepLink.split('://')[0];
     
-    // If we already detected via window provider, return true
-    if (walletId === 'metamask' && providers.metamask) {
-      return resolve(true);
-    }
-    if (walletId === 'trust' && providers.trustwallet) {
-      return resolve(true);
-    }
-    if (walletId === 'cbwallet' && providers.coinbasewallet) {
-      return resolve(true);
-    }
-    if (walletId === 'rainbow' && providers.rainbow) {
+    // First check for Aetherion (our primary wallet)
+    if (walletId === 'aetherion' && window.aetherion) {
       return resolve(true);
     }
     
-    // Setup timeout for the hidden iframe method
-    const timeout = setTimeout(() => {
-      resolve(false);
-    }, 300); // Shorter timeout for better UX
+    // If we're checking for Aetherion but don't have window.aetherion,
+    // check if our interface is ready to load it
+    if (walletId === 'aetherion' && typeof window !== 'undefined') {
+      // This will attempt to initialize window.aetherion if possible
+      // by loading the AetherionProvider module
+      import('../core/blockchain/AetherionProvider')
+        .then(() => {
+          if (window.aetherion) {
+            return resolve(true);
+          }
+          // Continue with other methods if import didn't set window.aetherion
+          checkOtherProviders();
+        })
+        .catch(() => {
+          // Continue with other methods if import failed
+          checkOtherProviders();
+        });
+      return;
+    }
     
-    try {
-      // Modern approach: use hidden iframe but detect focus change
-      // This prevents automatic redirects
-      const initialFocus = document.hasFocus();
+    // Check other providers if not checking for Aetherion
+    checkOtherProviders();
+    
+    function checkOtherProviders() {
+      // Legacy checks for other wallet providers
+      if (walletId === 'metamask' && providers.metamask) {
+        return resolve(true);
+      }
+      if (walletId === 'trust' && providers.trustwallet) {
+        return resolve(true);
+      }
+      if (walletId === 'cbwallet' && providers.coinbasewallet) {
+        return resolve(true);
+      }
+      if (walletId === 'rainbow' && providers.rainbow) {
+        return resolve(true);
+      }
+      if (walletId === 'aetherion' && providers.aetherion) {
+        return resolve(true);
+      }
       
-      // Create a hidden iframe
-      const iframe = document.createElement('iframe');
-      iframe.style.display = 'none';
-      document.body.appendChild(iframe);
-      
-      // Remove iframe when done
-      const cleanupIframe = () => {
-        if (document.body.contains(iframe)) {
-          document.body.removeChild(iframe);
-        }
-      };
-      
-      // Listen for focus changes
-      const checkFocus = () => {
-        if (initialFocus && !document.hasFocus()) {
-          // Focus changed, indicating app switching - likely wallet is installed
-          clearTimeout(timeout);
-          cleanupIframe();
-          resolve(true);
-          return true;
-        }
-        return false;
-      };
-      
-      // Set brief interval to check focus
-      const focusInterval = setInterval(() => {
-        if (checkFocus()) {
-          clearInterval(focusInterval);
-        }
-      }, 50);
-      
-      // Set timeout to clear interval
-      setTimeout(() => {
-        clearInterval(focusInterval);
-      }, 300);
-      
-      // Handle iframe events
-      iframe.onload = () => {
-        if (!checkFocus()) {
-          clearTimeout(timeout);
-          cleanupIframe();
-          resolve(true);
-        }
-      };
-      
-      iframe.onerror = () => {
-        clearTimeout(timeout);
-        cleanupIframe();
-        clearInterval(focusInterval);
+      // Fallback to deep link detection
+      attemptDeepLinkDetection();
+    }
+    
+    function attemptDeepLinkDetection() {
+      // Setup timeout for the hidden iframe method
+      const timeout = setTimeout(() => {
         resolve(false);
-      };
+      }, 300); // Shorter timeout for better UX
       
-      // Try loading the deep link in the iframe
-      iframe.src = deepLink;
-    } catch (error) {
-      console.error("Error detecting wallet:", error);
-      clearTimeout(timeout);
-      resolve(false);
+      try {
+        // Modern approach: use hidden iframe but detect focus change
+        // This prevents automatic redirects
+        const initialFocus = document.hasFocus();
+        
+        // Create a hidden iframe
+        const iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        document.body.appendChild(iframe);
+        
+        // Remove iframe when done
+        const cleanupIframe = () => {
+          if (document.body.contains(iframe)) {
+            document.body.removeChild(iframe);
+          }
+        };
+        
+        // Listen for focus changes
+        const checkFocus = () => {
+          if (initialFocus && !document.hasFocus()) {
+            // Focus changed, indicating app switching - likely wallet is installed
+            clearTimeout(timeout);
+            cleanupIframe();
+            resolve(true);
+            return true;
+          }
+          return false;
+        };
+        
+        // Set brief interval to check focus
+        const focusInterval = setInterval(() => {
+          if (checkFocus()) {
+            clearInterval(focusInterval);
+          }
+        }, 50);
+        
+        // Set timeout to clear interval
+        setTimeout(() => {
+          clearInterval(focusInterval);
+        }, 300);
+        
+        // Handle iframe events
+        iframe.onload = () => {
+          if (!checkFocus()) {
+            clearTimeout(timeout);
+            cleanupIframe();
+            resolve(true);
+          }
+        };
+        
+        iframe.onerror = () => {
+          clearTimeout(timeout);
+          cleanupIframe();
+          clearInterval(focusInterval);
+          resolve(false);
+        };
+        
+        // Try loading the deep link in the iframe
+        iframe.src = deepLink;
+      } catch (error) {
+        console.error("Error detecting wallet:", error);
+        clearTimeout(timeout);
+        resolve(false);
+      }
     }
   });
 }
@@ -202,43 +241,66 @@ export async function isWalletInstalled(deepLink: string): Promise<boolean> {
 export function detectProvidersFromWindow(): { [key: string]: boolean } {
   const providers: { [key: string]: boolean } = {};
   
-  if (typeof window !== 'undefined' && window.ethereum) {
-    // Get the ethereum object safely
-    const ethereum = window.ethereum as any;
+  // Initialize all providers as false
+  providers.metamask = false;
+  providers.trustwallet = false;
+  providers.coinbasewallet = false;
+  providers.rainbow = false;
+  providers.aetherion = false;
+  providers.generic = false;
+  
+  if (typeof window !== 'undefined') {
+    // Check for native Aetherion provider first (our preferred provider)
+    if (window.aetherion) {
+      providers.aetherion = true;
+      providers.generic = true;
+      return providers; // If we have our native provider, return immediately
+    }
     
-    // Check for MetaMask
-    providers.metamask = !!ethereum.isMetaMask;
-    
-    // Check for Trust Wallet - use multiple detection methods
-    providers.trustwallet = 
-      !!ethereum.isTrust || 
-      !!ethereum.isTrustWallet ||
-      (typeof ethereum.providerMap === 'object' && 
-        ethereum.providerMap?.has('trust') ||
-        false);
-    
-    // Check for Coinbase Wallet
-    providers.coinbasewallet = !!ethereum.isCoinbaseWallet;
-    
-    // Check for Rainbow using multiple detection strategies
-    providers.rainbow = !!(
-      ethereum.isRainbow || 
-      (window as any).rainbow !== undefined || 
-      ethereum._events?.accountsChanged?.some((fn: any) => 
-        fn.toString().includes('rainbow')
-      ) ||
-      false
-    );
-    
-    // Generic check for any Web3 provider
-    providers.generic = true;
-  } else {
-    // No ethereum provider found
-    providers.metamask = false;
-    providers.trustwallet = false;
-    providers.coinbasewallet = false;
-    providers.rainbow = false;
-    providers.generic = false;
+    // Legacy check for Ethereum providers (for compatibility with MetaMask, etc.)
+    // This is used as a fallback when native Aetherion provider is not available
+    if (window.ethereum) {
+      // Get the ethereum object safely
+      const ethereum = window.ethereum as any;
+      
+      // Check for MetaMask
+      providers.metamask = !!ethereum.isMetaMask;
+      
+      // Check for Trust Wallet - use multiple detection methods
+      providers.trustwallet = 
+        !!ethereum.isTrust || 
+        !!ethereum.isTrustWallet ||
+        (typeof ethereum.providerMap === 'object' && 
+          ethereum.providerMap?.has('trust') ||
+          false);
+      
+      // Check for Coinbase Wallet
+      providers.coinbasewallet = !!ethereum.isCoinbaseWallet;
+      
+      // Check for Rainbow using multiple detection strategies
+      providers.rainbow = !!(
+        ethereum.isRainbow || 
+        (window as any).rainbow !== undefined || 
+        ethereum._events?.accountsChanged?.some((fn: any) => 
+          fn.toString().includes('rainbow')
+        ) ||
+        false
+      );
+      
+      // Check for Aetherion integration with legacy Ethereum provider
+      providers.aetherion = !!(
+        ethereum.isAetherion || 
+        ethereum.isATC ||
+        ethereum._events?.accountsChanged?.some((fn: any) => 
+          fn.toString().includes('aetherion') || fn.toString().includes('atc')
+        ) ||
+        ethereum.chainId === '0xa37' || // Aetherion mainnet Chain ID
+        false
+      );
+      
+      // Generic check for any Web3 provider
+      providers.generic = true;
+    }
   }
   
   return providers;
@@ -267,6 +329,7 @@ export async function detectMobileWallets(): Promise<DetectedWallet[]> {
   if (windowProviders.trustwallet) detectedWalletIds.add('trust');
   if (windowProviders.coinbasewallet) detectedWalletIds.add('coinbase');
   if (windowProviders.rainbow) detectedWalletIds.add('rainbow');
+  if (windowProviders.aetherion) detectedWalletIds.add('aetherion');
   
   // For each wallet, check if it's installed
   const walletPromises = MOBILE_WALLETS.map(async (wallet) => {

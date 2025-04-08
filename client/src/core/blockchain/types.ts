@@ -73,6 +73,17 @@ export enum BlockchainNetworkType {
 }
 
 /**
+ * Mining algorithm types for Aetherion blockchain
+ */
+export enum MiningAlgorithm {
+  MANDELBROT_FIBONACCI = 'mandelbrot-fibonacci',
+  QUANTUM_RESISTANT_PROOF_OF_WORK = 'quantum-resistant-pow',
+  RECURVE_FRACTAL = 'recurve-fractal',
+  TOROIDAL_WAVE = 'toroidal-wave',
+  BIOZOE_CONSENSUS = 'biozoe-consensus'
+}
+
+/**
  * Blockchain listener type
  */
 export type BlockchainEventListener = (data: any) => void;
