@@ -1,5 +1,6 @@
 import React from 'react';
-import { Helmet } from 'react-helmet-async';
+// Temporarily removed react-helmet-async import to fix build error
+// import { Helmet } from 'react-helmet-async';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
@@ -7,11 +8,18 @@ import { FileDown, Github, ExternalLink } from 'lucide-react';
 import { Link } from 'wouter';
 
 const AboutPage: React.FC = () => {
+  // Set document title directly as a temporary solution
+  React.useEffect(() => {
+    document.title = "About Aetherion | FractalCoin";
+  }, []);
+  
   return (
     <div className="container mx-auto py-8 px-4 max-w-5xl">
+      {/* Temporarily removed Helmet component
       <Helmet>
         <title>About Aetherion | FractalCoin</title>
       </Helmet>
+      */}
 
       <Card className="mb-6">
         <CardHeader>
