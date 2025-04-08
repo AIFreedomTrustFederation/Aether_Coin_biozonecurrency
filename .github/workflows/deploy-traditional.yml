@@ -17,10 +17,15 @@ jobs:
       - run: npm ci
       - run: npm run build
       
+      # Build server-redirect.js with ESM support
+      - name: Build server-redirect
+        run: |
+          npx esbuild server-redirect.js --platform=node --packages=external --bundle --format=esm --outfile=dist/server-redirect.js
+      
       # Create necessary deployment files
       - name: Prepare deployment package
         run: |
-          tar -czf deploy-package.tar.gz dist server-redirect.js package.json
+          tar -czf deploy-package.tar.gz dist package.json
       
       # Set up SSH key from secrets
       - name: Set up SSH key
@@ -38,6 +43,8 @@ jobs:
             mkdir -p ~/aetherion
             tar -xzf deploy-package.tar.gz -C ~/aetherion
             cd ~/aetherion
+            # Ensure the server-redirect.js file is executable
+            chmod +x dist/server-redirect.js
             
             # Install production dependencies
             npm install --production
@@ -54,7 +61,7 @@ jobs:
           Type=simple
           User=$USER
           WorkingDirectory=$HOME/aetherion
-          ExecStart=/usr/bin/node $HOME/aetherion/server-redirect.js
+          ExecStart=/usr/bin/node $HOME/aetherion/dist/server-redirect.js
           Restart=on-failure
           Environment=PORT=3000
           Environment=NODE_ENV=production

@@ -1,0 +1,18 @@
+/* Animation styles for the typing indicator */
+.typingDot1 {
+  animation-delay: 0ms;
+}
+
+.typingDot2 {
+  animation-delay: 150ms;
+}
+
+.typingDot3 {
+  animation-delay: 300ms;
+}
+
+/* Container positioning */
+.aiAssistantContainer {
+  position: fixed;
+  z-index: 50;
+}

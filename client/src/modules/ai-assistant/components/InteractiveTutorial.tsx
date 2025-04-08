@@ -6,8 +6,87 @@ import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChevronRight, ChevronLeft, Play, Pause, Volume2, VolumeX, X } from "lucide-react";
 
+// Define interaction types
+type BaseInteraction = {
+  type: string;
+  instruction: string;
+};
+
+type ClickInteraction = BaseInteraction & {
+  type: 'click';
+  element: string;
+};
+
+type SelectInteraction = BaseInteraction & {
+  type: 'select';
+  options: string[];
+};
+
+type SliderInteraction = BaseInteraction & {
+  type: 'slider';
+  min: number;
+  max: number;
+  step?: number;
+  defaultValue?: number;
+  id: string;
+};
+
+type InputInteraction = BaseInteraction & {
+  type: 'input';
+  fields: { id: string; label: string }[];
+};
+
+type TextareaInteraction = BaseInteraction & {
+  type: 'textarea';
+  id: string;
+  placeholder?: string;
+};
+
+type ToggleInteraction = BaseInteraction & {
+  type: 'toggle';
+  id: string;
+  label: string;
+};
+
+type HoverInteraction = BaseInteraction & {
+  type: 'hover';
+  elements: string[];
+};
+
+type DragInteraction = BaseInteraction & {
+  type: 'drag';
+  elements: string[];
+  targets: string[];
+};
+
+type Interaction = 
+  | ClickInteraction
+  | SelectInteraction
+  | SliderInteraction
+  | InputInteraction
+  | TextareaInteraction
+  | ToggleInteraction
+  | HoverInteraction
+  | DragInteraction;
+
+// Define tutorial section types
+type TutorialStep = {
+  title: string;
+  content: string;
+  audioSrc: string;
+  image: string;
+  interactions: Interaction[];
+};
+
+type TutorialSection = {
+  id: string;
+  title: string;
+  description: string;
+  steps: TutorialStep[];
+};
+
 // Tutorial content by section
-const tutorialSections = [
+const tutorialSections: TutorialSection[] = [
   {
     id: "getting-started",
     title: "Getting Started",
@@ -454,12 +533,14 @@ const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
                                   </Button>
                                 )}
                                 
-                                {interaction.type === 'select' && (
+                                {interaction.type === 'select' && 'options' in interaction && (
                                   <div className="space-y-2">
-                                    <p className="text-sm">{interaction.instruction}</p>
+                                    <label htmlFor="tutorial-select" className="text-sm">{interaction.instruction}</label>
                                     <select 
+                                      id="tutorial-select"
                                       className="w-full p-2 border rounded"
                                       onChange={() => handleInteraction('select')}
+                                      aria-label={interaction.instruction}
                                     >
                                       <option value="">-- Select an option --</option>
                                       {interaction.options.map(option => (
@@ -471,20 +552,22 @@ const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
                                 
                                 {interaction.type === 'slider' && (
                                   <div className="space-y-2">
-                                    <p className="text-sm">{interaction.instruction}</p>
+                                    <label htmlFor={interaction.id} className="text-sm">{interaction.instruction}</label>
                                     <input 
+                                      id={interaction.id}
                                       type="range" 
                                       min={interaction.min} 
                                       max={interaction.max} 
-                                      step={interaction.step}
-                                      defaultValue={interaction.defaultValue}
+                                      step={interaction.step || 1}
+                                      defaultValue={interaction.defaultValue || interaction.min}
+                                      aria-label={interaction.instruction}
                                       className="w-full"
                                       onChange={() => handleInteraction('slider')}
                                     />
                                   </div>
                                 )}
                                 
-                                {interaction.type === 'input' && (
+                                {interaction.type === 'input' && 'fields' in interaction && (
                                   <div className="space-y-3">
                                     <p className="text-sm">{interaction.instruction}</p>
                                     {interaction.fields.map(field => (
@@ -503,19 +586,19 @@ const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
                                   </div>
                                 )}
                                 
-                                {interaction.type === 'textarea' && (
+                                {interaction.type === 'textarea' && 'id' in interaction && (
                                   <div className="space-y-2">
                                     <p className="text-sm">{interaction.instruction}</p>
                                     <textarea 
                                       id={interaction.id}
-                                      placeholder={interaction.placeholder}
+                                      placeholder={'placeholder' in interaction ? interaction.placeholder : ''}
                                       className="w-full p-2 border rounded h-24"
                                       onChange={() => handleInteraction('textarea')}
                                     />
                                   </div>
                                 )}
                                 
-                                {interaction.type === 'toggle' && (
+                                {interaction.type === 'toggle' && 'id' in interaction && 'label' in interaction && (
                                   <div className="flex items-center space-x-2">
                                     <input 
                                       type="checkbox" 
@@ -526,6 +609,54 @@ const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
                                     <label htmlFor={interaction.id} className="text-sm">
                                       {interaction.label}
                                     </label>
+                                  </div>
+                                )}
+                                
+                                {interaction.type === 'hover' && 'elements' in interaction && (
+                                  <div className="space-y-2">
+                                    <p className="text-sm">{interaction.instruction}</p>
+                                    <div className="flex flex-wrap gap-2">
+                                      {interaction.elements.map((element, i) => (
+                                        <div 
+                                          key={i}
+                                          className="p-2 border rounded bg-muted/30 hover:bg-primary/10 cursor-pointer transition-colors"
+                                          onMouseEnter={() => handleInteraction('hover')}
+                                        >
+                                          {element.replace('#', '')}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                                
+                                {interaction.type === 'drag' && 'elements' in interaction && 'targets' in interaction && (
+                                  <div className="space-y-2">
+                                    <p className="text-sm">{interaction.instruction}</p>
+                                    <div className="grid grid-cols-2 gap-4">
+                                      <div className="space-y-2">
+                                        <p className="text-xs font-medium">Elements</p>
+                                        {interaction.elements.map((element, i) => (
+                                          <div 
+                                            key={i}
+                                            className="p-2 border rounded bg-muted/30 cursor-grab"
+                                            onClick={() => handleInteraction('drag')}
+                                          >
+                                            {element.replace('#', '')}
+                                          </div>
+                                        ))}
+                                      </div>
+                                      <div className="space-y-2">
+                                        <p className="text-xs font-medium">Targets</p>
+                                        {interaction.targets.map((target, i) => (
+                                          <div 
+                                            key={i}
+                                            className="p-2 border border-dashed rounded bg-muted/10"
+                                          >
+                                            {target.replace('#', '')}
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
                                   </div>
                                 )}
                               </div>

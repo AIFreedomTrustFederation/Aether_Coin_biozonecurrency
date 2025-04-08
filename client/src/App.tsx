@@ -2,7 +2,8 @@ import React, { useState, useEffect, lazy, Suspense, startTransition } from "rea
 import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { HelmetProvider } from "react-helmet-async";
+// Temporarily removed react-helmet-async import to fix build error
+// import { HelmetProvider } from "react-helmet-async";
 import { Toaster } from "@/components/ui/toaster";
 import { LiveModeProvider } from "./contexts/LiveModeContext";
 import { LiveModeIndicator } from "@/components/ui/LiveModeIndicator";
@@ -464,7 +465,8 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <LiveModeProvider>
-          <HelmetProvider>
+          {/* Temporarily removed HelmetProvider to fix build error */}
+          {/* <HelmetProvider> */}
             {/* Add resource hints for faster page loading */}
             <ResourceHints />
           <div className={`app-container w-full h-full ${isMobile ? 'pb-16' : ''}`}>
@@ -751,7 +753,7 @@ function App() {
           </div>
         )}
       </div>
-          </HelmetProvider>
+          {/* </HelmetProvider> */}
         </LiveModeProvider>
       </AuthProvider>
     </QueryClientProvider>

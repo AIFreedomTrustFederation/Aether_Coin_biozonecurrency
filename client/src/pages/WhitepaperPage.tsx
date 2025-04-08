@@ -227,7 +227,7 @@ const WhitepaperPage: React.FC = () => {
                         <span>75%</span>
                       </div>
                       <div className="w-full bg-muted-foreground/20 rounded-full h-2.5">
-                        <div className="bg-primary h-2.5 rounded-full" style={{ width: '75%' }}></div>
+                        <div className="bg-primary h-2.5 rounded-full progress-width-75"></div>
                       </div>
                     </div>
                     <div>
@@ -236,7 +236,7 @@ const WhitepaperPage: React.FC = () => {
                         <span>62%</span>
                       </div>
                       <div className="w-full bg-muted-foreground/20 rounded-full h-2.5">
-                        <div className="bg-primary h-2.5 rounded-full" style={{ width: '62%' }}></div>
+                        <div className="bg-primary h-2.5 rounded-full progress-width-62"></div>
                       </div>
                     </div>
                     <div>
@@ -245,7 +245,7 @@ const WhitepaperPage: React.FC = () => {
                         <span>89%</span>
                       </div>
                       <div className="w-full bg-muted-foreground/20 rounded-full h-2.5">
-                        <div className="bg-primary h-2.5 rounded-full" style={{ width: '89%' }}></div>
+                        <div className="bg-primary h-2.5 rounded-full progress-width-89"></div>
                       </div>
                     </div>
                   </div>

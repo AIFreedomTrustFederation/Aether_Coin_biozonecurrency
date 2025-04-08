@@ -355,8 +355,8 @@ export default function MobileFeatureDemo() {
                       </div>
                       <div className="w-full bg-muted rounded-full h-2 mb-3">
                         <div 
-                          className="bg-primary h-2 rounded-full" 
-                          style={{ width: `${miningStats.hashRatePercent}%` }}
+                          className="bg-primary h-2 rounded-full progress-bar" 
+                          style={{ '--progress-width': `${miningStats.hashRatePercent}%` } as React.CSSProperties}
                         ></div>
                       </div>
                       
@@ -366,8 +366,8 @@ export default function MobileFeatureDemo() {
                       </div>
                       <div className="w-full bg-muted rounded-full h-2">
                         <div 
-                          className="bg-primary h-2 rounded-full" 
-                          style={{ width: `${miningStats.earningsPercent}%` }}
+                          className="bg-primary h-2 rounded-full progress-bar" 
+                          style={{ '--progress-width': `${miningStats.earningsPercent}%` } as React.CSSProperties}
                         ></div>
                       </div>
                     </div>

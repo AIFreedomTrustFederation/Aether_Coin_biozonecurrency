@@ -379,7 +379,7 @@ const ICOPage: React.FC = () => {
                     <span className="font-medium">42%</span>
                   </div>
                   <div className="w-full bg-muted rounded-full h-2.5">
-                    <div className="bg-primary h-2.5 rounded-full" style={{ width: '42%' }}></div>
+                    <div className="bg-primary h-2.5 rounded-full progress-width-42"></div>
                   </div>
                 </div>
                 
