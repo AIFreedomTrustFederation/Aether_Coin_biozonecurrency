@@ -2,6 +2,7 @@ import React, { useState, useEffect, lazy, Suspense, startTransition } from "rea
 import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
+import { HelmetProvider } from "react-helmet-async";
 import { Toaster } from "@/components/ui/toaster";
 import { LiveModeProvider } from "./contexts/LiveModeContext";
 import { LiveModeIndicator } from "@/components/ui/LiveModeIndicator";
@@ -59,6 +60,7 @@ const PaymentPage = lazy(() => import("./pages/PaymentPage").then(m => ({ defaul
 const TransactionsPage = lazy(() => import("./pages/TransactionsPage"));
 const BridgePage = lazy(() => import("./pages/BridgePage"));
 const BridgeTestPage = lazy(() => import("./pages/BridgeTestPage"));
+const QuantumSecurePaymentPage = lazy(() => import("./pages/QuantumSecurePaymentPage"));
 
 // VS Code Integration
 const CodeEditorPage = lazy(() => import("./features/code-editor").then(m => ({ default: m.CodeEditorPage })));
@@ -88,6 +90,7 @@ const navigationItems = [
   { name: "Dashboard", path: "/dashboard", icon: <Layout className="h-5 w-5" /> },
   { name: "Wallet", path: "/wallet", icon: <Wallet className="h-5 w-5" /> },
   { name: "Payment", path: "/payment", icon: <CreditCard className="h-5 w-5" /> },
+  { name: "Quantum Payment", path: "/quantum-secure-payment", icon: <Shield className="h-5 w-5" /> },
   { name: "Transactions", path: "/transactions", icon: <BarChart3 className="h-5 w-5" /> },
   { name: "Code Editor", path: "/code-editor", icon: <Code className="h-5 w-5" /> },
   { name: "Domain Hosting", path: "/domain-hosting", icon: <Database className="h-5 w-5" /> },
@@ -461,8 +464,9 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <LiveModeProvider>
-          {/* Add resource hints for faster page loading */}
-          <ResourceHints />
+          <HelmetProvider>
+            {/* Add resource hints for faster page loading */}
+            <ResourceHints />
           <div className={`app-container w-full h-full ${isMobile ? 'pb-16' : ''}`}>
         {/* Top Navigation Bar */}
         <header className="flex justify-between items-center p-2 sm:p-4 bg-background border-b fixed top-0 left-0 right-0 z-30">
@@ -554,6 +558,12 @@ function App() {
             <Route path="/quantum-security">
               <Suspense fallback={<LoadingScreen message="Loading quantum security dashboard..." />}>
                 <QuantumSecurityPage />
+              </Suspense>
+            </Route>
+            
+            <Route path="/quantum-secure-payment">
+              <Suspense fallback={<LoadingScreen message="Loading quantum secure payment..." />}>
+                <QuantumSecurePaymentPage />
               </Suspense>
             </Route>
             <Route path="/singularity">
@@ -741,6 +751,7 @@ function App() {
           </div>
         )}
       </div>
+          </HelmetProvider>
         </LiveModeProvider>
       </AuthProvider>
     </QueryClientProvider>

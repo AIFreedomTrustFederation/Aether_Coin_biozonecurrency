@@ -1,13 +1,25 @@
 {
   "name": "aetherion-quantum-validator",
   "version": "1.0.0",
-  "description": "Quantum-resistant security validation module for Aetherion",
-  "main": "dist/validator.js",
+  "description": "Quantum-resistant security and validation module for the Aetherion blockchain",
+  "main": "dist/index.js",
   "type": "module",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "dependencies": {
-    "express": "^4.18.2"
-  }
+  "keywords": [
+    "blockchain",
+    "quantum",
+    "security",
+    "validation",
+    "aetherion"
+  ],
+  "author": "Aetherion Development Team",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "typescript": "^5.2.2"
+  },
+  "dependencies": {}
 }

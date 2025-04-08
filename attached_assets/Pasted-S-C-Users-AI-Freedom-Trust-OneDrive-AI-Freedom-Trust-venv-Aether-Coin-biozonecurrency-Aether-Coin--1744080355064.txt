@@ -1,0 +1,53 @@
+S C:\Users\AI Freedom Trust\OneDrive\AI Freedom Trust\.venv\Aether_Coin_biozonecurrency\Aether_Coin_biozonecurrency> npm install dotenv
+npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+npm warn deprecated web3-provider-engine@16.0.1: This package has been deprecated, see the README for details: 
+https://github.com/MetaMask/web3-provider-engine
+npm warn deprecated web3.storage@4.5.5: This client is for the old web3.storage API, sunset on Jan 9 2024. Use 
+the new web3.storage client and API instead: @web3-storage/w3up-client.
+npm warn deprecated safe-event-emitter@1.0.1: Renamed to @metamask/safe-event-emitter
+npm warn deprecated request@2.88.2: request has been deprecated, see https://github.com/request/request/issues/3142
+npm warn deprecated multiaddr-to-uri@8.0.0: This module is deprecated, please upgrade to @multiformats/multiaddr-to-uri
+npm warn deprecated multiaddr@10.0.1: This module is deprecated, please upgrade to @multiformats/multiaddr     
+npm warn deprecated memdown@1.4.1: Superseded by memory-level (https://github.com/Level/community#faq)
+npm warn deprecated level-errors@1.0.5: Superseded by abstract-level (https://github.com/Level/community#faq)  
+npm warn deprecated level-codec@7.0.1: Superseded by level-transcoder (https://github.com/Level/community#faq) 
+npm warn deprecated levelup@1.3.9: Superseded by abstract-level (https://github.com/Level/community#faq)       
+npm warn deprecated ipfs-core-utils@0.18.1: js-IPFS has been deprecated in favour of Helia - please see https://github.com/ipfs/js-ipfs/issues/4336 for details
+npm warn deprecated ipfs-core-types@0.14.1: js-IPFS has been deprecated in favour of Helia - please see https://github.com/ipfs/js-ipfs/issues/4336 for details
+npm warn deprecated ipfs-http-client@60.0.1: js-IPFS has been deprecated in favour of Helia - please see https://github.com/ipfs/js-ipfs/issues/4336 for details
+npm warn deprecated har-validator@5.1.5: this library is no longer supported
+npm warn deprecated ethereumjs-vm@2.6.0: New package name format for new versions: @ethereumjs/vm. Please update.
+npm warn deprecated ethereumjs-tx@1.3.7: New package name format for new versions: @ethereumjs/tx. Please update.
+npm warn deprecated eth-sig-util@1.4.2: Deprecated in favor of '@metamask/eth-sig-util'
+npm warn deprecated eth-json-rpc-infura@5.1.0: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
+npm warn deprecated ethereumjs-block@1.7.1: New package name format for new versions: @ethereumjs/block. Please update.
+npm warn deprecated ethereumjs-common@1.5.2: New package name format for new versions: @ethereumjs/common. Please update.
+npm warn deprecated deferred-leveldown@1.2.2: Superseded by abstract-level (https://github.com/Level/community#faq)
+npm warn deprecated abstract-leveldown@2.6.3: Superseded by abstract-level (https://github.com/Level/community#faq)
+npm warn deprecated @web3modal/react@2.7.1: Please use new @web3modal/wagmi package
+npm warn deprecated @web3modal/core@2.7.1: Web3Modal is now Reown AppKit. Please follow the upgrade guide at https://docs.reown.com/appkit/upgrade/from-w3m-to-reown
+npm warn deprecated @web3modal/ui@2.7.1: Web3Modal is now Reown AppKit. Please follow the upgrade guide at https://docs.reown.com/appkit/upgrade/from-w3m-to-reown
+npm warn deprecated @walletconnect/types@1.8.0: WalletConnect's v1 SDKs are now deprecated. Please upgrade to a v2 SDK. For details see: https://docs.walletconnect.com/
+npm warn deprecated @walletconnect/mobile-registry@1.4.0: Deprecated in favor of dynamic registry available from: https://github.com/walletconnect/walletconnect-registry
+npm warn deprecated @walletconnect/qrcode-modal@1.8.0: WalletConnect's v1 SDKs are now deprecated. Please upgrade to a v2 SDK. For details see: https://docs.walletconnect.com/
+npm warn deprecated @walletconnect/client@1.8.0: WalletConnect's v1 SDKs are now deprecated. Please upgrade to 
+a v2 SDK. For details see: https://docs.walletconnect.com/
+npm warn deprecated @walletconnect/web3-provider@1.8.0: WalletConnect's v1 SDKs are now deprecated. Please upgrade to a v2 SDK. For details see: https://docs.walletconnect.com/
+npm warn deprecated @web3modal/ethereum@2.7.1: Please use new @web3modal/wagmi package
+npm warn deprecated @motionone/vue@10.16.4: Motion One for Vue is deprecated. Use Oku Motion instead https://oku-ui.com/motion
+npm warn deprecated @esbuild-kit/esm-loader@2.6.5: Merged into tsx: https://tsx.is
+npm warn deprecated @esbuild-kit/core-utils@3.3.2: Merged into tsx: https://tsx.is
+npm warn deprecated uuid@3.4.0: Please upgrade  to version 7 or higher.  Older versions may use Math.random() in certain circumstances, which is known to be problematic.  See https://v8.dev/blog/math-random for details.   
+npm warn deprecated abstract-leveldown@2.7.2: Superseded by abstract-level (https://github.com/Level/community#faq)
+npm warn deprecated ipfs-core-utils@0.12.2: js-IPFS has been deprecated in favour of Helia - please see https://github.com/ipfs/js-ipfs/issues/4336 for details
+npm warn deprecated ipfs-core-types@0.8.4: js-IPFS has been deprecated in favour of Helia - please see https://github.com/ipfs/js-ipfs/issues/4336 for details
+npm warn deprecated ethereumjs-tx@2.1.2: New package name format for new versions: @ethereumjs/tx. Please update.
+npm warn deprecated ethereumjs-block@2.2.2: New package name format for new versions: @ethereumjs/block. Please update.
+
+added 1599 packages, and audited 1600 packages in 4m
+
+230 packages are looking for funding
+  run `npm fund` for details
+
+26 vulnerabilities (10 moderate, 16 high)

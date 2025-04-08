@@ -73,9 +73,59 @@ export enum BlockchainNetworkType {
 }
 
 /**
+ * Mining algorithm types for Aetherion blockchain
+ */
+export enum MiningAlgorithm {
+  MANDELBROT_FIBONACCI = 'mandelbrot-fibonacci',
+  QUANTUM_RESISTANT_PROOF_OF_WORK = 'quantum-resistant-pow',
+  RECURVE_FRACTAL = 'recurve-fractal',
+  TOROIDAL_WAVE = 'toroidal-wave',
+  BIOZOE_CONSENSUS = 'biozoe-consensus'
+}
+
+/**
+ * Consensus types for Aetherion blockchain
+ */
+export enum ConsensusType {
+  PROOF_OF_WORK = 'proof-of-work',
+  PROOF_OF_STAKE = 'proof-of-stake',
+  PROOF_OF_AUTHORITY = 'proof-of-authority',
+  QUANTUM_PROOF_OF_SIGNATURE = 'quantum-proof-of-signature',
+  RECURSIVE_CONSENSUS = 'recursive-consensus',
+  MANDELBROT_CONSENSUS = 'mandelbrot-consensus',
+  BIOZOE_CONSENSUS = 'biozoe-consensus'
+}
+
+/**
  * Blockchain listener type
  */
 export type BlockchainEventListener = (data: any) => void;
+
+/**
+ * Mining configuration interface
+ */
+export interface MiningConfig {
+  enabled: boolean;
+  threads: number;
+  gpuMining: boolean;
+  gpuDevices: number[];
+  algorithm: MiningAlgorithm;
+  miningAddress: string;
+  autoAdjustDifficulty: boolean;
+  targetBlockTime: number;
+  minimumTransactionFee: number;
+  maxTransactionsPerBlock: number;
+}
+
+/**
+ * Sync status interface
+ */
+export interface SyncStatus {
+  isSyncing: boolean;
+  currentBlock: number;
+  highestBlock: number;
+  startingBlock: number;
+}
 
 /**
  * Blockchain state interface
@@ -94,8 +144,8 @@ export interface BlockchainState {
   lastBlockTime?: number;
   nodes?: string[];
   isMining?: boolean;
-  syncStatus?: string;
-  consensusType?: string;
+  syncStatus?: SyncStatus;
+  consensusType?: ConsensusType;
   networkHashrate?: number;
   version?: string;
   genesisBlock?: Block;

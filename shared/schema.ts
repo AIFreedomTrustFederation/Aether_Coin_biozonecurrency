@@ -461,8 +461,15 @@ export const payments = pgTable("payments", {
   status: text("status").notNull(), // 'pending', 'completed', 'failed', 'refunded'
   provider: text("provider").notNull().default('stripe'), // 'stripe', 'open_collective', etc.
   providerPaymentId: text("provider_payment_id"), // Stripe payment intent ID or other provider's ID
+  externalId: text("external_id"), // ID from external payment system
   description: text("description"),
   metadata: jsonb("metadata"),
+  // Quantum security fields
+  quantumSecured: boolean("quantum_secured").default(false), // Whether the payment has quantum security
+  quantumSignature: text("quantum_signature"), // Quantum-resistant signature
+  temporalEntanglementId: text("temporal_entanglement_id"), // ID for temporal entanglement
+  securityLevel: text("security_level").default('standard'), // 'standard', 'enhanced', 'quantum'
+  // Standard fields
   createdAt: timestamp("created_at").defaultNow(),
   processedAt: timestamp("processed_at"),
 });
@@ -489,6 +496,11 @@ export const insertPaymentSchema = createInsertSchema(payments).omit({
 }).extend({
   // We need to extend this because the provider field is added to the schema
   provider: z.string().default('stripe'),
+  // Extend with quantum security fields (optional)
+  quantumSecured: z.boolean().default(false).optional(),
+  quantumSignature: z.string().optional(),
+  temporalEntanglementId: z.string().optional(),
+  securityLevel: z.enum(['standard', 'enhanced', 'quantum']).default('standard').optional(),
 });
 
 export type CidEntry = typeof cidEntries.$inferSelect;

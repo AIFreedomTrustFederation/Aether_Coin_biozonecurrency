@@ -10,9 +10,14 @@
  * 3. It will prepare the GitHub Actions workflow generator
  */
 
-const fs = require('fs');
-const path = require('path');
-const { execSync } = require('child_process');
+import * as fs from 'fs';
+import * as path from 'path';
+import { execSync } from 'child_process';
+import { fileURLToPath } from 'url';
+
+// Get __dirname equivalent in ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Color codes for console output
 const COLORS = {

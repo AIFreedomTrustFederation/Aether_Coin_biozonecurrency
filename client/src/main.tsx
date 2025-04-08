@@ -4,6 +4,9 @@ import App from './App.tsx';
 import './index.css';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
+// Import the Aetherion provider to initialize window.aetherion
+import './core/blockchain/AetherionProvider';
+
 // Create a client
 const queryClient = new QueryClient({
   defaultOptions: {
