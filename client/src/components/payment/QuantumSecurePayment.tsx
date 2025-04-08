@@ -91,25 +91,21 @@ const QuantumSecurePayment: React.FC<QuantumSecurePaymentProps> = ({ onPaymentCo
       // Use demo wallet ID if no wallet is selected
       const walletId = selectedWallet?.id || 'demo-wallet';
       
-      const response = await apiRequest({
-        url: '/api/payments/quantum-secure/stripe',
-        method: 'POST',
-        data: {
-          amount,
-          currency,
-          description,
-          securityLevel,
-          walletId,
-          paymentDetails: {
-            processor: 'stripe',
-            userId: 1, // Demo user
-            card: {
-              number: cardNumber.replace(/\s/g, ''),
-              exp_month: cardExpiry.split('/')[0],
-              exp_year: cardExpiry.split('/')[1],
-              cvc: cardCvc,
-              name: cardName
-            }
+      const response = await apiRequest('/api/payments/quantum-secure/stripe', 'POST', {
+        amount,
+        currency,
+        description,
+        securityLevel,
+        walletId,
+        paymentDetails: {
+          processor: 'stripe',
+          userId: 1, // Demo user
+          card: {
+            number: cardNumber.replace(/\s/g, ''),
+            exp_month: cardExpiry.split('/')[0],
+            exp_year: cardExpiry.split('/')[1],
+            cvc: cardCvc,
+            name: cardName
           }
         }
       });
@@ -167,20 +163,16 @@ const QuantumSecurePayment: React.FC<QuantumSecurePaymentProps> = ({ onPaymentCo
       // Use demo wallet ID if no wallet is selected
       const walletId = selectedWallet?.id || 'demo-wallet';
       
-      const response = await apiRequest({
-        url: '/api/payments/quantum-secure/crypto',
-        method: 'POST',
-        data: {
-          amount,
-          currency,
-          description,
-          securityLevel,
-          walletId,
-          metadata: {
-            processor: 'crypto',
-            cryptoNetwork: currency === 'ETH' ? 'ethereum' : currency === 'BTC' ? 'bitcoin' : 'polygon',
-            userId: 1, // Demo user
-          }
+      const response = await apiRequest('/api/payments/quantum-secure/crypto', 'POST', {
+        amount,
+        currency,
+        description,
+        securityLevel,
+        walletId,
+        metadata: {
+          processor: 'crypto',
+          cryptoNetwork: currency === 'ETH' ? 'ethereum' : currency === 'BTC' ? 'bitcoin' : 'polygon',
+          userId: 1, // Demo user
         }
       });
       
@@ -239,23 +231,19 @@ const QuantumSecurePayment: React.FC<QuantumSecurePaymentProps> = ({ onPaymentCo
       // Use demo wallet ID if no wallet is selected
       const walletId = selectedWallet?.id || 'demo-wallet';
       
-      const response = await apiRequest({
-        url: '/api/payments/quantum-secure/fractalcoin',
-        method: 'POST',
-        data: {
-          amount,
-          currency: 'FRC', // Always use FractalCoin currency code
-          description,
-          securityLevel,
-          walletId,
-          metadata: {
-            processor: 'fractalcoin',
-            recurveFactors: {
-              depth: securityLevel === 'quantum' ? 3 : securityLevel === 'enhanced' ? 2 : 1,
-              entanglementFactor: securityLevel === 'quantum' ? 0.95 : securityLevel === 'enhanced' ? 0.75 : 0.5,
-            },
-            userId: 1, // Demo user
-          }
+      const response = await apiRequest('/api/payments/quantum-secure/fractalcoin', 'POST', {
+        amount,
+        currency: 'FRC', // Always use FractalCoin currency code
+        description,
+        securityLevel,
+        walletId,
+        metadata: {
+          processor: 'fractalcoin',
+          recurveFactors: {
+            depth: securityLevel === 'quantum' ? 3 : securityLevel === 'enhanced' ? 2 : 1,
+            entanglementFactor: securityLevel === 'quantum' ? 0.95 : securityLevel === 'enhanced' ? 0.75 : 0.5,
+          },
+          userId: 1, // Demo user
         }
       });
       
@@ -318,19 +306,15 @@ const QuantumSecurePayment: React.FC<QuantumSecurePaymentProps> = ({ onPaymentCo
       // Use demo wallet ID if no wallet is selected
       const walletId = selectedWallet?.id || 'demo-wallet';
       
-      const response = await apiRequest({
-        url: '/api/payments/quantum-secure/open-source',
-        method: 'POST',
-        data: {
-          amount,
-          currency,
-          description,
-          securityLevel,
-          walletId,
-          metadata: {
-            processor: 'open_collective',
-            userId: 1, // Demo user
-          }
+      const response = await apiRequest('/api/payments/quantum-secure/open-source', 'POST', {
+        amount,
+        currency,
+        description,
+        securityLevel,
+        walletId,
+        metadata: {
+          processor: 'open_collective',
+          userId: 1, // Demo user
         }
       });
       
@@ -386,10 +370,7 @@ const QuantumSecurePayment: React.FC<QuantumSecurePaymentProps> = ({ onPaymentCo
     
     try {
       const paymentId = paymentDetails.paymentIntentId || paymentDetails.transactionId;
-      const response = await apiRequest({
-        url: `/api/payments/quantum-secure/verify/${paymentId}`,
-        method: 'GET'
-      });
+      const response = await apiRequest(`/api/payments/quantum-secure/verify/${paymentId}`, 'GET');
       
       // If we don't get a response back, create a simulated verification
       const verificationResult = response || {

@@ -52,10 +52,7 @@ export default function useWallet() {
   // Create a new wallet
   const createWalletMutation = useMutation({
     mutationFn: (data: { name: string; currency: string; network: string; type: string }) => 
-      apiRequest('/api/wallets', {
-        method: 'POST',
-        data
-      }),
+      apiRequest('/api/wallets', 'POST', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/wallets'] });
     }
@@ -64,9 +61,7 @@ export default function useWallet() {
   // Set default wallet
   const setDefaultWalletMutation = useMutation({
     mutationFn: (walletId: number) => 
-      apiRequest(`/api/wallets/${walletId}/default`, {
-        method: 'POST'
-      }),
+      apiRequest(`/api/wallets/${walletId}/default`, 'POST'),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/wallets'] });
     }
