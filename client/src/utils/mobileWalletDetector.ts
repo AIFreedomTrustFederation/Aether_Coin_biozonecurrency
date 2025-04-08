@@ -12,6 +12,7 @@ export interface DetectedWallet {
   deepLink: string;
   installed: boolean;
   download: string;
+  forceCheck?: boolean;
 }
 
 // Common mobile Web3 wallets
@@ -22,6 +23,7 @@ const MOBILE_WALLETS: Omit<DetectedWallet, 'installed'>[] = [
     icon: 'metamask',
     deepLink: 'metamask://',
     download: 'https://metamask.io/download/',
+    forceCheck: true  // Always check MetaMask as it's the most common
   },
   {
     name: 'Trust Wallet',
@@ -29,6 +31,7 @@ const MOBILE_WALLETS: Omit<DetectedWallet, 'installed'>[] = [
     icon: 'trustwallet',
     deepLink: 'trust://',
     download: 'https://trustwallet.com/download',
+    forceCheck: true  // Always check Trust Wallet on mobile
   },
   {
     name: 'Coinbase Wallet',
@@ -36,6 +39,7 @@ const MOBILE_WALLETS: Omit<DetectedWallet, 'installed'>[] = [
     icon: 'coinbasewallet',
     deepLink: 'cbwallet://',
     download: 'https://www.coinbase.com/wallet/downloads',
+    forceCheck: true  // Always check Coinbase Wallet
   },
   {
     name: 'Rainbow',
@@ -43,6 +47,7 @@ const MOBILE_WALLETS: Omit<DetectedWallet, 'installed'>[] = [
     icon: 'rainbow',
     deepLink: 'rainbow://',
     download: 'https://rainbow.me',
+    forceCheck: true  // Always check Rainbow
   },
   {
     name: 'Argent',
@@ -50,6 +55,7 @@ const MOBILE_WALLETS: Omit<DetectedWallet, 'installed'>[] = [
     icon: 'argent',
     deepLink: 'argent://',
     download: 'https://www.argent.xyz/download/',
+    forceCheck: false  // Skip if another wallet is connected
   },
   {
     name: 'Alpha Wallet',
@@ -57,6 +63,7 @@ const MOBILE_WALLETS: Omit<DetectedWallet, 'installed'>[] = [
     icon: 'alpha',
     deepLink: 'awallet://',
     download: 'https://alphawallet.com/',
+    forceCheck: false  // Skip if another wallet is connected
   },
   {
     name: 'imToken',
@@ -64,6 +71,7 @@ const MOBILE_WALLETS: Omit<DetectedWallet, 'installed'>[] = [
     icon: 'imtoken',
     deepLink: 'imtokenv2://',
     download: 'https://token.im/download',
+    forceCheck: false  // Skip if another wallet is connected
   },
   {
     name: 'Spot',
@@ -71,6 +79,7 @@ const MOBILE_WALLETS: Omit<DetectedWallet, 'installed'>[] = [
     icon: 'spot',
     deepLink: 'spot://',
     download: 'https://www.spot-wallet.com',
+    forceCheck: false  // Skip if another wallet is connected
   },
   {
     name: 'Aetherion',
@@ -78,6 +87,7 @@ const MOBILE_WALLETS: Omit<DetectedWallet, 'installed'>[] = [
     icon: 'aetherion',
     deepLink: 'aetherion://',
     download: '/download',
+    forceCheck: true  // Always check the native Aetherion wallet
   }
 ];
 
@@ -90,34 +100,98 @@ export function isMobileDevice(): boolean {
 
 /**
  * Check if a specific mobile wallet is installed by testing its deep link
+ * Uses a more reliable detection method that doesn't redirect users
  */
 export async function isWalletInstalled(deepLink: string): Promise<boolean> {
+  // Improved detection logic - uses multiple methods
   return new Promise((resolve) => {
-    // Set a timeout in case the wallet isn't installed
+    // First check window providers
+    const providers = detectProvidersFromWindow();
+    const walletId = deepLink.split('://')[0];
+    
+    // If we already detected via window provider, return true
+    if (walletId === 'metamask' && providers.metamask) {
+      return resolve(true);
+    }
+    if (walletId === 'trust' && providers.trustwallet) {
+      return resolve(true);
+    }
+    if (walletId === 'cbwallet' && providers.coinbasewallet) {
+      return resolve(true);
+    }
+    if (walletId === 'rainbow' && providers.rainbow) {
+      return resolve(true);
+    }
+    
+    // Setup timeout for the hidden iframe method
     const timeout = setTimeout(() => {
       resolve(false);
-    }, 500);
-
-    // Create an iframe to test the deep link
-    const iframe = document.createElement('iframe');
-    iframe.style.display = 'none';
-    document.body.appendChild(iframe);
+    }, 300); // Shorter timeout for better UX
     
-    // Set up handlers for iframe load/error events
-    iframe.onload = () => {
+    try {
+      // Modern approach: use hidden iframe but detect focus change
+      // This prevents automatic redirects
+      const initialFocus = document.hasFocus();
+      
+      // Create a hidden iframe
+      const iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      document.body.appendChild(iframe);
+      
+      // Remove iframe when done
+      const cleanupIframe = () => {
+        if (document.body.contains(iframe)) {
+          document.body.removeChild(iframe);
+        }
+      };
+      
+      // Listen for focus changes
+      const checkFocus = () => {
+        if (initialFocus && !document.hasFocus()) {
+          // Focus changed, indicating app switching - likely wallet is installed
+          clearTimeout(timeout);
+          cleanupIframe();
+          resolve(true);
+          return true;
+        }
+        return false;
+      };
+      
+      // Set brief interval to check focus
+      const focusInterval = setInterval(() => {
+        if (checkFocus()) {
+          clearInterval(focusInterval);
+        }
+      }, 50);
+      
+      // Set timeout to clear interval
+      setTimeout(() => {
+        clearInterval(focusInterval);
+      }, 300);
+      
+      // Handle iframe events
+      iframe.onload = () => {
+        if (!checkFocus()) {
+          clearTimeout(timeout);
+          cleanupIframe();
+          resolve(true);
+        }
+      };
+      
+      iframe.onerror = () => {
+        clearTimeout(timeout);
+        cleanupIframe();
+        clearInterval(focusInterval);
+        resolve(false);
+      };
+      
+      // Try loading the deep link in the iframe
+      iframe.src = deepLink;
+    } catch (error) {
+      console.error("Error detecting wallet:", error);
       clearTimeout(timeout);
-      document.body.removeChild(iframe);
-      resolve(true);
-    };
-    
-    iframe.onerror = () => {
-      clearTimeout(timeout);
-      document.body.removeChild(iframe);
       resolve(false);
-    };
-    
-    // Try loading the deep link
-    iframe.src = deepLink;
+    }
   });
 }
 
@@ -128,24 +202,43 @@ export async function isWalletInstalled(deepLink: string): Promise<boolean> {
 export function detectProvidersFromWindow(): { [key: string]: boolean } {
   const providers: { [key: string]: boolean } = {};
   
-  if (typeof window !== 'undefined') {
-    // Check for MetaMask
-    providers.metamask = window.ethereum?.isMetaMask || false;
+  if (typeof window !== 'undefined' && window.ethereum) {
+    // Get the ethereum object safely
+    const ethereum = window.ethereum as any;
     
-    // Check for Trust Wallet
-    providers.trustwallet = window.ethereum?.isTrust || false;
+    // Check for MetaMask
+    providers.metamask = !!ethereum.isMetaMask;
+    
+    // Check for Trust Wallet - use multiple detection methods
+    providers.trustwallet = 
+      !!ethereum.isTrust || 
+      !!ethereum.isTrustWallet ||
+      (typeof ethereum.providerMap === 'object' && 
+        ethereum.providerMap?.has('trust') ||
+        false);
     
     // Check for Coinbase Wallet
-    providers.coinbasewallet = window.ethereum?.isCoinbaseWallet || false;
+    providers.coinbasewallet = !!ethereum.isCoinbaseWallet;
     
-    // Check for Rainbow
-    providers.rainbow = 
-      window.ethereum?.isRainbow || 
-      window.rainbow !== undefined || 
-      false;
+    // Check for Rainbow using multiple detection strategies
+    providers.rainbow = !!(
+      ethereum.isRainbow || 
+      (window as any).rainbow !== undefined || 
+      ethereum._events?.accountsChanged?.some((fn: any) => 
+        fn.toString().includes('rainbow')
+      ) ||
+      false
+    );
     
     // Generic check for any Web3 provider
-    providers.generic = window.ethereum !== undefined;
+    providers.generic = true;
+  } else {
+    // No ethereum provider found
+    providers.metamask = false;
+    providers.trustwallet = false;
+    providers.coinbasewallet = false;
+    providers.rainbow = false;
+    providers.generic = false;
   }
   
   return providers;
@@ -164,22 +257,51 @@ export async function detectMobileWallets(): Promise<DetectedWallet[]> {
   // Check for window providers first
   const windowProviders = detectProvidersFromWindow();
   
+  // Check if any provider is detected, this means a wallet is already connected
+  const hasConnectedWallet = Object.values(windowProviders).some(val => val === true);
+  
+  // Map window provider detection to wallet IDs
+  const detectedWalletIds = new Set<string>();
+  
+  if (windowProviders.metamask) detectedWalletIds.add('metamask');
+  if (windowProviders.trustwallet) detectedWalletIds.add('trust');
+  if (windowProviders.coinbasewallet) detectedWalletIds.add('coinbase');
+  if (windowProviders.rainbow) detectedWalletIds.add('rainbow');
+  
   // For each wallet, check if it's installed
   const walletPromises = MOBILE_WALLETS.map(async (wallet) => {
     // If we already detected it from window providers, use that
-    if (windowProviders[wallet.id]) {
+    if (detectedWalletIds.has(wallet.id)) {
       return {
         ...wallet,
         installed: true
       };
     }
     
+    // Skip deep link checking if we already have a connected wallet (optimization)
+    if (hasConnectedWallet && !wallet.forceCheck) {
+      // If we have a connected wallet but it's not this one, 
+      // assume this wallet is not installed for faster loading
+      return {
+        ...wallet,
+        installed: false
+      };
+    }
+    
     // Otherwise check deep link
-    const installed = await isWalletInstalled(wallet.deepLink);
-    return {
-      ...wallet,
-      installed
-    };
+    try {
+      const installed = await isWalletInstalled(wallet.deepLink);
+      return {
+        ...wallet,
+        installed
+      };
+    } catch (error) {
+      console.error(`Error checking wallet installation for ${wallet.name}:`, error);
+      return {
+        ...wallet,
+        installed: false
+      };
+    }
   });
   
   return Promise.all(walletPromises);
