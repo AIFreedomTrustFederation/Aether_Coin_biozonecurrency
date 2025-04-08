@@ -2,6 +2,7 @@ import React, { useState, useEffect, lazy, Suspense, startTransition } from "rea
 import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
+import { HelmetProvider } from "react-helmet-async";
 import { Toaster } from "@/components/ui/toaster";
 import { LiveModeProvider } from "./contexts/LiveModeContext";
 import { LiveModeIndicator } from "@/components/ui/LiveModeIndicator";
@@ -463,8 +464,9 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <LiveModeProvider>
-          {/* Add resource hints for faster page loading */}
-          <ResourceHints />
+          <HelmetProvider>
+            {/* Add resource hints for faster page loading */}
+            <ResourceHints />
           <div className={`app-container w-full h-full ${isMobile ? 'pb-16' : ''}`}>
         {/* Top Navigation Bar */}
         <header className="flex justify-between items-center p-2 sm:p-4 bg-background border-b fixed top-0 left-0 right-0 z-30">
@@ -749,6 +751,7 @@ function App() {
           </div>
         )}
       </div>
+          </HelmetProvider>
         </LiveModeProvider>
       </AuthProvider>
     </QueryClientProvider>

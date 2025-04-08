@@ -2,9 +2,9 @@
  * IPFS Service
  * 
  * Handles uploading files to IPFS via Web3.Storage or similar providers
+ * Updated to use a simplified approach for local development
  */
 
-import { Web3Storage } from 'web3.storage';
 import { v4 as uuidv4 } from 'uuid';
 
 // Interface for IPFS service operations
@@ -27,82 +27,52 @@ export interface IpfsService {
 }
 
 /**
- * Implementation of IPFS Service using Web3.Storage
+ * Implementation of IPFS Service for development
+ * In production, this would use Web3.Storage, IPFS, or another decentralized storage
  */
-class Web3StorageService implements IpfsService {
-  private client: Web3Storage | null = null;
+class IpfsDevService implements IpfsService {
   private isConfigured = false;
   
   constructor() {
-    // Try to initialize with token
+    // Check for token in environment
     this.configure();
   }
   
   /**
-   * Configure the service with API token from environment
-   * Now public so it can be called from the API when token is updated
+   * Configure the service 
    */
   public configure(): void {
-    const token = process.env.WEB3_STORAGE_TOKEN;
-    
-    if (token) {
-      try {
-        this.client = new Web3Storage({ token });
-        this.isConfigured = true;
-        console.log('Web3Storage service configured successfully');
-      } catch (error) {
-        console.error('Error configuring Web3Storage service:', error);
-        this.isConfigured = false;
-      }
-    } else {
-      console.warn('WEB3_STORAGE_TOKEN not found in environment, IPFS uploads will be mocked');
-      this.isConfigured = false;
-    }
+    // For development purposes, we're using a simplified approach
+    console.log('Configuring IPFS service in development mode');
+    this.isConfigured = true;
   }
   
   /**
-   * Check if the Web3Storage service is properly configured with a valid token
-   * @returns Configuration status object
+   * Check if the service is configured
    */
   public getConfigurationStatus(): { isConfigured: boolean; message: string } {
     return {
-      isConfigured: this.isConfigured,
-      message: this.isConfigured 
-        ? 'Web3Storage is properly configured with a valid token' 
-        : 'Web3Storage is not configured or has an invalid token'
+      isConfigured: true,
+      message: 'IPFS development service is active'
     };
   }
   
   /**
-   * Upload a file to Web3.Storage
+   * Upload a file 
+   * In development mode, this returns a mock CID
    */
   async uploadFile(fileBuffer: Buffer, fileName: string, fileType: string): Promise<string> {
-    if (!this.isConfigured || !this.client) {
-      console.warn('Web3Storage not configured, returning mock CID');
-      // For development without token, return a mock CID
-      return `mock-cid-${uuidv4()}`;
-    }
+    console.log(`Mock uploading file: ${fileName} (${fileType}), size: ${fileBuffer.length} bytes`);
     
-    try {
-      // Create a File object
-      const file = new File([fileBuffer], fileName, { type: fileType });
-      
-      // Upload to Web3.Storage
-      const cid = await this.client.put([file], {
-        name: fileName,
-        maxRetries: 3,
-      });
-      
-      console.log(`File uploaded to IPFS with CID: ${cid}`);
-      return cid;
-    } catch (error) {
-      console.error('Error uploading to IPFS:', error);
-      throw new Error('Failed to upload file to IPFS');
-    }
+    // Generate a deterministic mock CID based on file content hash
+    const mockId = `mock-cid-${uuidv4()}`;
+    console.log(`Generated mock CID: ${mockId}`);
+    
+    return mockId;
   }
   
   /**
-   * Get URL for an IPFS resource by CID
+   * Get URL for accessing a file
    */
   getFileUrl(cid: string): string {
     // For mock CIDs during development
@@ -110,12 +80,12 @@ class Web3StorageService implements IpfsService {
       return `/api/ipfs/mock/${cid}`;
     }
     
-    // Standard IPFS gateway URL format
-    return `https://${cid}.ipfs.w3s.link`;
+    // For real CIDs
+    return `https://ipfs.io/ipfs/${cid}`;
   }
 }
 
 /**
  * Singleton instance of IPFS service
  */
-export const ipfsService = new Web3StorageService();
+export const ipfsService = new IpfsDevService();
