@@ -20,7 +20,7 @@ export const openSourcePaymentService = {
    * @returns Payment details with ID and status
    */
   async processPayment(
-    amount: string,
+    amount: number | string,
     currency: string,
     description: string,
     userId: number,
@@ -32,9 +32,10 @@ export const openSourcePaymentService = {
       const transactionId = uuidv4();
       
       // Create the payment record in our database
+      const amountAsString = typeof amount === 'number' ? amount.toString() : amount;
       const paymentData: InsertPayment = {
         userId,
-        amount,
+        amount: amountAsString,
         currency,
         status: 'pending',
         provider: 'open_collective',

@@ -8,7 +8,8 @@ import { quantumSecurePaymentService } from '../services/quantumSecurePayment';
 
 // Schema for quantum secure payment request
 const quantumPaymentSchema = z.object({
-  amount: z.string(),
+  // Accept amount as string or number, will be converted to number later
+  amount: z.union([z.string(), z.number()]),
   currency: z.string(),
   description: z.string().optional(),
   securityLevel: z.enum(['standard', 'enhanced', 'quantum']).default('quantum'),
@@ -25,22 +26,26 @@ export function registerQuantumSecurePaymentRoutes(app: Express) {
       const userId = 1; // For demo purposes, ideally this would come from auth
       
       // First, create a regular payment intent with Stripe
+      const amountAsNumber = typeof paymentData.amount === 'string' 
+        ? parseFloat(paymentData.amount) 
+        : paymentData.amount;
+        
       const stripeIntent = await stripeService.createPaymentIntent(
-        paymentData.amount,
+        amountAsNumber, // Amount as number
         paymentData.currency,
         paymentData.description || 'Quantum secured payment',
         userId,
-        paymentData.walletId,
-        paymentData.metadata
+        paymentData.walletId || undefined,
+        paymentData.metadata || {}
       );
       
-      if (!stripeIntent || !stripeIntent.id) {
+      if (!stripeIntent || !stripeIntent.paymentIntentId) {
         return res.status(500).json({ message: 'Failed to create Stripe payment intent' });
       }
       
       // Apply quantum security enhancement
       const securedPayment = await quantumSecurePaymentService.secureStripePayment(
-        stripeIntent.id,
+        stripeIntent.paymentIntentId,
         paymentData.securityLevel,
         paymentData
       );
@@ -49,8 +54,8 @@ export function registerQuantumSecurePaymentRoutes(app: Express) {
       res.status(200).json({
         success: true,
         message: 'Quantum secured payment intent created',
-        paymentIntentId: stripeIntent.id,
-        clientSecret: stripeIntent.client_secret,
+        paymentIntentId: stripeIntent.paymentIntentId,
+        clientSecret: stripeIntent.clientSecret, // Fix property name
         amount: paymentData.amount,
         currency: paymentData.currency,
         securityLevel: paymentData.securityLevel,
@@ -77,13 +82,17 @@ export function registerQuantumSecurePaymentRoutes(app: Express) {
       const userId = 1; // For demo purposes
       
       // Process open source payment
+      const amountAsNumber = typeof paymentData.amount === 'string' 
+        ? parseFloat(paymentData.amount) 
+        : paymentData.amount;
+        
       const openSourcePayment = await openSourcePaymentService.processPayment(
-        paymentData.amount,
+        amountAsNumber, // Amount as number
         paymentData.currency,
         paymentData.description || 'Quantum secured open source payment',
         userId,
-        paymentData.walletId,
-        paymentData.metadata
+        paymentData.walletId || undefined,
+        paymentData.metadata || {}
       );
       
       if (!openSourcePayment || !openSourcePayment.id) {

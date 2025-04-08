@@ -106,7 +106,7 @@ async function secureStripePayment(
       quantumSignature,
       temporalEntanglementId,
       processedAt: new Date().toISOString()
-    }
+    } as Record<string, any> // Type cast metadata to any record
   });
   
   return {
@@ -154,7 +154,7 @@ async function secureOpenSourcePayment(
       quantumSignature,
       temporalEntanglementId,
       processedAt: new Date().toISOString()
-    }
+    } as Record<string, any> // Type cast metadata to any record
   });
   
   return {
@@ -201,7 +201,9 @@ async function verifyPaymentSecurity(paymentId: string) {
   }
   
   // Check if the payment has quantum security metadata
-  if (!payment.metadata?.quantumSecured) {
+  const metadata = (payment.metadata || {}) as Record<string, any>;
+  
+  if (!metadata.quantumSecured) {
     return {
       valid: false,
       securityLevel: 'none',
@@ -213,14 +215,14 @@ async function verifyPaymentSecurity(paymentId: string) {
   }
   
   // Validate the quantum signature
-  const securityLevel = payment.metadata.securityLevel || 'standard';
-  const storedSignature = payment.metadata.quantumSignature;
+  const securityLevel = metadata.securityLevel || 'standard';
+  const storedSignature = metadata.quantumSignature;
   
   // In a real system, we would validate by recreating the signature and comparing
   // For demo purposes, we'll just verify the signature exists and has correct format
   
   // Validate the temporal entanglement
-  const temporalEntanglementId = payment.metadata.temporalEntanglementId;
+  const temporalEntanglementId = metadata.temporalEntanglementId;
   
   // Report the security status
   return {
@@ -235,7 +237,7 @@ async function verifyPaymentSecurity(paymentId: string) {
       currency: payment.currency,
       temporalEntanglementId,
       signatureVerified: true,
-      processedAt: payment.metadata.processedAt,
+      processedAt: metadata.processedAt,
     }
   };
 }

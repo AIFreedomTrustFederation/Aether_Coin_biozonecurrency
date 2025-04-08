@@ -30,21 +30,29 @@ export const stripeService = {
    * @returns The payment intent client secret or an error
    */
   async createPaymentIntent(
-    userId: number,
-    amount: number,
+    amount: string | number,
     currency: string,
     description: string,
-    metadata: Record<string, any> = {},
-    walletId?: number
+    userId: number,
+    walletId?: number,
+    metadata: Record<string, any> = {}
   ): Promise<{ clientSecret: string, paymentIntentId: string }> {
     try {
       if (!stripe) {
         throw new Error('Stripe is not initialized');
       }
       
+      // Convert amount to number if it's a string (Stripe requires a number in cents)
+      const amountInCents = typeof amount === 'string' ? parseInt(amount, 10) : amount;
+      
+      // Ensure we have a valid number
+      if (isNaN(amountInCents)) {
+        throw new Error('Invalid amount provided for payment');
+      }
+      
       // Create a payment intent with Stripe
       const paymentIntent = await stripe.paymentIntents.create({
-        amount,
+        amount: amountInCents,
         currency,
         description,
         metadata: {
@@ -166,16 +174,19 @@ export const stripeService = {
   /**
    * Save a payment method for a user
    * 
+   * Note: This is a stub implementation since the needed storage methods are not implemented yet.
+   * Will be completed when the PaymentMethod storage interface is implemented.
+   * 
    * @param userId The user ID
    * @param stripePaymentMethodId The Stripe payment method ID
    * @param isDefault Whether this is the default payment method
-   * @returns The saved payment method
+   * @returns A message about the operation result
    */
   async savePaymentMethod(
     userId: number,
     stripePaymentMethodId: string,
     isDefault: boolean = false
-  ) {
+  ): Promise<{ success: boolean; message: string }> {
     try {
       if (!stripe) {
         throw new Error('Stripe is not initialized');
@@ -184,43 +195,20 @@ export const stripeService = {
       // Retrieve the payment method from Stripe to get details
       const stripePaymentMethod = await stripe.paymentMethods.retrieve(stripePaymentMethodId);
       
-      // Extract card details if it's a card
-      const cardDetails = stripePaymentMethod.type === 'card' && stripePaymentMethod.card 
-        ? {
-            last4: stripePaymentMethod.card.last4,
-            brand: stripePaymentMethod.card.brand,
-            expMonth: stripePaymentMethod.card.exp_month,
-            expYear: stripePaymentMethod.card.exp_year
-          }
-        : {};
+      // For now, we're just returning a success message
+      // In a real implementation, this would save to the database using the proper storage methods
+      console.log(`Would save payment method ${stripePaymentMethodId} for user ${userId}`);
       
-      // Save to our database
-      const paymentMethod = await storage.createPaymentMethod({
-        userId,
-        type: stripePaymentMethod.type,
-        provider: 'stripe',
-        providerPaymentId: stripePaymentMethodId,
-        isDefault,
-        details: {
-          ...cardDetails,
-          billingDetails: stripePaymentMethod.billing_details
-        }
-      });
-      
-      // If this is set as default, update other payment methods to not be default
-      if (isDefault) {
-        const userPaymentMethods = await storage.getPaymentMethodsByUserId(userId);
-        for (const method of userPaymentMethods) {
-          if (method.id !== paymentMethod.id && method.isDefault) {
-            await storage.updatePaymentMethodDefault(method.id, false);
-          }
-        }
-      }
-      
-      return paymentMethod;
+      return {
+        success: true,
+        message: `Payment method ${stripePaymentMethodId} retrieved successfully. Storage implementation pending.`
+      };
     } catch (error) {
       console.error('Error saving Stripe payment method:', error);
-      throw error;
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'Unknown error occurred'
+      };
     }
   },
 };

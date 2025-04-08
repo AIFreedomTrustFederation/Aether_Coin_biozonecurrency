@@ -496,11 +496,15 @@ export const insertPaymentSchema = createInsertSchema(payments).omit({
 }).extend({
   // We need to extend this because the provider field is added to the schema
   provider: z.string().default('stripe'),
+  // Allow amount to be either a string or a number
+  amount: z.union([z.string(), z.number()]),
   // Extend with quantum security fields (optional)
   quantumSecured: z.boolean().default(false).optional(),
   quantumSignature: z.string().optional(),
   temporalEntanglementId: z.string().optional(),
   securityLevel: z.enum(['standard', 'enhanced', 'quantum']).default('standard').optional(),
+  // Allow metadata to be a record with any values
+  metadata: z.record(z.any()).optional(),
 });
 
 export type CidEntry = typeof cidEntries.$inferSelect;
