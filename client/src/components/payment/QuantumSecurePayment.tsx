@@ -15,9 +15,11 @@ import { useToast } from '@/hooks/use-toast';
 import { useWallet, Wallet } from '@/hooks/useWallet';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { apiRequest } from '@/lib/queryClient';
-import { AlertCircle, CheckCircle, Shield, Zap } from 'lucide-react';
+import { AlertCircle, CheckCircle, Shield, Zap, Info } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
+import StripeCardForm from './StripeCardForm';
+import SecurityComparison from './SecurityComparison';
 
 interface QuantumSecurePaymentProps {
   onPaymentCompleted?: (paymentDetails: any) => void;
@@ -48,10 +50,40 @@ const QuantumSecurePayment: React.FC<QuantumSecurePaymentProps> = ({ onPaymentCo
     }
   }, [paymentType]);
   
+  // Card details for Stripe payments
+  const [cardNumber, setCardNumber] = useState('');
+  const [cardExpiry, setCardExpiry] = useState('');
+  const [cardCvc, setCardCvc] = useState('');
+  const [cardName, setCardName] = useState('');
+  const [showSecurityInfo, setShowSecurityInfo] = useState(false);
+
   const handleStripePayment = async () => {
     if (!amount || parseFloat(amount) <= 0) {
       toast({ title: 'Invalid amount', description: 'Please enter a valid payment amount', variant: 'destructive' });
       return;
+    }
+    
+    // Basic card validation
+    if (paymentType === 'stripe') {
+      if (!cardNumber || cardNumber.replace(/\s/g, '').length < 16) {
+        toast({ title: 'Invalid card', description: 'Please enter a valid card number', variant: 'destructive' });
+        return;
+      }
+      
+      if (!cardExpiry || !cardExpiry.includes('/')) {
+        toast({ title: 'Invalid expiry', description: 'Please enter a valid expiry date (MM/YY)', variant: 'destructive' });
+        return;
+      }
+      
+      if (!cardCvc || cardCvc.length < 3) {
+        toast({ title: 'Invalid CVC', description: 'Please enter a valid CVC code', variant: 'destructive' });
+        return;
+      }
+      
+      if (!cardName) {
+        toast({ title: 'Missing information', description: 'Please enter the cardholder name', variant: 'destructive' });
+        return;
+      }
     }
     
     setIsProcessing(true);
@@ -71,6 +103,13 @@ const QuantumSecurePayment: React.FC<QuantumSecurePaymentProps> = ({ onPaymentCo
           paymentDetails: {
             processor: 'stripe',
             userId: 1, // Demo user
+            card: {
+              number: cardNumber.replace(/\s/g, ''),
+              exp_month: cardExpiry.split('/')[0],
+              exp_year: cardExpiry.split('/')[1],
+              cvc: cardCvc,
+              name: cardName
+            }
           }
         }
       });
@@ -81,7 +120,8 @@ const QuantumSecurePayment: React.FC<QuantumSecurePaymentProps> = ({ onPaymentCo
         status: 'succeeded',
         temporalEntanglementId: `te_${Date.now()}`,
         quantumSignature: `qs_${Math.random().toString(36).substring(2, 15)}`,
-        securityLevel
+        securityLevel,
+        last4: cardNumber.slice(-4)
       };
       
       setPaymentDetails(result);
@@ -100,7 +140,8 @@ const QuantumSecurePayment: React.FC<QuantumSecurePaymentProps> = ({ onPaymentCo
         status: 'succeeded',
         temporalEntanglementId: `te_${Date.now()}`,
         quantumSignature: `qs_${Math.random().toString(36).substring(2, 15)}`,
-        securityLevel
+        securityLevel,
+        last4: cardNumber.slice(-4)
       };
       
       setPaymentDetails(simulatedResponse);
@@ -445,6 +486,7 @@ const QuantumSecurePayment: React.FC<QuantumSecurePaymentProps> = ({ onPaymentCo
   
   const renderPaymentForm = () => (
     <div className="space-y-4">
+      {/* Amount and Currency Row */}
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="amount">Amount</Label>
@@ -490,6 +532,7 @@ const QuantumSecurePayment: React.FC<QuantumSecurePaymentProps> = ({ onPaymentCo
         </div>
       </div>
       
+      {/* Description */}
       <div className="space-y-2">
         <Label htmlFor="description">Description</Label>
         <Input 
@@ -500,6 +543,26 @@ const QuantumSecurePayment: React.FC<QuantumSecurePaymentProps> = ({ onPaymentCo
         />
       </div>
       
+      {/* Stripe Card Form - only shown for Stripe payment type */}
+      {paymentType === 'stripe' && (
+        <div className="space-y-2">
+          <Label className="flex items-center gap-1">
+            Card Details
+            <span className={`ml-1 px-1.5 py-0.5 text-xs rounded ${securityLevel === 'quantum' ? 'bg-purple-100 text-purple-800' : 'bg-slate-100 text-slate-800'}`}>
+              {securityLevel === 'quantum' ? 'Quantum Protected' : securityLevel === 'enhanced' ? 'Enhanced Security' : 'Standard Security'}
+            </span>
+          </Label>
+          <StripeCardForm 
+            onCardNumberChange={setCardNumber}
+            onExpiryChange={setCardExpiry}
+            onCvcChange={setCardCvc}
+            onNameChange={setCardName}
+            isQuantumSecured={securityLevel === 'quantum'}
+          />
+        </div>
+      )}
+      
+      {/* Wallet Selection */}
       <div className="space-y-2">
         <Label htmlFor="wallet">Wallet</Label>
         <Select 
@@ -526,8 +589,20 @@ const QuantumSecurePayment: React.FC<QuantumSecurePaymentProps> = ({ onPaymentCo
         </Select>
       </div>
       
+      {/* Security Level Selection */}
       <div className="space-y-2">
-        <Label htmlFor="securityLevel">Security Level</Label>
+        <div className="flex justify-between items-center">
+          <Label htmlFor="securityLevel">Security Level</Label>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="px-2 h-7 text-xs"
+            onClick={() => setShowSecurityInfo(!showSecurityInfo)}
+          >
+            <Info className="h-3.5 w-3.5 mr-1" />
+            {showSecurityInfo ? 'Hide details' : 'Learn more'}
+          </Button>
+        </div>
         <Select value={securityLevel} onValueChange={(val: any) => setSecurityLevel(val)}>
           <SelectTrigger>
             <SelectValue placeholder="Select security level" />
@@ -541,6 +616,7 @@ const QuantumSecurePayment: React.FC<QuantumSecurePaymentProps> = ({ onPaymentCo
         <p className="text-sm text-muted-foreground">{renderSecurityLevelDescription()}</p>
       </div>
       
+      {/* Security Visualization */}
       <Alert>
         <div className="flex items-center gap-2">
           {getSecurityLevelIcon()}
@@ -558,6 +634,15 @@ const QuantumSecurePayment: React.FC<QuantumSecurePaymentProps> = ({ onPaymentCo
         </div>
       </Alert>
       
+      {/* Security Comparison (conditionally shown) */}
+      {showSecurityInfo && (
+        <div className="mt-6">
+          <h3 className="font-medium text-base mb-3">Security Comparison</h3>
+          <SecurityComparison />
+        </div>
+      )}
+      
+      {/* Process Payment Button */}
       <div className="pt-4">
         <Button 
           onClick={() => {
@@ -580,6 +665,7 @@ const QuantumSecurePayment: React.FC<QuantumSecurePaymentProps> = ({ onPaymentCo
           }} 
           disabled={isProcessing || !amount}
           className="w-full"
+          size="lg"
         >
           {isProcessing ? 'Processing...' : `Process Quantum Secured ${
             paymentType === 'stripe' ? 'Card Payment' : 
