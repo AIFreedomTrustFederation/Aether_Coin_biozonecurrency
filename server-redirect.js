@@ -3,9 +3,15 @@
  * Can be deployed to a traditional web hosting environment
  * Configured to serve the application at atc.aifreedomtrust.com/wallet or atc.aifreedomtrust.com/dapp
  */
-const express = require('express');
-const path = require('path');
-const fs = require('fs');
+import express from 'express';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+// Get __dirname equivalent in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -15,11 +21,11 @@ app.use('/wallet', express.static(path.join(__dirname, 'dist')));
 app.use('/dapp', express.static(path.join(__dirname, 'dist')));
 
 // For API requests, pass to the appropriate handler
-app.use('/wallet/api', (req, res, next) => {
+app.use('/wallet/api', async (req, res, next) => {
   // Import the API router from the server
   try {
-    const apiRouter = require('./server').router;
-    apiRouter(req, res, next);
+    const { router } = await import('./dist/index.js');
+    router(req, res, next);
   } catch (error) {
     console.error('API router error:', error);
     res.status(500).json({ error: 'Internal Server Error' });
@@ -27,10 +33,10 @@ app.use('/wallet/api', (req, res, next) => {
 });
 
 // Also handle API requests for the /dapp path
-app.use('/dapp/api', (req, res, next) => {
+app.use('/dapp/api', async (req, res, next) => {
   try {
-    const apiRouter = require('./server').router;
-    apiRouter(req, res, next);
+    const { router } = await import('./dist/index.js');
+    router(req, res, next);
   } catch (error) {
     console.error('API router error:', error);
     res.status(500).json({ error: 'Internal Server Error' });

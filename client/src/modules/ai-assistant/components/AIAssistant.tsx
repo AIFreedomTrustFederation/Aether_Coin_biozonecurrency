@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { MessageSquare, X, Minus, Move, Settings, Send } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { Message } from './ChatInterface'; // Import the Message type
+import styles from './AIAssistant.module.css';
 
 // Using a local interface instead of importing from types to avoid TypeScript errors
 interface AIAssistantProps {
@@ -140,9 +141,9 @@ const AIContent = () => {
             <div className="flex justify-start">
               <div className="flex items-center gap-2 max-w-[80%] p-3 rounded-lg bg-muted mr-auto">
                 <div className="flex space-x-1">
-                  <div className="w-2 h-2 bg-primary/70 rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></div>
-                  <div className="w-2 h-2 bg-primary/70 rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></div>
-                  <div className="w-2 h-2 bg-primary/70 rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></div>
+                  <div className={`w-2 h-2 bg-primary/70 rounded-full animate-bounce ${styles.typingDot1}`}></div>
+                  <div className={`w-2 h-2 bg-primary/70 rounded-full animate-bounce ${styles.typingDot2}`}></div>
+                  <div className={`w-2 h-2 bg-primary/70 rounded-full animate-bounce ${styles.typingDot3}`}></div>
                 </div>
                 <div className="text-sm text-muted-foreground">Thinking...</div>
               </div>
@@ -179,7 +180,10 @@ const AIContent = () => {
             handleSendMessage(inputValue);
             setInputValue('');
           }}
+          aria-label="Send message"
         >
+          <Send className="h-5 w-5" />
+        
           <Send className="h-4 w-4" />
         </button>
       </div>
@@ -444,12 +448,9 @@ export function AIAssistant({ userId, className = '' }: AIAssistantProps) {
     <AIProvider userId={userId}>
       <div 
         ref={dragRef}
-        className={`fixed z-50 ${className}`} 
-        style={{ 
-          left: `${position.x}px`, 
-          top: `${position.y}px`,
-          transition: isDragging ? 'none' : 'all 0.2s ease'
-        }}
+        className={`${styles.aiAssistantContainer} ${className} ${isDragging ? styles.dragging : ''}`} 
+        data-position-x={position.x}
+        data-position-y={position.y}
       >
         {isOpen ? (
           <Card 
