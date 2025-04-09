@@ -1,6 +1,7 @@
+/* Import custom styles first */
 @import './styles/neon.css';
 
-/* Tailwind CSS setup */
+/* Tailwind CSS directives */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
