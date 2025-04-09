@@ -1,0 +1,42 @@
+/* Progress bar styles */
+.progressBar {
+  width: 100%;
+  background-color: rgb(229, 231, 235); /* bg-gray-200 */
+  border-radius: 9999px; /* rounded-full */
+  height: 0.625rem; /* h-2.5 */
+  margin-bottom: 0.25rem; /* mb-1 */
+}
+
+/* Dark mode support */
+:global(.dark) .progressBar {
+  background-color: rgb(55, 65, 81); /* dark:bg-gray-700 */
+}
+
+.progressFill {
+  background-color: rgb(37, 99, 235); /* bg-blue-600 */
+  height: 0.625rem; /* h-2.5 */
+  border-radius: 9999px; /* rounded-full */
+}
+
+/* Progress percentage classes - dynamically applied */
+.progress0 { width: 0%; }
+.progress5 { width: 5%; }
+.progress10 { width: 10%; }
+.progress15 { width: 15%; }
+.progress20 { width: 20%; }
+.progress25 { width: 25%; }
+.progress30 { width: 30%; }
+.progress35 { width: 35%; }
+.progress40 { width: 40%; }
+.progress45 { width: 45%; }
+.progress50 { width: 50%; }
+.progress55 { width: 55%; }
+.progress60 { width: 60%; }
+.progress65 { width: 65%; }
+.progress70 { width: 70%; }
+.progress75 { width: 75%; }
+.progress80 { width: 80%; }
+.progress85 { width: 85%; }
+.progress90 { width: 90%; }
+.progress95 { width: 95%; }
+.progress100 { width: 100%; }

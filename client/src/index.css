@@ -1,10 +1,10 @@
-/* Import custom styles first */
-@import './styles/neon.css';
-
-/* Tailwind CSS directives */
+/* Tailwind CSS directives must come first */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Import custom styles after Tailwind */
+@import './styles/neon.css';
 
 @layer base {
   html {
@@ -64,12 +64,30 @@
   overflow-x: auto;
   scroll-behavior: smooth;
   scroll-snap-type: x proximity;
+  /* Safari/iOS < 16 fallback for overscroll-behavior */
+  -webkit-overflow-scrolling: touch;
+  /* Modern browsers including Safari iOS 16+ */
   overscroll-behavior-x: contain;
-  -webkit-overflow-scrolling: touch; /* Safari fallback */
+  /* Prevent default touch actions */
   touch-action: pan-x;
   position: relative;
+  /* Additional Safari/iOS bounce prevention */
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .scroll-item {
   scroll-snap-align: start;
+}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+// Update the content array to include your source files
+module.exports = {
+  content: ['./src/**/*.{js,jsx,ts,tsx,css}'],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
 }

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ArrowRight, CheckCircle, Clock3, Info, ShieldAlert, X } from 'lucide-react';
 import { formatTimeRemaining } from '../utils/formatters';
+import styles from './TransactionHold.module.css';
 
 interface TransactionHoldProps {
   transaction: {
@@ -81,6 +82,13 @@ const TransactionHold: React.FC<TransactionHoldProps> = ({
   const totalIssues = sortedIssues.length;
   const progressPercent = totalIssues > 0 ? Math.round((resolvedCount / totalIssues) * 100) : 0;
   
+  // Helper function to get the closest progress class (in increments of 5)
+  const getProgressClass = (progress: number): string => {
+    // Round to the nearest 5
+    const roundedProgress = Math.round(progress / 5) * 5;
+    return styles[`progress${roundedProgress}`];
+  };
+
   // Handle issue resolution toggle
   const toggleIssueResolved = (issueId: string) => {
     setResolvedIssues(prev => ({
@@ -157,10 +165,9 @@ const TransactionHold: React.FC<TransactionHoldProps> = ({
         </div>
         
         {/* Progress Bar */}
-        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 mb-1">
+        <div className={styles.progressBar}>
           <div 
-            className="bg-blue-600 h-2.5 rounded-full" 
-            style={{ width: `${progressPercent}%` }}
+            className={`${styles.progressFill} ${getProgressClass(progressPercent)}`}
           ></div>
         </div>
         <div className="text-xs text-gray-500 dark:text-gray-400 mb-3">

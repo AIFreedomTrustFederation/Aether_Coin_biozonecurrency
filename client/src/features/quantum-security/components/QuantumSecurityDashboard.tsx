@@ -33,6 +33,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { QuantumAlgorithmStatus } from './QuantumAlgorithmStatus';
+import styles from './QuantumSecurityDashboard.module.css';
 
 // Helper to format timestamp in relative terms
 const formatRelativeTime = (timestamp: number): string => {
@@ -289,8 +290,7 @@ const FractalVisualization: React.FC = () => {
   return (
     <canvas 
       ref={canvasRef}
-      className="w-full h-full rounded-md"
-      style={{ minHeight: '300px' }}
+      className={styles.fractalCanvas}
     />
   );
 };
@@ -484,10 +484,10 @@ const TimeStreamVisualization: React.FC = () => {
   };
   
   return (
-    <div className="relative w-full h-full" style={{ minHeight: '300px' }}>
+    <div className="relative w-full h-full">
       <canvas 
         ref={canvasRef}
-        className="w-full h-full rounded-md"
+        className={styles.timeStreamCanvas}
       />
       <div className="absolute bottom-4 right-4">
         <Button 
