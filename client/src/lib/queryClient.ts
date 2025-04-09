@@ -1,47 +1,60 @@
 import { QueryClient } from '@tanstack/react-query';
 
-// Create and export a query client instance
+// Create a client
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
+      staleTime: 5 * 60 * 1000, // 5 minutes
       retry: 1,
+      refetchOnWindowFocus: false,
     },
   },
 });
 
-// Helper for making API requests
-export async function apiRequest<T = any>(
-  url: string,
-  method: string = 'GET', 
-  body?: any, 
-  headers: HeadersInit = {}
-): Promise<T> {
-  const options: RequestInit = {
+type ApiRequestOptions = {
+  method?: string;
+  body?: any;
+  headers?: Record<string, string>;
+};
+
+// General API request function
+export async function apiRequest(endpoint: string, options: ApiRequestOptions = {}) {
+  const { method = 'GET', body, headers = {} } = options;
+
+  const requestHeaders = {
+    'Content-Type': 'application/json',
+    ...headers,
+  };
+
+  const config: RequestInit = {
     method,
-    headers: {
-      'Content-Type': 'application/json',
-      ...headers,
-    },
+    headers: requestHeaders,
     credentials: 'include',
   };
 
-  if (body && method !== 'GET') {
-    options.body = JSON.stringify(body);
+  if (body) {
+    config.body = typeof body === 'string' ? body : JSON.stringify(body);
   }
 
-  const response = await fetch(url, options);
-
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(error || `Error ${response.status}: ${response.statusText}`);
+  try {
+    const response = await fetch(endpoint, config);
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({
+        message: 'Unknown error occurred',
+      }));
+      throw new Error(errorData.message || `Request failed with status ${response.status}`);
+    }
+    
+    // Check if the response is JSON
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.indexOf('application/json') !== -1) {
+      return await response.json();
+    }
+    
+    return await response.text();
+  } catch (error) {
+    console.error('API request error:', error);
+    throw error;
   }
-
-  // Check if the response has content
-  const contentType = response.headers.get('content-type');
-  if (contentType && contentType.includes('application/json')) {
-    return await response.json();
-  }
-  
-  return {} as T;
 }

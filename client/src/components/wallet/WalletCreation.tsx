@@ -403,11 +403,29 @@ export default function WalletCreation() {
       // Decrypt private key
       let decryptedBytes;
       try {
-        decryptedBytes = CryptoJS.AES.decrypt(wallet.encryptedPrivateKey, walletPassphrase);
-        // Check if decryption was successful (should produce a non-empty string)
-        const testDecrypt = decryptedBytes.toString(CryptoJS.enc.Utf8);
-        if (!testDecrypt || testDecrypt.length < 1) {
-          throw new Error("Decryption resulted in empty string");
+        // First try to decrypt with the complete passphrase as provided
+        try {
+          decryptedBytes = CryptoJS.AES.decrypt(wallet.encryptedPrivateKey, walletPassphrase);
+          // Check if decryption was successful (should produce a non-empty string)
+          const testDecrypt = decryptedBytes.toString(CryptoJS.enc.Utf8);
+          if (!testDecrypt || testDecrypt.length < 1) {
+            throw new Error("Decryption resulted in empty string");
+          }
+        } catch (initialDecryptError) {
+          console.log("Initial decryption failed, trying with first 12 words...");
+          // If that fails, try using just the first 12 words (common for mnemonic phrases)
+          const mnemonicWords = walletPassphrase.trim().split(/\s+/);
+          if (mnemonicWords.length > 12) {
+            const first12Words = mnemonicWords.slice(0, 12).join(' ');
+            decryptedBytes = CryptoJS.AES.decrypt(wallet.encryptedPrivateKey, first12Words);
+            // Check if decryption was successful with the first 12 words
+            const testDecrypt = decryptedBytes.toString(CryptoJS.enc.Utf8);
+            if (!testDecrypt || testDecrypt.length < 1) {
+              throw new Error("Decryption failed with first 12 words too");
+            }
+          } else {
+            throw initialDecryptError; // Re-throw if we don't have more than 12 words
+          }
         }
       } catch (decryptError) {
         console.error("Decryption error:", decryptError);

@@ -2,7 +2,8 @@ import { pgTable, text, serial, integer, boolean, timestamp, jsonb, decimal, pri
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
-import { users, wallets } from "./schema";
+import { users } from "./base-schema";
+import { wallets } from "./schema";
 
 // Enums for Recurve System
 export enum InsurancePolicyType {

@@ -14,7 +14,7 @@ import { Link } from "wouter";
 import { 
   Menu, X, Home, Layout, Wallet, Lock, Shield, Settings, AlertTriangle, ChevronRight, 
   BarChart3, Eye, Cpu, Bell, Zap, Coins, FileText, Database, Bot, TestTube, Blocks,
-  Smartphone, Lightbulb, CreditCard, Info, Palette, Loader2, UserCircle2, Globe, Code
+  Smartphone, Lightbulb, CreditCard, Info, Palette, Loader2, UserCircle2, Globe, Code, Key
 } from "lucide-react";
 import { AuthProvider } from "./context/AuthContext";
 import TrustMemberGuard from "./components/auth/TrustMemberGuard";
@@ -63,6 +63,7 @@ const TransactionsPage = lazy(() => import("./pages/TransactionsPage"));
 const BridgePage = lazy(() => import("./pages/BridgePage"));
 const BridgeTestPage = lazy(() => import("./pages/BridgeTestPage"));
 const QuantumSecurePaymentPage = lazy(() => import("./pages/QuantumSecurePaymentPage"));
+const ApiKeyPage = lazy(() => import("./pages/ApiKeyPage"));
 
 // VS Code Integration
 const CodeEditorPage = lazy(() => import("./features/code-editor").then(m => ({ default: m.CodeEditorPage })));
@@ -97,6 +98,7 @@ const navigationItems = [
   { name: "Code Editor", path: "/code-editor", icon: <Code className="h-5 w-5" /> },
   { name: "Domain Hosting", path: "/domain-hosting", icon: <Database className="h-5 w-5" /> },
   { name: "Domain Wizard", path: "/domain-hosting-wizard", icon: <Globe className="h-5 w-5" /> },
+  { name: "API Key", path: "/api-key", icon: <Key className="h-5 w-5" /> },
   { name: "Bridge", path: "/bridge", icon: <ChevronRight className="h-5 w-5 rotate-90" /> },
   { name: "Bridge Test", path: "/bridge-test", icon: <TestTube className="h-5 w-5" /> },
   { name: "Escrow", path: "/escrow", icon: <Shield className="h-5 w-5" /> },
@@ -670,6 +672,12 @@ function App() {
             <Route path="/domain-hosting-wizard">
               <Suspense fallback={<LoadingScreen message="Loading domain hosting wizard..." />}>
                 <DomainHostingWizardPage />
+              </Suspense>
+            </Route>
+            
+            <Route path="/api-key">
+              <Suspense fallback={<LoadingScreen message="Loading API key generator..." />}>
+                <ApiKeyPage />
               </Suspense>
             </Route>
             <Route path="/escrow">

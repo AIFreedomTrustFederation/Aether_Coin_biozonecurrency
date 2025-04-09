@@ -1,7 +1,8 @@
 import express, { Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
-import { IStorage } from '../storage';
+import { storage } from '../fixed-storage';
+import { checkAdminPrivilege } from '../middleware/admin-auth';
 
 const router = express.Router();
 
@@ -23,9 +24,8 @@ interface AuthRequest extends Request {
 
 /**
  * Create authentication routes
- * @param storage The storage interface to interact with the database
  */
-export function createAuthRoutes(storage: IStorage) {
+export function createAuthRoutes() {
   
   // Login route
   router.post('/login', async (req: Request, res: Response) => {
@@ -197,6 +197,15 @@ export function createAuthRoutes(storage: IStorage) {
     res.status(200).json({ 
       message: 'This data is only available to trust members',
       // Add trust-specific data here 
+    });
+  });
+
+  // Check if user has admin privileges
+  router.get('/check-admin', requireAuth, checkAdminPrivilege, (req: Request, res: Response) => {
+    const authReq = req as any; // using any to avoid type issues with session.isAdmin
+    
+    res.status(200).json({
+      isAdmin: authReq.session?.isAdmin || false,
     });
   });
 

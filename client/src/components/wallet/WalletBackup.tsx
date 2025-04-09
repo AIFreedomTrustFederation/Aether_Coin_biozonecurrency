@@ -257,7 +257,8 @@ export default function WalletBackup() {
     
     // Create a hash of the fingerprint
     const input = walletsFingerprint + Date.now().toString();
-    const hash = CryptoJS.MD5(input).toString();
+    // Use SHA256 instead of MD5
+    const hash = CryptoJS.SHA256(input).toString();
     
     // Use the hash to create a more user-friendly passphrase (first 16 chars)
     const securePassphrase = `ATC-${hash.substring(0, 4)}-${hash.substring(4, 8)}-${hash.substring(8, 12)}-${hash.substring(12, 16)}`;
