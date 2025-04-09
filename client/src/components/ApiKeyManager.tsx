@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
+import { useAuth } from '@/context/AuthContext';
 import {
   Card,
   CardContent,
@@ -82,24 +83,8 @@ export function ApiKeyManager() {
   const [viewConnectionsFor, setViewConnectionsFor] = useState<number | null>(null);
   const [viewUsageFor, setViewUsageFor] = useState<number | null>(null);
   const [showFullKey, setShowFullKey] = useState<number | null>(null);
-  const [isUserAdmin, setIsUserAdmin] = useState(false);
-  
+  const { isAdmin } = useAuth();
   const queryClient = useQueryClient();
-  
-  // Check if user has admin privileges
-  useEffect(() => {
-    const checkAdminStatus = async () => {
-      try {
-        const response = await apiRequest('/api/auth/check-admin');
-        setIsUserAdmin(response?.isAdmin || false);
-      } catch (error) {
-        console.error('Error checking admin status:', error);
-        setIsUserAdmin(false);
-      }
-    };
-    
-    checkAdminStatus();
-  }, []);
   
   // Form for creating new API keys
   const form = useForm<ApiKeyFormValues>({
@@ -321,7 +306,7 @@ export function ApiKeyManager() {
                           />
                           <label htmlFor="scope-write">Write</label>
                         </div>
-                        {isUserAdmin ? (
+                        {isAdmin ? (
                           <div className="flex items-center gap-2">
                             <input
                               type="checkbox"
