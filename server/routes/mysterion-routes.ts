@@ -125,8 +125,8 @@ mysterionRouter.post('/analyze-code', requireAuth, async (req: any, res) => {
   }
 });
 
-// Create a new Zen Coding project with Matrix integration
-mysterionRouter.post('/zen-coding/projects', requireAuth, async (req: any, res) => {
+// Create a new BioZone Coding project with Matrix integration
+mysterionRouter.post('/biozone-coding/projects', requireAuth, async (req: any, res) => {
   try {
     const userId = req.session.userId;
     
@@ -140,7 +140,7 @@ mysterionRouter.post('/zen-coding/projects', requireAuth, async (req: any, res) 
     const { name, description, inviteMatrixIds = [] } = schema.parse(req.body);
     
     // Create the project
-    const project = await mysterionLlmService.bootstrapZenCodingProject(
+    const project = await mysterionLlmService.bootstrapBioZoneCodingProject(
       name,
       description,
       userId,
@@ -149,7 +149,7 @@ mysterionRouter.post('/zen-coding/projects', requireAuth, async (req: any, res) 
     
     res.status(201).json(project);
   } catch (error) {
-    console.error('Error creating Zen Coding project:', error);
+    console.error('Error creating BioZone Coding project:', error);
     
     if (error instanceof z.ZodError) {
       return res.status(400).json({ 
@@ -159,7 +159,7 @@ mysterionRouter.post('/zen-coding/projects', requireAuth, async (req: any, res) 
     }
     
     res.status(500).json({ 
-      message: 'Error creating Zen Coding project', 
+      message: 'Error creating BioZone Coding project', 
       error: error instanceof Error ? error.message : 'Unknown error' 
     });
   }

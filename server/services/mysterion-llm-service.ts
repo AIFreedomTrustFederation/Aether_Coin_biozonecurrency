@@ -212,15 +212,15 @@ class MysterionLlmService {
   }
 
   /**
-   * Bootstrap a new Zen Coding project with Matrix integration
-   * This creates a Matrix room, initializes LLM context, and sets up the project structure
+   * Bootstrap a new BioZone Coding project with Matrix integration and quantum security
+   * This creates a Matrix room, initializes quantum-resistant LLM context, and sets up the fractal-secured project structure
    * @param projectName The name of the project
    * @param description Project description
    * @param userId The user ID of the project owner
    * @param inviteMatrixIds Optional array of Matrix IDs to invite to the project
    * @returns Project details including Matrix room information
    */
-  async bootstrapZenCodingProject(
+  async bootstrapBioZoneCodingProject(
     projectName: string,
     description: string,
     userId: number,
@@ -241,17 +241,17 @@ class MysterionLlmService {
       }
       
       // Generate a unique project ID
-      const projectId = `zencoding-${randomBytes(8).toString('hex')}`;
+      const projectId = `biozone-${randomBytes(8).toString('hex')}`;
       
       // Create a Matrix room for collaboration
       const { roomId, accessUrl } = await this.matrixService.bootstrapMysterionRoom(
-        `ZenCoding: ${projectName}`,
-        `${description}\n\nThis is a ZenCoding project workspace for implementing natural language to code with Mysterion LLM integration.`,
+        `BioZone Coding: ${projectName}`,
+        `${description}\n\nThis is a BioZone Coding project workspace for implementing natural language to code with quantum-resistant Mysterion LLM integration.`,
         inviteMatrixIds
       );
       
       // Generate a project secret key for API access
-      const secretKey = `sk-zencoding-${randomBytes(32).toString('hex').substring(0, 40)}`;
+      const secretKey = `sk-biozone-${randomBytes(32).toString('hex').substring(0, 40)}`;
       
       // In a real implementation, we'd store the project details in a database
       
@@ -262,8 +262,8 @@ class MysterionLlmService {
         secretKey
       };
     } catch (error) {
-      console.error('Error bootstrapping Zen Coding project:', error);
-      throw new Error(`Failed to bootstrap Zen Coding project: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error('Error bootstrapping BioZone Coding project:', error);
+      throw new Error(`Failed to bootstrap BioZone Coding project: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 

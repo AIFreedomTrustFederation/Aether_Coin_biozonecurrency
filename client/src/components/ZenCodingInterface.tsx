@@ -133,8 +133,8 @@ interface CodeAnalysis {
   performanceIssues: string[];
 }
 
-// Interface for Zen Coding project
-interface ZenCodingProject {
+// Interface for BioZone Coding project
+interface BioZoneCodingProject {
   projectId: string;
   matrixRoomId: string;
   accessUrl: string;
@@ -166,7 +166,7 @@ export function BioZoneCodingUI() {
   const [activeTab, setActiveTab] = useState('generate');
   const [generatedCode, setGeneratedCode] = useState<GeneratedCode | null>(null);
   const [codeAnalysis, setCodeAnalysis] = useState<CodeAnalysis | null>(null);
-  const [createdProject, setCreatedProject] = useState<ZenCodingProject | null>(null);
+  const [createdProject, setCreatedProject] = useState<BioZoneCodingProject | null>(null);
   const [isCreatingProject, setIsCreatingProject] = useState(false);
   const editorRef = useRef<any>(null);
   const analysisEditorRef = useRef<any>(null);
@@ -287,9 +287,9 @@ export function BioZoneCodingUI() {
     },
   });
   
-  // Mutation to create a new Zen Coding project
+  // Mutation to create a new BioZone Coding project
   const createProjectMutation = useMutation({
-    mutationFn: (data: ProjectCreationFormValues) => apiRequest('/api/mysterion/zen-coding/projects', {
+    mutationFn: (data: ProjectCreationFormValues) => apiRequest('/api/mysterion/biozone-coding/projects', {
       method: 'POST',
       body: data,
     }),
