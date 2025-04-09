@@ -417,9 +417,11 @@ class WalletConnector extends EventEmitter {
   public addVerifiedWallet(wallet: ConnectedWallet): void {
     this.checkInitialized();
     
+    console.log("Adding verified wallet:", wallet.id, wallet.type);
+    
     // Remove any existing wallet with the same ID or address to prevent duplicates
     this.connectedWallets = this.connectedWallets.filter(
-      w => w.id !== wallet.id && w.address !== wallet.address
+      w => w.id !== wallet.id && w.address?.toLowerCase() !== wallet.address?.toLowerCase()
     );
     
     // Add the wallet
@@ -428,6 +430,10 @@ class WalletConnector extends EventEmitter {
     // Update metrics based on wallet type
     if (wallet.type === 'ethereum') this.storageMetrics.ethereumWallets++;
     if (wallet.type === 'bitcoin') this.storageMetrics.bitcoinWallets++;
+    
+    // Emit a connection event
+    this.emit('wallet-connected', wallet);
+    console.log("Wallet connected successfully:", wallet.id);
     if (wallet.type === 'coinbase') this.storageMetrics.coinbaseWallets++;
     if (wallet.type === 'plaid') this.storageMetrics.plaidConnections++;
     

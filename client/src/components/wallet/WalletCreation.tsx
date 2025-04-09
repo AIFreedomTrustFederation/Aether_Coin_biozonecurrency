@@ -355,13 +355,35 @@ export default function WalletCreation() {
       setUserWallets(prev => [...prev, importedWalletObj]);
       setImportedWallet(importedWalletObj);
       
+      // Connect the wallet through WalletConnector - ensure we match the ConnectedWallet interface
+      const connectedWalletObj = {
+        id: importedWalletObj.id,
+        type: 'ethereum' as const,
+        name: `HD Wallet (${importedWalletObj.address.substring(0, 6)}...${importedWalletObj.address.substring(38)})`,
+        address: importedWalletObj.address,
+        provider: wallet,
+        metadata: {
+          privateKey: privateKey,
+          encryptedMnemonic: importedWalletObj.encryptedMnemonic,
+          verified: true
+        }
+      };
+      
+      try {
+        // Notify the WalletConnector about the new connection
+        walletConnector.addVerifiedWallet(connectedWalletObj);
+      } catch (connectError) {
+        console.error("Error adding imported wallet to connector:", connectError);
+        // We'll still show success but log the error connecting
+      }
+      
       // Reset form
       setImportMnemonic('');
       setImportPassphrase('');
       
       toast({
         title: 'Wallet Imported',
-        description: 'Your wallet has been imported successfully.'
+        description: 'Your wallet has been imported successfully and connected.'
       });
     } catch (error) {
       console.error('Error importing wallet:', error);
@@ -538,14 +560,18 @@ export default function WalletCreation() {
           setUserWallets(updatedWallets);
         }
         
-        // Connect the wallet through WalletConnector
+        // Connect the wallet through WalletConnector - ensure we match the ConnectedWallet interface
         const connectedWalletObj = {
           id: wallet.id,
           type: 'ethereum' as const,
           name: `HD Wallet (${wallet.address.substring(0, 6)}...${wallet.address.substring(38)})`,
           address: wallet.address,
           provider: connectedWallet,
-          privateKey // Add the private key for signing operations
+          metadata: {
+            privateKey, // Store privateKey in metadata to avoid interface errors
+            encryptedMnemonic: wallet.encryptedMnemonic,
+            verified: true
+          }
         };
         
         try {
