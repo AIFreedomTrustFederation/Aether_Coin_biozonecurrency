@@ -3,6 +3,14 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
 
+// Import wallet passphrase schema
+import { 
+  passphraseWallets, 
+  passphraseWalletsRelations,
+  PassphraseWallet,
+  InsertPassphraseWallet
+} from "./wallet-schema";
+
 // Import AI Assistant Schema 
 import {
   TrainingFeedbackType,
@@ -200,6 +208,19 @@ import {
 } from './dapp-schema';
 
 // User API Keys and Mysterion training data types are already exported elsewhere
+
+// Export wallet passphrase schema
+export {
+  // Tables
+  passphraseWallets,
+  
+  // Relations
+  passphraseWalletsRelations,
+  
+  // Types
+  PassphraseWallet,
+  InsertPassphraseWallet
+}
 
 // Escrow system types
 export enum EscrowStatus {

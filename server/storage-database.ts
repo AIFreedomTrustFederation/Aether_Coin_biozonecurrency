@@ -18,7 +18,9 @@ import {
   aiTrainingData, aiTrainingJobs, aiTrainingContributors,
   TrainingFeedbackType, TrainingProcessingStatus,
   // AetherCore tables
-  aetherBridgeTransactions, llmBrainRecords, brainNetworkShards, quantumIdentities, fractalGovernanceVotes
+  aetherBridgeTransactions, llmBrainRecords, brainNetworkShards, quantumIdentities, fractalGovernanceVotes,
+  // Passphrase wallet tables
+  passphraseWallets
 } from '../shared/schema';
 
 /**
@@ -122,6 +124,56 @@ export class DatabaseStorage implements IStorage {
       .update(wallets)
       .set({ balance })
       .where(eq(wallets.id, id))
+      .returning();
+    return wallet;
+  }
+
+  // Passphrase Wallet methods
+  async getPassphraseWallet(id: number): Promise<schema.PassphraseWallet | undefined> {
+    const [wallet] = await db.select().from(passphraseWallets).where(eq(passphraseWallets.id, id));
+    return wallet;
+  }
+
+  async getPassphraseWalletByWalletId(walletId: string): Promise<schema.PassphraseWallet | undefined> {
+    const [wallet] = await db.select().from(passphraseWallets).where(eq(passphraseWallets.walletId, walletId));
+    return wallet;
+  }
+
+  async getPassphraseWalletsByUserId(userId: number): Promise<schema.PassphraseWallet[]> {
+    return db
+      .select()
+      .from(passphraseWallets)
+      .where(eq(passphraseWallets.userId, userId));
+  }
+
+  async getPassphraseWalletByAddress(address: string): Promise<schema.PassphraseWallet | undefined> {
+    const [wallet] = await db.select().from(passphraseWallets).where(eq(passphraseWallets.address, address));
+    return wallet;
+  }
+
+  async createPassphraseWallet(wallet: schema.InsertPassphraseWallet): Promise<schema.PassphraseWallet> {
+    const [result] = await db.insert(passphraseWallets).values(wallet).returning();
+    return result;
+  }
+
+  async updatePassphraseWallet(id: number, updates: Partial<schema.PassphraseWallet>): Promise<schema.PassphraseWallet | undefined> {
+    const [wallet] = await db
+      .update(passphraseWallets)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(passphraseWallets.id, id))
+      .returning();
+    return wallet;
+  }
+
+  async verifyPassphraseWallet(id: number): Promise<schema.PassphraseWallet | undefined> {
+    const [wallet] = await db
+      .update(passphraseWallets)
+      .set({ 
+        verified: true, 
+        verifiedAt: new Date(),
+        updatedAt: new Date() 
+      })
+      .where(eq(passphraseWallets.id, id))
       .returning();
     return wallet;
   }

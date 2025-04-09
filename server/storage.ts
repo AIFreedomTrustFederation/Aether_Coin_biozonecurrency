@@ -5,6 +5,14 @@
 
 import dotenv from 'dotenv';
 import * as schema from '../shared/schema';
+
+// Import passphrase wallet schema explicitly
+import { 
+  passphraseWallets, 
+  passphraseWalletsRelations,
+  PassphraseWallet,
+  InsertPassphraseWallet
+} from '../shared/schema';
 import { DatabaseStorage } from './storage-database';
 
 // Load environment variables
@@ -17,6 +25,8 @@ export const storage = new DatabaseStorage();
 export type { User, Wallet, Transaction, SmartContract, AiMonitoringLog, CidEntry, PaymentMethod, Payment, 
                StakingPosition, Proposal, ProposalOption, Vote, GovernanceReward,
                WalletHealthScore, WalletHealthIssue, NotificationPreference,
+               // Export passphrase wallet types
+               PassphraseWallet, InsertPassphraseWallet,
                AdminAction, AdminPermission, Fund, FundAllocation, FundTransaction,
                TokenomicsConfig, TokenDistribution, Widget, WidgetTemplate, Dashboard,
                IcoParticipation, IcoPhase, StakingRecord, EscrowTransaction, EscrowProof,
@@ -67,6 +77,15 @@ export interface IStorage {
   getWalletsByUserId(userId: number): Promise<schema.Wallet[]>;
   createWallet(insertWallet: schema.InsertWallet): Promise<schema.Wallet>;
   updateWalletBalance(id: number, balance: string): Promise<schema.Wallet | undefined>;
+  
+  // Passphrase Wallet methods
+  getPassphraseWallet(id: number): Promise<schema.PassphraseWallet | undefined>;
+  getPassphraseWalletByWalletId(walletId: string): Promise<schema.PassphraseWallet | undefined>;
+  getPassphraseWalletsByUserId(userId: number): Promise<schema.PassphraseWallet[]>;
+  getPassphraseWalletByAddress(address: string): Promise<schema.PassphraseWallet | undefined>;
+  createPassphraseWallet(wallet: schema.InsertPassphraseWallet): Promise<schema.PassphraseWallet>;
+  updatePassphraseWallet(id: number, updates: Partial<schema.PassphraseWallet>): Promise<schema.PassphraseWallet | undefined>;
+  verifyPassphraseWallet(id: number): Promise<schema.PassphraseWallet | undefined>;
   
   // Transaction methods
   getTransaction(id: number): Promise<schema.Transaction | undefined>;

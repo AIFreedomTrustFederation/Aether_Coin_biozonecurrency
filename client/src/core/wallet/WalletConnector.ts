@@ -7,7 +7,6 @@
 
 import { EventEmitter } from 'events';
 import CryptoJS from 'crypto-js';
-import { enc, SHA256 } from 'crypto-js';
 import * as ethers from 'ethers';
 import { formatEther } from '@ethersproject/units';
 
@@ -90,7 +89,7 @@ class WalletConnector extends EventEmitter {
     if (this.initialized) return;
     
     // Set encryption key (hash it for security)
-    const hash = SHA256(encryptionKey).toString(enc.Hex);
+    const hash = CryptoJS.SHA256(encryptionKey).toString();
     this.encryptionKey = hash;
     
     // Initialize storage metrics for test mode
