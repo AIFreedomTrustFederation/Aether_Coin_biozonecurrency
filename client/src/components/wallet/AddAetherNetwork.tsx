@@ -7,7 +7,7 @@ import {
   AETHER_TESTNET_CONFIG 
 } from '../../config/blockchain-config';
 import { useToast } from '@/hooks/use-toast';
-import { AlertTriangle, Check, ExternalLink, Plus } from 'lucide-react';
+import { AlertTriangle, Check, ExternalLink, Plus, Sparkles } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -25,6 +25,7 @@ import {
   SelectValue
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import NetworkConfirmDialog from './NetworkConfirmDialog';
 
 interface NetworkParams {
   chainId: string;
@@ -43,6 +44,8 @@ const AddAetherNetwork: React.FC = () => {
   const [isAdding, setIsAdding] = useState(false);
   const [networkType, setNetworkType] = useState<'mainnet' | 'testnet'>('mainnet');
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [oneClickMode, setOneClickMode] = useState(false);
 
   // Check if MetaMask or other web3 wallet is available
   const hasWeb3Wallet = typeof window !== 'undefined' && window.ethereum !== undefined;
@@ -198,6 +201,88 @@ Block Explorer URL: ${config.blockExplorerUrl}`;
     );
   };
 
+  // New function to handle one-click network connect
+  const handleOneClickConnect = async () => {
+    if (!hasWeb3Wallet) {
+      toast({
+        title: 'No Web3 Wallet Detected',
+        description: 'Please install MetaMask or another Web3 wallet to connect to AetherCoin.',
+        variant: 'destructive'
+      });
+      return;
+    }
+    
+    setOneClickMode(true);
+    setConfirmDialogOpen(true);
+  };
+  
+  // Handle dialog confirmation
+  const handleConfirmConnect = async () => {
+    setConfirmDialogOpen(false);
+    setIsAdding(true);
+    
+    try {
+      const config = networkType === 'mainnet' ? AETHER_COIN_CONFIG : AETHER_TESTNET_CONFIG;
+      
+      if (!window.ethereum) {
+        throw new Error('No Web3 wallet detected');
+      }
+      
+      // First try to switch to network (in case it's already added)
+      try {
+        await window.ethereum.request({
+          method: 'wallet_switchEthereumChain',
+          params: [{ chainId: config.chainId }],
+        });
+        
+        toast({
+          title: 'Connected!',
+          description: `Successfully connected to ${config.networkName}.`,
+        });
+        return;
+      } catch (switchError: any) {
+        // If chain hasn't been added yet (error code 4902), add it
+        if (switchError.code === 4902) {
+          const params = getNetworkParams();
+          
+          await window.ethereum.request({
+            method: 'wallet_addEthereumChain',
+            params: [params],
+          });
+          
+          toast({
+            title: 'Success!',
+            description: `${params.chainName} has been added to your wallet.`,
+          });
+        } else {
+          throw switchError; // Re-throw if it's a different error
+        }
+      }
+    } catch (error: any) {
+      console.error('Error connecting to AetherCoin network:', error);
+      
+      if (error.code === 4001) {
+        // User rejected the request
+        toast({
+          title: 'Request Rejected',
+          description: 'You declined the request to connect to the AetherCoin network.',
+          variant: 'destructive'
+        });
+      } else {
+        toast({
+          title: 'Error Connecting',
+          description: error.message || 'Could not connect to AetherCoin network.',
+          variant: 'destructive'
+        });
+      }
+    } finally {
+      setIsAdding(false);
+    }
+  };
+  
+  // Get current network config
+  const currentConfig = networkType === 'mainnet' ? AETHER_COIN_CONFIG : AETHER_TESTNET_CONFIG;
+
   return (
     <>
       <div className="border-t pt-4 mt-4">
@@ -207,18 +292,29 @@ Block Explorer URL: ${config.blockExplorerUrl}`;
         </p>
         
         <div className="flex flex-col sm:flex-row gap-2">
+          {/* One-Click Connect Button */}
+          <Button 
+            className="flex-1 bg-gradient-to-r from-primary/90 to-primary"
+            onClick={handleOneClickConnect}
+            disabled={isAdding || !hasWeb3Wallet}
+          >
+            <Sparkles className="mr-2 h-4 w-4" />
+            {isAdding ? 'Connecting...' : 'One-Click Connect'}
+          </Button>
+          
+          {/* Advanced Options Dialog Trigger */}
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="flex-1">
+              <Button variant="outline" className="flex-1 sm:flex-none">
                 <Plus className="mr-2 h-4 w-4" />
-                Add AetherCoin Network
+                Advanced Options
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-md">
               <DialogHeader>
-                <DialogTitle>Add AetherCoin Network</DialogTitle>
+                <DialogTitle>AetherCoin Network Settings</DialogTitle>
                 <DialogDescription>
-                  Connect your wallet to the AetherCoin blockchain network.
+                  Configure and connect to the AetherCoin blockchain network.
                 </DialogDescription>
               </DialogHeader>
               
@@ -311,12 +407,28 @@ Block Explorer URL: ${config.blockExplorerUrl}`;
             </DialogContent>
           </Dialog>
           
-          <Button variant="outline" onClick={() => window.open(getNetworkConfig().blockExplorerUrl, '_blank')}>
+          <Button 
+            variant="outline" 
+            onClick={() => window.open(getNetworkConfig().blockExplorerUrl, '_blank')}
+            className="sm:flex-none"
+          >
             <ExternalLink className="mr-2 h-4 w-4" />
             Block Explorer
           </Button>
         </div>
       </div>
+      
+      {/* One-Click Network Confirmation Dialog */}
+      <NetworkConfirmDialog
+        open={confirmDialogOpen}
+        onOpenChange={setConfirmDialogOpen}
+        networkName={currentConfig.networkName}
+        networkSymbol={currentConfig.symbol}
+        chainId={currentConfig.chainId}
+        explorerUrl={currentConfig.blockExplorerUrl}
+        onConfirm={handleConfirmConnect}
+        onCancel={() => setConfirmDialogOpen(false)}
+      />
     </>
   );
 };
