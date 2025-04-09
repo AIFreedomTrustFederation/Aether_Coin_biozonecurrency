@@ -5,7 +5,7 @@
  * and viewing active connections to the FractalCoin API.
  */
 
-import { Router, Request, Response } from "express";
+import { Router, Request, Response, NextFunction } from "express";
 import { z } from "zod";
 import { storage } from "../fixed-storage";
 import { apiKeyService } from "../services/api-key-service";
@@ -13,8 +13,29 @@ import {
   insertApiKeySchema, 
   insertApiKeyConnectionSchema 
 } from "@shared/api-key-schema";
+import { checkAdminPrivilege } from "../middleware/admin-auth";
 
-// Create a router for API key routes
+// Auth request interface for TypeScript
+interface AuthRequest extends Request {
+  session?: {
+    userId: number;
+    isAuthenticated: boolean;
+    isAdmin?: boolean;
+  };
+}
+
+// Middleware to require authentication
+const requireAuth = (req: Request, res: Response, next: NextFunction) => {
+  const authReq = req as AuthRequest;
+  
+  if (!authReq.session || !authReq.session.isAuthenticated) {
+    return res.status(401).json({ message: 'Authentication required' });
+  }
+  
+  next();
+};
+
+// Create a router for API key routes with admin check middleware
 const router = Router();
 
 /**
@@ -49,8 +70,10 @@ router.get("/", async (req: Request, res: Response) => {
  * 
  * Create a new API key for the authenticated user
  */
-router.post("/", async (req: Request, res: Response) => {
+router.post("/", requireAuth, checkAdminPrivilege, async (req: Request, res: Response) => {
   try {
+    const authReq = req as AuthRequest;
+    
     // Validate incoming data
     const keyData = insertApiKeySchema
       .extend({
@@ -58,8 +81,16 @@ router.post("/", async (req: Request, res: Response) => {
       })
       .parse(req.body);
     
-    // In a real app, this would be from req.session.userId
-    const userId = 1;
+    // Check if user is trying to create a key with admin scope but doesn't have admin privileges
+    if (keyData.scopes.includes("admin") && (!authReq.session?.isAdmin)) {
+      return res.status(403).json({ 
+        message: "Admin privilege required to create keys with admin scope",
+        code: "ADMIN_PRIVILEGE_REQUIRED"
+      });
+    }
+    
+    // Get user ID from session
+    const userId = authReq.session?.userId || 1; // Fallback for development
     
     // Create the new API key
     const apiKey = await apiKeyService.createApiKey({

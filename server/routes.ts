@@ -146,7 +146,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/api/ai', aiGuidanceRoutes);
   
   // Mount authentication routes
-  app.use('/api/auth', authRoutes(storage));
+  app.use('/api/auth', authRoutes());
   
   // Mount domain hosting routes
   app.use('/api/domain-hosting', domainHostingRoutes);

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
@@ -40,11 +40,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { format } from 'date-fns';
-import { Copy, Eye, EyeOff, RotateCcw, Shield, ShieldAlert } from 'lucide-react';
+import { Copy, Eye, EyeOff, RotateCcw, Shield, ShieldAlert, Info } from 'lucide-react';
 
 // Define the API key schema
 const apiKeyFormSchema = z.object({
@@ -81,8 +82,24 @@ export function ApiKeyManager() {
   const [viewConnectionsFor, setViewConnectionsFor] = useState<number | null>(null);
   const [viewUsageFor, setViewUsageFor] = useState<number | null>(null);
   const [showFullKey, setShowFullKey] = useState<number | null>(null);
+  const [isUserAdmin, setIsUserAdmin] = useState(false);
   
   const queryClient = useQueryClient();
+  
+  // Check if user has admin privileges
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      try {
+        const response = await apiRequest('/api/auth/check-admin');
+        setIsUserAdmin(response?.isAdmin || false);
+      } catch (error) {
+        console.error('Error checking admin status:', error);
+        setIsUserAdmin(false);
+      }
+    };
+    
+    checkAdminStatus();
+  }, []);
   
   // Form for creating new API keys
   const form = useForm<ApiKeyFormValues>({
@@ -304,23 +321,67 @@ export function ApiKeyManager() {
                           />
                           <label htmlFor="scope-write">Write</label>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="checkbox"
-                            id="scope-admin"
-                            checked={form.watch("scopes").includes("admin")}
-                            onChange={(e) => {
-                              const scopes = new Set(form.watch("scopes"));
-                              if (e.target.checked) {
-                                scopes.add("admin");
-                              } else {
-                                scopes.delete("admin");
-                              }
-                              form.setValue("scopes", Array.from(scopes));
-                            }}
-                          />
-                          <label htmlFor="scope-admin">Admin</label>
-                        </div>
+                        {isUserAdmin ? (
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              id="scope-admin"
+                              checked={form.watch("scopes").includes("admin")}
+                              onChange={(e) => {
+                                const scopes = new Set(form.watch("scopes"));
+                                if (e.target.checked) {
+                                  scopes.add("admin");
+                                } else {
+                                  scopes.delete("admin");
+                                }
+                                form.setValue("scopes", Array.from(scopes));
+                              }}
+                            />
+                            <label htmlFor="scope-admin">Admin</label>
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span className="cursor-help">
+                                    <ShieldAlert className="h-4 w-4 text-amber-500 ml-1" />
+                                  </span>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p className="w-[200px] text-xs">
+                                    Admin scope provides elevated privileges and is only available to 
+                                    AI Freedom Trust admins with quantum authentication.
+                                  </p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2 opacity-50">
+                            <input
+                              type="checkbox"
+                              id="scope-admin"
+                              disabled
+                              checked={false}
+                            />
+                            <label htmlFor="scope-admin" className="flex items-center">
+                              Admin
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <span className="cursor-help">
+                                      <Info className="h-4 w-4 text-muted-foreground ml-1" />
+                                    </span>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p className="w-[200px] text-xs">
+                                      Admin scope is restricted to AI Freedom Trust admin members only.
+                                      This requires Trust membership, admin role, and quantum authentication.
+                                    </p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            </label>
+                          </div>
+                        )}
                       </div>
                       <FormDescription>
                         Select the scopes this API key will have access to.
