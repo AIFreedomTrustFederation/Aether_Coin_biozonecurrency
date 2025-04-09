@@ -18,7 +18,7 @@ const client = postgres(connectionString, {
   idle_timeout: 20, // max seconds a connection can be idle before being terminated
   connect_timeout: 10, // max seconds to wait for a connection
   prepare: false, // automatically prepare statements
-  ssl: process.env.NODE_ENV === 'production' // Use SSL in production
+  ssl: { rejectUnauthorized: false } // Allow self-signed certificates but still use SSL encryption
 });
 
 // Create a Drizzle ORM instance with the client and schema

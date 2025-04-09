@@ -12,13 +12,13 @@ import {
   LlmFineTuningJob, InsertLlmFineTuningJob,
   SacredPatternRecord, InsertSacredPatternRecord
 } from '../shared/schema-proxy';
-import { DatabaseStorage } from './database-storage';
 
-// Load environment variables
-dotenv.config();
+// Import the storage instance from fixed-storage.ts
+// This allows us to maintain backwards compatibility
+import { storage } from './fixed-storage';
 
-// Create and export the storage instance
-export const storage = new DatabaseStorage();
+// Re-export the storage instance
+export { storage };
 
 // Export the interfaces for the storage
 export interface IStorage {

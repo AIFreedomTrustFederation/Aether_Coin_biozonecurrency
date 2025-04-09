@@ -14,6 +14,9 @@ export * from './schema';
 // Re-export from LLM schema
 export * from './llm-schema';
 
+// Re-export from API Key schema
+export * from './api-key-schema';
+
 // Define proxy references to schema tables with forward declarations for other schemas
 // that may have circular dependencies
 
@@ -73,6 +76,43 @@ export const templeNodes = {
   nodeType: null, // 'levite', 'aaronic', 'zadokite'
   status: null,
   configuration: null
+} as any;
+
+// API Key schema proxies
+export const apiKeys = {
+  id: null,
+  userId: null,
+  key: null,
+  email: null,
+  name: null,
+  createdAt: null,
+  expiresAt: null,
+  revokedAt: null,
+  isActive: null,
+  lastUsedAt: null,
+  scopes: null
+} as any;
+
+export const apiKeyUsage = {
+  id: null,
+  keyId: null,
+  timestamp: null,
+  endpoint: null,
+  ipAddress: null,
+  responseCode: null,
+  responseTime: null
+} as any;
+
+export const apiKeyConnections = {
+  id: null,
+  keyId: null,
+  serviceType: null,
+  connectionId: null,
+  connectedAt: null,
+  disconnectedAt: null,
+  isActive: null,
+  lastPingAt: null,
+  metadata: null
 } as any;
 
 // Make sure any new schemas are also re-exported and proxied here
