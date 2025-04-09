@@ -8,6 +8,10 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 // Import the Aetherion provider to initialize window.aetherion
 import './core/blockchain/AetherionProvider';
 
+// Initialize theme system
+import { initializeThemeListener } from './lib/theme';
+initializeThemeListener();
+
 // Create a client
 const queryClient = new QueryClient({
   defaultOptions: {
