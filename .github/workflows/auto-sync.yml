@@ -1,0 +1,41 @@
+name: Auto-Sync to GitHub
+
+on:
+  workflow_dispatch:  # Allows manual triggering
+  schedule:
+    - cron: '0 */6 * * *'  # Run every 6 hours
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Set up Git
+        run: |
+          git config --global user.name "GitHub Actions Bot"
+          git config --global user.email "actions@github.com"
+
+      - name: Pull from Replit
+        run: |
+          # Add Replit as a remote repository
+          git remote add replit ${{ secrets.REPLIT_REPO_URL }}
+          git fetch replit
+
+      - name: Merge changes
+        run: |
+          # Try to merge changes from Replit's main branch
+          git merge replit/main --allow-unrelated-histories -X theirs
+          # Handle any merge conflicts in favor of Replit version
+          if [ $? -ne 0 ]; then
+            git checkout --theirs .
+            git add .
+            git commit -m "Resolve merge conflicts in favor of Replit version"
+          fi
+
+      - name: Push to GitHub
+        run: |
+          git push origin main
