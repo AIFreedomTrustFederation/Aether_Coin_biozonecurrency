@@ -32,6 +32,7 @@ import { registerQuantumSecurePaymentRoutes } from "./routes/quantum-secure-paym
 import web3StorageRoutes from "./routes/web3-storage-routes";
 import domainHostingRoutes from "./routes/domain-hosting-routes";
 import recurveRoutes from "./routes/recurve-routes";
+import aethercoreRoutes from "./routes/aethercore-routes";
 import { openSourcePaymentService } from "./services/openSourcePayment";
 
 /**
@@ -155,6 +156,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Mount AI Training Feedback routes
   app.use('/api/ai-training', aiTrainingRoutes);
+  
+  // Mount AetherCore routes
+  app.use('/api/aethercore', aethercoreRoutes);
   
   // Register quantum secure payment routes
   registerQuantumSecurePaymentRoutes(app);
