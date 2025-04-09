@@ -4,7 +4,7 @@
  */
 
 import { IBrainShardingService, IStorageConfig, IShardDistributionPlan } from '../interfaces/IBrainSharding';
-import { 
+import type { 
   LlmModelType, 
   ShardingStrategy, 
   BrainStorageRecord, 
@@ -491,7 +491,7 @@ export class AetherBrainShardingService implements IBrainShardingService {
     modelParameters: any,
     shardsCount: number
   ): ShardingStrategy {
-    if (modelType === LlmModelType.TRANSFORMER) {
+    if (modelType === 'transformer') {
       // For transformer models, shard by:
       // 1. Attention heads (allowing parallel attention computation)
       // 2. Model layers (allowing pipeline parallelism)
@@ -503,7 +503,7 @@ export class AetherBrainShardingService implements IBrainShardingService {
         redundancyPattern: 'fibonacci', // Increasing redundancy for critical layers
         replicationFactor: this.calculateAdaptiveReplication(this.estimateModelSize(modelParameters))
       };
-    } else if (modelType === LlmModelType.MIXTURE_OF_EXPERTS) {
+    } else if (modelType === 'moe') {
       // For MoE models, shard experts independently
       return {
         primaryDimension: 'experts',

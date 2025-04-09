@@ -992,15 +992,17 @@ tokenDistributions = pgTable("token_distributions", {
 // Export tokenDistributions after initialization
 export { tokenDistributions };
 
-// Import AetherCore schema
+// Import AetherCore tables
 import { 
   aetherBridgeTransactions, 
   llmBrainRecords, 
   brainNetworkShards, 
   quantumIdentities, 
-  fractalGovernanceVotes,
-  
-  // Types
+  fractalGovernanceVotes
+} from "./aethercore/schema";
+
+// Import AetherCore schema types 
+import type {
   AetherBridgeTransaction,
   InsertAetherBridgeTransaction,
   LlmBrainRecord,
@@ -1010,14 +1012,16 @@ import {
   QuantumIdentity,
   InsertQuantumIdentity,
   FractalGovernanceVote,
-  InsertFractalGovernanceVote,
-  
-  // Additional types
+  InsertFractalGovernanceVote
+} from "./aethercore/schema";
+
+// Import AetherCore interface types
+import type {
   LlmModelType,
   ModelParameters,
   BrainStorageRecord,
   ShardDistributionPlan
-} from "./aethercore/schema";
+} from "./aethercore/types";
 
 // Re-export AetherCore schema
 export {

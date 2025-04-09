@@ -11,7 +11,7 @@ import {
   TokenBridgeTransaction 
 } from '@shared/aethercore/types';
 import { db } from '../../../db';
-import { tokenBridgeTransactions } from '@shared/aethercore/schema';
+import { aetherBridgeTransactions } from '@shared/aethercore/schema';
 import { eq } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
 import { ethers } from 'ethers';
@@ -212,17 +212,17 @@ export class AetherCoreBridgeService implements ITokenBridgeService {
     // Calculate the fee
     const fee = await this.calculateBridgeFee(amount, direction);
 
-    // Generate a transaction ID
-    const txId = uuidv4();
+    // We don't need to generate a transaction ID manually anymore
+    // The database will auto-generate it with the serial primary key
 
-    // Generate a hash for the transaction
+    // Generate a hash for the transaction based on transaction details and timestamp
+    const timestamp = Date.now();
     const hash = crypto.createHash('sha256')
-      .update(`${txId}-${userId}-${sourceAddress}-${destinationAddress}-${amount}-${direction}-${Date.now()}`)
+      .update(`${userId}-${sourceAddress}-${destinationAddress}-${amount}-${direction}-${timestamp}`)
       .digest('hex');
 
     // Create the transaction in our database
-    const [transaction] = await db.insert(tokenBridgeTransactions).values({
-      txId,
+    const [transaction] = await db.insert(aetherBridgeTransactions).values({
       userId,
       sourceNetwork: networks.sourceNetwork,
       destinationNetwork: networks.destinationNetwork,
@@ -230,15 +230,28 @@ export class AetherCoreBridgeService implements ITokenBridgeService {
       destinationAddress,
       amount,
       fee,
+      tokenSymbol: 'ATC',
       direction,
       status: TokenBridgeStatus.INITIATED,
-      hash,
-      initiatedAt: new Date(),
+      sourceTxHash: hash,
+      validations: {},
+      metadata: {},
     }).returning();
 
-    // Format the response
+    // Format the response - handle completedAt field properly
+    const completedAt = (
+      // status is a terminal status and we don't have a completedAt field
+      (transaction.status === TokenBridgeStatus.COMPLETED || 
+       transaction.status === TokenBridgeStatus.FAILED ||
+       transaction.status === TokenBridgeStatus.REVERTED) ? 
+       // use current time as completedAt
+       Date.now() : 
+       // otherwise undefined
+       undefined
+    );
+    
     return {
-      id: transaction.txId,
+      id: transaction.id.toString(),
       sourceNetwork: transaction.sourceNetwork as BlockchainNetworkType,
       destinationNetwork: transaction.destinationNetwork as BlockchainNetworkType,
       sourceAddress: transaction.sourceAddress,
@@ -247,10 +260,10 @@ export class AetherCoreBridgeService implements ITokenBridgeService {
       fee: transaction.fee,
       direction: transaction.direction as BridgeDirection,
       status: transaction.status as TokenBridgeStatus,
-      hash: transaction.hash,
-      initiatedAt: transaction.initiatedAt.getTime(),
-      completedAt: transaction.completedAt ? transaction.completedAt.getTime() : undefined,
-      metadata: transaction.metadata,
+      hash: transaction.sourceTxHash || "",
+      initiatedAt: transaction.createdAt.getTime(),
+      completedAt,
+      metadata: transaction.metadata || {},
     };
   }
 
@@ -258,28 +271,40 @@ export class AetherCoreBridgeService implements ITokenBridgeService {
    * Get a bridge transaction by ID
    */
   public async getBridgeTransaction(txId: string): Promise<TokenBridgeTransaction | null> {
-    const transaction = await db.query.tokenBridgeTransactions.findFirst({
-      where: eq(tokenBridgeTransactions.txId, txId)
+    const transaction = await db.query.aetherBridgeTransactions.findFirst({
+      where: eq(aetherBridgeTransactions.id, parseInt(txId))
     });
 
     if (!transaction) {
       return null;
     }
 
+    // Format the response - handle completedAt field properly
+    const completedAt = (
+      // status is a terminal status and we don't have a completedAt field
+      (transaction.status === TokenBridgeStatus.COMPLETED || 
+       transaction.status === TokenBridgeStatus.FAILED ||
+       transaction.status === TokenBridgeStatus.REVERTED) ? 
+       // use current time as completedAt
+       Date.now() : 
+       // otherwise undefined
+       undefined
+    );
+    
     return {
-      id: transaction.txId,
+      id: transaction.id.toString(),
       sourceNetwork: transaction.sourceNetwork as BlockchainNetworkType,
       destinationNetwork: transaction.destinationNetwork as BlockchainNetworkType,
       sourceAddress: transaction.sourceAddress,
       destinationAddress: transaction.destinationAddress,
       amount: transaction.amount,
       fee: transaction.fee,
-      direction: transaction.direction as BridgeDirection,
+      direction: transaction.direction as BridgeDirection || "atc_to_fractalcoin" as BridgeDirection, // Use actual direction or default
       status: transaction.status as TokenBridgeStatus,
-      hash: transaction.hash,
-      initiatedAt: transaction.initiatedAt.getTime(),
-      completedAt: transaction.completedAt ? transaction.completedAt.getTime() : undefined,
-      metadata: transaction.metadata,
+      hash: transaction.sourceTxHash || "",
+      initiatedAt: transaction.createdAt.getTime(),
+      completedAt,
+      metadata: transaction.metadata || {},
     };
   }
 
@@ -287,26 +312,40 @@ export class AetherCoreBridgeService implements ITokenBridgeService {
    * Get all bridge transactions for a user
    */
   public async getUserBridgeTransactions(userId: number): Promise<TokenBridgeTransaction[]> {
-    const transactions = await db.query.tokenBridgeTransactions.findMany({
-      where: eq(tokenBridgeTransactions.userId, userId),
-      orderBy: (tokenBridgeTransactions, { desc }) => [desc(tokenBridgeTransactions.initiatedAt)]
+    const transactions = await db.query.aetherBridgeTransactions.findMany({
+      where: eq(aetherBridgeTransactions.userId, userId),
+      orderBy: (table, { desc }) => [desc(table.createdAt)]
     });
 
-    return transactions.map(transaction => ({
-      id: transaction.txId,
-      sourceNetwork: transaction.sourceNetwork as BlockchainNetworkType,
-      destinationNetwork: transaction.destinationNetwork as BlockchainNetworkType,
-      sourceAddress: transaction.sourceAddress,
-      destinationAddress: transaction.destinationAddress,
-      amount: transaction.amount,
-      fee: transaction.fee,
-      direction: transaction.direction as BridgeDirection,
-      status: transaction.status as TokenBridgeStatus,
-      hash: transaction.hash,
-      initiatedAt: transaction.initiatedAt.getTime(),
-      completedAt: transaction.completedAt ? transaction.completedAt.getTime() : undefined,
-      metadata: transaction.metadata,
-    }));
+    return transactions.map(transaction => {
+      // Format the response - handle completedAt field properly
+      const completedAt = (
+        // status is a terminal status and we don't have a completedAt field
+        (transaction.status === TokenBridgeStatus.COMPLETED || 
+         transaction.status === TokenBridgeStatus.FAILED ||
+         transaction.status === TokenBridgeStatus.REVERTED) ? 
+         // use current time as completedAt
+         Date.now() : 
+         // otherwise undefined
+         undefined
+      );
+      
+      return {
+        id: transaction.id.toString(),
+        sourceNetwork: transaction.sourceNetwork as BlockchainNetworkType,
+        destinationNetwork: transaction.destinationNetwork as BlockchainNetworkType,
+        sourceAddress: transaction.sourceAddress,
+        destinationAddress: transaction.destinationAddress,
+        amount: transaction.amount,
+        fee: transaction.fee,
+        direction: transaction.direction as BridgeDirection,
+        status: transaction.status as TokenBridgeStatus,
+        hash: transaction.sourceTxHash || "",
+        initiatedAt: transaction.createdAt.getTime(),
+        completedAt,
+        metadata: transaction.metadata || {},
+      };
+    });
   }
 
   /**
@@ -331,18 +370,31 @@ export class AetherCoreBridgeService implements ITokenBridgeService {
     }
 
     // Update the transaction
-    const [updatedTransaction] = await db.update(tokenBridgeTransactions)
+    const [updatedTransaction] = await db.update(aetherBridgeTransactions)
       .set(updateData)
-      .where(eq(tokenBridgeTransactions.txId, txId))
+      .where(eq(aetherBridgeTransactions.id, parseInt(txId)))
       .returning();
 
     if (!updatedTransaction) {
       throw new Error(`Transaction with ID ${txId} not found`);
     }
 
-    // Format the response
+    // Format the response - handle completedAt field properly
+    const completedAt = (
+      // status is a terminal status
+      (updatedTransaction.status === TokenBridgeStatus.COMPLETED || 
+       updatedTransaction.status === TokenBridgeStatus.FAILED ||
+       updatedTransaction.status === TokenBridgeStatus.REVERTED) ? 
+       // use current time as completedAt if we don't have it in DB
+       (updatedTransaction.completedAt ? 
+         updatedTransaction.completedAt.getTime() : 
+         Date.now()) : 
+       // otherwise undefined
+       undefined
+    );
+    
     return {
-      id: updatedTransaction.txId,
+      id: updatedTransaction.id.toString(),
       sourceNetwork: updatedTransaction.sourceNetwork as BlockchainNetworkType,
       destinationNetwork: updatedTransaction.destinationNetwork as BlockchainNetworkType,
       sourceAddress: updatedTransaction.sourceAddress,
@@ -351,10 +403,10 @@ export class AetherCoreBridgeService implements ITokenBridgeService {
       fee: updatedTransaction.fee,
       direction: updatedTransaction.direction as BridgeDirection,
       status: updatedTransaction.status as TokenBridgeStatus,
-      hash: updatedTransaction.hash,
-      initiatedAt: updatedTransaction.initiatedAt.getTime(),
-      completedAt: updatedTransaction.completedAt ? updatedTransaction.completedAt.getTime() : undefined,
-      metadata: updatedTransaction.metadata,
+      hash: updatedTransaction.sourceTxHash || "",
+      initiatedAt: updatedTransaction.createdAt.getTime(),
+      completedAt,
+      metadata: updatedTransaction.metadata || {},
     };
   }
 

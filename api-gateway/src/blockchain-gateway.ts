@@ -7,7 +7,8 @@ import express from 'express';
 import { createProxyMiddleware } from 'http-proxy-middleware';
 import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
-import { createClient } from '@neondatabase/serverless';
+import { neon } from '@neondatabase/serverless';
+import postgres from 'postgres';
 import { DB_CONNECTION_STRING } from '../config';
 
 // Service registry schema
@@ -46,18 +47,16 @@ type ServiceInfo = {
 // In-memory service registry for quick access
 const serviceRegistry = new Map<string, ServiceInfo>();
 
-// Database client
-const dbClient = createClient({ connectionString: DB_CONNECTION_STRING });
+// Database client using postgres client
+const sql = postgres(DB_CONNECTION_STRING, { ssl: 'require' });
 
 /**
  * Initialize the database schema if needed
  */
 async function initializeDatabase() {
   try {
-    await dbClient.connect();
-    
     // Create service registry table if it doesn't exist
-    await dbClient.query(`
+    await sql`
       CREATE TABLE IF NOT EXISTS service_registry (
         id TEXT PRIMARY KEY,
         name TEXT NOT NULL UNIQUE,
@@ -72,10 +71,10 @@ async function initializeDatabase() {
         description TEXT,
         metadata JSONB
       );
-    `);
+    `;
     
     // Load existing services into memory
-    const result = await dbClient.query('SELECT * FROM service_registry');
+    const result = await sql`SELECT * FROM service_registry`;
     for (const row of result.rows) {
       serviceRegistry.set(row.name, {
         id: row.id,
@@ -191,22 +190,15 @@ export async function createBlockchainGateway() {
       serviceRegistry.set(validatedData.serviceName, serviceInfo);
       
       // Store in database
-      await dbClient.query(`
+      await sql`
         INSERT INTO service_registry (
           id, name, endpoint, type, blockchain, health_check_path, api_key, description
         ) VALUES (
-          $1, $2, $3, $4, $5, $6, $7, $8
+          ${serviceId}, ${validatedData.serviceName}, ${validatedData.serviceEndpoint}, 
+          ${validatedData.serviceType}, ${validatedData.blockchainType}, 
+          ${validatedData.healthCheckPath}, ${validatedData.apiKey}, ${validatedData.description}
         )
-      `, [
-        serviceId,
-        validatedData.serviceName,
-        validatedData.serviceEndpoint,
-        validatedData.serviceType,
-        validatedData.blockchainType,
-        validatedData.healthCheckPath,
-        validatedData.apiKey,
-        validatedData.description,
-      ]);
+      `;
       
       // Perform initial health check
       performHealthCheck(serviceInfo);
@@ -510,7 +502,11 @@ function startPeriodicHealthChecks() {
 }
 
 // Initialize when directly executed
-if (require.main === module) {
+// ES module version of the CommonJS "if (require.main === module)" pattern
+import { fileURLToPath } from 'url';
+const isMainModule = import.meta.url === fileURLToPath(new URL(import.meta.url));
+
+if (isMainModule) {
   (async () => {
     try {
       await initializeDatabase();

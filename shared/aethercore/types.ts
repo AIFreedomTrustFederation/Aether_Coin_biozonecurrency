@@ -47,12 +47,7 @@ export interface TokenBridgeTransaction {
   metadata?: any;
 }
 
-export enum LlmModelType {
-  TRANSFORMER = 'transformer',
-  MIXTURE_OF_EXPERTS = 'mixture_of_experts',
-  AUTOREGRESSIVE = 'autoregressive',
-  HYBRID = 'hybrid'
-}
+export type LlmModelType = 'transformer' | 'moe' | 'fractal-recursive' | 'hybrid';
 
 export interface ShardingStrategy {
   primaryDimension: string;

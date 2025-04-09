@@ -12,7 +12,8 @@ import { getAetherBrainShardingService } from '../services/aethercore/sharding/A
 import { 
   BlockchainNetworkType, 
   BridgeDirection, 
-  LlmModelType 
+  LlmModelType,
+  TokenBridgeStatus
 } from '@shared/aethercore/types';
 
 const router = express.Router();
@@ -27,7 +28,7 @@ const createBridgeSchema = z.object({
 
 // Schema for creating a brain shard
 const createBrainShardSchema = z.object({
-  modelType: z.nativeEnum(LlmModelType),
+  modelType: z.string(),
   modelParameters: z.record(z.any()),
   shardsCount: z.number().optional().default(12)
 });
@@ -168,7 +169,7 @@ router.post('/bridge/verify/:txId', requireAuth, async (req, res) => {
     
     if (verified) {
       // Update the transaction status to CONFIRMED_SOURCE
-      await bridgeService.updateBridgeTransactionStatus(txId, 'confirmed_source');
+      await bridgeService.updateBridgeTransactionStatus(txId, TokenBridgeStatus.CONFIRMED_SOURCE);
     }
     
     res.json({ txId, verified });
@@ -223,7 +224,7 @@ router.post('/brain/shard', requireAuth, async (req, res) => {
     }
     
     const brainRecord = await brainShardingService.shardNeuralNetwork(
-      validatedData.modelType,
+      validatedData.modelType as LlmModelType,
       validatedData.modelParameters,
       validatedData.shardsCount,
       req.user.id
