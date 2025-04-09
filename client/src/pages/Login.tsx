@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Loader2, LogIn, AlertCircle } from 'lucide-react';
+import { Loader2, LogIn, AlertCircle, KeyRound, UserCheck } from 'lucide-react';
 import { Link } from 'wouter';
 
 // Define the login form schema with zod
@@ -32,8 +32,11 @@ type LoginFormValues = z.infer<typeof loginFormSchema>;
 export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { login } = useAuth();
-  const [, navigate] = useLocation();
+  const { login, checkAuthStatus, user } = useAuth();
+  const [location, navigate] = useLocation();
+  
+  // Check if this is a trust login by looking for trust=true in the URL
+  const isTrustLogin = location.includes('trust=true') || location.includes('trust/login');
 
   // Initialize the form with react-hook-form and zodResolver
   const form = useForm<LoginFormValues>({
@@ -52,8 +55,17 @@ export default function Login() {
     try {
       const success = await login(data.username, data.password);
       if (success) {
-        // Redirect to dashboard on success
-        navigate('/dashboard');
+        // After login, check authentication status to get updated user
+        await checkAuthStatus();
+        
+        // User will now be updated, we can check for trust membership
+        if (user?.isTrustMember) {
+          // If user is a trust member, redirect to trust portal
+          navigate('/trust/portal');
+        } else {
+          // Otherwise redirect to dashboard
+          navigate('/dashboard');
+        }
       } else {
         setError('Login failed. Please check your credentials and try again.');
       }
@@ -66,12 +78,20 @@ export default function Login() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-background px-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">Login to Aetherion</CardTitle>
-          <CardDescription className="text-center">
-            Enter your username and password to access your account
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-muted/20">
+      <Card className="w-full max-w-md mx-auto shadow-xl">
+        <CardHeader className="space-y-1 text-center">
+          <div className="mx-auto bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mb-2">
+            <KeyRound className="h-8 w-8 text-primary" />
+          </div>
+          <CardTitle className="text-2xl font-bold">
+            {isTrustLogin ? 'AI Freedom Trust' : 'Aetherion'}
+          </CardTitle>
+          <CardDescription>
+            {isTrustLogin 
+              ? 'Enter your credentials to access the Trust portal' 
+              : 'Enter your credentials to access your account'
+            }
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -124,18 +144,18 @@ export default function Login() {
               
               <Button 
                 type="submit" 
-                className="w-full"
+                className="w-full bg-green-400 hover:bg-green-500 text-black"
                 disabled={isLoading}
               >
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Logging in...
+                    Authenticating...
                   </>
                 ) : (
                   <>
-                    <LogIn className="mr-2 h-4 w-4" />
-                    Login
+                    <UserCheck className="mr-2 h-4 w-4" />
+                    {isTrustLogin ? 'Login to Trust Portal' : 'Login to Aetherion'}
                   </>
                 )}
               </Button>
@@ -143,22 +163,38 @@ export default function Login() {
           </Form>
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
-          <div className="text-sm text-muted-foreground text-center">
-            Don't have an account?{' '}
-            <Link href="/signup" className="text-primary hover:underline">
-              Sign up
-            </Link>
-          </div>
-          <div className="text-xs text-muted-foreground text-center">
-            By logging in, you agree to our{' '}
-            <Link href="/terms" className="text-primary hover:underline">
-              Terms of Service
-            </Link>{' '}
-            and{' '}
-            <Link href="/privacy" className="text-primary hover:underline">
-              Privacy Policy
-            </Link>
-          </div>
+          {!isTrustLogin && (
+            <div className="text-sm text-muted-foreground text-center">
+              Don't have an account?{' '}
+              <Link href="/signup" className="text-primary hover:underline">
+                Sign up
+              </Link>
+            </div>
+          )}
+          
+          {isTrustLogin ? (
+            <div className="text-center text-sm text-muted-foreground">
+              <p>The Trust portal is accessible to authorized members only.</p>
+              <Button 
+                variant="link" 
+                onClick={() => navigate('/')}
+                className="text-sm"
+              >
+                Return to Main Platform
+              </Button>
+            </div>
+          ) : (
+            <div className="text-xs text-muted-foreground text-center">
+              By logging in, you agree to our{' '}
+              <Link href="/terms" className="text-primary hover:underline">
+                Terms of Service
+              </Link>{' '}
+              and{' '}
+              <Link href="/privacy" className="text-primary hover:underline">
+                Privacy Policy
+              </Link>
+            </div>
+          )}
         </CardFooter>
       </Card>
     </div>

@@ -36,6 +36,12 @@ const TrustLogin = () => {
   const [, navigate] = useLocation();
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Redirect to unified login page with trust flag
+  useEffect(() => {
+    // Just use the existing Login component with a trust flag
+    navigate('/login?trust=true');
+  }, [navigate]);
 
   // Form definition using react-hook-form with zod validation
   const form = useForm<LoginFormValues>({

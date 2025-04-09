@@ -724,6 +724,13 @@ function App() {
                 <TrustLogin />
               </Suspense>
             </Route>
+            
+            {/* Special route for /trust/login that can be accessed from other entry points */}
+            <Route path="/login?trust=true">
+              <Suspense fallback={<LoadingScreen message="Loading login..." />}>
+                <Login />
+              </Suspense>
+            </Route>
             <Route path="/ai-freedom-trust/login">
               <Suspense fallback={<LoadingScreen message="Loading AI Freedom Trust login..." />}>
                 <AIFreedomTrustLogin />
