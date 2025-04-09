@@ -75,7 +75,7 @@ async function initializeDatabase() {
     
     // Load existing services into memory
     const result = await sql`SELECT * FROM service_registry`;
-    for (const row of result.rows) {
+    for (const row of result) {
       serviceRegistry.set(row.name, {
         id: row.id,
         name: row.name,
@@ -190,13 +190,19 @@ export async function createBlockchainGateway() {
       serviceRegistry.set(validatedData.serviceName, serviceInfo);
       
       // Store in database
+      // Handle optional fields appropriately to prevent TypeScript errors with undefined values
+      const blockchainValue = validatedData.blockchainType || null;
+      const healthCheckPathValue = validatedData.healthCheckPath || '/health';
+      const apiKeyValue = validatedData.apiKey || null;
+      const descriptionValue = validatedData.description || null;
+      
       await sql`
         INSERT INTO service_registry (
           id, name, endpoint, type, blockchain, health_check_path, api_key, description
         ) VALUES (
           ${serviceId}, ${validatedData.serviceName}, ${validatedData.serviceEndpoint}, 
-          ${validatedData.serviceType}, ${validatedData.blockchainType}, 
-          ${validatedData.healthCheckPath}, ${validatedData.apiKey}, ${validatedData.description}
+          ${validatedData.serviceType}, ${blockchainValue}, 
+          ${healthCheckPathValue}, ${apiKeyValue}, ${descriptionValue}
         )
       `;
       
@@ -249,24 +255,22 @@ export async function createBlockchainGateway() {
       serviceRegistry.set(serviceName, updatedService);
       
       // Update in database
-      await dbClient.query(`
+      // Handle optional fields appropriately to prevent TypeScript errors with undefined values
+      const blockchainValue = updatedService.blockchain || null;
+      const healthCheckPathValue = updatedService.healthCheckPath || '/health';
+      const apiKeyValue = updatedService.apiKey || null;
+      const descriptionValue = updatedService.description || null;
+      
+      await sql`
         UPDATE service_registry SET
-          endpoint = $1,
-          type = $2,
-          blockchain = $3,
-          health_check_path = $4,
-          api_key = $5,
-          description = $6
-        WHERE name = $7
-      `, [
-        updatedService.endpoint,
-        updatedService.type,
-        updatedService.blockchain,
-        updatedService.healthCheckPath,
-        updatedService.apiKey,
-        updatedService.description,
-        serviceName,
-      ]);
+          endpoint = ${updatedService.endpoint},
+          type = ${updatedService.type},
+          blockchain = ${blockchainValue},
+          health_check_path = ${healthCheckPathValue},
+          api_key = ${apiKeyValue},
+          description = ${descriptionValue}
+        WHERE name = ${serviceName}
+      `;
       
       // Perform health check on updated service
       performHealthCheck(updatedService);
@@ -299,7 +303,7 @@ export async function createBlockchainGateway() {
       serviceRegistry.delete(serviceName);
       
       // Remove from database
-      await dbClient.query('DELETE FROM service_registry WHERE name = $1', [serviceName]);
+      await sql`DELETE FROM service_registry WHERE name = ${serviceName}`;
       
       res.json({
         message: 'Service deregistered successfully',
@@ -450,16 +454,12 @@ async function performHealthCheck(service: ServiceInfo): Promise<'healthy' | 'de
     service.lastHealthCheck = new Date();
     
     // Update in database
-    await dbClient.query(`
+    await sql`
       UPDATE service_registry SET
-        health_status = $1,
-        last_health_check = $2
-      WHERE name = $3
-    `, [
-      service.healthStatus,
-      service.lastHealthCheck,
-      service.name,
-    ]);
+        health_status = ${service.healthStatus},
+        last_health_check = ${service.lastHealthCheck}
+      WHERE name = ${service.name}
+    `;
     
     return service.healthStatus;
   } catch (error) {
@@ -469,16 +469,12 @@ async function performHealthCheck(service: ServiceInfo): Promise<'healthy' | 'de
     service.lastHealthCheck = new Date();
     
     // Update in database
-    await dbClient.query(`
+    await sql`
       UPDATE service_registry SET
-        health_status = $1,
-        last_health_check = $2
-      WHERE name = $3
-    `, [
-      service.healthStatus,
-      service.lastHealthCheck,
-      service.name,
-    ]);
+        health_status = ${service.healthStatus},
+        last_health_check = ${service.lastHealthCheck}
+      WHERE name = ${service.name}
+    `;
     
     return 'unhealthy';
   }
@@ -502,11 +498,9 @@ function startPeriodicHealthChecks() {
 }
 
 // Initialize when directly executed
-// ES module version of the CommonJS "if (require.main === module)" pattern
-import { fileURLToPath } from 'url';
-const isMainModule = import.meta.url === fileURLToPath(new URL(import.meta.url));
-
-if (isMainModule) {
+// Since detecting main module in ESM is challenging, we'll check process.env for a specific flag
+// This can be set when running directly vs. importing
+if (process.env.INIT_BLOCKCHAIN_GATEWAY) {
   (async () => {
     try {
       await initializeDatabase();
