@@ -307,16 +307,16 @@ export default function CodeEditor({ code, projectName }: CodeEditorProps) {
                   <h3 className="text-lg font-semibold mb-2">Security Analysis</h3>
                   
                   <div className="flex items-center mb-4">
-                    <div className="w-20 h-20 rounded-full border-4 flex items-center justify-center mr-4 relative" 
-                      style={{ 
-                        borderColor: code.securityReport.score >= 90 
-                          ? '#10b981' 
-                          : code.securityReport.score >= 70 
-                            ? '#f59e0b' 
-                            : code.securityReport.score >= 50 
-                              ? '#f97316' 
-                              : '#ef4444' 
-                      }}
+                    <div
+                      className={`w-20 h-20 rounded-full border-4 flex items-center justify-center mr-4 relative ${
+                        code.securityReport.score >= 90
+                          ? 'border-green-500'
+                          : code.securityReport.score >= 70
+                          ? 'border-yellow-500'
+                          : code.securityReport.score >= 50
+                          ? 'border-orange-500'
+                          : 'border-red-500'
+                      }`}
                     >
                       <span className="text-xl font-bold">{code.securityReport.score}</span>
                       <span className="text-xs absolute -bottom-6 w-full text-center">

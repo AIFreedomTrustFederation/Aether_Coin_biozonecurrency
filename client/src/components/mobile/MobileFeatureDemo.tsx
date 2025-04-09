@@ -14,6 +14,9 @@ import { LiveModeIndicator } from "@/components/ui/LiveModeIndicator";
 import { useLiveMode } from '../../contexts/LiveModeContext';
 import { useToast } from '@/hooks/use-toast';
 
+// Import styles
+import '@/styles/progressBars.css';
+
 // Import new feature components
 import MobileOneTapPay from './MobileOneTapPay';
 import MobileChainActivity from './MobileChainActivity';
@@ -355,8 +358,8 @@ export default function MobileFeatureDemo() {
                       </div>
                       <div className="w-full bg-muted rounded-full h-2 mb-3">
                         <div 
-                          className="bg-primary h-2 rounded-full progress-bar" 
-                          style={{ '--progress-width': `${miningStats.hashRatePercent}%` } as React.CSSProperties}
+                          className="progress-bar" 
+                          data-progress-width={`${miningStats.hashRatePercent}%`}
                         ></div>
                       </div>
                       
@@ -366,8 +369,7 @@ export default function MobileFeatureDemo() {
                       </div>
                       <div className="w-full bg-muted rounded-full h-2">
                         <div 
-                          className="bg-primary h-2 rounded-full progress-bar" 
-                          style={{ '--progress-width': `${miningStats.earningsPercent}%` } as React.CSSProperties}
+                          className="progress-bar earnings-progress"
                         ></div>
                       </div>
                     </div>

@@ -808,7 +808,10 @@ function initializeWebsite() {
           </TabsContent>
 
           <TabsContent value="preview" className="space-y-4">
-            {generationProgress.status !== 'idle' && generationProgress.status !== 'complete' ? (
+            {generationProgress.status === 'analyzing' || 
+              generationProgress.status === 'designing' || 
+              generationProgress.status === 'coding' || 
+              generationProgress.status === 'deploying' ? (
               <div className="space-y-4">
                 <div className="flex items-center gap-3">
                   <Loader2 className="h-5 w-5 animate-spin text-primary" />
@@ -823,8 +826,7 @@ function initializeWebsite() {
                 
                 <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
                   <div 
-                    className="h-full bg-primary transition-all duration-500 ease-out"
-                    style={{ width: `${generationProgress.progress}%` }}
+                    className={`h-full bg-primary transition-all duration-500 ease-out progress-bar`}
                   ></div>
                 </div>
                 

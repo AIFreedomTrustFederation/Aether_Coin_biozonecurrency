@@ -1,26 +1,28 @@
 @import './styles/neon.css';
+
+/* Tailwind CSS setup */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
-  * {
+  html {
     @apply border-border;
   }
 
   html, body, #root {
-    @apply h-full w-full;
+    @apply h-full w-full font-sans antialiased bg-background text-foreground;
   }
 
   body {
     @apply font-sans antialiased bg-background text-foreground;
   }
-  
+
   :root {
-    --primary-color-rgb: 0, 255, 136; /* Default neon green in RGB */
+    --primary-color-rgb: 0, 255, 136; /* Neon green in RGB */
     --glow-color: #ffffff;
   }
-  
+
   .dark {
     --background: 0 0% 7%;
     --foreground: 0 0% 98%;
@@ -44,29 +46,29 @@
   }
 }
 
-@layer utilities {
-  /* Hide scrollbar but keep functionality */
-  .no-scrollbar, .scrollbar-hide {
-    -ms-overflow-style: none;  /* Internet Explorer and Edge */
-    scrollbar-width: none;  /* Firefox */
-  }
-  .no-scrollbar::-webkit-scrollbar, 
-  .scrollbar-hide::-webkit-scrollbar {
-    display: none;  /* Chrome, Safari and Opera */
-  }
-  
-  /* Custom horizontal scrolling with momentum scrolling for iOS */
-  .scroll-x {
-    overflow-x: auto;
-    overflow-y: hidden;
-    -webkit-overflow-scrolling: touch; /* Momentum scrolling for iOS */
-    scroll-behavior: smooth;
-    scroll-snap-type: x proximity;
-  }
-  
-  .scroll-item {
-    scroll-snap-align: start;
-  }
+/* Scrollbar styles */
+.no-scrollbar, .scrollbar-hide {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
 }
 
-/* Styles are injected directly by the DevToolsToggle component */
+.no-scrollbar::-webkit-scrollbar, 
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, and Opera */
+}
+
+/* Horizontal scrolling */
+.scroll-x {
+  overflow-y: hidden;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  scroll-snap-type: x proximity;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch; /* Safari fallback */
+  touch-action: pan-x;
+  position: relative;
+}
+
+.scroll-item {
+  scroll-snap-align: start;
+}

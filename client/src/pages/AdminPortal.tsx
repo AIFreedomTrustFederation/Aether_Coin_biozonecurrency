@@ -9,6 +9,7 @@ import { z } from 'zod';
 import { queryClient } from '@/lib/queryClient';
 import Dashboard from '@/components/admin/Dashboard';
 import AISystem from '@/components/admin/AISystem';
+import '@/styles/progressBars.css';
 
 // Components
 import { Button } from '@/components/ui/button';
@@ -822,7 +823,7 @@ const AdminPortal: React.FC = () => {
                         <p className="text-sm font-medium">$452,200 / $646,000</p>
                       </div>
                       <div className="h-2 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                        <div className="h-full bg-primary rounded-full" style={{ width: '70%' }} />
+                        <div className="h-full bg-primary rounded-full progress-width-70" />
                       </div>
                       <div className="flex items-center justify-between">
                         <p className="text-sm text-muted-foreground">70% complete</p>

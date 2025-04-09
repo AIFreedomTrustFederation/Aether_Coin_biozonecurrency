@@ -32,6 +32,7 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { QuantumAlgorithmStatus } from './QuantumAlgorithmStatus';
 
 // Helper to format timestamp in relative terms
 const formatRelativeTime = (timestamp: number): string => {
@@ -753,6 +754,12 @@ export const QuantumSecurityDashboard: React.FC = () => {
                 Temporal Analysis
               </div>
             </TabsTrigger>
+            <TabsTrigger value="algorithms">
+              <div className="flex items-center">
+                <Lock className="h-4 w-4 mr-2" />
+                Quantum Algorithms
+              </div>
+            </TabsTrigger>
           </TabsList>
           
           <TabsContent value="transaction">
@@ -1138,6 +1145,10 @@ export const QuantumSecurityDashboard: React.FC = () => {
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+          
+          <TabsContent value="algorithms">
+            <QuantumAlgorithmStatus />
           </TabsContent>
         </Tabs>
       </motion.div>
