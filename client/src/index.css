@@ -1,10 +1,10 @@
-/* Tailwind CSS directives must come first */
+/* Import custom styles before Tailwind */
+@import './styles/neon.css';
+
+/* Tailwind CSS directives */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Import custom styles after Tailwind */
-@import './styles/neon.css';
 
 @layer base {
   html {
@@ -79,15 +79,4 @@
 .scroll-item {
   scroll-snap-align: start;
 }
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
 
-// Update the content array to include your source files
-module.exports = {
-  content: ['./src/**/*.{js,jsx,ts,tsx,css}'],
-  theme: {
-    extend: {},
-  },
-  plugins: [],
-}
