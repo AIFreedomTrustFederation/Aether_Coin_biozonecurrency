@@ -1,7 +1,7 @@
 import express, { Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
-import { IStorage } from '../storage';
+import { IStorage } from '../fixed-storage';
 
 const router = express.Router();
 

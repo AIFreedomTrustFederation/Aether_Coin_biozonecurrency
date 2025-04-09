@@ -8,49 +8,118 @@ import {
   passphraseWallets, 
   passphraseWalletsRelations,
   torusWallets,
-  templeNodeWallets,
-  // Types
+  templeNodeWallets 
+} from "./wallet-schema";
+
+// Import wallet types
+import type { 
   PassphraseWallet,
   TorusWallet,
   TempleNodeWallet,
-  // Insert schemas
-  InsertPassphraseWallet,
-  InsertTorusWallet,
-  InsertTempleNodeWallet
+  InsertPassphraseWalletType as InsertPassphraseWallet,
+  InsertTorusWalletType as InsertTorusWallet,
+  InsertTempleNodeWalletType as InsertTempleNodeWallet
 } from "./wallet-schema";
 
-// Import Sacred Utility Modules Schema
-import {
-  sacredUtilityModules,
-  fractalAuthenticationRibbons,
-  octavalFeedbacks,
-  synapticCoCreations,
-  covenantRegistrations,
-  vaultBuilders,
-  liturgicalExchanges,
-  harvestAllocators,
-  graftingProtocols,
-  // Types
-  SacredUtilityModule,
-  FractalAuthenticationRibbon,
-  OctavalFeedback,
-  SynapticCoCreation,
-  CovenantRegistration,
-  VaultBuilder,
-  LiturgicalExchange,
-  HarvestAllocator,
-  GraftingProtocol,
-  // Insert Types
-  InsertSacredUtilityModuleType,
-  InsertFractalAuthenticationRibbonType,
-  InsertOctavalFeedbackType,
-  InsertSynapticCoCreationType, 
-  InsertCovenantRegistrationType,
-  InsertVaultBuilderType,
-  InsertLiturgicalExchangeType,
-  InsertHarvestAllocatorType,
-  InsertGraftingProtocolType
-} from "./sacred-utility-schema";
+// Using existing pgTable imports from the top of the file for schema definitions
+
+// Temporary definition for Sacred Utility schema
+// These are placeholders until we properly implement them
+const sacredUtilityModules = pgTable('sacred_utility_modules', {
+  id: serial('id').primaryKey(),
+  name: text('name').notNull(),
+  description: text('description').notNull(),
+  isActive: boolean('is_active').default(true),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow()
+});
+
+const fractalAuthenticationRibbons = pgTable('fractal_authentication_ribbons', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').notNull(),
+  isActive: boolean('is_active').default(true),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow()
+});
+
+const octavalFeedbacks = pgTable('octaval_feedbacks', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').notNull(),
+  isActive: boolean('is_active').default(true),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow()
+});
+
+const synapticCoCreations = pgTable('synaptic_co_creations', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').notNull(),
+  isActive: boolean('is_active').default(true),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow()
+});
+
+const covenantRegistrations = pgTable('covenant_registrations', {
+  id: serial('id').primaryKey(),
+  covenantName: text('covenant_name').notNull(),
+  covenantType: text('covenant_type').notNull(),
+  isActive: boolean('is_active').default(true),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow()
+});
+
+const vaultBuilders = pgTable('vault_builders', {
+  id: serial('id').primaryKey(),
+  name: text('name').notNull(),
+  isActive: boolean('is_active').default(true),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow()
+});
+
+const liturgicalExchanges = pgTable('liturgical_exchanges', {
+  id: serial('id').primaryKey(),
+  name: text('name').notNull(),
+  isActive: boolean('is_active').default(true),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow()
+});
+
+const harvestAllocators = pgTable('harvest_allocators', {
+  id: serial('id').primaryKey(),
+  name: text('name').notNull(),
+  isActive: boolean('is_active').default(true),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow()
+});
+
+const graftingProtocols = pgTable('grafting_protocols', {
+  id: serial('id').primaryKey(),
+  name: text('name').notNull(),
+  isActive: boolean('is_active').default(true),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow()
+});
+
+// Type definitions
+type SacredUtilityModule = typeof sacredUtilityModules.$inferSelect;
+type FractalAuthenticationRibbon = typeof fractalAuthenticationRibbons.$inferSelect;
+type OctavalFeedback = typeof octavalFeedbacks.$inferSelect;
+type SynapticCoCreation = typeof synapticCoCreations.$inferSelect;
+type CovenantRegistration = typeof covenantRegistrations.$inferSelect;
+type VaultBuilder = typeof vaultBuilders.$inferSelect;
+type LiturgicalExchange = typeof liturgicalExchanges.$inferSelect;
+type HarvestAllocator = typeof harvestAllocators.$inferSelect;
+type GraftingProtocol = typeof graftingProtocols.$inferSelect;
+
+// Insert types (placeholder)
+type InsertSacredUtilityModuleType = any;
+type InsertFractalAuthenticationRibbonType = any;
+type InsertOctavalFeedbackType = any;
+type InsertSynapticCoCreationType = any;
+type InsertCovenantRegistrationType = any;
+type InsertVaultBuilderType = any;
+type InsertLiturgicalExchangeType = any;
+type InsertHarvestAllocatorType = any;
+type InsertGraftingProtocolType = any;
 
 // Import AI Assistant Schema 
 import {
