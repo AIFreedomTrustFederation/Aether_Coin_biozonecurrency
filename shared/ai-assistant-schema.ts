@@ -2,7 +2,7 @@ import { pgTable, text, serial, integer, boolean, timestamp, jsonb } from "drizz
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
-import { users, userApiKeys } from "./schema";
+import { users, userApiKeys } from "./base-schema";
 
 // Training feedback types
 export enum TrainingFeedbackType {

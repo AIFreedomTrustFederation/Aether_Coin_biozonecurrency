@@ -1,28 +1,23 @@
+import "dotenv/config";
+import { migrate } from "drizzle-orm/postgres-js/migrator";
+import { db, pgClient } from "./db";
+
 /**
- * Database Migration Script
+ * This script runs database migrations using Drizzle ORM.
+ * It will apply all the migrations in the migrations folder.
  * 
- * This script is used to apply new database schema changes.
- * It uses the Drizzle ORM to push schema changes.
+ * Run with: npx tsx server/migrate.ts
  */
 
-import 'dotenv/config';
-import { migrate } from 'drizzle-orm/postgres-js/migrator';
-import { db, pgClient } from './db';
-import * as schema from '../shared/schema';
-
-/**
- * Run migrations
- */
 async function main() {
-  console.log('Starting database migration...');
+  console.log("Starting database migration...");
   
   try {
-    // Apply migrations
-    await migrate(db, { migrationsFolder: 'drizzle' });
-    
-    console.log('Migration completed successfully');
+    // Run the migrations
+    await migrate(db, { migrationsFolder: "./migrations" });
+    console.log("Migration completed successfully");
   } catch (error) {
-    console.error('Migration failed:', error);
+    console.error("Migration failed:", error);
     process.exit(1);
   } finally {
     // Close the database connection
