@@ -992,6 +992,61 @@ tokenDistributions = pgTable("token_distributions", {
 // Export tokenDistributions after initialization
 export { tokenDistributions };
 
+// Import AetherCore schema
+import { 
+  aetherBridgeTransactions, 
+  llmBrainRecords, 
+  brainNetworkShards, 
+  quantumIdentities, 
+  fractalGovernanceVotes,
+  
+  // Types
+  AetherBridgeTransaction,
+  InsertAetherBridgeTransaction,
+  LlmBrainRecord,
+  InsertLlmBrainRecord,
+  BrainNetworkShard,
+  InsertBrainNetworkShard,
+  QuantumIdentity,
+  InsertQuantumIdentity,
+  FractalGovernanceVote,
+  InsertFractalGovernanceVote,
+  
+  // Additional types
+  LlmModelType,
+  ModelParameters,
+  BrainStorageRecord,
+  ShardDistributionPlan
+} from "./aethercore/schema";
+
+// Re-export AetherCore schema
+export {
+  // Tables
+  aetherBridgeTransactions,
+  llmBrainRecords,
+  brainNetworkShards,
+  quantumIdentities,
+  fractalGovernanceVotes,
+  
+  // Types
+  AetherBridgeTransaction,
+  InsertAetherBridgeTransaction,
+  LlmBrainRecord,
+  InsertLlmBrainRecord,
+  BrainNetworkShard,
+  InsertBrainNetworkShard,
+  QuantumIdentity,
+  InsertQuantumIdentity,
+  FractalGovernanceVote,
+  InsertFractalGovernanceVote,
+  
+  // Additional types
+  LlmModelType,
+  ModelParameters,
+  BrainStorageRecord,
+  ShardDistributionPlan
+};
+
 export const tokenomicsConfigRelations = relations(tokenomicsConfig, ({ one, many }) => ({
   updater: one(users, {
     fields: [tokenomicsConfig.updatedBy],

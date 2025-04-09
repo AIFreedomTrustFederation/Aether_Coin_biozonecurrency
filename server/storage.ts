@@ -39,7 +39,13 @@ export type { User, Wallet, Transaction, SmartContract, AiMonitoringLog, CidEntr
                TrainingFeedbackType, TrainingProcessingStatus,
                AiTrainingData, InsertAiTrainingData,
                AiTrainingJob, InsertAiTrainingJob,
-               AiTrainingContributor, InsertAiTrainingContributor } from '../shared/schema';
+               AiTrainingContributor, InsertAiTrainingContributor,
+               // AetherCore types
+               AetherBridgeTransaction, InsertAetherBridgeTransaction,
+               LlmBrainRecord, InsertLlmBrainRecord,
+               BrainNetworkShard, InsertBrainNetworkShard, 
+               QuantumIdentity, InsertQuantumIdentity,
+               FractalGovernanceVote, InsertFractalGovernanceVote } from '../shared/schema';
 
 // Export storage interface
 export interface IStorage {
@@ -217,4 +223,40 @@ export interface IStorage {
   ): Promise<schema.AiTrainingContributor | undefined>;
   updateAiTrainingContributorTier(id: number, tier: string): Promise<schema.AiTrainingContributor | undefined>;
   updateAiTrainingContributorRank(id: number, rank: number): Promise<schema.AiTrainingContributor | undefined>;
+  
+  // AetherCore - Token Bridge methods
+  getAetherBridgeTransaction(id: number): Promise<schema.AetherBridgeTransaction | undefined>;
+  getAetherBridgeTransactionByTxId(txId: string): Promise<schema.AetherBridgeTransaction | undefined>;
+  getAetherBridgeTransactionsByUserId(userId: number): Promise<schema.AetherBridgeTransaction[]>;
+  getAetherBridgeTransactionsByStatus(status: string): Promise<schema.AetherBridgeTransaction[]>;
+  createAetherBridgeTransaction(transaction: schema.InsertAetherBridgeTransaction): Promise<schema.AetherBridgeTransaction>;
+  updateAetherBridgeTransactionStatus(id: number, status: string, metadata?: any): Promise<schema.AetherBridgeTransaction | undefined>;
+  
+  // AetherCore - LLM Brain Sharding methods
+  getLlmBrainRecord(id: number): Promise<schema.LlmBrainRecord | undefined>;
+  getLlmBrainRecordByBrainId(brainId: string): Promise<schema.LlmBrainRecord | undefined>;
+  getLlmBrainRecordsByUserId(userId: number): Promise<schema.LlmBrainRecord[]>;
+  createLlmBrainRecord(record: schema.InsertLlmBrainRecord): Promise<schema.LlmBrainRecord>;
+  updateLlmBrainRecordStatus(id: number, isActive: boolean): Promise<schema.LlmBrainRecord | undefined>;
+  
+  // AetherCore - Brain Network Shards methods
+  getBrainNetworkShard(id: number): Promise<schema.BrainNetworkShard | undefined>;
+  getBrainNetworkShardsByBrainId(brainId: string): Promise<schema.BrainNetworkShard[]>;
+  createBrainNetworkShard(shard: schema.InsertBrainNetworkShard): Promise<schema.BrainNetworkShard>;
+  updateBrainNetworkShardStatus(id: number, isActive: boolean): Promise<schema.BrainNetworkShard | undefined>;
+  
+  // AetherCore - Quantum Identity methods
+  getQuantumIdentity(id: number): Promise<schema.QuantumIdentity | undefined>;
+  getQuantumIdentityByUserId(userId: number): Promise<schema.QuantumIdentity | undefined>;
+  getQuantumIdentityByPublicKey(publicKey: string): Promise<schema.QuantumIdentity | undefined>;
+  createQuantumIdentity(identity: schema.InsertQuantumIdentity): Promise<schema.QuantumIdentity>;
+  
+  // AetherCore - Fractal Governance methods
+  getFractalGovernanceVote(id: number): Promise<schema.FractalGovernanceVote | undefined>;
+  getFractalGovernanceVoteByProposalId(proposalId: string): Promise<schema.FractalGovernanceVote | undefined>;
+  getFractalGovernanceVotesByCreator(createdBy: number): Promise<schema.FractalGovernanceVote[]>;
+  getFractalGovernanceVotesByStatus(status: string): Promise<schema.FractalGovernanceVote[]>;
+  createFractalGovernanceVote(vote: schema.InsertFractalGovernanceVote): Promise<schema.FractalGovernanceVote>;
+  updateFractalGovernanceVoteStatus(id: number, status: string, result?: string): Promise<schema.FractalGovernanceVote | undefined>;
+  recordFractalGovernanceVote(id: number, voteFor: boolean): Promise<schema.FractalGovernanceVote | undefined>;
 }

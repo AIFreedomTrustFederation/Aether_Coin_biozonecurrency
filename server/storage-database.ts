@@ -16,7 +16,9 @@ import {
   networkInsurancePolicies, mandelbrotRecursionEvents,
   // AI Training tables
   aiTrainingData, aiTrainingJobs, aiTrainingContributors,
-  TrainingFeedbackType, TrainingProcessingStatus
+  TrainingFeedbackType, TrainingProcessingStatus,
+  // AetherCore tables
+  aetherBridgeTransactions, llmBrainRecords, brainNetworkShards, quantumIdentities, fractalGovernanceVotes
 } from '../shared/schema';
 
 /**
@@ -1095,5 +1097,226 @@ export class DatabaseStorage implements IStorage {
       .where(eq(aiTrainingContributors.id, id))
       .returning();
     return contributor;
+  }
+
+  // AetherCore - Token Bridge methods
+  async getAetherBridgeTransaction(id: number): Promise<schema.AetherBridgeTransaction | undefined> {
+    const [transaction] = await db.select().from(aetherBridgeTransactions).where(eq(aetherBridgeTransactions.id, id));
+    return transaction;
+  }
+
+  async getAetherBridgeTransactionByTxId(txId: string): Promise<schema.AetherBridgeTransaction | undefined> {
+    const [transaction] = await db
+      .select()
+      .from(aetherBridgeTransactions)
+      .where(
+        or(
+          eq(aetherBridgeTransactions.sourceTxHash, txId),
+          eq(aetherBridgeTransactions.destinationTxHash, txId)
+        )
+      );
+    return transaction;
+  }
+
+  async getAetherBridgeTransactionsByUserId(userId: number): Promise<schema.AetherBridgeTransaction[]> {
+    return db
+      .select()
+      .from(aetherBridgeTransactions)
+      .where(eq(aetherBridgeTransactions.userId, userId))
+      .orderBy(desc(aetherBridgeTransactions.createdAt));
+  }
+
+  async getAetherBridgeTransactionsByStatus(status: string): Promise<schema.AetherBridgeTransaction[]> {
+    return db
+      .select()
+      .from(aetherBridgeTransactions)
+      .where(eq(aetherBridgeTransactions.status, status))
+      .orderBy(desc(aetherBridgeTransactions.createdAt));
+  }
+
+  async createAetherBridgeTransaction(transaction: schema.InsertAetherBridgeTransaction): Promise<schema.AetherBridgeTransaction> {
+    const [result] = await db.insert(aetherBridgeTransactions).values(transaction).returning();
+    return result;
+  }
+
+  async updateAetherBridgeTransactionStatus(id: number, status: string, metadata?: any): Promise<schema.AetherBridgeTransaction | undefined> {
+    const [transaction] = await db
+      .update(aetherBridgeTransactions)
+      .set({
+        status,
+        metadata: metadata ? { ...metadata } : aetherBridgeTransactions.metadata,
+        updatedAt: new Date()
+      })
+      .where(eq(aetherBridgeTransactions.id, id))
+      .returning();
+    return transaction;
+  }
+
+  // AetherCore - LLM Brain Sharding methods
+  async getLlmBrainRecord(id: number): Promise<schema.LlmBrainRecord | undefined> {
+    const [record] = await db.select().from(llmBrainRecords).where(eq(llmBrainRecords.id, id));
+    return record;
+  }
+
+  async getLlmBrainRecordByBrainId(brainId: string): Promise<schema.LlmBrainRecord | undefined> {
+    const [record] = await db
+      .select()
+      .from(llmBrainRecords)
+      .where(eq(llmBrainRecords.brainId, brainId));
+    return record;
+  }
+
+  async getLlmBrainRecordsByUserId(userId: number): Promise<schema.LlmBrainRecord[]> {
+    return db
+      .select()
+      .from(llmBrainRecords)
+      .where(eq(llmBrainRecords.userId, userId))
+      .orderBy(desc(llmBrainRecords.createdAt));
+  }
+
+  async createLlmBrainRecord(record: schema.InsertLlmBrainRecord): Promise<schema.LlmBrainRecord> {
+    const [result] = await db.insert(llmBrainRecords).values(record).returning();
+    return result;
+  }
+
+  async updateLlmBrainRecordStatus(id: number, isActive: boolean): Promise<schema.LlmBrainRecord | undefined> {
+    const [record] = await db
+      .update(llmBrainRecords)
+      .set({
+        isActive,
+        updatedAt: new Date()
+      })
+      .where(eq(llmBrainRecords.id, id))
+      .returning();
+    return record;
+  }
+
+  // AetherCore - Brain Network Shards methods
+  async getBrainNetworkShard(id: number): Promise<schema.BrainNetworkShard | undefined> {
+    const [shard] = await db.select().from(brainNetworkShards).where(eq(brainNetworkShards.id, id));
+    return shard;
+  }
+
+  async getBrainNetworkShardsByBrainId(brainId: string): Promise<schema.BrainNetworkShard[]> {
+    return db
+      .select()
+      .from(brainNetworkShards)
+      .where(eq(brainNetworkShards.brainId, brainId))
+      .orderBy(asc(brainNetworkShards.shardIndex));
+  }
+
+  async createBrainNetworkShard(shard: schema.InsertBrainNetworkShard): Promise<schema.BrainNetworkShard> {
+    const [result] = await db.insert(brainNetworkShards).values(shard).returning();
+    return result;
+  }
+
+  async updateBrainNetworkShardStatus(id: number, isActive: boolean): Promise<schema.BrainNetworkShard | undefined> {
+    const [shard] = await db
+      .update(brainNetworkShards)
+      .set({
+        isActive,
+        updatedAt: new Date()
+      })
+      .where(eq(brainNetworkShards.id, id))
+      .returning();
+    return shard;
+  }
+
+  // AetherCore - Quantum Identity methods
+  async getQuantumIdentity(id: number): Promise<schema.QuantumIdentity | undefined> {
+    const [identity] = await db.select().from(quantumIdentities).where(eq(quantumIdentities.id, id));
+    return identity;
+  }
+
+  async getQuantumIdentityByUserId(userId: number): Promise<schema.QuantumIdentity | undefined> {
+    const [identity] = await db
+      .select()
+      .from(quantumIdentities)
+      .where(eq(quantumIdentities.userId, userId));
+    return identity;
+  }
+
+  async getQuantumIdentityByPublicKey(publicKey: string): Promise<schema.QuantumIdentity | undefined> {
+    const [identity] = await db
+      .select()
+      .from(quantumIdentities)
+      .where(eq(quantumIdentities.publicKey, publicKey));
+    return identity;
+  }
+
+  async createQuantumIdentity(identity: schema.InsertQuantumIdentity): Promise<schema.QuantumIdentity> {
+    const [result] = await db.insert(quantumIdentities).values(identity).returning();
+    return result;
+  }
+
+  // AetherCore - Fractal Governance methods
+  async getFractalGovernanceVote(id: number): Promise<schema.FractalGovernanceVote | undefined> {
+    const [vote] = await db.select().from(fractalGovernanceVotes).where(eq(fractalGovernanceVotes.id, id));
+    return vote;
+  }
+
+  async getFractalGovernanceVoteByProposalId(proposalId: string): Promise<schema.FractalGovernanceVote | undefined> {
+    const [vote] = await db
+      .select()
+      .from(fractalGovernanceVotes)
+      .where(eq(fractalGovernanceVotes.proposalId, proposalId));
+    return vote;
+  }
+
+  async getFractalGovernanceVotesByCreator(createdBy: number): Promise<schema.FractalGovernanceVote[]> {
+    return db
+      .select()
+      .from(fractalGovernanceVotes)
+      .where(eq(fractalGovernanceVotes.createdBy, createdBy))
+      .orderBy(desc(fractalGovernanceVotes.createdAt));
+  }
+
+  async getFractalGovernanceVotesByStatus(status: string): Promise<schema.FractalGovernanceVote[]> {
+    return db
+      .select()
+      .from(fractalGovernanceVotes)
+      .where(eq(fractalGovernanceVotes.status, status))
+      .orderBy(desc(fractalGovernanceVotes.createdAt));
+  }
+
+  async createFractalGovernanceVote(vote: schema.InsertFractalGovernanceVote): Promise<schema.FractalGovernanceVote> {
+    const [result] = await db.insert(fractalGovernanceVotes).values(vote).returning();
+    return result;
+  }
+
+  async updateFractalGovernanceVoteStatus(id: number, status: string, result?: string): Promise<schema.FractalGovernanceVote | undefined> {
+    const [vote] = await db
+      .update(fractalGovernanceVotes)
+      .set({
+        status,
+        result,
+        updatedAt: new Date()
+      })
+      .where(eq(fractalGovernanceVotes.id, id))
+      .returning();
+    return vote;
+  }
+
+  async recordFractalGovernanceVote(id: number, voteFor: boolean): Promise<schema.FractalGovernanceVote | undefined> {
+    // Get the current vote
+    const [currentVote] = await db
+      .select()
+      .from(fractalGovernanceVotes)
+      .where(eq(fractalGovernanceVotes.id, id));
+    
+    if (!currentVote) return undefined;
+    
+    // Update the vote counts
+    const [vote] = await db
+      .update(fractalGovernanceVotes)
+      .set({
+        votesFor: voteFor ? currentVote.votesFor + 1 : currentVote.votesFor,
+        votesAgainst: !voteFor ? currentVote.votesAgainst + 1 : currentVote.votesAgainst,
+        updatedAt: new Date()
+      })
+      .where(eq(fractalGovernanceVotes.id, id))
+      .returning();
+    
+    return vote;
   }
 }
