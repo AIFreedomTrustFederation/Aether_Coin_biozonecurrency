@@ -298,6 +298,19 @@ const FractalVisualization: React.FC = () => {
 /**
  * The TimeStream visualization shows the active timestreams and their convergence
  */
+
+// Define types for the TimeStream visualization
+interface TimePoint {
+  x: number;
+  y: number;
+}
+
+interface TimeStream {
+  id: string;
+  points: TimePoint[];
+  isActive: boolean;
+}
+
 const TimeStreamVisualization: React.FC = () => {
   const { eternalNowTimestamp, timeStreamCount, activeTimeStream, createBranchingTimeStream } = useQuantumState();
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -322,10 +335,10 @@ const TimeStreamVisualization: React.FC = () => {
     
     // Create timestreams
     const streamCount = timeStreamCount || 3; // Fallback
-    const streams = [];
+    const streams: TimeStream[] = [];
     
     // Base stream (present timestream)
-    const baseStream = {
+    const baseStream: TimeStream = {
       id: 'primary',
       points: [],
       isActive: 'primary' === activeTimeStream
@@ -347,7 +360,7 @@ const TimeStreamVisualization: React.FC = () => {
     // Create branching timestreams
     for (let s = 1; s < streamCount; s++) {
       const streamId = `stream-${s}`;
-      const stream = {
+      const stream: TimeStream = {
         id: streamId,
         points: [],
         isActive: streamId === activeTimeStream
