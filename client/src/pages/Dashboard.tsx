@@ -9,6 +9,7 @@ import WalletHealthScore from '@/components/dashboard/WalletHealthScore';
 import DomainSummary from '@/components/dashboard/DomainSummary';
 import TokenSummary from '@/components/dashboard/TokenSummary';
 import NetworkStatus from '@/components/dashboard/NetworkStatus';
+import WalletBackupPromotion from '@/components/dashboard/WalletBackupPromotion';
 
 const Dashboard = () => {
   const isMobile = useIsMobile();
@@ -34,11 +35,12 @@ const Dashboard = () => {
         <AIMonitoring />
       </div>
       
-      {/* Summary Cards Section - Domains, Tokens, Network */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+      {/* Summary Cards Section - Domains, Tokens, Network, Backup */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
         <DomainSummary />
         <TokenSummary />
         <NetworkStatus />
+        <WalletBackupPromotion />
       </div>
       
       {/* Recent Transactions and Smart Contracts Section */}

@@ -7,6 +7,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { LiveModeProvider } from "./contexts/LiveModeContext";
 import { LiveModeIndicator } from "@/components/ui/LiveModeIndicator";
+import { ThemeProvider } from "./contexts/ThemeContext";
 import ResourceHints from "./components/ResourceHints";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
@@ -465,10 +466,11 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <LiveModeProvider>
-          {/* Temporarily removed HelmetProvider to fix build error */}
-          {/* <HelmetProvider> */}
-            {/* Add resource hints for faster page loading */}
-            <ResourceHints />
+          <ThemeProvider>
+            {/* Temporarily removed HelmetProvider to fix build error */}
+            {/* <HelmetProvider> */}
+              {/* Add resource hints for faster page loading */}
+              <ResourceHints />
           <div className={`app-container w-full h-full ${isMobile ? 'pb-16' : ''}`}>
         {/* Top Navigation Bar */}
         <header className="flex justify-between items-center p-2 sm:p-4 bg-background border-b fixed top-0 left-0 right-0 z-30">
@@ -754,6 +756,7 @@ function App() {
         )}
       </div>
           {/* </HelmetProvider> */}
+          </ThemeProvider>
         </LiveModeProvider>
       </AuthProvider>
     </QueryClientProvider>

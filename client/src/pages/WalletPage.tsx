@@ -1,9 +1,10 @@
 import React from 'react';
 import WalletCreation from '../components/wallet/WalletCreation';
+import WalletBackup from '../components/wallet/WalletBackup';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { useLiveMode } from '../contexts/LiveModeContext';
-import { Wallet, Zap } from 'lucide-react';
+import { Wallet, Zap, Shield, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const WalletPage: React.FC = () => {
@@ -30,6 +31,22 @@ const WalletPage: React.FC = () => {
       }
     }
   };
+  
+  // Check for URL parameters to open specific tab
+  React.useEffect(() => {
+    // Get the URL search parameters
+    const queryParams = new URLSearchParams(window.location.search);
+    const tab = queryParams.get('tab');
+    
+    // If there's a tab parameter and it's a valid tab, select it
+    if (tab === 'backup-restore') {
+      // Find all tabs and select the backup-restore tab
+      const tabElement = document.querySelector('[value="backup-restore"]');
+      if (tabElement) {
+        (tabElement as HTMLElement).click();
+      }
+    }
+  }, []);
 
   return (
     <div className="min-h-screen bg-background p-6">
@@ -37,19 +54,36 @@ const WalletPage: React.FC = () => {
         <h1 className="text-3xl font-bold mb-8">Wallet Management</h1>
         
         <Tabs defaultValue="create-wallet" className="w-full">
-          <TabsList className="mb-6">
+          <TabsList className="mb-6 grid grid-cols-3">
             <TabsTrigger value="create-wallet">
-              <span className="hidden sm:inline">Create/Import Wallet</span>
-              <span className="sm:hidden">Create</span>
+              <span className="flex items-center gap-1">
+                <Wallet className="h-4 w-4" />
+                <span className="hidden sm:inline">Create/Import</span>
+                <span className="sm:hidden">Create</span>
+              </span>
+            </TabsTrigger>
+            <TabsTrigger value="backup-restore">
+              <span className="flex items-center gap-1">
+                <Shield className="h-4 w-4" />
+                <span className="hidden sm:inline">Backup/Restore</span>
+                <span className="sm:hidden">Backup</span>
+              </span>
             </TabsTrigger>
             <TabsTrigger value="web3-connect">
-              <span className="hidden sm:inline">Web3 Connect</span>
-              <span className="sm:hidden">Connect</span>
+              <span className="flex items-center gap-1">
+                <Zap className="h-4 w-4" />
+                <span className="hidden sm:inline">Web3 Connect</span>
+                <span className="sm:hidden">Connect</span>
+              </span>
             </TabsTrigger>
           </TabsList>
           
           <TabsContent value="create-wallet">
             <WalletCreation />
+          </TabsContent>
+          
+          <TabsContent value="backup-restore">
+            <WalletBackup />
           </TabsContent>
           
           <TabsContent value="web3-connect">

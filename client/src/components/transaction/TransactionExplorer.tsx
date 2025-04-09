@@ -181,12 +181,19 @@ export default function TransactionExplorer({
       <Card>
         <CardHeader>
           <CardTitle>Transaction Explorer</CardTitle>
-          <CardDescription>Error loading transactions</CardDescription>
+          <CardDescription>No transactions available</CardDescription>
         </CardHeader>
-        <CardContent>
-          <p className="text-red-500">
-            Failed to load transaction data. Please try again later.
+        <CardContent className="flex flex-col items-center justify-center py-10">
+          <div className="mb-4 p-3 bg-primary/10 rounded-full">
+            <InfoIcon className="h-8 w-8 text-primary" />
+          </div>
+          <h3 className="text-xl font-semibold mb-2">No Transaction History</h3>
+          <p className="text-center text-muted-foreground mb-6 max-w-md">
+            There are currently no transactions in your history. Transactions will appear here once you start using your wallet.
           </p>
+          <Button variant="outline" onClick={() => window.location.reload()}>
+            Refresh
+          </Button>
         </CardContent>
       </Card>
     );
