@@ -131,17 +131,30 @@ export default function WalletCreation() {
         
         // For testing purposes, we'll generate placeholders with the right word count
         // In a real implementation, you'd use an appropriate cryptographic method
-        const language = [ // Sample of BIP-39 English words for demo (you'd use the full list in production)
+        const language = [ // Sample of BIP-39 English words from different parts of the alphabet
+          // A words
           "abandon", "ability", "able", "about", "above", "absent", "absorb", "abstract", "absurd", "abuse",
-          "access", "accident", "account", "accuse", "achieve", "acid", "acoustic", "acquire", "across", "act",
-          "action", "actor", "actress", "actual", "adapt", "add", "addict", "address", "adjust", "admit",
-          "adult", "advance", "advice", "aerobic", "affair", "afford", "afraid", "again", "age", "agent",
-          "agree", "ahead", "aim", "air", "airport", "aisle", "alarm", "album", "alcohol", "alert",
-          "alien", "all", "alley", "allow", "almost", "alone", "alpha", "already", "also", "alter",
-          "always", "amateur", "amazing", "among", "amount", "amused", "analyst", "anchor", "ancient", "anger",
-          "angle", "angry", "animal", "ankle", "announce", "annual", "another", "answer", "antenna", "antique",
-          "anxiety", "any", "apart", "apology", "appear", "apple", "approve", "april", "arch", "arctic",
-          "area", "arena", "argue", "arm", "armed", "armor", "army", "around", "arrange", "arrest"
+          // B words
+          "bacon", "badge", "balance", "balcony", "ball", "bamboo", "banana", "banner", "bar", "barely",
+          // C words
+          "cabin", "cable", "cactus", "cage", "cake", "call", "calm", "camera", "camp", "canal",
+          // D words
+          "damage", "damp", "dance", "danger", "daring", "dash", "daughter", "dawn", "day", "deal",
+          // E words
+          "eagle", "early", "earn", "earth", "easily", "east", "easy", "echo", "ecology", "edge",
+          // F words
+          "fabric", "face", "faculty", "fade", "faint", "faith", "fall", "false", "fame", "family",
+          // G words
+          "gadget", "gain", "galaxy", "gallery", "game", "gap", "garage", "garbage", "garden", "garlic",
+          // H words
+          "habit", "hair", "half", "hammer", "hamster", "hand", "happy", "harbor", "hard", "harsh",
+          // I words
+          "ice", "idea", "identify", "idle", "ignore", "ill", "illegal", "illness", "image", "imitate",
+          // J-Z words
+          "jacket", "jail", "kangaroo", "kidney", "lawsuit", "lemon", "medal", "media", "naive", "name",
+          "obey", "object", "panda", "paper", "quantum", "quarter", "rabbit", "raccoon", "saddle", "salt",
+          "timber", "title", "umbrella", "uncle", "vacuum", "valid", "walnut", "warm", "yacht", "yard", 
+          "zebra", "zero", "zone", "zoo"
         ];
         
         // Create a mnemonic with the right number of words
@@ -723,7 +736,7 @@ export default function WalletCreation() {
                     )}
                   </div>
                   
-                  <div className="flex gap-2 mt-6">
+                  <div className="flex flex-col sm:flex-row gap-2 mt-6">
                     <Button 
                       onClick={() => {
                         setStep(1);
@@ -733,14 +746,14 @@ export default function WalletCreation() {
                         setNewWallet(null);
                         generateNewMnemonic();
                       }} 
-                      className="flex-1"
+                      className="w-full"
                     >
                       Create Another Wallet
                     </Button>
                     <Button 
                       variant="outline" 
-                      onClick={() => document.querySelector('[data-value="manage"]')?.dispatchEvent(new MouseEvent('click'))}
-                      className="flex-1"
+                      onClick={() => document.querySelector('[value="manage"]')?.dispatchEvent(new MouseEvent('click'))}
+                      className="w-full"
                     >
                       Manage Wallets
                     </Button>
@@ -845,7 +858,7 @@ export default function WalletCreation() {
                   <p className="text-muted-foreground">You haven't created any wallets yet.</p>
                   <Button 
                     variant="outline" 
-                    onClick={() => document.querySelector('[data-value="create"]')?.dispatchEvent(new MouseEvent('click'))}
+                    onClick={() => document.querySelector('[value="create"]')?.dispatchEvent(new MouseEvent('click'))}
                     className="mt-4"
                   >
                     Create Your First Wallet
