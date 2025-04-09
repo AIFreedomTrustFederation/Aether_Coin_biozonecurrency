@@ -6,12 +6,15 @@
 import dotenv from 'dotenv';
 import * as schema from '../shared/schema';
 
-// Import passphrase wallet schema explicitly
+// Import wallet schemas and tables explicitly
 import { 
   passphraseWallets, 
   passphraseWalletsRelations,
   PassphraseWallet,
-  InsertPassphraseWallet
+  torusWallets,
+  TorusWallet,
+  templeNodeWallets,
+  TempleNodeWallet
 } from '../shared/schema';
 import { DatabaseStorage } from './storage-database';
 
@@ -86,6 +89,22 @@ export interface IStorage {
   createPassphraseWallet(wallet: schema.InsertPassphraseWallet): Promise<schema.PassphraseWallet>;
   updatePassphraseWallet(id: number, updates: Partial<schema.PassphraseWallet>): Promise<schema.PassphraseWallet | undefined>;
   verifyPassphraseWallet(id: number): Promise<schema.PassphraseWallet | undefined>;
+  
+  // Torus Wallet methods
+  getTorusWallet(id: number): Promise<schema.TorusWallet | undefined>;
+  getTorusWalletsByUserId(userId: number): Promise<schema.TorusWallet[]>;
+  getTorusWalletByAddress(address: string): Promise<schema.TorusWallet | undefined>;
+  createTorusWallet(wallet: Partial<schema.TorusWallet>): Promise<schema.TorusWallet>;
+  updateTorusWallet(id: number, updates: Partial<schema.TorusWallet>): Promise<schema.TorusWallet | undefined>;
+
+  // Temple Node Wallet methods
+  getTempleNodeWallet(id: number): Promise<schema.TempleNodeWallet | undefined>;
+  getTempleNodeWalletsByUserId(userId: number): Promise<schema.TempleNodeWallet[]>;
+  getTempleNodeWalletByNodeId(nodeId: string): Promise<schema.TempleNodeWallet | undefined>;
+  getTempleNodeWalletsByTorusWalletId(torusWalletId: number): Promise<schema.TempleNodeWallet[]>;
+  createTempleNodeWallet(wallet: Partial<schema.TempleNodeWallet>): Promise<schema.TempleNodeWallet>;
+  updateTempleNodeWallet(id: number, updates: Partial<schema.TempleNodeWallet>): Promise<schema.TempleNodeWallet | undefined>;
+  updateTempleNodeHarmonyScore(id: number, harmonyScore: number): Promise<schema.TempleNodeWallet | undefined>;
   
   // Transaction methods
   getTransaction(id: number): Promise<schema.Transaction | undefined>;

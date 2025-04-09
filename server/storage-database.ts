@@ -19,8 +19,10 @@ import {
   TrainingFeedbackType, TrainingProcessingStatus,
   // AetherCore tables
   aetherBridgeTransactions, llmBrainRecords, brainNetworkShards, quantumIdentities, fractalGovernanceVotes,
-  // Passphrase wallet tables
-  passphraseWallets
+  // Wallet tables
+  passphraseWallets,
+  torusWallets,
+  templeNodeWallets
 } from '../shared/schema';
 
 /**
@@ -151,7 +153,7 @@ export class DatabaseStorage implements IStorage {
     return wallet;
   }
 
-  async createPassphraseWallet(wallet: schema.InsertPassphraseWallet): Promise<schema.PassphraseWallet> {
+  async createPassphraseWallet(wallet: Partial<schema.PassphraseWallet>): Promise<schema.PassphraseWallet> {
     const [result] = await db.insert(passphraseWallets).values(wallet).returning();
     return result;
   }
@@ -307,6 +309,90 @@ export class DatabaseStorage implements IStorage {
       .where(eq(payments.id, id))
       .returning();
     return payment;
+  }
+
+  // Torus Wallet methods
+  async getTorusWallet(id: number): Promise<schema.TorusWallet | undefined> {
+    const [wallet] = await db.select().from(torusWallets).where(eq(torusWallets.id, id));
+    return wallet;
+  }
+
+  async getTorusWalletsByUserId(userId: number): Promise<schema.TorusWallet[]> {
+    return db
+      .select()
+      .from(torusWallets)
+      .where(eq(torusWallets.userId, userId));
+  }
+
+  async getTorusWalletByAddress(address: string): Promise<schema.TorusWallet | undefined> {
+    const [wallet] = await db.select().from(torusWallets).where(eq(torusWallets.address, address));
+    return wallet;
+  }
+
+  async createTorusWallet(wallet: Partial<schema.TorusWallet>): Promise<schema.TorusWallet> {
+    const [result] = await db.insert(torusWallets).values(wallet).returning();
+    return result;
+  }
+
+  async updateTorusWallet(id: number, updates: Partial<schema.TorusWallet>): Promise<schema.TorusWallet | undefined> {
+    const [wallet] = await db
+      .update(torusWallets)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(torusWallets.id, id))
+      .returning();
+    return wallet;
+  }
+
+  // Temple Node Wallet methods
+  async getTempleNodeWallet(id: number): Promise<schema.TempleNodeWallet | undefined> {
+    const [wallet] = await db.select().from(templeNodeWallets).where(eq(templeNodeWallets.id, id));
+    return wallet;
+  }
+
+  async getTempleNodeWalletsByUserId(userId: number): Promise<schema.TempleNodeWallet[]> {
+    return db
+      .select()
+      .from(templeNodeWallets)
+      .where(eq(templeNodeWallets.userId, userId));
+  }
+
+  async getTempleNodeWalletByNodeId(nodeId: string): Promise<schema.TempleNodeWallet | undefined> {
+    const [wallet] = await db.select().from(templeNodeWallets).where(eq(templeNodeWallets.nodeId, nodeId));
+    return wallet;
+  }
+
+  async getTempleNodeWalletsByTorusWalletId(torusWalletId: number): Promise<schema.TempleNodeWallet[]> {
+    return db
+      .select()
+      .from(templeNodeWallets)
+      .where(eq(templeNodeWallets.torusWalletId, torusWalletId));
+  }
+
+  async createTempleNodeWallet(wallet: Partial<schema.TempleNodeWallet>): Promise<schema.TempleNodeWallet> {
+    const [result] = await db.insert(templeNodeWallets).values(wallet).returning();
+    return result;
+  }
+
+  async updateTempleNodeWallet(id: number, updates: Partial<schema.TempleNodeWallet>): Promise<schema.TempleNodeWallet | undefined> {
+    const [wallet] = await db
+      .update(templeNodeWallets)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(templeNodeWallets.id, id))
+      .returning();
+    return wallet;
+  }
+
+  async updateTempleNodeHarmonyScore(id: number, harmonyScore: number): Promise<schema.TempleNodeWallet | undefined> {
+    const [wallet] = await db
+      .update(templeNodeWallets)
+      .set({ 
+        harmonyScore,
+        lastHarmonyScoreUpdate: new Date(),
+        updatedAt: new Date()
+      })
+      .where(eq(templeNodeWallets.id, id))
+      .returning();
+    return wallet;
   }
 
   // User API Keys

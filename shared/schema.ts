@@ -3,12 +3,20 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
 
-// Import wallet passphrase schema
+// Import wallet schemas
 import { 
   passphraseWallets, 
   passphraseWalletsRelations,
+  torusWallets,
+  templeNodeWallets,
+  // Types
   PassphraseWallet,
-  InsertPassphraseWallet
+  TorusWallet,
+  TempleNodeWallet,
+  // Insert schemas
+  InsertPassphraseWallet,
+  InsertTorusWallet,
+  InsertTempleNodeWallet
 } from "./wallet-schema";
 
 // Import AI Assistant Schema 
@@ -209,17 +217,25 @@ import {
 
 // User API Keys and Mysterion training data types are already exported elsewhere
 
-// Export wallet passphrase schema
+// Export wallet schemas
 export {
   // Tables
   passphraseWallets,
+  torusWallets,
+  templeNodeWallets,
   
   // Relations
   passphraseWalletsRelations,
   
   // Types
   PassphraseWallet,
-  InsertPassphraseWallet
+  TorusWallet,
+  TempleNodeWallet,
+  
+  // Insert types
+  InsertPassphraseWallet,
+  InsertTorusWallet,
+  InsertTempleNodeWallet
 }
 
 // Escrow system types
