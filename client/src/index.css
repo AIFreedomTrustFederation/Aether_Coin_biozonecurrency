@@ -1,10 +1,10 @@
-/* Tailwind CSS directives must come first */
+/* Import custom styles before Tailwind */
+@import './styles/neon.css';
+
+/* Tailwind CSS directives */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Import custom styles after Tailwind */
-@import './styles/neon.css';
 
 @layer base {
   html {
