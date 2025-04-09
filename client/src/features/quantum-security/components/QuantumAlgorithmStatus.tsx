@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Shield, Lock, Server, Cpu, AlertTriangle, CheckCircle, Info } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import styles from './QuantumAlgorithmStatus.module.css';
 
 interface AlgorithmStatus {
   name: string;
@@ -85,7 +86,7 @@ const quantumAlgorithms: AlgorithmStatus[] = [
   },
 ];
 
-const classicAlgorithms = [
+const classicAlgorithms: AlgorithmStatus[] = [
   {
     name: 'AES-256-GCM',
     status: 'active',
@@ -165,6 +166,13 @@ const getSecurityLevelBadge = (level: AlgorithmStatus['securityLevel']) => {
   }
 };
 
+// Helper function to get the closest progress class (in increments of 5)
+const getProgressClass = (progress: number) => {
+  // Round to the nearest 5
+  const roundedProgress = Math.round(progress / 5) * 5;
+  return styles[`progress${roundedProgress}`];
+};
+
 export function QuantumAlgorithmStatus() {
   return (
     <Card className="w-full">
@@ -234,18 +242,17 @@ export function QuantumAlgorithmStatus() {
                       <span>Implementation Progress</span>
                       <span>{algorithm.progress}%</span>
                     </div>
-                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+                    <div className={`${styles.progressBar} dark:${styles.progressBarDark}`}>
                       <div 
-                        className={`${
+                        className={`${styles.progressFill} ${
                           algorithm.status === 'deprecated' 
-                            ? 'bg-red-500' 
+                            ? styles.progressFillDeprecated 
                             : algorithm.progress > 90 
-                              ? 'bg-green-500' 
+                              ? styles.progressFillHigh 
                               : algorithm.progress > 70 
-                                ? 'bg-blue-500' 
-                                : 'bg-yellow-500'
-                        } h-2.5 rounded-full`} 
-                        style={{ width: `${algorithm.progress}%` }}
+                                ? styles.progressFillMedium 
+                                : styles.progressFillLow
+                        } ${getProgressClass(algorithm.progress)}`} 
                       ></div>
                     </div>
                   </div>
@@ -298,10 +305,9 @@ export function QuantumAlgorithmStatus() {
                       <span>Implementation Progress</span>
                       <span>{algorithm.progress}%</span>
                     </div>
-                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+                    <div className={`${styles.progressBar} dark:${styles.progressBarDark}`}>
                       <div 
-                        className="bg-green-500 h-2.5 rounded-full" 
-                        style={{ width: `${algorithm.progress}%` }}
+                        className={`${styles.progressFill} ${styles.progressFillHigh} ${getProgressClass(algorithm.progress)}`} 
                       ></div>
                     </div>
                   </div>
