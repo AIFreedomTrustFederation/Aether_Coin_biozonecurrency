@@ -1,9 +1,7 @@
-import axios from 'axios';
 import crypto from 'crypto';
+import { getFractalCoinAPI } from './fractalcoin-api';
 
 // Environment variables
-const FRACTALCOIN_API_KEY = process.env.FRACTALCOIN_API_KEY;
-const FRACTALCOIN_API_ENDPOINT = process.env.FRACTALCOIN_API_ENDPOINT || 'https://api.fractalcoin.network/v1';
 const DEBUG = process.env.DEBUG === 'true';
 
 // Debug logging
@@ -18,17 +16,18 @@ function log(...args: any[]) {
  * Manages the bridge between FractalCoin's sharded storage network and Filecoin
  */
 export class FilecoinBridgeService {
-  private apiKey: string | undefined;
-  private apiEndpoint: string;
+  private fractalCoinAPI;
   private mockMode: boolean;
 
   constructor() {
-    this.apiKey = FRACTALCOIN_API_KEY;
-    this.apiEndpoint = FRACTALCOIN_API_ENDPOINT;
-    this.mockMode = !this.apiKey;
+    // Get the FractalCoin API client
+    this.fractalCoinAPI = getFractalCoinAPI();
+    
+    // Check if we're in mock mode (will be handled by the API client)
+    this.mockMode = !process.env.FRACTALCOIN_API_KEY || process.env.FRACTALCOIN_API_KEY === 'localhost-dev-key';
 
     if (this.mockMode) {
-      console.warn('FRACTALCOIN_API_KEY not found in environment, FractalCoin-Filecoin Bridge will run in simulation mode');
+      console.warn('FRACTALCOIN_API_KEY not found in environment or set to development key, FractalCoin-Filecoin Bridge will run in simulation mode');
     }
   }
 
@@ -41,48 +40,31 @@ export class FilecoinBridgeService {
     allocatedBytes: number;
     nodeIds: string[];
   }> {
-    if (this.mockMode) {
-      return this.mockAllocation(bytes);
-    }
-
     try {
       log('Allocating storage from FractalCoin network...');
       
-      // API call to allocate storage from FractalCoin network
-      const response = await axios.post(
-        `${this.apiEndpoint}/storage/allocate`,
-        {
-          bytes,
-          purpose: 'filecoin-bridge',
-          redundancy: 3, // Number of redundant shards
-          encryption: 'aes-256-gcm'
-        },
-        {
-          headers: {
-            'Authorization': `Bearer ${this.apiKey}`,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
+      // Use the FractalCoin API client to allocate storage
+      const allocationResult = await this.fractalCoinAPI.allocateStorage(bytes, {
+        purpose: 'filecoin-bridge',
+        redundancy: 3,
+        encryption: 'aes-256-gcm'
+      });
       
-      log('Storage allocation response:', response.data);
+      log('Storage allocation response:', allocationResult);
       
-      if (!response.data.success) {
-        throw new Error(`Failed to allocate storage: ${response.data.message}`);
+      if (!allocationResult.success) {
+        throw new Error(`Failed to allocate storage: ${allocationResult.message}`);
       }
       
       console.log(`✅ Successfully allocated ${this.formatBytes(bytes)} of storage from FractalCoin network`);
-      console.log(`📊 Distributed across ${response.data.nodes.length} nodes`);
+      console.log(`📊 Distributed across ${allocationResult.nodes.length} nodes`);
       
       return {
         allocatedBytes: bytes,
-        nodeIds: response.data.nodes.map((node: any) => node.id)
+        nodeIds: allocationResult.nodes.map(node => node.id)
       };
     } catch (error: any) {
       console.error('Error allocating FractalCoin storage:', error.message);
-      if (error.response) {
-        console.error('API response:', error.response.data);
-      }
       throw error;
     }
   }
@@ -96,10 +78,6 @@ export class FilecoinBridgeService {
     allocatedBytes: number;
     nodeIds: string[];
   }): Promise<string> {
-    if (this.mockMode) {
-      return this.mockRegistration(allocation);
-    }
-
     try {
       log('Registering FractalCoin storage with Filecoin network...');
       
@@ -126,28 +104,19 @@ export class FilecoinBridgeService {
         }
       };
       
-      // Register the bridge with FractalCoin network
-      const registerResponse = await axios.post(
-        `${this.apiEndpoint}/bridges/create`,
-        {
-          type: 'filecoin',
-          config: bridgeConfig
-        },
-        {
-          headers: {
-            'Authorization': `Bearer ${this.apiKey}`,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
+      // Use the FractalCoin API client to register the bridge
+      const registerResponse = await this.fractalCoinAPI.registerBridge({
+        type: 'filecoin',
+        config: bridgeConfig
+      });
       
-      log('Bridge registration response:', registerResponse.data);
+      log('Bridge registration response:', registerResponse);
       
-      if (!registerResponse.data.success) {
-        throw new Error(`Failed to register bridge: ${registerResponse.data.message}`);
+      if (!registerResponse.success) {
+        throw new Error(`Failed to register bridge: ${registerResponse.message}`);
       }
       
-      const bridgeCid = registerResponse.data.cid;
+      const bridgeCid = registerResponse.cid;
       
       console.log(`✅ Successfully registered FractalCoin-Filecoin bridge`);
       console.log(`🔗 Bridge CID: ${bridgeCid}`);
@@ -157,9 +126,6 @@ export class FilecoinBridgeService {
       return bridgeCid;
     } catch (error: any) {
       console.error('Error registering with Filecoin:', error.message);
-      if (error.response) {
-        console.error('API response:', error.response.data);
-      }
       throw error;
     }
   }

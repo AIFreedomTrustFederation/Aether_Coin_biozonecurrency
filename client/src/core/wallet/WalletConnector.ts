@@ -90,8 +90,8 @@ class WalletConnector extends EventEmitter {
     if (this.initialized) return;
     
     // Set encryption key (hash it for security)
-    const hash = SHA256(encryptionKey);
-    this.encryptionKey = hash.toString();
+    const hash = SHA256(encryptionKey).toString(enc.Hex);
+    this.encryptionKey = hash;
     
     // Initialize storage metrics for test mode
     this.storageMetrics = {

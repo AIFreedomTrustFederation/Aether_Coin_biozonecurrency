@@ -33,6 +33,8 @@ import web3StorageRoutes from "./routes/web3-storage-routes";
 import domainHostingRoutes from "./routes/domain-hosting-routes";
 import recurveRoutes from "./routes/recurve-routes";
 import aethercoreRoutes from "./routes/aethercore-routes";
+import fractalCoinRoutes from "./routes/fractalcoin-api-routes";
+import fractalCoinKeyRoutes from "./routes/fractalcoin-key-routes";
 import { openSourcePaymentService } from "./services/openSourcePayment";
 
 /**
@@ -159,6 +161,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Mount AetherCore routes
   app.use('/api/aethercore', aethercoreRoutes);
+  
+  // Mount FractalCoin API routes
+  app.use('/api/fractalcoin', fractalCoinRoutes);
+  
+  // Mount FractalCoin API Key management routes
+  app.use('/api/fractalcoin', fractalCoinKeyRoutes);
   
   // Register quantum secure payment routes
   registerQuantumSecurePaymentRoutes(app);
