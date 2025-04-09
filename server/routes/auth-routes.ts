@@ -27,6 +27,67 @@ interface AuthRequest extends Request {
  */
 export function createAuthRoutes() {
   
+  // Signup route
+  router.post('/signup', async (req: Request, res: Response) => {
+    try {
+      // Validate signup request body
+      const signupSchema = z.object({
+        username: z.string().min(3, 'Username must be at least 3 characters'),
+        email: z.string().email('Invalid email format'),
+        password: z.string().min(6, 'Password must be at least 6 characters'),
+      });
+
+      const result = signupSchema.safeParse(req.body);
+      
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: 'Invalid request data', 
+          errors: result.error.issues 
+        });
+      }
+
+      const { username, email, password } = result.data;
+
+      // Check if user already exists
+      const existingUserByUsername = await storage.getUserByUsername(username);
+      if (existingUserByUsername) {
+        return res.status(409).json({ message: 'Username already taken' });
+      }
+
+      // Hash the password
+      const salt = await bcrypt.genSalt(10);
+      const passwordHash = await bcrypt.hash(password, salt);
+
+      // Create the user
+      const newUser = await storage.createUser({
+        username,
+        email,
+        passwordHash,
+        role: 'user', // Default role
+        isTrustMember: false, // Default not a trust member
+      });
+
+      // Return success response (without sensitive data)
+      const safeUser = {
+        id: newUser.id,
+        username: newUser.username,
+        email: newUser.email,
+        role: newUser.role,
+        isTrustMember: newUser.isTrustMember,
+        createdAt: newUser.createdAt,
+        updatedAt: newUser.updatedAt,
+      };
+
+      return res.status(201).json({ 
+        message: 'User created successfully', 
+        user: safeUser 
+      });
+    } catch (error) {
+      console.error('Signup error:', error);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+  
   // Login route
   router.post('/login', async (req: Request, res: Response) => {
     try {

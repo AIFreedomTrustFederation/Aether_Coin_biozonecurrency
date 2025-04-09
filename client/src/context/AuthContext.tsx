@@ -23,6 +23,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isTrustMember: boolean;
   isAdmin: boolean;
+  signup: (username: string, email: string, password: string) => Promise<boolean>;
   login: (username: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
   checkAuthStatus: () => Promise<boolean>;
@@ -36,6 +37,7 @@ const AuthContext = createContext<AuthContextType>({
   isAuthenticated: false,
   isTrustMember: false,
   isAdmin: false,
+  signup: async () => false,
   login: async () => false,
   logout: async () => {},
   checkAuthStatus: async () => false,
@@ -79,6 +81,54 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } catch (error) {
       console.error('Auth status check error:', error);
       setUser(null);
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Signup function
+  const signup = async (username: string, email: string, password: string): Promise<boolean> => {
+    try {
+      setIsLoading(true);
+      
+      // Add API Gateway headers for development environment
+      const headers = {
+        'Content-Type': 'application/json',
+        'X-API-Gateway-Validated': 'true',
+        'X-Quantum-Validation-Timestamp': Date.now().toString()
+      };
+      
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ username, email, password }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast({
+          title: 'Signup Successful',
+          description: `Your account has been created. Please log in.`,
+        });
+        return true;
+      } else {
+        // Display error message
+        toast({
+          title: 'Signup Failed',
+          description: data.message || 'Error creating account',
+          variant: 'destructive',
+        });
+        return false;
+      }
+    } catch (error) {
+      console.error('Signup error:', error);
+      toast({
+        title: 'Signup Error',
+        description: 'An unexpected error occurred. Please try again.',
+        variant: 'destructive',
+      });
       return false;
     } finally {
       setIsLoading(false);
@@ -239,6 +289,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     isAuthenticated,
     isTrustMember,
     isAdmin,
+    signup,
     login,
     logout,
     checkAuthStatus,

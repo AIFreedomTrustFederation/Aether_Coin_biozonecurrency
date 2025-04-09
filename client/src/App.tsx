@@ -14,7 +14,8 @@ import { Link } from "wouter";
 import { 
   Menu, X, Home, Layout, Wallet, Lock, Shield, Settings, AlertTriangle, ChevronRight, 
   BarChart3, Eye, Cpu, Bell, Zap, Coins, FileText, Database, Bot, TestTube, Blocks,
-  Smartphone, Lightbulb, CreditCard, Info, Palette, Loader2, UserCircle2, Globe, Code, Key
+  Smartphone, Lightbulb, CreditCard, Info, Palette, Loader2, UserCircle2, Globe, Code, Key,
+  LogIn, UserPlus
 } from "lucide-react";
 import { AuthProvider } from "./context/AuthContext";
 import TrustMemberGuard from "./components/auth/TrustMemberGuard";
@@ -76,6 +77,10 @@ const DomainHostingPage = lazy(() => import("./pages/DomainHosting"));
 const DomainHostingWizardPage = lazy(() => import("./pages/DomainHostingWizardPage"));
 const BottomNavigation = lazy(() => import("@/components/mobile/BottomNavigation"));
 
+// Authentication pages
+const Login = lazy(() => import("./pages/Login"));
+const Signup = lazy(() => import("./pages/Signup"));
+
 // Trust member authentication pages
 const TrustLogin = lazy(() => import("./pages/TrustLogin"));
 const TrustPortal = lazy(() => import("./pages/TrustPortal"));
@@ -92,6 +97,8 @@ const QuantumSecurityPage = lazy(() => import("./pages/QuantumSecurityPage"));
 const navigationItems = [
   { name: "Dashboard", path: "/dashboard", icon: <Layout className="h-5 w-5" /> },
   { name: "Wallet", path: "/wallet", icon: <Wallet className="h-5 w-5" /> },
+  { name: "Login", path: "/login", icon: <LogIn className="h-5 w-5" /> },
+  { name: "Signup", path: "/signup", icon: <UserPlus className="h-5 w-5" /> },
   { name: "Payment", path: "/payment", icon: <CreditCard className="h-5 w-5" /> },
   { name: "Quantum Payment", path: "/quantum-secure-payment", icon: <Shield className="h-5 w-5" /> },
   { name: "Transactions", path: "/transactions", icon: <BarChart3 className="h-5 w-5" /> },
@@ -720,6 +727,19 @@ function App() {
             <Route path="/ai-freedom-trust/login">
               <Suspense fallback={<LoadingScreen message="Loading AI Freedom Trust login..." />}>
                 <AIFreedomTrustLogin />
+              </Suspense>
+            </Route>
+            
+            {/* Standard Authentication Pages */}
+            <Route path="/login">
+              <Suspense fallback={<LoadingScreen message="Loading login..." />}>
+                <Login />
+              </Suspense>
+            </Route>
+            
+            <Route path="/signup">
+              <Suspense fallback={<LoadingScreen message="Loading signup..." />}>
+                <Signup />
               </Suspense>
             </Route>
             <Route path="/trust/portal">
