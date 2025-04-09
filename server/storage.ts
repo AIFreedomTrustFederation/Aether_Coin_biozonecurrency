@@ -5,6 +5,7 @@
 
 import dotenv from 'dotenv';
 import * as schema from '../shared/schema';
+import { z } from 'zod';
 
 // Import wallet schemas and tables explicitly
 import { 
@@ -16,6 +17,40 @@ import {
   templeNodeWallets,
   TempleNodeWallet
 } from '../shared/schema';
+
+// Import Sacred Utility Module schemas and tables explicitly
+import {
+  sacredUtilityModules,
+  fractalAuthenticationRibbons,
+  octavalFeedbacks,
+  synapticCoCreations,
+  covenantRegistrations,
+  vaultBuilders,
+  liturgicalExchanges,
+  harvestAllocators,
+  graftingProtocols,
+  // Types
+  SacredUtilityModule,
+  FractalAuthenticationRibbon,
+  OctavalFeedback,
+  SynapticCoCreation,
+  CovenantRegistration,
+  VaultBuilder,
+  LiturgicalExchange,
+  HarvestAllocator,
+  GraftingProtocol,
+  // Insert Types
+  InsertSacredUtilityModuleType,
+  InsertFractalAuthenticationRibbonType,
+  InsertOctavalFeedbackType,
+  InsertSynapticCoCreationType,
+  InsertCovenantRegistrationType,
+  InsertVaultBuilderType,
+  InsertLiturgicalExchangeType,
+  InsertHarvestAllocatorType,
+  InsertGraftingProtocolType
+} from '../shared/schema';
+
 import { DatabaseStorage } from './storage-database';
 
 // Load environment variables
@@ -29,7 +64,9 @@ export type { User, Wallet, Transaction, SmartContract, AiMonitoringLog, CidEntr
                StakingPosition, Proposal, ProposalOption, Vote, GovernanceReward,
                WalletHealthScore, WalletHealthIssue, NotificationPreference,
                // Export passphrase wallet types
-               PassphraseWallet, InsertPassphraseWallet,
+               PassphraseWallet, TorusWallet, TempleNodeWallet,
+               // Re-export InsertPassphraseWallet for use with z.infer
+               InsertPassphraseWallet,
                AdminAction, AdminPermission, Fund, FundAllocation, FundTransaction,
                TokenomicsConfig, TokenDistribution, Widget, WidgetTemplate, Dashboard,
                IcoParticipation, IcoPhase, StakingRecord, EscrowTransaction, EscrowProof,
@@ -48,6 +85,16 @@ export type { User, Wallet, Transaction, SmartContract, AiMonitoringLog, CidEntr
                InsertMandelbrotRecursionEvent, InsurancePolicyType, InsurancePolicyStatus,
                BeneficiaryType, FractalLoanStatus, FractalLoanCollateralType, RecurveSyncStatus,
                RecurveTokenTier, TorusNodeType,
+               // Sacred Utility Module types
+               SacredUtilityModule, InsertSacredUtilityModuleType,
+               FractalAuthenticationRibbon, InsertFractalAuthenticationRibbonType,
+               OctavalFeedback, InsertOctavalFeedbackType,
+               SynapticCoCreation, InsertSynapticCoCreationType,
+               CovenantRegistration, InsertCovenantRegistrationType,
+               VaultBuilder, InsertVaultBuilderType,
+               LiturgicalExchange, InsertLiturgicalExchangeType,
+               HarvestAllocator, InsertHarvestAllocatorType,
+               GraftingProtocol, InsertGraftingProtocolType,
                // AI Assistant Training types
                TrainingFeedbackType, TrainingProcessingStatus,
                AiTrainingData, InsertAiTrainingData,
@@ -86,7 +133,7 @@ export interface IStorage {
   getPassphraseWalletByWalletId(walletId: string): Promise<schema.PassphraseWallet | undefined>;
   getPassphraseWalletsByUserId(userId: number): Promise<schema.PassphraseWallet[]>;
   getPassphraseWalletByAddress(address: string): Promise<schema.PassphraseWallet | undefined>;
-  createPassphraseWallet(wallet: schema.InsertPassphraseWallet): Promise<schema.PassphraseWallet>;
+  createPassphraseWallet(wallet: z.infer<typeof schema.InsertPassphraseWallet>): Promise<schema.PassphraseWallet>;
   updatePassphraseWallet(id: number, updates: Partial<schema.PassphraseWallet>): Promise<schema.PassphraseWallet | undefined>;
   verifyPassphraseWallet(id: number): Promise<schema.PassphraseWallet | undefined>;
   
@@ -231,6 +278,56 @@ export interface IStorage {
   getMandelbrotRecursionEvent(id: number): Promise<schema.MandelbrotRecursionEvent | undefined>;
   getMandelbrotRecursionEventsByType(type: string): Promise<schema.MandelbrotRecursionEvent[]>;
   createMandelbrotRecursionEvent(event: schema.InsertMandelbrotRecursionEvent): Promise<schema.MandelbrotRecursionEvent>;
+  
+  // Sacred Utility Module methods
+  // Sacred Utility Module base methods
+  getSacredUtilityModule(id: number): Promise<schema.SacredUtilityModule | undefined>;
+  getSacredUtilityModulesByType(moduleType: string): Promise<schema.SacredUtilityModule[]>;
+  createSacredUtilityModule(module: schema.InsertSacredUtilityModuleType): Promise<schema.SacredUtilityModule>;
+  
+  // Fractal Authentication Ribbon methods
+  getFractalAuthenticationRibbon(id: number): Promise<schema.FractalAuthenticationRibbon | undefined>;
+  getFractalAuthenticationRibbonByUserId(userId: number): Promise<schema.FractalAuthenticationRibbon | undefined>;
+  createFractalAuthenticationRibbon(ribbon: schema.InsertFractalAuthenticationRibbonType): Promise<schema.FractalAuthenticationRibbon>;
+  evolveFractalAuthenticationRibbon(id: number): Promise<schema.FractalAuthenticationRibbon | undefined>;
+  
+  // Octaval Feedback methods
+  getOctavalFeedback(id: number): Promise<schema.OctavalFeedback | undefined>;
+  getOctavalFeedbackByUserId(userId: number): Promise<schema.OctavalFeedback | undefined>;
+  createOctavalFeedback(feedback: schema.InsertOctavalFeedbackType): Promise<schema.OctavalFeedback>;
+  updateOctavalFeedback(id: number, updates: Partial<schema.OctavalFeedback>): Promise<schema.OctavalFeedback | undefined>;
+  
+  // Synaptic Co-Creation methods
+  getSynapticCoCreation(id: number): Promise<schema.SynapticCoCreation | undefined>;
+  getSynapticCoCreationsByUserId(userId: number): Promise<schema.SynapticCoCreation[]>;
+  createSynapticCoCreation(creation: schema.InsertSynapticCoCreationType): Promise<schema.SynapticCoCreation>;
+  updateSynapticCoCreation(id: number, updates: Partial<schema.SynapticCoCreation>): Promise<schema.SynapticCoCreation | undefined>;
+  
+  // Covenant Registration methods
+  getCovenantRegistration(id: number): Promise<schema.CovenantRegistration | undefined>;
+  getCovenantRegistrationsByParticipant(participantId: number): Promise<schema.CovenantRegistration[]>;
+  createCovenantRegistration(covenant: schema.InsertCovenantRegistrationType): Promise<schema.CovenantRegistration>;
+  
+  // Vault Builder methods
+  getVaultBuilder(id: number): Promise<schema.VaultBuilder | undefined>;
+  getVaultBuildersByUserId(userId: number): Promise<schema.VaultBuilder[]>;
+  createVaultBuilder(vault: schema.InsertVaultBuilderType): Promise<schema.VaultBuilder>;
+  
+  // Liturgical Exchange methods
+  getLiturgicalExchange(id: number): Promise<schema.LiturgicalExchange | undefined>;
+  getLiturgicalExchangesByUserId(userId: number): Promise<schema.LiturgicalExchange[]>;
+  createLiturgicalExchange(exchange: schema.InsertLiturgicalExchangeType): Promise<schema.LiturgicalExchange>;
+  
+  // Harvest Allocator methods
+  getHarvestAllocator(id: number): Promise<schema.HarvestAllocator | undefined>;
+  getHarvestAllocatorsByUserId(userId: number): Promise<schema.HarvestAllocator[]>;
+  createHarvestAllocator(allocator: schema.InsertHarvestAllocatorType): Promise<schema.HarvestAllocator>;
+  
+  // Grafting Protocol methods
+  getGraftingProtocol(id: number): Promise<schema.GraftingProtocol | undefined>;
+  getGraftingProtocolByEntity(entityType: string, entityId: number): Promise<schema.GraftingProtocol | undefined>;
+  createGraftingProtocol(protocol: schema.InsertGraftingProtocolType): Promise<schema.GraftingProtocol>;
+  updateGraftingProtocolFruitfulness(id: number, fruitfulness: number): Promise<schema.GraftingProtocol | undefined>;
   
   // AI Assistant Training Data methods
   getAiTrainingData(id: number): Promise<schema.AiTrainingData | undefined>;

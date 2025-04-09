@@ -91,6 +91,7 @@ export type PassphraseWallet = typeof passphraseWallets.$inferSelect;
 export type TorusWallet = typeof torusWallets.$inferSelect;
 export type TempleNodeWallet = typeof templeNodeWallets.$inferSelect;
 
+// Define types for insert schemas
 export type InsertPassphraseWalletType = z.infer<typeof InsertPassphraseWallet>;
 export type InsertTorusWalletType = z.infer<typeof InsertTorusWallet>;
 export type InsertTempleNodeWalletType = z.infer<typeof InsertTempleNodeWallet>;

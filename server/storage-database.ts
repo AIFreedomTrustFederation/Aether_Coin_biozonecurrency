@@ -22,7 +22,11 @@ import {
   // Wallet tables
   passphraseWallets,
   torusWallets,
-  templeNodeWallets
+  templeNodeWallets,
+  // Sacred Utility Module tables
+  sacredUtilityModules, fractalAuthenticationRibbons, octavalFeedbacks,
+  synapticCoCreations, covenantRegistrations, vaultBuilders,
+  liturgicalExchanges, harvestAllocators, graftingProtocols
 } from '../shared/schema';
 
 /**
@@ -1456,5 +1460,230 @@ export class DatabaseStorage implements IStorage {
       .returning();
     
     return vote;
+  }
+
+  // Sacred Utility Module base methods
+  async getSacredUtilityModule(id: number): Promise<schema.SacredUtilityModule | undefined> {
+    const [module] = await db.select().from(sacredUtilityModules).where(eq(sacredUtilityModules.id, id));
+    return module;
+  }
+
+  async getSacredUtilityModulesByType(moduleType: string): Promise<schema.SacredUtilityModule[]> {
+    return db
+      .select()
+      .from(sacredUtilityModules)
+      .where(eq(sacredUtilityModules.moduleType, moduleType))
+      .orderBy(desc(sacredUtilityModules.createdAt));
+  }
+
+  async createSacredUtilityModule(module: schema.InsertSacredUtilityModuleType): Promise<schema.SacredUtilityModule> {
+    const [result] = await db.insert(sacredUtilityModules).values(module).returning();
+    return result;
+  }
+  
+  // Fractal Authentication Ribbon methods
+  async getFractalAuthenticationRibbon(id: number): Promise<schema.FractalAuthenticationRibbon | undefined> {
+    const [ribbon] = await db.select().from(fractalAuthenticationRibbons).where(eq(fractalAuthenticationRibbons.id, id));
+    return ribbon;
+  }
+
+  async getFractalAuthenticationRibbonByUserId(userId: number): Promise<schema.FractalAuthenticationRibbon | undefined> {
+    const [ribbon] = await db
+      .select()
+      .from(fractalAuthenticationRibbons)
+      .where(eq(fractalAuthenticationRibbons.userId, userId));
+    return ribbon;
+  }
+
+  async createFractalAuthenticationRibbon(ribbon: schema.InsertFractalAuthenticationRibbonType): Promise<schema.FractalAuthenticationRibbon> {
+    const [result] = await db.insert(fractalAuthenticationRibbons).values(ribbon).returning();
+    return result;
+  }
+
+  async evolveFractalAuthenticationRibbon(id: number): Promise<schema.FractalAuthenticationRibbon | undefined> {
+    // Get the current ribbon
+    const currentRibbon = await this.getFractalAuthenticationRibbon(id);
+    if (!currentRibbon) return undefined;
+    
+    // Increment the evolution level and update
+    const [ribbon] = await db
+      .update(fractalAuthenticationRibbons)
+      .set({
+        evolutionLevel: currentRibbon.evolutionLevel + 1,
+        lastEvolution: new Date(),
+        updatedAt: new Date()
+      })
+      .where(eq(fractalAuthenticationRibbons.id, id))
+      .returning();
+    return ribbon;
+  }
+  
+  // Octaval Feedback methods
+  async getOctavalFeedback(id: number): Promise<schema.OctavalFeedback | undefined> {
+    const [feedback] = await db.select().from(octavalFeedbacks).where(eq(octavalFeedbacks.id, id));
+    return feedback;
+  }
+
+  async getOctavalFeedbackByUserId(userId: number): Promise<schema.OctavalFeedback | undefined> {
+    const [feedback] = await db
+      .select()
+      .from(octavalFeedbacks)
+      .where(eq(octavalFeedbacks.userId, userId));
+    return feedback;
+  }
+
+  async createOctavalFeedback(feedback: schema.InsertOctavalFeedbackType): Promise<schema.OctavalFeedback> {
+    const [result] = await db.insert(octavalFeedbacks).values(feedback).returning();
+    return result;
+  }
+
+  async updateOctavalFeedback(id: number, updates: Partial<schema.OctavalFeedback>): Promise<schema.OctavalFeedback | undefined> {
+    const [feedback] = await db
+      .update(octavalFeedbacks)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(octavalFeedbacks.id, id))
+      .returning();
+    return feedback;
+  }
+  
+  // Synaptic Co-Creation methods
+  async getSynapticCoCreation(id: number): Promise<schema.SynapticCoCreation | undefined> {
+    const [creation] = await db.select().from(synapticCoCreations).where(eq(synapticCoCreations.id, id));
+    return creation;
+  }
+
+  async getSynapticCoCreationsByUserId(userId: number): Promise<schema.SynapticCoCreation[]> {
+    return db
+      .select()
+      .from(synapticCoCreations)
+      .where(eq(synapticCoCreations.userId, userId))
+      .orderBy(desc(synapticCoCreations.createdAt));
+  }
+
+  async createSynapticCoCreation(creation: schema.InsertSynapticCoCreationType): Promise<schema.SynapticCoCreation> {
+    const [result] = await db.insert(synapticCoCreations).values(creation).returning();
+    return result;
+  }
+
+  async updateSynapticCoCreation(id: number, updates: Partial<schema.SynapticCoCreation>): Promise<schema.SynapticCoCreation | undefined> {
+    const [creation] = await db
+      .update(synapticCoCreations)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(synapticCoCreations.id, id))
+      .returning();
+    return creation;
+  }
+  
+  // Covenant Registration methods
+  async getCovenantRegistration(id: number): Promise<schema.CovenantRegistration | undefined> {
+    const [covenant] = await db.select().from(covenantRegistrations).where(eq(covenantRegistrations.id, id));
+    return covenant;
+  }
+
+  async getCovenantRegistrationsByParticipant(participantId: number): Promise<schema.CovenantRegistration[]> {
+    return db
+      .select()
+      .from(covenantRegistrations)
+      .where(eq(covenantRegistrations.participantId, participantId))
+      .orderBy(desc(covenantRegistrations.createdAt));
+  }
+
+  async createCovenantRegistration(covenant: schema.InsertCovenantRegistrationType): Promise<schema.CovenantRegistration> {
+    const [result] = await db.insert(covenantRegistrations).values(covenant).returning();
+    return result;
+  }
+  
+  // Vault Builder methods
+  async getVaultBuilder(id: number): Promise<schema.VaultBuilder | undefined> {
+    const [vault] = await db.select().from(vaultBuilders).where(eq(vaultBuilders.id, id));
+    return vault;
+  }
+
+  async getVaultBuildersByUserId(userId: number): Promise<schema.VaultBuilder[]> {
+    return db
+      .select()
+      .from(vaultBuilders)
+      .where(eq(vaultBuilders.userId, userId))
+      .orderBy(desc(vaultBuilders.createdAt));
+  }
+
+  async createVaultBuilder(vault: schema.InsertVaultBuilderType): Promise<schema.VaultBuilder> {
+    const [result] = await db.insert(vaultBuilders).values(vault).returning();
+    return result;
+  }
+  
+  // Liturgical Exchange methods
+  async getLiturgicalExchange(id: number): Promise<schema.LiturgicalExchange | undefined> {
+    const [exchange] = await db.select().from(liturgicalExchanges).where(eq(liturgicalExchanges.id, id));
+    return exchange;
+  }
+
+  async getLiturgicalExchangesByUserId(userId: number): Promise<schema.LiturgicalExchange[]> {
+    return db
+      .select()
+      .from(liturgicalExchanges)
+      .where(eq(liturgicalExchanges.userId, userId))
+      .orderBy(desc(liturgicalExchanges.createdAt));
+  }
+
+  async createLiturgicalExchange(exchange: schema.InsertLiturgicalExchangeType): Promise<schema.LiturgicalExchange> {
+    const [result] = await db.insert(liturgicalExchanges).values(exchange).returning();
+    return result;
+  }
+  
+  // Harvest Allocator methods
+  async getHarvestAllocator(id: number): Promise<schema.HarvestAllocator | undefined> {
+    const [allocator] = await db.select().from(harvestAllocators).where(eq(harvestAllocators.id, id));
+    return allocator;
+  }
+
+  async getHarvestAllocatorsByUserId(userId: number): Promise<schema.HarvestAllocator[]> {
+    return db
+      .select()
+      .from(harvestAllocators)
+      .where(eq(harvestAllocators.userId, userId))
+      .orderBy(desc(harvestAllocators.createdAt));
+  }
+
+  async createHarvestAllocator(allocator: schema.InsertHarvestAllocatorType): Promise<schema.HarvestAllocator> {
+    const [result] = await db.insert(harvestAllocators).values(allocator).returning();
+    return result;
+  }
+  
+  // Grafting Protocol methods
+  async getGraftingProtocol(id: number): Promise<schema.GraftingProtocol | undefined> {
+    const [protocol] = await db.select().from(graftingProtocols).where(eq(graftingProtocols.id, id));
+    return protocol;
+  }
+
+  async getGraftingProtocolByEntity(entityType: string, entityId: number): Promise<schema.GraftingProtocol | undefined> {
+    const [protocol] = await db
+      .select()
+      .from(graftingProtocols)
+      .where(
+        and(
+          eq(graftingProtocols.entityType, entityType),
+          eq(graftingProtocols.entityId, entityId)
+        )
+      );
+    return protocol;
+  }
+
+  async createGraftingProtocol(protocol: schema.InsertGraftingProtocolType): Promise<schema.GraftingProtocol> {
+    const [result] = await db.insert(graftingProtocols).values(protocol).returning();
+    return result;
+  }
+
+  async updateGraftingProtocolFruitfulness(id: number, fruitfulness: number): Promise<schema.GraftingProtocol | undefined> {
+    const [protocol] = await db
+      .update(graftingProtocols)
+      .set({
+        fruitfulness,
+        lastFruitfulnessUpdate: new Date(),
+        updatedAt: new Date()
+      })
+      .where(eq(graftingProtocols.id, id))
+      .returning();
+    return protocol;
   }
 }

@@ -19,6 +19,39 @@ import {
   InsertTempleNodeWallet
 } from "./wallet-schema";
 
+// Import Sacred Utility Modules Schema
+import {
+  sacredUtilityModules,
+  fractalAuthenticationRibbons,
+  octavalFeedbacks,
+  synapticCoCreations,
+  covenantRegistrations,
+  vaultBuilders,
+  liturgicalExchanges,
+  harvestAllocators,
+  graftingProtocols,
+  // Types
+  SacredUtilityModule,
+  FractalAuthenticationRibbon,
+  OctavalFeedback,
+  SynapticCoCreation,
+  CovenantRegistration,
+  VaultBuilder,
+  LiturgicalExchange,
+  HarvestAllocator,
+  GraftingProtocol,
+  // Insert Types
+  InsertSacredUtilityModuleType,
+  InsertFractalAuthenticationRibbonType,
+  InsertOctavalFeedbackType,
+  InsertSynapticCoCreationType, 
+  InsertCovenantRegistrationType,
+  InsertVaultBuilderType,
+  InsertLiturgicalExchangeType,
+  InsertHarvestAllocatorType,
+  InsertGraftingProtocolType
+} from "./sacred-utility-schema";
+
 // Import AI Assistant Schema 
 import {
   TrainingFeedbackType,
@@ -35,6 +68,42 @@ import type {
   AiTrainingContributor,
   InsertAiTrainingContributor
 } from "./ai-assistant-schema";
+
+// Re-export Sacred Utility Modules Schema
+export {
+  // Tables
+  sacredUtilityModules,
+  fractalAuthenticationRibbons,
+  octavalFeedbacks,
+  synapticCoCreations,
+  covenantRegistrations,
+  vaultBuilders,
+  liturgicalExchanges,
+  harvestAllocators,
+  graftingProtocols,
+  
+  // Types
+  SacredUtilityModule,
+  FractalAuthenticationRibbon,
+  OctavalFeedback,
+  SynapticCoCreation,
+  CovenantRegistration,
+  VaultBuilder,
+  LiturgicalExchange,
+  HarvestAllocator,
+  GraftingProtocol,
+  
+  // Insert Types
+  InsertSacredUtilityModuleType,
+  InsertFractalAuthenticationRibbonType,
+  InsertOctavalFeedbackType,
+  InsertSynapticCoCreationType, 
+  InsertCovenantRegistrationType,
+  InsertVaultBuilderType,
+  InsertLiturgicalExchangeType,
+  InsertHarvestAllocatorType,
+  InsertGraftingProtocolType
+}
 
 // Re-export AI Assistant Schema
 export {
