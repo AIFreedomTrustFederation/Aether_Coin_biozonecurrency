@@ -3,6 +3,23 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
 
+// Import API key management schema
+import { 
+  apiKeys, 
+  apiKeyUsage, 
+  apiKeyConnections 
+} from "./api-key-schema";
+
+// Import API key types
+import type { 
+  ApiKey, 
+  InsertApiKey,
+  ApiKeyUsage,
+  InsertApiKeyUsage,
+  ApiKeyConnection,
+  InsertApiKeyConnection 
+} from "./api-key-schema";
+
 // Import wallet schemas
 import { 
   passphraseWallets, 
@@ -354,6 +371,22 @@ import {
 } from './dapp-schema';
 
 // User API Keys and Mysterion training data types are already exported elsewhere
+
+// Re-export API Key Management Schema
+export {
+  // Tables
+  apiKeys,
+  apiKeyUsage,
+  apiKeyConnections,
+  
+  // Types
+  ApiKey,
+  InsertApiKey,
+  ApiKeyUsage,
+  InsertApiKeyUsage,
+  ApiKeyConnection,
+  InsertApiKeyConnection
+}
 
 // Export wallet schemas
 export {
@@ -2213,4 +2246,9 @@ export const schema = {
   torusSecurityNodes,
   networkInsurancePolicies,
   mandelbrotRecursionEvents,
+  
+  // API Key Management schemas (imported from api-key-schema.ts)
+  apiKeys,
+  apiKeyUsage,
+  apiKeyConnections,
 };
