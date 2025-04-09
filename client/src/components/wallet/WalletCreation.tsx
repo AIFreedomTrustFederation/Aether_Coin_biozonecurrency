@@ -684,17 +684,17 @@ export default function WalletCreation() {
                     </div>
                   </div>
                   
-                  <div className="flex gap-2 mt-6">
+                  <div className="flex flex-col sm:flex-row gap-2 mt-6">
                     <Button 
                       variant="outline" 
                       onClick={() => setStep(1)}
-                      className="flex-1"
+                      className="w-full sm:w-auto order-2 sm:order-1"
                     >
                       Back
                     </Button>
                     <Button 
                       onClick={verifyMnemonic} 
-                      className="flex-1"
+                      className="w-full sm:flex-1 order-1 sm:order-2"
                       disabled={selectedMnemonicWords.length !== mnemonic.split(' ').length}
                     >
                       Verify & Save Wallet
@@ -948,28 +948,31 @@ function WalletCard({ wallet, onConnect }: WalletCardProps) {
         </div>
       </div>
       
-      <div className="flex items-center space-x-2 mt-3">
-        <div className="flex-1">
-          <Input
-            type={showPassphrase ? "text" : "password"}
-            placeholder="Enter passphrase to unlock"
-            value={passphrase}
-            onChange={(e) => setPassphrase(e.target.value)}
-            className="h-9"
-          />
+      <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 mt-3">
+        <div className="flex items-center space-x-2 flex-1">
+          <div className="flex-1 relative">
+            <Input
+              type={showPassphrase ? "text" : "password"}
+              placeholder="Enter passphrase to unlock"
+              value={passphrase}
+              onChange={(e) => setPassphrase(e.target.value)}
+              className="h-9 pr-10" // Extra padding for eye icon
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowPassphrase(!showPassphrase)}
+              className="h-9 w-9 p-0 absolute right-0 top-0"
+            >
+              {showPassphrase ? <Lock className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </Button>
+          </div>
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setShowPassphrase(!showPassphrase)}
-          className="h-9 px-2"
-        >
-          {showPassphrase ? <Lock className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-        </Button>
         <Button
           onClick={handleConnect}
           disabled={!passphrase || isConnecting}
-          className="h-9"
+          className="h-9 sm:w-auto w-full"
         >
           {isConnecting ? "Connecting..." : "Connect"}
         </Button>
