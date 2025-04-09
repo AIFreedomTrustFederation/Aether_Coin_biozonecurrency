@@ -25,6 +25,7 @@ import {
   QuantumResistanceTooltip, 
   PrivateKeyTooltip 
 } from '@/components/ui/guidance-tooltips';
+import AddAetherNetwork from './AddAetherNetwork';
 
 // Entropy levels for generating mnemonic
 const ENTROPY_LEVELS = {
@@ -972,6 +973,9 @@ export default function WalletCreation() {
                   </div>
                 </div>
               )}
+              
+              {/* Add AetherCoin Network Component */}
+              <AddAetherNetwork />
             </CardContent>
           </Card>
         </TabsContent>

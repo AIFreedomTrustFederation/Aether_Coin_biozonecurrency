@@ -1,6 +1,11 @@
-// Global Window Interface extensions for Node.js polyfills
+// Define window.ethereum for Web3 wallets
 interface Window {
-  global: Window;
-  process: any; // Using 'any' to avoid TypeScript errors
-  Buffer: any; // Using 'any' to avoid TypeScript errors
+  ethereum?: {
+    isMetaMask?: boolean;
+    request: (request: { method: string; params?: any[] }) => Promise<any>;
+    on?: (eventName: string, callback: (...args: any[]) => void) => void;
+    removeListener?: (eventName: string, callback: (...args: any[]) => void) => void;
+    selectedAddress?: string;
+    chainId?: string;
+  };
 }
