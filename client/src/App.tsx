@@ -94,7 +94,7 @@ const AetherCoinDApp = lazy(() => import("./pages/AetherCoinDApp"));
 const QuantumSecurityPage = lazy(() => import("./pages/QuantumSecurityPage"));
 
 // LLM API Key Manager
-const LlmKeyManager = lazy(() => import("./pages/LlmKeyManager"));
+const LlmKeyManager = lazy(() => import("./pages/LlmApiKeyManager"));
 
 // Define navigation items for both mobile and desktop
 const navigationItems = [
