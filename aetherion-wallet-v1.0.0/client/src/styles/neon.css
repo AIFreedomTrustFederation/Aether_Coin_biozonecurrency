@@ -1,0 +1,9 @@
+/* Main neon theme file - only imports the core styles */
+/* Advanced styles will be loaded dynamically for better performance */
+
+@import './neon-base.css';
+
+/* The following styles will be loaded dynamically:
+   - neon-advanced.css: More detailed neon effects
+   - neon-animations.css: Complex animations
+*/

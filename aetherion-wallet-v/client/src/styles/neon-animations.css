@@ -1,0 +1,272 @@
+/* Neon Animations - Heavy but visually impressive effects */
+
+/* Pulsating neon effect */
+.neon-pulse {
+  animation: neon-pulse 2s infinite;
+}
+
+@keyframes neon-pulse {
+  0% {
+    opacity: 1;
+    text-shadow: 0 0 5px var(--glow-color, #fff),
+                 0 0 10px var(--glow-color, #fff),
+                 0 0 15px var(--primary-color, #00ffff),
+                 0 0 20px var(--primary-color, #00ffff);
+  }
+  50% {
+    opacity: 0.8;
+    text-shadow: 0 0 10px var(--glow-color, #fff),
+                 0 0 20px var(--glow-color, #fff),
+                 0 0 30px var(--primary-color, #00ffff),
+                 0 0 40px var(--primary-color, #00ffff),
+                 0 0 70px var(--primary-color, #00ffff);
+  }
+  100% {
+    opacity: 1;
+    text-shadow: 0 0 5px var(--glow-color, #fff),
+                 0 0 10px var(--glow-color, #fff),
+                 0 0 15px var(--primary-color, #00ffff),
+                 0 0 20px var(--primary-color, #00ffff);
+  }
+}
+
+/* Animated neon border */
+.neon-border-animated {
+  border: 2px solid var(--primary-color, #00ffff);
+  animation: neon-border-glow 1.5s infinite alternate;
+}
+
+@keyframes neon-border-glow {
+  from {
+    box-shadow: 0 0 5px var(--primary-color, #00ffff),
+                0 0 10px var(--primary-color, #00ffff),
+                inset 0 0 5px var(--primary-color, #00ffff);
+  }
+  to {
+    box-shadow: 0 0 10px var(--primary-color, #00ffff),
+                0 0 20px var(--primary-color, #00ffff),
+                0 0 30px var(--primary-color, #00ffff),
+                inset 0 0 10px var(--primary-color, #00ffff);
+  }
+}
+
+/* Neon hover effect for buttons with after element */
+.neon-button-advanced {
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.neon-button-advanced::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--primary-color, #00ffff);
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+  z-index: -1;
+}
+
+.neon-button-advanced:hover::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+/* Animated neon scanner line */
+.neon-scanner {
+  position: relative;
+  overflow: hidden;
+}
+
+.neon-scanner::before {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 2px;
+  background-color: var(--primary-color, #00ffff);
+  box-shadow: 0 0 10px var(--primary-color, #00ffff),
+              0 0 20px var(--primary-color, #00ffff);
+  top: 0;
+  left: -100%;
+  animation: neon-scanning 3s linear infinite;
+}
+
+@keyframes neon-scanning {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+/* Glitching neon text effect */
+.neon-glitch {
+  position: relative;
+}
+
+.neon-glitch::before,
+.neon-glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.neon-glitch::before {
+  animation: neon-glitch-1 2s infinite;
+  clip-path: polygon(0 0, 100% 0, 100% 45%, 0 45%);
+  text-shadow: 0 0 10px rgba(var(--primary-color-rgb, 0, 255, 255), 0.7);
+}
+
+.neon-glitch::after {
+  animation: neon-glitch-2 3s infinite;
+  clip-path: polygon(0 55%, 100% 55%, 100% 100%, 0 100%);
+  text-shadow: 0 0 5px var(--glow-color, #fff),
+               0 0 10px var(--primary-color, #00ffff);
+}
+
+@keyframes neon-glitch-1 {
+  0%, 91%, 100% {
+    transform: none;
+    opacity: 1;
+  }
+  92% {
+    transform: translateX(2px) skew(0.5deg);
+    opacity: 0.8;
+  }
+  94% {
+    transform: translateX(-2px) skew(-0.5deg);
+    opacity: 0.7;
+  }
+  96% {
+    transform: translateX(1px) skew(0.25deg);
+    opacity: 0.9;
+  }
+  98% {
+    transform: translateX(-1px) skew(-0.25deg);
+    opacity: 0.8;
+  }
+}
+
+@keyframes neon-glitch-2 {
+  0%, 82%, 100% {
+    transform: none;
+    opacity: 1;
+  }
+  83% {
+    transform: translateX(3px) skew(1deg);
+    opacity: 0.8;
+  }
+  87% {
+    transform: translateX(-3px) skew(-1deg);
+    opacity: 0.7;
+  }
+  90% {
+    transform: translateX(2px) skew(0.5deg);
+    opacity: 0.9;
+  }
+  93% {
+    transform: translateX(-2px) skew(-0.5deg);
+    opacity: 0.8;
+  }
+}
+
+/* Ripple effect for buttons */
+.neon-ripple {
+  position: relative;
+  overflow: hidden;
+}
+
+.neon-ripple::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  background: rgba(var(--primary-color-rgb, 0, 255, 255), 0.5);
+  opacity: 0;
+  border-radius: 100%;
+  transform: scale(1, 1) translate(-50%, -50%);
+  transform-origin: 50% 50%;
+}
+
+.neon-ripple:focus:not(:active)::after {
+  animation: neon-ripple 1s ease-out;
+}
+
+@keyframes neon-ripple {
+  0% {
+    transform: scale(0, 0);
+    opacity: 0.5;
+  }
+  20% {
+    transform: scale(25, 25);
+    opacity: 0.3;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(40, 40);
+  }
+}
+
+/* Flicker animation for authentic neon experience */
+.neon-flicker {
+  animation: neon-flicker 3s infinite alternate;
+}
+
+@keyframes neon-flicker {
+  0%, 18%, 22%, 25%, 53%, 57%, 100% {
+    text-shadow: 0 0 5px var(--glow-color, #fff),
+                 0 0 10px var(--glow-color, #fff),
+                 0 0 15px var(--primary-color, #00ffff),
+                 0 0 20px var(--primary-color, #00ffff),
+                 0 0 30px var(--primary-color, #00ffff);
+  }
+  20%, 24%, 55% {
+    text-shadow: none;
+  }
+}
+
+/* Digital rain effect (Matrix-style) */
+.neon-digital-rain {
+  position: relative;
+  overflow: hidden;
+}
+
+.neon-digital-rain::after {
+  content: "01010010100101010100101010101001010";
+  letter-spacing: 10px;
+  font-family: monospace;
+  font-size: 18px;
+  position: absolute;
+  top: -100%;
+  left: 0;
+  right: 0;
+  text-align: center;
+  background: linear-gradient(
+    to bottom,
+    rgba(var(--primary-color-rgb, 0, 255, 255), 0) 0%,
+    rgba(var(--primary-color-rgb, 0, 255, 255), 1) 75%,
+    rgba(var(--primary-color-rgb, 0, 255, 255), 0) 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: neon-digital-rain 5s linear infinite;
+}
+
+@keyframes neon-digital-rain {
+  0% {
+    top: -100%;
+  }
+  100% {
+    top: 100%;
+  }
+}

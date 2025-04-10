@@ -1,0 +1,39 @@
+/**
+ * Enhanced mobile styles for ChatInterface component
+ */
+
+/* Increase touch target size for the send button on mobile */
+@media (max-width: 768px) {
+  button[type="button"] {
+    min-height: 42px;
+    min-width: 42px;
+  }
+  
+  /* Make the chat input easier to tap */
+  .chat-input {
+    min-height: 42px;
+    font-size: 16px !important; /* Prevent iOS zoom on focus */
+  }
+  
+  /* Prevent iOS double-tap zoom */
+  .chat-input, button {
+    touch-action: manipulation;
+  }
+}
+
+/* Ensure buttons are easier to tap on mobile */
+button[type="button"] {
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+}
+
+/* Prevent unwanted text selection during touch */
+.chat-messages {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* Ensure the send button is clearly active when pressed */
+button[type="button"]:active {
+  opacity: 0.7;
+}

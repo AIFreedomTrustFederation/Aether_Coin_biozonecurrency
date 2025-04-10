@@ -1,0 +1,84 @@
+version: '3.8'
+
+services:
+  aetherion-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/aetherion
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=${JWT_SECRET:-default_jwt_secret_please_change_in_production}
+      - SESSION_SECRET=${SESSION_SECRET:-default_session_secret_please_change_in_production}
+      - FRACTALCOIN_API_KEY=${FRACTALCOIN_API_KEY:-}
+      - GITHUB_TOKEN=${GITHUB_TOKEN:-}
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data
+    restart: unless-stopped
+    networks:
+      - aetherion-network
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=aetherion
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "5432:5432"
+    networks:
+      - aetherion-network
+
+  redis:
+    image: redis:alpine
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "6379:6379"
+    networks:
+      - aetherion-network
+
+  # API Gateway service
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    depends_on:
+      - aetherion-app
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - MAIN_APP_URL=http://aetherion-app:5000
+      - JWT_SECRET=${JWT_SECRET:-default_jwt_secret_please_change_in_production}
+    restart: unless-stopped
+    networks:
+      - aetherion-network
+
+volumes:
+  postgres-data:
+  redis-data:
+
+networks:
+  aetherion-network:
+    driver: bridge

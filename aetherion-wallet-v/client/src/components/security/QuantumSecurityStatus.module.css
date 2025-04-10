@@ -1,0 +1,61 @@
+/* Progress bar styles */
+.progressBar {
+  height: 0.625rem; /* equivalent to h-2.5 */
+  border-radius: 9999px; /* equivalent to rounded-full */
+  transition: width 0.3s ease-in-out;
+}
+
+.progressBarBg {
+  width: 100%;
+  background-color: #e5e7eb; /* equivalent to bg-gray-200 */
+  border-radius: 9999px;
+  height: 0.625rem;
+}
+
+/* Dark mode support */
+:global(.dark) .progressBarBg {
+  background-color: #374151; /* equivalent to dark:bg-gray-700 */
+}
+
+.progressBarDeprecated {
+  background-color: #ef4444; /* equivalent to bg-red-500 */
+}
+
+.progressBarHigh {
+  background-color: #22c55e; /* equivalent to bg-green-500 */
+}
+
+.progressBarMedium {
+  background-color: #3b82f6; /* equivalent to bg-blue-500 */
+}
+
+.progressBarLow {
+  background-color: #eab308; /* equivalent to bg-yellow-500 */
+}
+
+.progressBarClassic {
+  background-color: #22c55e; /* equivalent to bg-green-500 */
+}
+
+/* Progress percentage classes - generated for 0 to 100% */
+.progress0 { width: 0%; }
+.progress5 { width: 5%; }
+.progress10 { width: 10%; }
+.progress15 { width: 15%; }
+.progress20 { width: 20%; }
+.progress25 { width: 25%; }
+.progress30 { width: 30%; }
+.progress35 { width: 35%; }
+.progress40 { width: 40%; }
+.progress45 { width: 45%; }
+.progress50 { width: 50%; }
+.progress55 { width: 55%; }
+.progress60 { width: 60%; }
+.progress65 { width: 65%; }
+.progress70 { width: 70%; }
+.progress75 { width: 75%; }
+.progress80 { width: 80%; }
+.progress85 { width: 85%; }
+.progress90 { width: 90%; }
+.progress95 { width: 95%; }
+.progress100 { width: 100%; }

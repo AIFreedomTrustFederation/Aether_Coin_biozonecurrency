@@ -1,0 +1,28 @@
+/* Progress bar width classes */
+.progress-width-42 {
+  width: 42%;
+}
+
+.progress-width-62 {
+  width: 62%;
+}
+
+.progress-width-75 {
+  width: 75%;
+}
+
+.progress-width-89 {
+  width: 89%;
+}
+
+.progress-width-70 {
+  width: 70%;
+}
+
+/* Dynamic width classes for components that use variables */
+.progress-bar {
+  height: 0.625rem; /* h-2.5 equivalent */
+  border-radius: 9999px; /* rounded-full */
+  background-color: var(--color-primary);
+  width: var(--progress-width);
+}
