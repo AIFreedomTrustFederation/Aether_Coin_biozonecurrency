@@ -167,11 +167,28 @@ export default function LlmKeyManager() {
     const { name, value } = e.target;
     setCreateForm(prev => ({ ...prev, [name]: value }));
   };
+  
+  // Handle admin form change
+  const handleAdminFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setAdminForm(prev => ({ ...prev, [name]: value }));
+  };
 
   // Handle form submit
   const handleCreateKey = (e: React.FormEvent) => {
     e.preventDefault();
     createKeyMutation.mutate(createForm);
+  };
+  
+  // Handle direct admin key creation
+  const handleAdminKeyCreation = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Combine admin credentials with key details
+    createAdminKeyMutation.mutate({
+      ...adminForm,
+      name: createForm.name,
+      description: `Admin-generated quantum access key for ${createForm.email}`
+    });
   };
 
   // Handle key revocation
@@ -379,6 +396,62 @@ export default function LlmKeyManager() {
               I've Copied My Key
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Admin authentication dialog */}
+      <Dialog open={showAdminAuth} onOpenChange={setShowAdminAuth}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Admin Authentication Required</DialogTitle>
+            <DialogDescription>
+              Creating a quantum-level API key requires admin authentication. Please enter your admin credentials.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <form onSubmit={handleAdminKeyCreation} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="adminUsername">Admin Username</Label>
+              <Input 
+                id="adminUsername" 
+                name="adminUsername" 
+                placeholder="admin username" 
+                value={adminForm.adminUsername}
+                onChange={handleAdminFormChange}
+                required
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="adminPassword">Admin Password</Label>
+              <Input 
+                id="adminPassword" 
+                name="adminPassword" 
+                type="password"
+                placeholder="••••••••" 
+                value={adminForm.adminPassword}
+                onChange={handleAdminFormChange}
+                required
+              />
+            </div>
+            
+            <DialogFooter>
+              <Button 
+                variant="outline" 
+                type="button" 
+                onClick={() => setShowAdminAuth(false)}
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="submit"
+                disabled={createAdminKeyMutation.isPending || !adminForm.adminUsername || !adminForm.adminPassword}
+              >
+                {createAdminKeyMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Generate Admin Key
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
     </div>
