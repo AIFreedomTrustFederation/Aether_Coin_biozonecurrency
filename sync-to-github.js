@@ -8,4 +8,4 @@
  */
 
 // Import the main script
-require('./scripts/trigger-github-sync.js');
+import './scripts/trigger-github-sync.js';
