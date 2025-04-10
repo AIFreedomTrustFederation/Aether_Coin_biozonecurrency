@@ -93,6 +93,9 @@ const AetherCoinDApp = lazy(() => import("./pages/AetherCoinDApp"));
 // Quantum Security
 const QuantumSecurityPage = lazy(() => import("./pages/QuantumSecurityPage"));
 
+// LLM API Key Manager
+const LlmKeyManager = lazy(() => import("./pages/LlmKeyManager"));
+
 // Define navigation items for both mobile and desktop
 const navigationItems = [
   { name: "Dashboard", path: "/dashboard", icon: <Layout className="h-5 w-5" /> },
@@ -123,6 +126,7 @@ const navigationItems = [
   { name: "Blockchain Visualizer", path: "/blockchain-visualizer", icon: <Database className="h-5 w-5" /> },
   { name: "Mysterion AI", path: "/ai-assistant", icon: <Bot className="h-5 w-5" /> },
   { name: "AI Assistant Demo", path: "/ai-assistant-onboarding", icon: <Lightbulb className="h-5 w-5" /> },
+  { name: "LLM API Keys", path: "/llm-key-manager", icon: <Key className="h-5 w-5" /> },
   { name: "Mobile Features", path: "/mobile-feature", icon: <Smartphone className="h-5 w-5" /> },
   { name: "Security", path: "/security", icon: <Shield className="h-5 w-5" /> },
   { name: "Quantum Security", path: "/quantum-security", icon: <Cpu className="h-5 w-5" /> },
@@ -577,6 +581,12 @@ function App() {
             <Route path="/quantum-secure-payment">
               <Suspense fallback={<LoadingScreen message="Loading quantum secure payment..." />}>
                 <QuantumSecurePaymentPage />
+              </Suspense>
+            </Route>
+            
+            <Route path="/llm-key-manager">
+              <Suspense fallback={<LoadingScreen message="Loading LLM API key manager..." />}>
+                <LlmKeyManager />
               </Suspense>
             </Route>
             <Route path="/singularity">

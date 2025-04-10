@@ -60,7 +60,7 @@ export default function LlmKeyManager() {
   });
 
   // Get all LLM API keys
-  const { data: keys, isLoading, error } = useQuery({
+  const { data: keys = [], isLoading, error } = useQuery<LlmApiKey[]>({
     queryKey: ['/api/llm/keys'],
     retry: false
   });
@@ -68,7 +68,7 @@ export default function LlmKeyManager() {
   // Create a new key
   const createKeyMutation = useMutation({
     mutationFn: (data: CreateKeyForm) => 
-      apiRequest('/api/llm/keys', 'POST', data),
+      apiRequest('/api/llm/keys', { method: 'POST', body: data }),
     onSuccess: (data) => {
       setNewKeyData(data);
       queryClient.invalidateQueries({ queryKey: ['/api/llm/keys'] });
@@ -94,7 +94,7 @@ export default function LlmKeyManager() {
   // Revoke a key
   const revokeKeyMutation = useMutation({
     mutationFn: (keyId: number) => 
-      apiRequest(`/api/llm/keys/${keyId}/revoke`, 'PATCH'),
+      apiRequest(`/api/llm/keys/${keyId}/revoke`, { method: 'PATCH' }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/llm/keys'] });
       toast({
