@@ -8,40 +8,18 @@
  * node verify-deployment.js
  */
 
-import fetch from 'node-fetch';
-import { promisify } from 'util';
-import { exec as execCallback } from 'child_process';
-import * as dotenv from 'dotenv';
-
-// Load environment variables
-dotenv.config();
-
-// Promisify exec
-const exec = promisify(execCallback);
-
-// Terminal colors
-const colors = {
-  reset: '\x1b[0m',
-  green: '\x1b[32m',
-  yellow: '\x1b[33m',
-  red: '\x1b[31m',
-  blue: '\x1b[34m',
-  magenta: '\x1b[35m',
-  cyan: '\x1b[36m'
-};
-
-// Configuration
-const DEFAULT_DOMAIN = 'atc.aifreedomtrust.com';
-const DEFAULT_PATH = '/dapp';
+const https = require('https');
+const { URL } = require('url');
+require('dotenv').config();
 
 /**
  * Print banner
  */
 function printBanner() {
-  console.log(`${colors.blue}==============================================${colors.reset}`);
-  console.log(`${colors.blue}    AETHERION WALLET DEPLOYMENT VERIFICATION  ${colors.reset}`);
-  console.log(`${colors.blue}==============================================${colors.reset}`);
-  console.log('');
+  console.log('===========================================================');
+  console.log('   Aetherion Wallet Deployment Verification Tool');
+  console.log('===========================================================');
+  console.log();
 }
 
 /**
@@ -50,26 +28,17 @@ function printBanner() {
 function parseArgs() {
   const args = process.argv.slice(2);
   const options = {
-    domain: DEFAULT_DOMAIN,
-    path: DEFAULT_PATH,
-    protocol: 'https',
-    verbose: false
+    url: process.env.VERIFY_URL || 'https://atc.aifreedomtrust.com/dapp',
+    timeout: parseInt(process.env.VERIFY_TIMEOUT || '10000', 10),
+    verbose: args.includes('--verbose') || args.includes('-v'),
+    skipSsl: args.includes('--skip-ssl'),
   };
-
-  for (let i = 0; i < args.length; i++) {
-    if (args[i] === '--domain' && args[i + 1]) {
-      options.domain = args[i + 1];
-      i++;
-    } else if (args[i] === '--path' && args[i + 1]) {
-      options.path = args[i + 1];
-      i++;
-    } else if (args[i] === '--http') {
-      options.protocol = 'http';
-    } else if (args[i] === '--verbose' || args[i] === '-v') {
-      options.verbose = true;
-    }
+  
+  const urlArg = args.find(arg => arg.startsWith('http'));
+  if (urlArg) {
+    options.url = urlArg;
   }
-
+  
   return options;
 }
 
@@ -77,26 +46,54 @@ function parseArgs() {
  * Check health endpoint
  */
 async function checkHealth(options) {
-  const url = `${options.protocol}://${options.domain}${options.path}/health`;
-  console.log(`${colors.cyan}Checking health endpoint: ${url}${colors.reset}`);
+  console.log(`Checking health endpoint at ${options.url}/health`);
   
   try {
-    const response = await fetch(url);
-    if (response.ok) {
-      const data = await response.json();
-      console.log(`${colors.green}✓ Health check successful!${colors.reset}`);
-      console.log(`Status: ${data.status}`);
-      console.log(`Timestamp: ${data.timestamp}`);
-      console.log(`Version: ${data.version}`);
-      console.log(`Environment: ${data.environment}`);
-      console.log(`Deploy Target: ${data.deployTarget}`);
-      return true;
+    const healthUrl = `${options.url}/health`;
+    const response = await makeRequest(healthUrl, options);
+    
+    if (response.statusCode === 200) {
+      console.log('✅ Health endpoint accessible');
+      
+      try {
+        const data = JSON.parse(response.body);
+        console.log(`Health status: ${data.status}`);
+        
+        if (data.status === 'ok') {
+          console.log('✅ Application is healthy');
+          
+          if (data.version) {
+            console.log(`Application version: ${data.version}`);
+          }
+          
+          if (data.environment) {
+            console.log(`Environment: ${data.environment}`);
+          }
+          
+          if (data.uptime) {
+            console.log(`Uptime: ${data.uptime} seconds`);
+          }
+          
+          return true;
+        } else {
+          console.log('❌ Application reports unhealthy status');
+          if (data.message) {
+            console.log(`Error message: ${data.message}`);
+          }
+          return false;
+        }
+      } catch (error) {
+        console.log('❌ Failed to parse health response');
+        console.log(`Response: ${response.body}`);
+        return false;
+      }
     } else {
-      console.log(`${colors.red}✗ Health check failed with status ${response.status}${colors.reset}`);
+      console.log(`❌ Health endpoint returned status code ${response.statusCode}`);
+      console.log(`Response: ${response.body}`);
       return false;
     }
   } catch (error) {
-    console.log(`${colors.red}✗ Health check failed: ${error.message}${colors.reset}`);
+    console.log(`❌ Failed to access health endpoint: ${error.message}`);
     return false;
   }
 }
@@ -105,20 +102,23 @@ async function checkHealth(options) {
  * Check connectivity
  */
 async function checkConnectivity(options) {
-  console.log(`${colors.cyan}Checking connectivity to ${options.domain}...${colors.reset}`);
+  console.log(`\nChecking basic connectivity to ${options.url}`);
   
   try {
-    const { stdout, stderr } = await exec(`ping -c 3 ${options.domain}`);
-    if (options.verbose) {
-      console.log(stdout);
+    const response = await makeRequest(options.url, options);
+    
+    if (response.statusCode === 200) {
+      console.log('✅ Application is accessible');
+      return true;
+    } else {
+      console.log(`❌ Application returned status code ${response.statusCode}`);
+      if (options.verbose) {
+        console.log(`Response: ${response.body.substring(0, 500)}...`);
+      }
+      return false;
     }
-    console.log(`${colors.green}✓ Server is reachable${colors.reset}`);
-    return true;
   } catch (error) {
-    console.log(`${colors.red}✗ Server is not reachable: ${error.message}${colors.reset}`);
-    if (options.verbose && error.stdout) {
-      console.log(error.stdout);
-    }
+    console.log(`❌ Failed to access application: ${error.message}`);
     return false;
   }
 }
@@ -127,37 +127,48 @@ async function checkConnectivity(options) {
  * Check homepage
  */
 async function checkHomepage(options) {
-  const url = `${options.protocol}://${options.domain}${options.path}`;
-  console.log(`${colors.cyan}Checking homepage: ${url}${colors.reset}`);
+  console.log(`\nVerifying homepage content at ${options.url}`);
   
   try {
-    const response = await fetch(url);
-    if (response.ok) {
-      const html = await response.text();
-      const titleMatch = html.match(/<title>(.*?)<\/title>/i);
-      const title = titleMatch ? titleMatch[1] : 'Unknown';
+    const response = await makeRequest(options.url, options);
+    
+    if (response.statusCode === 200) {
+      // Check for expected content markers in the response
+      const markers = [
+        'Aetherion',
+        'wallet',
+        'blockchain',
+        '<div id="root">'
+      ];
       
-      console.log(`${colors.green}✓ Homepage loaded successfully${colors.reset}`);
-      console.log(`Title: ${title}`);
+      let allMarkersFound = true;
+      markers.forEach(marker => {
+        if (response.body.includes(marker)) {
+          if (options.verbose) {
+            console.log(`✅ Found marker: "${marker}"`);
+          }
+        } else {
+          console.log(`❌ Missing expected content: "${marker}"`);
+          allMarkersFound = false;
+        }
+      });
       
-      // Check for key app elements
-      const hasReactRoot = html.includes('id="root"');
-      const hasAppJs = html.includes('src="/assets/index-');
-      const hasCss = html.includes('href="/assets/index-');
-      
-      if (hasReactRoot && hasAppJs && hasCss) {
-        console.log(`${colors.green}✓ Homepage contains required application elements${colors.reset}`);
+      if (allMarkersFound) {
+        console.log('✅ Homepage contains expected content');
         return true;
       } else {
-        console.log(`${colors.yellow}⚠ Homepage may be missing some application elements${colors.reset}`);
-        return true; // Still return true as the page loaded
+        console.log('❌ Homepage is missing expected content');
+        if (options.verbose) {
+          console.log(`First 500 chars of response: ${response.body.substring(0, 500)}...`);
+        }
+        return false;
       }
     } else {
-      console.log(`${colors.red}✗ Homepage check failed with status ${response.status}${colors.reset}`);
+      console.log(`❌ Homepage returned status code ${response.statusCode}`);
       return false;
     }
   } catch (error) {
-    console.log(`${colors.red}✗ Homepage check failed: ${error.message}${colors.reset}`);
+    console.log(`❌ Failed to access homepage: ${error.message}`);
     return false;
   }
 }
@@ -166,46 +177,96 @@ async function checkHomepage(options) {
  * Check server headers
  */
 async function checkHeaders(options) {
-  const url = `${options.protocol}://${options.domain}${options.path}`;
-  console.log(`${colors.cyan}Checking HTTP headers: ${url}${colors.reset}`);
+  console.log(`\nChecking server security headers at ${options.url}`);
   
   try {
-    const response = await fetch(url, { method: 'HEAD' });
-    if (response.ok) {
-      console.log(`${colors.green}✓ Server responded with ${response.status} ${response.statusText}${colors.reset}`);
+    const response = await makeRequest(options.url, options, true);
+    
+    if (response.statusCode === 200) {
+      const headers = response.headers;
+      const securityHeaders = {
+        'Strict-Transport-Security': headers['strict-transport-security'],
+        'X-Content-Type-Options': headers['x-content-type-options'],
+        'X-Frame-Options': headers['x-frame-options'],
+        'Content-Security-Policy': headers['content-security-policy'],
+        'X-XSS-Protection': headers['x-xss-protection'],
+      };
       
-      // Log headers
-      if (options.verbose) {
-        console.log('Headers:');
-        response.headers.forEach((value, name) => {
-          console.log(`  ${name}: ${value}`);
-        });
-      }
-      
-      // Check for security headers
-      const securityHeaders = [
-        'strict-transport-security',
-        'x-content-type-options',
-        'x-frame-options'
-      ];
-      
-      const missingHeaders = securityHeaders.filter(header => !response.headers.has(header));
-      
-      if (missingHeaders.length === 0) {
-        console.log(`${colors.green}✓ All recommended security headers are present${colors.reset}`);
-      } else {
-        console.log(`${colors.yellow}⚠ Missing recommended security headers: ${missingHeaders.join(', ')}${colors.reset}`);
+      console.log('Server headers:');
+      for (const [header, value] of Object.entries(securityHeaders)) {
+        if (value) {
+          console.log(`✅ ${header}: ${value}`);
+        } else {
+          console.log(`⚠️ Missing security header: ${header}`);
+        }
       }
       
       return true;
     } else {
-      console.log(`${colors.red}✗ Headers check failed with status ${response.status}${colors.reset}`);
+      console.log(`❌ Server returned status code ${response.statusCode}`);
       return false;
     }
   } catch (error) {
-    console.log(`${colors.red}✗ Headers check failed: ${error.message}${colors.reset}`);
+    console.log(`❌ Failed to check headers: ${error.message}`);
     return false;
   }
+}
+
+/**
+ * Make HTTPS request
+ */
+function makeRequest(url, options, headersOnly = false) {
+  return new Promise((resolve, reject) => {
+    const parsedUrl = new URL(url);
+    
+    const reqOptions = {
+      hostname: parsedUrl.hostname,
+      port: parsedUrl.port || 443,
+      path: parsedUrl.pathname + parsedUrl.search,
+      method: 'GET',
+      timeout: options.timeout,
+      headers: {
+        'User-Agent': 'Aetherion-Deployment-Verification-Tool/1.0',
+      },
+      rejectUnauthorized: !options.skipSsl,
+    };
+    
+    const req = https.request(reqOptions, (res) => {
+      if (headersOnly) {
+        resolve({
+          statusCode: res.statusCode,
+          headers: res.headers,
+          body: '',
+        });
+        return;
+      }
+      
+      let data = '';
+      
+      res.on('data', (chunk) => {
+        data += chunk;
+      });
+      
+      res.on('end', () => {
+        resolve({
+          statusCode: res.statusCode,
+          headers: res.headers,
+          body: data,
+        });
+      });
+    });
+    
+    req.on('error', (error) => {
+      reject(error);
+    });
+    
+    req.on('timeout', () => {
+      req.destroy();
+      reject(new Error(`Request timed out after ${options.timeout}ms`));
+    });
+    
+    req.end();
+  });
 }
 
 /**
@@ -214,57 +275,47 @@ async function checkHeaders(options) {
 async function main() {
   printBanner();
   
-  // Parse command line arguments
   const options = parseArgs();
-  console.log(`Verifying deployment at: ${options.protocol}://${options.domain}${options.path}`);
-  console.log('');
+  console.log(`Target URL: ${options.url}`);
+  console.log(`Timeout: ${options.timeout}ms`);
+  console.log();
   
   // Run checks
-  const checks = [
-    { name: 'Connectivity', fn: checkConnectivity },
-    { name: 'Health Endpoint', fn: checkHealth },
-    { name: 'Homepage', fn: checkHomepage },
-    { name: 'HTTP Headers', fn: checkHeaders }
-  ];
+  const results = {};
   
-  let successCount = 0;
-  let failCount = 0;
+  results.connectivity = await checkConnectivity(options);
+  results.health = await checkHealth(options);
+  results.homepage = await checkHomepage(options);
+  results.headers = await checkHeaders(options);
   
-  for (const check of checks) {
-    console.log(`${colors.blue}[${check.name}]${colors.reset}`);
-    const success = await check.fn(options);
-    if (success) {
-      successCount++;
-    } else {
-      failCount++;
-    }
-    console.log(''); // Add spacing between checks
+  // Summary
+  console.log('\n===========================================================');
+  console.log('                   Verification Summary                   ');
+  console.log('===========================================================');
+  
+  for (const [check, passed] of Object.entries(results)) {
+    console.log(`${passed ? '✅' : '❌'} ${check.charAt(0).toUpperCase() + check.slice(1)}`);
   }
   
-  // Final summary
-  console.log(`${colors.blue}==============================================${colors.reset}`);
-  console.log(`${colors.blue}    VERIFICATION SUMMARY                     ${colors.reset}`);
-  console.log(`${colors.blue}==============================================${colors.reset}`);
-  console.log('');
+  const allPassed = Object.values(results).every(Boolean);
   
-  console.log(`Total checks: ${checks.length}`);
-  console.log(`${colors.green}Successful: ${successCount}${colors.reset}`);
-  console.log(`${colors.red}Failed: ${failCount}${colors.reset}`);
+  console.log('\nVerification ' + (allPassed ? '✅ PASSED' : '❌ FAILED'));
   
-  if (failCount === 0) {
-    console.log('');
-    console.log(`${colors.green}✓ Deployment verification PASSED! The application is deployed correctly.${colors.reset}`);
-    process.exit(0);
-  } else {
-    console.log('');
-    console.log(`${colors.red}✗ Deployment verification FAILED! Please check the logs above for details.${colors.reset}`);
+  if (!allPassed) {
+    console.log('\nTroubleshooting tips:');
+    console.log('- Check if the server is running');
+    console.log('- Verify that the deployment completed successfully');
+    console.log('- Check server logs for errors');
+    console.log('- Ensure the domain is correctly configured');
+    console.log('- Verify that the health endpoint is implemented correctly');
     process.exit(1);
   }
+  
+  process.exit(0);
 }
 
 // Run the main function
-main().catch(error => {
-  console.error(`${colors.red}Unexpected error: ${error.message}${colors.reset}`);
-  console.error(error.stack);
+main().catch((error) => {
+  console.error('Unexpected error:', error);
   process.exit(1);
 });
