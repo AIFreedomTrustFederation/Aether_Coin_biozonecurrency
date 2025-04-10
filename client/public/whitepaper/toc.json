@@ -1,0 +1,42 @@
+{
+  "title": "FractalCoin & Aetherion Whitepaper v1.0.0",
+  "updated": "April 10, 2025",
+  "sections": [
+    {
+      "id": "main",
+      "title": "FractalCoin Toroidal Economics",
+      "filename": "FractalCoin_Toroidal_Economics_Whitepaper.md",
+      "description": "Core economic principles, tokenomics, and consensus mechanisms"
+    },
+    {
+      "id": "ai-agents",
+      "title": "AI Agent Network",
+      "filename": "AI_Agent_Network_Section.md",
+      "description": "Architecture for the secure AI agent network and personalization framework"
+    },
+    {
+      "id": "wallet",
+      "title": "Aetherion Wallet v1.0.0",
+      "filename": "Aetherion_Wallet_v1.0.0_Section.md",
+      "description": "Technical architecture, security model, and implementation details"
+    },
+    {
+      "id": "user-guide",
+      "title": "User Guide",
+      "filename": "User_Guide_Section.md",
+      "description": "Detailed installation, configuration, and usage instructions"
+    },
+    {
+      "id": "feature-matrix",
+      "title": "Feature Matrix",
+      "filename": "Appendix_Feature_Matrix.md",
+      "description": "Complete feature inventory with implementation status"
+    },
+    {
+      "id": "references",
+      "title": "References",
+      "filename": "References_Section.md",
+      "description": "Academic papers, technical standards, and resources"
+    }
+  ]
+}

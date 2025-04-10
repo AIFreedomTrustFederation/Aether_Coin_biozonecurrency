@@ -40,7 +40,7 @@ const Dashboard = lazy(() => import("@/components/Dashboard"));
 const SecurityPage = lazy(() => import("./pages/SecurityPage").then(m => ({ default: m.SecurityPage })));
 const SingularityCoinPage = lazy(() => import("./pages/SingularityCoinPage"));
 const ICOPage = lazy(() => import("./pages/ICOPage"));
-const WhitepaperPage = lazy(() => import("./pages/WhitepaperPage"));
+const WhitepaperPage = lazy(() => import("./features/documentation/pages/WhitepaperPage"));
 const AboutPage = lazy(() => import("./pages/AboutPage"));
 const AdminPortal = lazy(() => import("./pages/AdminPortal"));
 const LazyAetherCoinPage = lazy(() => import("./pages/LazyAetherCoinPage"));

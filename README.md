@@ -343,6 +343,42 @@ The repository includes GitHub Actions workflows for automating deployments:
 
 See `.github/workflows/deploy.yml` for workflow configuration details.
 
+## Documentation
+
+Comprehensive documentation is available to help you understand and use Aetherion Wallet:
+
+### Release Documentation
+
+- **Release Usage Guide**: [RELEASE-USAGE-GUIDE.md](./RELEASE-USAGE-GUIDE.md)
+  - Download and installation instructions
+  - Configuration options
+  - Getting started with the wallet
+  - Troubleshooting common issues
+
+- **GitHub Release Guide**: [GITHUB-RELEASE-GUIDE.md](./GITHUB-RELEASE-GUIDE.md)
+  - Creating GitHub releases
+  - Package creation process
+  - Release automation
+  - Troubleshooting GitHub sync issues
+
+### Whitepaper
+
+The Aetherion project includes a comprehensive whitepaper in the `updated_whitepaper` directory:
+
+- **Economic Framework**: Core tokenomics and consensus mechanisms
+- **AI Agent Network**: Secure AI agent architecture and capabilities
+- **Wallet Implementation**: Technical architecture and security model
+- **User Guide**: Detailed usage instructions for all features
+
+To compile the complete whitepaper into a PDF:
+
+```bash
+cd updated_whitepaper
+./compile_whitepaper.sh
+```
+
+This creates `FractalCoin_Complete_Whitepaper_v1.0.0.pdf` with all whitepaper sections.
+
 ## Contributing
 
 We welcome contributions to the Aetherion Blockchain Wallet project! Please see our [Contributing Guide](./CONTRIBUTING.md) for details.
