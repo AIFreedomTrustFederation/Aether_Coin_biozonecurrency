@@ -20,6 +20,28 @@ import type {
   InsertApiKeyConnection 
 } from "./api-key-schema";
 
+// Import LLM API schema
+import {
+  llmApiKeys,
+  llmApiConnections,
+  llmApiUsage,
+  llmPromptTemplates,
+  modelAccessLevels
+} from "./llm-api-schema";
+
+// Import LLM API types
+import type {
+  LlmApiKey,
+  InsertLlmApiKey,
+  LlmApiConnection,
+  InsertLlmApiConnection,
+  LlmApiUsage,
+  InsertLlmApiUsage,
+  LlmPromptTemplate,
+  InsertLlmPromptTemplate,
+  ModelAccessLevel
+} from "./llm-api-schema";
+
 // Import wallet schemas
 import { 
   passphraseWallets, 
@@ -372,6 +394,29 @@ import {
 
 // User API Keys and Mysterion training data types are already exported elsewhere
 
+// Re-export LLM API Schema
+export {
+  // Tables
+  llmApiKeys,
+  llmApiConnections,
+  llmApiUsage,
+  llmPromptTemplates,
+  
+  // Types
+  LlmApiKey,
+  InsertLlmApiKey,
+  LlmApiConnection,
+  InsertLlmApiConnection,
+  LlmApiUsage,
+  InsertLlmApiUsage,
+  LlmPromptTemplate,
+  InsertLlmPromptTemplate,
+  
+  // Enums
+  modelAccessLevels,
+  ModelAccessLevel
+}
+
 // Re-export API Key Management Schema
 export {
   // Tables
@@ -472,6 +517,7 @@ export const usersRelations = relations(users, ({ many, one }) => ({
   notificationPreference: one(notificationPreferences),
   apiKeys: many(userApiKeys),
   bridgeTransactions: many(bridgeTransactions),
+  llmApiKeys: many(llmApiKeys),
   // New relations will be added in usersExtendedRelations after schema initialization
 }));
 
