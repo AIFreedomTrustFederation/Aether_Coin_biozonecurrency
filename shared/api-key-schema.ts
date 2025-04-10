@@ -71,8 +71,11 @@ export const apiKeyConnections = pgTable("api_key_connections", {
  */
 export const insertApiKeySchema = createInsertSchema(apiKeys).omit({
   id: true,
+  userId: true,
+  key: true,
   createdAt: true,
   lastUsedAt: true,
+  revokedAt: true,
 });
 
 /**

@@ -89,25 +89,39 @@ router.post("/", requireAuth, checkAdminPrivilege, async (req: Request, res: Res
     
     // Validate incoming data - with better error handling
     try {
-      const keyData = insertApiKeySchema
-        .extend({
-          scopes: z.array(z.string()).min(1, "At least one scope is required")
-        })
-        .parse(req.body);
+      console.log("Request body:", req.body);
+      
+      // Create a basic validation schema for the frontend form
+      const formSchema = z.object({
+        name: z.string().min(2, "Name must be at least 2 characters"),
+        email: z.string().email("Please provide a valid email"),
+        scopes: z.array(z.string()).min(1, "At least one scope is required")
+      });
+      
+      const validatedData = formSchema.parse(req.body);
       
       // Check if user is trying to create a key with admin scope but doesn't have admin privileges
-      if (keyData.scopes.includes("admin") && (!authReq.session.isAdmin)) {
+      if (validatedData.scopes.includes("admin") && (!authReq.session.isAdmin)) {
         return res.status(403).json({ 
           message: "Admin privilege required to create keys with admin scope",
           code: "ADMIN_PRIVILEGE_REQUIRED"
         });
       }
       
+      // Create the api key data object
+      const keyData = {
+        name: validatedData.name,
+        email: validatedData.email,
+        scopes: validatedData.scopes,
+        userId,
+        isActive: true,
+        expiresAt: null
+      };
+      
+      console.log("Prepared API key data:", keyData);
+      
       // Create the new API key
-      const apiKey = await apiKeyService.createApiKey({
-        ...keyData,
-        userId
-      });
+      const apiKey = await apiKeyService.createApiKey(keyData);
       
       res.status(201).json(apiKey);
     } catch (validationError) {
