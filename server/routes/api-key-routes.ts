@@ -43,10 +43,15 @@ const router = Router();
  * 
  * Get all API keys for the currently authenticated user
  */
-router.get("/", async (req: Request, res: Response) => {
+router.get("/", requireAuth, async (req: Request, res: Response) => {
   try {
-    // In a real app, this would be from req.session.userId
-    const userId = 1;
+    const authReq = req as AuthRequest;
+    const userId = authReq.session?.userId;
+    
+    if (!userId) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+    
     const keys = await apiKeyService.getApiKeysByUserId(userId);
     
     // Don't send the actual key in the response
@@ -74,40 +79,67 @@ router.post("/", requireAuth, checkAdminPrivilege, async (req: Request, res: Res
   try {
     const authReq = req as AuthRequest;
     
-    // Validate incoming data
-    const keyData = insertApiKeySchema
-      .extend({
-        scopes: z.array(z.string()).min(1, "At least one scope is required")
-      })
-      .parse(req.body);
-    
-    // Check if user is trying to create a key with admin scope but doesn't have admin privileges
-    if (keyData.scopes.includes("admin") && (!authReq.session?.isAdmin)) {
-      return res.status(403).json({ 
-        message: "Admin privilege required to create keys with admin scope",
-        code: "ADMIN_PRIVILEGE_REQUIRED"
-      });
+    // Make sure user is authenticated
+    if (!authReq.session || !authReq.session.userId) {
+      return res.status(401).json({ message: "Authentication required" });
     }
     
-    // Get user ID from session
-    const userId = authReq.session?.userId || 1; // Fallback for development
+    // Get user ID from session (no fallback, must be authenticated)
+    const userId = authReq.session.userId;
     
-    // Create the new API key
-    const apiKey = await apiKeyService.createApiKey({
-      ...keyData,
-      userId
-    });
-    
-    res.status(201).json(apiKey);
+    // Validate incoming data - with better error handling
+    try {
+      const keyData = insertApiKeySchema
+        .extend({
+          scopes: z.array(z.string()).min(1, "At least one scope is required")
+        })
+        .parse(req.body);
+      
+      // Check if user is trying to create a key with admin scope but doesn't have admin privileges
+      if (keyData.scopes.includes("admin") && (!authReq.session.isAdmin)) {
+        return res.status(403).json({ 
+          message: "Admin privilege required to create keys with admin scope",
+          code: "ADMIN_PRIVILEGE_REQUIRED"
+        });
+      }
+      
+      // Create the new API key
+      const apiKey = await apiKeyService.createApiKey({
+        ...keyData,
+        userId
+      });
+      
+      res.status(201).json(apiKey);
+    } catch (validationError) {
+      if (validationError instanceof z.ZodError) {
+        console.error("API key validation error:", validationError.errors);
+        return res.status(400).json({ 
+          message: "Invalid API key data", 
+          errors: validationError.errors 
+        });
+      }
+      throw validationError; // Re-throw if it's not a ZodError
+    }
   } catch (error) {
-    if (error instanceof z.ZodError) {
+    console.error("Error creating API key:", error);
+    if ((error as any)?.code === 'P2002') {
+      // This is a Prisma unique constraint error
       return res.status(400).json({ 
-        message: "Invalid API key data", 
-        errors: error.errors 
+        message: "Failed to create API key. A key with this name or email already exists."
       });
     }
-    console.error("Error creating API key:", error);
-    res.status(500).json({ message: "Failed to create API key" });
+    
+    if ((error as any)?.code === '23505') {
+      // PostgreSQL unique violation
+      return res.status(400).json({ 
+        message: "Failed to create API key. A key with this name or email already exists."
+      });
+    }
+    
+    res.status(500).json({ 
+      message: "Failed to create API key",
+      details: process.env.NODE_ENV === 'development' ? String(error) : undefined
+    });
   }
 });
 
