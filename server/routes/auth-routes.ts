@@ -143,6 +143,16 @@ export function createAuthRoutes() {
       const authReq = req as AuthRequest;
       authReq.session.userId = user.id;
       authReq.session.isAuthenticated = true;
+      
+      // Also set session.user to ensure middleware compatibility
+      authReq.session.user = {
+        id: user.id,
+        username: user.username,
+        email: user.email || '',
+        name: user.name || undefined,
+        isTrustMember: !!user.isTrustMember,
+        role: user.role || undefined
+      };
 
       // Update last login time
       await storage.updateUserLastLogin(user.id);
