@@ -21,6 +21,9 @@ declare module 'express-session' {
       role?: string;
     };
     isAdmin?: boolean;
+    // Session persistence test properties
+    visitCount?: number;
+    firstVisit?: string;
   }
 }
 
@@ -38,6 +41,9 @@ interface AuthRequest extends Request {
       role?: string;
     };
     isAdmin?: boolean;
+    // Session persistence test properties
+    visitCount?: number;
+    firstVisit?: string;
   };
 }
 
@@ -348,6 +354,40 @@ export function createAuthRoutes() {
     
     res.status(200).json({
       isAdmin: authReq.session?.isAdmin || false,
+    });
+  });
+
+  // Session test endpoint to verify persistence
+  router.get('/session-test', (req: AuthRequest, res: Response) => {
+    // If there's no session visit counter, initialize it
+    if (!req.session.visitCount) {
+      req.session.visitCount = 1;
+    } else {
+      // Increment the counter if it exists
+      req.session.visitCount++;
+    }
+    
+    // Create a persistable timestamp that will survive server restarts
+    if (!req.session.firstVisit) {
+      req.session.firstVisit = new Date().toISOString();
+    }
+    
+    // Return session data to verify persistence
+    return res.status(200).json({
+      success: true,
+      message: 'Session test endpoint',
+      sessionData: {
+        visitCount: req.session.visitCount,
+        firstVisit: req.session.firstVisit,
+        currentTimestamp: new Date().toISOString(),
+        sessionID: req.sessionID,
+        // Include user info if authenticated
+        user: req.session.user ? {
+          id: req.session.user.id,
+          username: req.session.user.username,
+          role: req.session.user.role
+        } : null
+      }
     });
   });
 
