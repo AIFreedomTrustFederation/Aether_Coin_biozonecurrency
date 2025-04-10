@@ -14,6 +14,9 @@ export * from './schema';
 // Re-export from LLM schema
 export * from './llm-schema';
 
+// Re-export from LLM API schema
+export * from './llm-api-schema';
+
 // Re-export from API Key schema
 export * from './api-key-schema';
 
@@ -113,6 +116,68 @@ export const apiKeyConnections = {
   isActive: null,
   lastPingAt: null,
   metadata: null
+} as any;
+
+// LLM API schema proxies
+export const llmApiKeys = {
+  id: null,
+  userId: null,
+  key: null,
+  name: null,
+  email: null,
+  createdAt: null,
+  expiresAt: null,
+  revokedAt: null,
+  lastUsedAt: null,
+  modelAccessLevel: null,
+  usageLimit: null,
+  usageCount: null,
+  callsPerMinuteLimit: null,
+  isActive: null
+} as any;
+
+export const llmApiConnections = {
+  id: null,
+  keyId: null,
+  connectionId: null,
+  serviceType: null,
+  ipAddress: null,
+  userAgent: null,
+  connectedAt: null,
+  lastPingAt: null,
+  disconnectedAt: null,
+  sessionData: null
+} as any;
+
+export const llmApiUsage = {
+  id: null,
+  keyId: null,
+  timestamp: null,
+  endpoint: null,
+  modelUsed: null,
+  promptTokens: null,
+  completionTokens: null,
+  totalTokens: null,
+  duration: null,
+  ipAddress: null,
+  responseCode: null,
+  errorMessage: null,
+  requestId: null
+} as any;
+
+export const llmPromptTemplates = {
+  id: null,
+  name: null,
+  description: null,
+  templateText: null,
+  createdBy: null,
+  createdAt: null,
+  updatedAt: null,
+  category: null,
+  tags: null,
+  isPublic: null,
+  version: null,
+  modelRecommendation: null
 } as any;
 
 // Make sure any new schemas are also re-exported and proxied here

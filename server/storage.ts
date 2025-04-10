@@ -10,7 +10,11 @@ import {
   LlmConversation, InsertLlmConversation,
   LlmMessage, InsertLlmMessage,
   LlmFineTuningJob, InsertLlmFineTuningJob,
-  SacredPatternRecord, InsertSacredPatternRecord
+  SacredPatternRecord, InsertSacredPatternRecord,
+  LlmApiKey, InsertLlmApiKey,
+  LlmApiConnection, InsertLlmApiConnection,
+  LlmApiUsage, InsertLlmApiUsage,
+  LlmPromptTemplate, InsertLlmPromptTemplate
 } from '../shared/schema-proxy';
 
 // Import the storage instance from fixed-storage.ts
@@ -79,6 +83,39 @@ export interface IStorage {
   getPaymentMethodsByUserId(userId: number): Promise<any[]>;
   createPaymentMethod(data: any): Promise<any>;
   getPaymentHistory(userId: number, limit?: number): Promise<any[]>;
+  
+  // LLM API Key methods
+  getLlmApiKey(id: number): Promise<LlmApiKey | undefined>;
+  getLlmApiKeyByKey(key: string): Promise<LlmApiKey | undefined>;
+  getLlmApiKeysByUserId(userId: number): Promise<LlmApiKey[]>;
+  createLlmApiKey(apiKey: InsertLlmApiKey): Promise<LlmApiKey>;
+  updateLlmApiKey(id: number, apiKey: Partial<InsertLlmApiKey>): Promise<LlmApiKey | undefined>;
+  revokeLlmApiKey(id: number): Promise<LlmApiKey | undefined>;
+  
+  // LLM API Connection methods
+  getLlmApiConnection(id: string): Promise<LlmApiConnection | undefined>;
+  getLlmApiConnectionsByKeyId(keyId: number): Promise<LlmApiConnection[]>;
+  createLlmApiConnection(connection: InsertLlmApiConnection): Promise<LlmApiConnection>;
+  updateLlmApiConnectionLastPing(id: string): Promise<LlmApiConnection | undefined>;
+  closeLlmApiConnection(id: string): Promise<LlmApiConnection | undefined>;
+  
+  // LLM API Usage methods
+  getLlmApiUsage(id: string): Promise<LlmApiUsage | undefined>;
+  getLlmApiUsageByKeyId(keyId: number, limit?: number): Promise<LlmApiUsage[]>;
+  createLlmApiUsage(usage: InsertLlmApiUsage): Promise<LlmApiUsage>;
+  getLlmApiUsageSummary(keyId: number): Promise<{ 
+    totalTokens: number, 
+    totalRequests: number, 
+    averageTokensPerRequest: number,
+    successRate: number
+  }>;
+  
+  // LLM Prompt Template methods
+  getLlmPromptTemplate(id: number): Promise<LlmPromptTemplate | undefined>;
+  getLlmPromptTemplatesByCategory(category: string): Promise<LlmPromptTemplate[]>;
+  getLlmPromptTemplatesByUserId(userId: number): Promise<LlmPromptTemplate[]>;
+  createLlmPromptTemplate(template: InsertLlmPromptTemplate): Promise<LlmPromptTemplate>;
+  updateLlmPromptTemplate(id: number, template: Partial<InsertLlmPromptTemplate>): Promise<LlmPromptTemplate | undefined>;
 }
 
 // Re-export types for convenience
@@ -88,5 +125,9 @@ export type {
   LlmConversation, InsertLlmConversation,
   LlmMessage, InsertLlmMessage,
   LlmFineTuningJob, InsertLlmFineTuningJob,
-  SacredPatternRecord, InsertSacredPatternRecord
+  SacredPatternRecord, InsertSacredPatternRecord,
+  LlmApiKey, InsertLlmApiKey,
+  LlmApiConnection, InsertLlmApiConnection,
+  LlmApiUsage, InsertLlmApiUsage,
+  LlmPromptTemplate, InsertLlmPromptTemplate
 };
