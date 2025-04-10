@@ -262,57 +262,97 @@ fi
 # Create a release package
 echo -e "${BLUE}Creating release package...${RESET}"
 
-# Create release directory
-RELEASE_DIR="release-$VERSION"
-mkdir -p $RELEASE_DIR
+# Use the dedicated package creation script if available
+if [ -x "./create-deployment-package.sh" ]; then
+    echo "Using create-deployment-package.sh to create the package..."
+    # Extract version without 'v' prefix for the package script
+    NUMERIC_VERSION=${VERSION#v}
+    ./create-deployment-package.sh --version=$NUMERIC_VERSION
+    
+    PACKAGE_DIR="aetherion-wallet-v$NUMERIC_VERSION"
+    
+    # Use the GitHub release packaging script if available
+    if [ -x "./package-for-github-release.sh" ]; then
+        echo "Using package-for-github-release.sh to create the release tarball..."
+        ./package-for-github-release.sh < <(echo "n")
+        RELEASE_ZIP="aetherion-wallet-v$NUMERIC_VERSION.tar.gz"
+    else
+        # Fallback to manual tar creation
+        RELEASE_ZIP="aetherion-wallet-v$NUMERIC_VERSION.tar.gz"
+        echo "Creating tarball $RELEASE_ZIP..."
+        tar -czf "$RELEASE_ZIP" "$PACKAGE_DIR"
+    fi
+    
+    echo -e "${GREEN}Release package created: $RELEASE_ZIP${RESET}"
+else
+    # Fall back to the old method if the script is not available
+    echo "Falling back to manual package creation method..."
 
-# Copy essential files
-echo "Copying files to release package..."
-cp -r \
-    package.json \
-    package-lock.json \
-    .env.example \
-    docker-compose.yml \
-    Dockerfile \
-    run-with-docker.sh \
-    deploy-traditional.sh \
-    CROSS-PLATFORM-DEPLOYMENT.md \
-    README.md \
-    CHANGELOG.md \
-    LICENSE \
-    $RELEASE_DIR/ 2>/dev/null || true
+    # Create release directory
+    RELEASE_DIR="release-$VERSION"
+    mkdir -p $RELEASE_DIR
 
-# Create release directories
-mkdir -p $RELEASE_DIR/client
-mkdir -p $RELEASE_DIR/server
-mkdir -p $RELEASE_DIR/shared
-mkdir -p $RELEASE_DIR/api-gateway
+    # Copy essential files
+    echo "Copying files to release package..."
+    cp -r \
+        package.json \
+        package-lock.json \
+        .env.example \
+        docker-compose.yml \
+        Dockerfile \
+        run-with-docker.sh \
+        deploy-traditional.sh \
+        CROSS-PLATFORM-DEPLOYMENT.md \
+        README.md \
+        CHANGELOG.md \
+        LICENSE \
+        $RELEASE_DIR/ 2>/dev/null || true
 
-# Copy source code
-cp -r client/src $RELEASE_DIR/client/ 2>/dev/null || true
-cp -r server/src $RELEASE_DIR/server/ 2>/dev/null || true
-cp -r shared/src $RELEASE_DIR/shared/ 2>/dev/null || true
-cp -r api-gateway/src $RELEASE_DIR/api-gateway/ 2>/dev/null || true
+    # Create release directories
+    mkdir -p $RELEASE_DIR/client
+    mkdir -p $RELEASE_DIR/server
+    mkdir -p $RELEASE_DIR/shared
+    mkdir -p $RELEASE_DIR/api-gateway
 
-# Copy configuration files
-cp client/*.json $RELEASE_DIR/client/ 2>/dev/null || true
-cp server/*.json $RELEASE_DIR/server/ 2>/dev/null || true
-cp shared/*.json $RELEASE_DIR/shared/ 2>/dev/null || true
-cp api-gateway/*.json $RELEASE_DIR/api-gateway/ 2>/dev/null || true
+    # Copy source code
+    cp -r client/src $RELEASE_DIR/client/ 2>/dev/null || true
+    cp -r server/src $RELEASE_DIR/server/ 2>/dev/null || true
+    cp -r shared/src $RELEASE_DIR/shared/ 2>/dev/null || true
+    cp -r api-gateway/src $RELEASE_DIR/api-gateway/ 2>/dev/null || true
 
-# Create zip archive
-RELEASE_ZIP="aetherion-wallet-$VERSION.zip"
-echo "Creating zip archive $RELEASE_ZIP..."
-(cd $RELEASE_DIR && zip -r ../$RELEASE_ZIP .)
+    # Copy configuration files
+    cp client/*.json $RELEASE_DIR/client/ 2>/dev/null || true
+    cp server/*.json $RELEASE_DIR/server/ 2>/dev/null || true
+    cp shared/*.json $RELEASE_DIR/shared/ 2>/dev/null || true
+    cp api-gateway/*.json $RELEASE_DIR/api-gateway/ 2>/dev/null || true
 
-echo -e "${GREEN}Release package created: $RELEASE_ZIP${RESET}"
+    # Create zip archive
+    RELEASE_ZIP="aetherion-wallet-$VERSION.zip"
+    echo "Creating zip archive $RELEASE_ZIP..."
+    (cd $RELEASE_DIR && zip -r ../$RELEASE_ZIP .)
+    
+    echo -e "${GREEN}Release package created: $RELEASE_ZIP${RESET}"
+fi
 
 # Create GitHub release if GitHub CLI is available
 if [ $USE_GH_CLI -eq 1 ]; then
     echo -e "${BLUE}Creating GitHub release...${RESET}"
     
-    # Generate release notes
-    RELEASE_NOTES=$(cat << EOL
+    # Check if release notes file exists for this version
+    RELEASE_NOTES_FILE="RELEASE-NOTES-$VERSION.md"
+    if [ ! -f "$RELEASE_NOTES_FILE" ]; then
+        # Try without v prefix
+        NUMERIC_VERSION=${VERSION#v}
+        RELEASE_NOTES_FILE="RELEASE-NOTES-v$NUMERIC_VERSION.md"
+    fi
+    
+    if [ -f "$RELEASE_NOTES_FILE" ]; then
+        echo -e "${GREEN}Using existing release notes from $RELEASE_NOTES_FILE${RESET}"
+        RELEASE_NOTES_PATH="$RELEASE_NOTES_FILE"
+    else
+        # Generate release notes
+        echo -e "${YELLOW}No release notes file found, generating default notes.${RESET}"
+        RELEASE_NOTES=$(cat << EOL
 # Aetherion Wallet $VERSION
 
 ## What's New
@@ -340,14 +380,21 @@ See [CROSS-PLATFORM-DEPLOYMENT.md](CROSS-PLATFORM-DEPLOYMENT.md) for detailed in
 \`\`\`
 EOL
 )
+        # Write to temporary file
+        echo "$RELEASE_NOTES" > release-notes-temp.md
+        RELEASE_NOTES_PATH="release-notes-temp.md"
+    fi
     
     # Create GitHub release
-    echo "$RELEASE_NOTES" > release-notes.md
-    gh release create $VERSION -F release-notes.md $RELEASE_ZIP || {
+    gh release create $VERSION -F "$RELEASE_NOTES_PATH" $RELEASE_ZIP || {
         echo -e "${RED}Failed to create GitHub release.${RESET}"
         echo -e "${YELLOW}You can create the release manually on GitHub using the generated package.${RESET}"
     }
-    rm release-notes.md
+    
+    # Clean up temporary file if created
+    if [ "$RELEASE_NOTES_PATH" = "release-notes-temp.md" ]; then
+        rm release-notes-temp.md
+    fi
     
     echo -e "${GREEN}GitHub release created: $VERSION${RESET}"
 else
