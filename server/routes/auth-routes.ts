@@ -3,22 +3,41 @@ import { z } from 'zod';
 import bcrypt from 'bcryptjs';
 import { storage } from '../fixed-storage';
 import { checkAdminPrivilege } from '../middleware/admin-auth';
+import { User } from '@shared/schema';
 
 const router = express.Router();
 
 // Extending Express Request type to include session
 declare module 'express-session' {
   interface SessionData {
-    userId: number;
-    isAuthenticated: boolean;
+    userId?: number;
+    isAuthenticated?: boolean;
+    user?: {
+      id: number;
+      username: string;
+      email: string;
+      name?: string;
+      isTrustMember: boolean;
+      role?: string;
+    };
+    isAdmin?: boolean;
   }
 }
 
 // Custom type to extend Express Request with session
 interface AuthRequest extends Request {
   session: express.Session & {
-    userId: number;
-    isAuthenticated: boolean;
+    userId?: number;
+    isAuthenticated?: boolean;
+    user?: {
+      id: number;
+      username: string;
+      email: string;
+      name?: string;
+      isTrustMember: boolean;
+      role?: string;
+    };
+    isAdmin?: boolean;
   };
 }
 
@@ -214,6 +233,16 @@ export function createAuthRoutes() {
         return res.status(401).json({ message: 'User not found' });
       }
 
+      // Update session.user to maintain consistency across middleware
+      authReq.session.user = {
+        id: user.id,
+        username: user.username,
+        email: user.email || '',
+        name: user.name || undefined,
+        isTrustMember: !!user.isTrustMember,
+        role: user.role || undefined
+      };
+      
       // Return user data without sensitive information
       const safeUser = {
         id: user.id,
