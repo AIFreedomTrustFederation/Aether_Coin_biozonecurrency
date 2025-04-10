@@ -1,15 +1,13 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import { modelAccessLevels, insertLlmApiKeySchema } from '@shared/llm-api-schema';
-import LlmApiService from '../services/llm-api-service';
+import { llmApiService as llmApiServiceInstance } from '../services/llm-api-service';
 import { StorageWrapper } from '../storage-wrapper';
 import { requireAuth } from '../middleware/auth';
 import { requireAdmin } from '../middleware/admin-auth';
 import { storage } from '../fixed-storage';
 
 const llmApiRouter = Router();
-const storageWrapper = new StorageWrapper();
-const llmApiService = new LlmApiService(storageWrapper);
 
 // Validate the model access level
 const validateModelAccessLevel = (level: string) => {
@@ -29,7 +27,7 @@ const requireLlmAdmin = async (req: any, res: any, next: any) => {
     const userId = req.session.userId;
     console.log(`Checking LLM admin access for user ID: ${userId}`);
 
-    const hasAccess = await llmApiService.hasLlmAdminAccess(userId);
+    const hasAccess = await llmApiServiceInstance.hasLlmAdminAccess(userId);
     if (!hasAccess) {
       console.log(`User ${userId} denied admin access to LLM services`);
       return res.status(403).json({ 
@@ -56,7 +54,7 @@ llmApiRouter.get('/keys', requireAuth, async (req: any, res) => {
     const userId = req.session.userId;
     console.log(`Getting LLM API keys for user ID: ${userId}`);
     
-    const apiKeys = await llmApiService.getApiKeysByUserId(userId);
+    const apiKeys = await llmApiServiceInstance.getApiKeysByUserId(userId);
     
     // Don't send the full key for security reasons
     const safeApiKeys = apiKeys.map(key => ({
@@ -77,7 +75,7 @@ llmApiRouter.get('/keys', requireAuth, async (req: any, res) => {
 // Get all API keys (admin only)
 llmApiRouter.get('/admin/keys', requireAuth, requireLlmAdmin, async (req, res) => {
   try {
-    const apiKeys = await llmApiService.getAllApiKeys();
+    const apiKeys = await llmApiServiceInstance.getAllApiKeys();
     
     // Mask keys for security
     const safeApiKeys = apiKeys.map(key => ({
@@ -198,7 +196,7 @@ llmApiRouter.post('/keys', directAdminAuth, requireAuth, async (req: any, res) =
     let modelAccessLevel = validatedData.modelAccessLevel || 'standard';
     
     if (modelAccessLevel !== 'standard') {
-      const hasAdminAccess = await llmApiService.hasLlmAdminAccess(userId);
+      const hasAdminAccess = await llmApiServiceInstance.hasLlmAdminAccess(userId);
       if (!hasAdminAccess) {
         console.log(`User ${userId} attempted to create key with ${modelAccessLevel} access but was denied`);
         modelAccessLevel = 'standard';
@@ -206,7 +204,7 @@ llmApiRouter.post('/keys', directAdminAuth, requireAuth, async (req: any, res) =
     }
     
     // Create the API key
-    const apiKey = await llmApiService.createApiKey({
+    const apiKey = await llmApiServiceInstance.createApiKey({
       ...validatedData,
       userId,
       modelAccessLevel
@@ -246,7 +244,7 @@ llmApiRouter.patch('/keys/:id/revoke', requireAuth, async (req: any, res) => {
     console.log(`User ${userId} attempting to revoke API key ${keyId}`);
     
     // Get the key to check ownership
-    const key = await llmApiService.getApiKeyById(keyId);
+    const key = await llmApiServiceInstance.getApiKeyById(keyId);
     
     if (!key) {
       return res.status(404).json({ message: 'API key not found' });
@@ -254,14 +252,14 @@ llmApiRouter.patch('/keys/:id/revoke', requireAuth, async (req: any, res) => {
     
     // Only allow owners or admins to revoke keys
     if (key.userId !== userId) {
-      const isAdmin = await llmApiService.hasLlmAdminAccess(userId);
+      const isAdmin = await llmApiServiceInstance.hasLlmAdminAccess(userId);
       if (!isAdmin) {
         console.log(`User ${userId} denied permission to revoke key ${keyId} (not owner or admin)`);
         return res.status(403).json({ message: 'Not authorized to revoke this API key' });
       }
     }
     
-    const updatedKey = await llmApiService.revokeApiKey(keyId);
+    const updatedKey = await llmApiServiceInstance.revokeApiKey(keyId);
     console.log(`API key ${keyId} successfully revoked by user ${userId}`);
     res.json(updatedKey);
   } catch (error) {
@@ -288,7 +286,7 @@ llmApiRouter.patch('/admin/keys/:id/access-level', requireAuth, requireLlmAdmin,
       });
     }
     
-    const updatedKey = await llmApiService.updateApiKeyAccessLevel(
+    const updatedKey = await llmApiServiceInstance.updateApiKeyAccessLevel(
       keyId, 
       accessLevel as typeof modelAccessLevels[number]
     );
@@ -322,7 +320,7 @@ llmApiRouter.patch('/admin/keys/:id/usage-limit', requireAuth, requireLlmAdmin, 
       });
     }
     
-    const updatedKey = await llmApiService.updateApiKeyUsageLimit(keyId, usageLimit);
+    const updatedKey = await llmApiServiceInstance.updateApiKeyUsageLimit(keyId, usageLimit);
     
     if (!updatedKey) {
       return res.status(404).json({ message: 'API key not found' });
@@ -346,7 +344,7 @@ llmApiRouter.get('/keys/:id/usage', requireAuth, async (req: any, res) => {
     }
     
     // Get the key to check ownership
-    const key = await llmApiService.getApiKeyById(keyId);
+    const key = await llmApiServiceInstance.getApiKeyById(keyId);
     
     if (!key) {
       return res.status(404).json({ message: 'API key not found' });
@@ -354,14 +352,14 @@ llmApiRouter.get('/keys/:id/usage', requireAuth, async (req: any, res) => {
     
     // Only allow owners or admins to view usage logs
     if (key.userId !== userId) {
-      const isAdmin = await llmApiService.hasLlmAdminAccess(userId);
+      const isAdmin = await llmApiServiceInstance.hasLlmAdminAccess(userId);
       if (!isAdmin) {
         return res.status(403).json({ message: 'Not authorized to view usage for this API key' });
       }
     }
     
     const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 100;
-    const usage = await llmApiService.getApiKeyUsage(keyId, limit);
+    const usage = await llmApiServiceInstance.getApiKeyUsage(keyId, limit);
     
     res.json(usage);
   } catch (error) {
@@ -381,7 +379,7 @@ llmApiRouter.get('/keys/:id/connections', requireAuth, async (req: any, res) => 
     }
     
     // Get the key to check ownership
-    const key = await llmApiService.getApiKeyById(keyId);
+    const key = await llmApiServiceInstance.getApiKeyById(keyId);
     
     if (!key) {
       return res.status(404).json({ message: 'API key not found' });
@@ -389,13 +387,13 @@ llmApiRouter.get('/keys/:id/connections', requireAuth, async (req: any, res) => 
     
     // Only allow owners or admins to view connections
     if (key.userId !== userId) {
-      const isAdmin = await llmApiService.hasLlmAdminAccess(userId);
+      const isAdmin = await llmApiServiceInstance.hasLlmAdminAccess(userId);
       if (!isAdmin) {
         return res.status(403).json({ message: 'Not authorized to view connections for this API key' });
       }
     }
     
-    const connections = await llmApiService.getActiveConnections(keyId);
+    const connections = await llmApiServiceInstance.getActiveConnections(keyId);
     res.json(connections);
   } catch (error) {
     console.error('Error getting API key connections:', error);
@@ -445,7 +443,7 @@ llmApiRouter.post('/admin/direct-key-generation', async (req, res) => {
     console.log(`Admin ${adminUsername} verified, generating LLM API key`);
     
     // Generate admin API key
-    const apiKey = await llmApiService.createApiKey({
+    const apiKey = await llmApiServiceInstance.createApiKey({
       userId: user.id,
       name,
       description: description || 'Admin-generated key via direct endpoint',
@@ -476,7 +474,7 @@ llmApiRouter.delete('/keys/:keyId/connections/:connectionId', requireAuth, async
     }
     
     // Get the key to check ownership
-    const key = await llmApiService.getApiKeyById(keyId);
+    const key = await llmApiServiceInstance.getApiKeyById(keyId);
     
     if (!key) {
       return res.status(404).json({ message: 'API key not found' });
@@ -484,13 +482,13 @@ llmApiRouter.delete('/keys/:keyId/connections/:connectionId', requireAuth, async
     
     // Only allow owners or admins to terminate connections
     if (key.userId !== userId) {
-      const isAdmin = await llmApiService.hasLlmAdminAccess(userId);
+      const isAdmin = await llmApiServiceInstance.hasLlmAdminAccess(userId);
       if (!isAdmin) {
         return res.status(403).json({ message: 'Not authorized to terminate connections for this API key' });
       }
     }
     
-    const connection = await llmApiService.terminateConnection(connectionId);
+    const connection = await llmApiServiceInstance.terminateConnection(connectionId);
     
     if (!connection) {
       return res.status(404).json({ message: 'Connection not found' });
