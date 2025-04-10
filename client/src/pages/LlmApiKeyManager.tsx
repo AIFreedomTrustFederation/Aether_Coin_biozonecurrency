@@ -548,7 +548,7 @@ const LlmApiKeyManager: React.FC = () => {
                         <TableCell>{formatDate(key.createdAt)}</TableCell>
                         <TableCell>
                           {key.isActive ? (
-                            <Badge variant="success" className="flex items-center">
+                            <Badge variant="outline" className="flex items-center bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
                               <CheckIcon className="mr-1 h-3 w-3" />
                               Active
                             </Badge>
