@@ -39,6 +39,10 @@ class StorageWrapper implements IStorage {
     return databaseStorage.getUserByUsername(username);
   }
   
+  async getAllUsers(): Promise<User[]> {
+    return databaseStorage.getAllUsers();
+  }
+  
   async createUser(insertUser: InsertUser): Promise<User> {
     return databaseStorage.createUser(insertUser);
   }

@@ -108,8 +108,20 @@ export function createAuthRoutes() {
 
       const { username, password } = result.data;
 
-      // Find user by username
-      const user = await storage.getUserByUsername(username);
+      let user;
+      
+      // First check if input looks like an email address
+      if (username.includes('@')) {
+        // This is likely an email, search users by email
+        console.log(`Login attempt with email: ${username}`);
+        // Get all users and find the one with matching email
+        const allUsers = await storage.getAllUsers();
+        user = allUsers.find((u: User) => u.email.toLowerCase() === username.toLowerCase());
+      } else {
+        // Try to find user by username
+        console.log(`Login attempt with username: ${username}`);
+        user = await storage.getUserByUsername(username);
+      }
       
       if (!user) {
         return res.status(401).json({ message: 'Invalid username or password' });

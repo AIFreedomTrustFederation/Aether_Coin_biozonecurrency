@@ -46,6 +46,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   /**
+   * Get all users
+   * @returns Array of all users
+   */
+  async getAllUsers(): Promise<User[]> {
+    return db.select().from(users);
+  }
+
+  /**
    * Create a new user
    * @param insertUser User data to insert
    * @returns The created user
