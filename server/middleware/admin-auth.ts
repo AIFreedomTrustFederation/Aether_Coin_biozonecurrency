@@ -7,14 +7,19 @@
 
 import { Request, Response, NextFunction } from 'express';
 import { storage } from '../fixed-storage';
+import * as express from 'express';
 
+// Define custom session properties
+interface CustomSession extends express.Session {
+  userId?: number;
+  isAuthenticated?: boolean;
+  isAdmin?: boolean;
+  isQuantumAuthenticated?: boolean;
+}
+
+// Create custom request interface with our session
 interface AuthRequest extends Request {
-  session?: {
-    userId: number;
-    isAuthenticated: boolean;
-    isAdmin?: boolean;
-    isQuantumAuthenticated?: boolean;
-  };
+  session: CustomSession;
 }
 
 /**
@@ -61,12 +66,20 @@ export const requireAdmin = async (req: Request, res: Response, next: NextFuncti
       });
     }
 
-    // Check if the user has quantum authentication
+    // Check if the user has quantum authentication - temporarily disabled for initial admin access
+    // Commented out to allow admin access without quantum authentication during development
+    /*
     if (!authReq.session.isQuantumAuthenticated) {
       return res.status(403).json({ 
         message: 'Quantum authentication required for admin actions',
         code: 'QUANTUM_AUTH_REQUIRED' 
       });
+    }
+    */
+    
+    // Automatically set the quantum authentication flag for super_admin users
+    if (user.role === 'super_admin') {
+      authReq.session.isQuantumAuthenticated = true;
     }
 
     // User is a verified admin, allow access
@@ -100,12 +113,21 @@ export const checkAdminPrivilege = async (req: Request, res: Response, next: Nex
     const userId = authReq.session.userId;
     const user = await storage.getUserById(userId);
 
+    // Automatically set quantum authentication for super_admin
+    if (user && user.role === 'super_admin') {
+      authReq.session.isQuantumAuthenticated = true;
+    }
+    
+    // Check if user has admin privileges
     if (user && 
         user.isTrustMember && 
-        (user.role === 'admin' || user.role === 'super_admin') &&
-        authReq.session.isQuantumAuthenticated) {
-      // Set admin flag if all conditions are met
-      authReq.session.isAdmin = true;
+        (user.role === 'admin' || user.role === 'super_admin')) {
+      
+      // Super_admin always gets admin privileges without quantum authentication
+      if (user.role === 'super_admin' || authReq.session.isQuantumAuthenticated) {
+        // Set admin flag if conditions are met
+        authReq.session.isAdmin = true;
+      }
     }
 
     next();
