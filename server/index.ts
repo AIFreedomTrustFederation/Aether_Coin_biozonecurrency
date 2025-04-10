@@ -14,26 +14,33 @@ app.use(express.urlencoded({ extended: false }));
 // Using a static secret for development to ensure session persistence 
 const sessionSecret = process.env.SESSION_SECRET || 'aetherion-quantum-fractal-session-secret';
 
-// Create memory store with periodic cleanup
-const MemoryStoreSession = MemoryStore(session);
-const sessionStore = new MemoryStoreSession({
-  checkPeriod: 86400000 // prune expired entries every 24h
+// Import PostgreSQL session store
+import connectPgSimple from 'connect-pg-simple';
+import { pool } from './db'; // Importing pool for session storage
+
+// Set up PostgreSQL session store for persistence
+const PgStore = connectPgSimple(session);
+const sessionStore = new PgStore({
+  pool: pool,               // Use the database pool
+  tableName: 'session',     // Use the session table we created
+  createTableIfMissing: true,
+  pruneSessionInterval: 60  // Clean expired sessions every hour
 });
 
-// Set up session middleware with replit-specific configuration
+// Set up session middleware with PostgreSQL for persistence
 app.use(session({
-  secret: sessionSecret,
-  resave: true,
-  saveUninitialized: true,
   store: sessionStore,
-  name: 'aetherion_session', // Custom cookie name to avoid conflicts
+  secret: sessionSecret,
+  resave: false,           // Only save session if modified
+  saveUninitialized: false, // Don't create session for anon users
+  rolling: true,           // Reset expiration on each response
+  name: 'aetherion_session', // Custom cookie name
   cookie: {
-    secure: false, 
+    secure: false,         // No HTTPS in development
     httpOnly: true,
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days for longer persistence
-    sameSite: 'none', // Changed to 'none' to handle cross-site Replit environment
-    path: '/', // Explicitly set path to root
-    domain: undefined // Let browser determine domain automatically
+    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+    sameSite: 'lax',       // More compatible setting
+    path: '/'
   }
 }));
 
@@ -42,7 +49,7 @@ import cookieParser from 'cookie-parser';
 app.use(cookieParser());
 
 // Log session configuration
-console.log(`Session configured with store: ${sessionStore ? 'MemoryStore' : 'default'}, secure cookies: ${process.env.NODE_ENV === 'production'}`);
+console.log(`Session configured with store: PostgreSQL, secure cookies: ${process.env.NODE_ENV === 'production'}, max age: ${30 * 24} hours`);
 
 // Add user extraction middleware for all requests
 app.use((req: any, res, next) => {

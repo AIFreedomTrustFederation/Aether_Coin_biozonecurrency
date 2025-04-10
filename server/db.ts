@@ -2,6 +2,7 @@ import "dotenv/config";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import * as schema from "../shared/schema-proxy";
+import pg from 'pg';
 
 // Check for required environment variables
 if (!process.env.DATABASE_URL) {
@@ -26,6 +27,12 @@ export const db = drizzle(client, { schema });
 
 // Export the client for use in migrations and other utilities
 export const pgClient = client;
+
+// Create a pool for connect-pg-simple (session store)
+export const pool = new pg.Pool({ 
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false } // Required for many cloud PostgreSQL providers
+});
 
 // Log database connection status
 try {
