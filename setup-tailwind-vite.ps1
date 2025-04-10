@@ -62,19 +62,13 @@ if (Test-Path $cssFilePath) {
 Write-Host "Adding Vite scripts to package.json..."
 $packageJsonPath = "./package.json"
 if (Test-Path $packageJsonPath) {
-    $packageJson = Get-Content $packageJsonPath -Raw | ConvertFrom-Json
+    $packageJson = Get-Content $packageJsonPath -Raw | ConvertFrom-Json -ErrorAction Stop
     if (-not $packageJson.scripts) {
-        $packageJson.scripts = @{}
+        $packageJson | Add-Member -MemberType NoteProperty -Name scripts -Value @{}
     }
-    if (-not $packageJson.scripts["dev"]) {
-        $packageJson.scripts["dev"] = "vite"
-    }
-    if (-not $packageJson.scripts["build"]) {
-        $packageJson.scripts["build"] = "vite build"
-    }
-    if (-not $packageJson.scripts["serve"]) {
-        $packageJson.scripts["serve"] = "vite preview"
-    }
+    $packageJson.scripts.dev = "vite"
+    $packageJson.scripts.build = "vite build"
+    $packageJson.scripts.serve = "vite preview"
     $packageJson | ConvertTo-Json -Depth 10 -Compress | Set-Content $packageJsonPath -Encoding UTF8
     Write-Host "Added Vite scripts to package.json."
 } else {

@@ -38,29 +38,49 @@ import fractalCoinKeyRoutes from "./routes/fractalcoin-key-routes";
 import apiKeyRoutes from "./routes/api-key-routes";
 import llmApiRoutes from "./routes/llm-api-routes";
 import { openSourcePaymentService } from "./services/openSourcePayment";
+import { getMessagingService, initializeMessagingService } from "./services/aetherion-messaging";
 
 /**
- * Utility function to send notifications through available channels
+ * Utility function to send notifications through all available channels
  * This function will send notifications to a user through all enabled channels
- * (SMS via Twilio and/or Matrix) based on their preferences
+ * (Aetherion Messaging, SMS via Twilio as fallback, and/or Matrix as fallback)
+ * based on their preferences
  * 
  * @param userId User ID to send notification to
- * @param message Plain text message (required for both channels)
- * @param htmlMessage HTML formatted message (optional, for Matrix only)
+ * @param message Plain text message (required for all channels)
+ * @param htmlMessage HTML formatted message (optional, for rich content)
  * @returns Object with status of each notification channel
  */
 async function sendUserNotifications(
   userId: number,
   message: string,
   htmlMessage?: string
-): Promise<{sms: boolean, matrix: boolean}> {
+): Promise<{aetherion: boolean, sms: boolean, matrix: boolean}> {
   const results = {
+    aetherion: false,
     sms: false,
     matrix: false
   };
   
   try {
-    // Try SMS notification
+    // Try Aetherion Messaging notification (primary channel)
+    const messagingService = getMessagingService();
+    if (messagingService.isAvailable()) {
+      const notificationId = await messagingService.sendNotification(userId, message, htmlMessage);
+      results.aetherion = !!notificationId;
+      
+      // If Aetherion Messaging succeeded, we can return early
+      if (results.aetherion) {
+        return results;
+      }
+    }
+  } catch (error) {
+    console.error('Error sending Aetherion notification:', error);
+  }
+  
+  // Fallback to legacy notification services
+  try {
+    // Try SMS notification as fallback
     const smsSid = await twilioService.sendSmsNotification(userId, message);
     results.sms = !!smsSid;
   } catch (error) {
@@ -68,7 +88,7 @@ async function sendUserNotifications(
   }
   
   try {
-    // Try Matrix notification
+    // Try Matrix notification as fallback
     const eventId = await matrixCommunication.sendUserNotification(userId, message, htmlMessage);
     results.matrix = !!eventId;
   } catch (error) {
@@ -80,21 +100,44 @@ async function sendUserNotifications(
 
 /**
  * Utility for transaction notifications
- * Sends to both channels if available
+ * Prioritizes Aetherion Messaging but falls back to other channels if necessary
  */
 async function sendTransactionNotification(
   userId: number,
   transactionType: string,
   amount: string,
   tokenSymbol: string
-): Promise<{sms: boolean, matrix: boolean}> {
+): Promise<{aetherion: boolean, sms: boolean, matrix: boolean}> {
   const results = {
+    aetherion: false,
     sms: false,
     matrix: false
   };
   
   try {
-    // Try SMS notification
+    // Try Aetherion Messaging notification (primary channel)
+    const messagingService = getMessagingService();
+    if (messagingService.isAvailable()) {
+      const notificationId = await messagingService.sendTransactionNotification(
+        userId, 
+        transactionType, 
+        amount, 
+        tokenSymbol
+      );
+      results.aetherion = !!notificationId;
+      
+      // If Aetherion Messaging succeeded, we can return early
+      if (results.aetherion) {
+        return results;
+      }
+    }
+  } catch (error) {
+    console.error('Error sending Aetherion transaction notification:', error);
+  }
+  
+  // Fallback to legacy notification services
+  try {
+    // Try SMS notification as fallback
     const smsSid = await twilioService.sendTransactionNotification(userId, transactionType, amount, tokenSymbol);
     results.sms = !!smsSid;
   } catch (error) {
@@ -102,7 +145,7 @@ async function sendTransactionNotification(
   }
   
   try {
-    // Try Matrix notification
+    // Try Matrix notification as fallback
     const eventId = await matrixCommunication.sendTransactionNotification(userId, transactionType, amount, tokenSymbol);
     results.matrix = !!eventId;
   } catch (error) {
@@ -228,6 +271,77 @@ FractalCoin represents not just a technological innovation but a fundamental rei
   });
   
   // API routes
+  
+  // Aetherion Messaging test route
+  app.post("/api/messaging/test", async (req, res) => {
+    try {
+      const { userId, message, messageType } = req.body;
+      
+      if (!userId || typeof userId !== 'number') {
+        return res.status(400).json({ message: "User ID is required and must be a number" });
+      }
+      
+      if (!message || typeof message !== 'string') {
+        return res.status(400).json({ message: "Message is required and must be a string" });
+      }
+      
+      let notificationId;
+      let success = false;
+      
+      try {
+        const messagingService = getMessagingService();
+        
+        if (messageType === 'transaction') {
+          // Test transaction notification
+          notificationId = await messagingService.sendTransactionNotification(
+            userId,
+            'receive', // transaction type
+            '0.05', // amount
+            'ATC' // token symbol
+          );
+        } else if (messageType === 'security') {
+          // Test security notification
+          notificationId = await messagingService.sendSecurityNotification(
+            userId,
+            'login_attempt',
+            'Unusual login attempt detected from a new location'
+          );
+        } else {
+          // Default regular notification
+          notificationId = await messagingService.sendNotification(
+            userId,
+            message
+          );
+        }
+        
+        success = !!notificationId;
+      } catch (error) {
+        console.error("Error sending Aetherion message:", error);
+        return res.status(500).json({ 
+          message: "Failed to send message through Aetherion Messaging",
+          error: error instanceof Error ? error.message : String(error)
+        });
+      }
+      
+      if (success) {
+        return res.json({ 
+          success: true, 
+          notificationId,
+          message: "Message sent successfully via Aetherion Messaging"
+        });
+      } else {
+        return res.status(500).json({ 
+          message: "Failed to send message through Aetherion Messaging"
+        });
+      }
+    } catch (error) {
+      console.error("Error in messaging test route:", error);
+      res.status(500).json({ 
+        message: "Failed to test messaging",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
   
   // Get user wallets
   app.get("/api/wallets", async (req, res) => {
@@ -1576,5 +1690,14 @@ FractalCoin represents not just a technological innovation but a fundamental rei
   });
   
   const httpServer = createServer(app);
+  
+  // Initialize Aetherion Messaging Service with the HTTP server
+  try {
+    await initializeMessagingService(httpServer);
+    console.log('Aetherion Messaging Service initialized successfully');
+  } catch (error) {
+    console.error('Failed to initialize Aetherion Messaging Service:', error);
+  }
+  
   return httpServer;
 }
