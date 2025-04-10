@@ -164,38 +164,58 @@ export function createAuthRoutes() {
         return res.status(403).json({ message: 'Account is inactive. Please contact support.' });
       }
 
-      // Set up session with robust approach
+      // Set up session with quantum security enhancements
       const authReq = req as AuthRequest;
       
-      // Set all session properties
+      // Import quantum storage service for security enhancements
+      const { quantumStorageService } = await import('../services/quantum-storage-service');
+      
+      // Determine Temple Node access level based on user trust membership
+      const templeNodeLevel = quantumStorageService.getTempleNodeLevel(user);
+      console.log(`Temple Node access level for user ${user.id}: ${templeNodeLevel}`);
+      
+      // Validate with quantum security protocols
+      const isQuantumSecure = await quantumStorageService.validateUserAuthentication(user.id, authReq.session);
+      
+      // Set all session properties with quantum security flags
       authReq.session.userId = user.id;
       authReq.session.isAuthenticated = true;
+      authReq.session.isQuantumAuthenticated = isQuantumSecure;
       
-      // Also set session.user to ensure middleware compatibility
+      // Also set session.user to ensure middleware compatibility with quantum security properties
       authReq.session.user = {
         id: user.id,
         username: user.username,
         email: user.email || '',
-        name: user.name || undefined,
+        name: user.name || '',
         isTrustMember: !!user.isTrustMember,
-        role: user.role || undefined
+        role: user.role || undefined,
+        templeNodeLevel  // Add Temple Node access level
       };
       
       // Ensure admin status is properly set
-      if (user.role === 'admin') {
+      if (user.role === 'admin' || user.role === 'super_admin') {
         authReq.session.isAdmin = true;
       }
       
-      // Force session save to ensure it's persisted immediately
+      // Record sacred pattern for authentication event
+      await quantumStorageService.recordSacredPattern(user.id, 'login', {
+        timestamp: new Date(),
+        isQuantumSecure,
+        templeNodeLevel,
+        ipAddress: req.ip
+      });
+      
+      // Force session save to ensure it's persisted immediately with quantum state
       authReq.session.save(err => {
         if (err) {
           console.error('Session save error during login:', err);
         } else {
-          console.log(`Session successfully saved for user ${user.id} with session ID ${authReq.session.id}`);
+          console.log(`Quantum-secured session saved for user ${user.id} with session ID ${req.sessionID}`);
         }
       });
 
-      // Update last login time
+      // Update last login time with quantum timestamp
       await storage.updateUserLastLogin(user.id);
 
       // Send user data (excluding sensitive information)
@@ -255,27 +275,45 @@ export function createAuthRoutes() {
         return res.status(401).json({ message: 'User not found' });
       }
 
-      // Update session.user to maintain consistency across middleware
+      // Import quantum storage service for security enhancements
+      const { quantumStorageService } = await import('../services/quantum-storage-service');
+      
+      // Determine Temple Node access level based on user trust membership
+      const templeNodeLevel = quantumStorageService.getTempleNodeLevel(user);
+      
+      // Update session.user to maintain consistency across middleware with quantum security
       authReq.session.user = {
         id: user.id,
         username: user.username,
         email: user.email || '',
-        name: user.name || undefined,
+        name: user.name || '',
         isTrustMember: !!user.isTrustMember,
-        role: user.role || undefined
+        role: user.role || undefined,
+        templeNodeLevel // Add Temple Node access level
       };
       
-      // Ensure admin status is properly set
-      if (user.role === 'admin') {
+      // Ensure admin status is properly set with quantum validation
+      if (user.role === 'admin' || user.role === 'super_admin') {
         authReq.session.isAdmin = true;
+        authReq.session.isQuantumAuthenticated = true; // Auto-validate quantum security for admins
+      } else {
+        // Validate with quantum security protocols for non-admins
+        const isQuantumSecure = await quantumStorageService.validateUserAuthentication(user.id, authReq.session);
+        authReq.session.isQuantumAuthenticated = isQuantumSecure;
       }
       
-      // Force session save to ensure it's persisted immediately
+      // Record sacred pattern for current-user verification
+      await quantumStorageService.recordSacredPattern(user.id, 'session_verification', {
+        timestamp: new Date(),
+        sessionID: req.sessionID
+      });
+      
+      // Force session save to ensure it's persisted immediately with quantum state
       authReq.session.save(err => {
         if (err) {
           console.error('Session save error during current-user fetch:', err);
         } else {
-          console.log(`Session refreshed for user ${user.id}`);
+          console.log(`Quantum-secured session refreshed for user ${user.id}`);
         }
       });
       
@@ -357,8 +395,8 @@ export function createAuthRoutes() {
     });
   });
 
-  // Session test endpoint to verify persistence
-  router.get('/session-test', (req: AuthRequest, res: Response) => {
+  // Quantum-enhanced session test endpoint to verify persistence
+  router.get('/session-test', async (req: AuthRequest, res: Response) => {
     // If there's no session visit counter, initialize it
     if (!req.session.visitCount) {
       req.session.visitCount = 1;
@@ -372,21 +410,65 @@ export function createAuthRoutes() {
       req.session.firstVisit = new Date().toISOString();
     }
     
-    // Return session data to verify persistence
+    // Get quantum security status
+    let quantumSecurityInfo = { enabled: false };
+    let templeNodeLevel = null;
+    
+    // If user is authenticated, enhance response with quantum security data
+    if (req.session.isAuthenticated && req.session.userId) {
+      try {
+        // Import quantum storage service
+        const { quantumStorageService } = await import('../services/quantum-storage-service');
+        
+        // Get user details for quantum verification
+        const user = await storage.getUser(req.session.userId);
+        
+        if (user) {
+          // Get temple node access level
+          templeNodeLevel = quantumStorageService.getTempleNodeLevel(user);
+          
+          // Validate quantum security
+          const isQuantumSecure = await quantumStorageService.validateUserAuthentication(user.id, req.session);
+          
+          // Record test access in sacred patterns
+          await quantumStorageService.recordSacredPattern(user.id, 'session_test', {
+            timestamp: new Date(),
+            sessionID: req.sessionID,
+            visitCount: req.session.visitCount
+          });
+          
+          // Enhanced quantum security info
+          quantumSecurityInfo = {
+            enabled: true,
+            isAuthenticated: !!req.session.isQuantumAuthenticated,
+            templeNodeLevel,
+            goldenRatio: 1.618033988749895 // Sacred constant in fractal patterns
+          };
+        }
+      } catch (error) {
+        console.error('Error getting quantum security info:', error);
+      }
+    }
+    
+    // Return session data to verify persistence with quantum security
     return res.status(200).json({
       success: true,
-      message: 'Session test endpoint',
+      message: 'Quantum-secured session test endpoint',
       sessionData: {
         visitCount: req.session.visitCount,
         firstVisit: req.session.firstVisit,
         currentTimestamp: new Date().toISOString(),
         sessionID: req.sessionID,
+        isAuthenticated: !!req.session.isAuthenticated,
         // Include user info if authenticated
         user: req.session.user ? {
           id: req.session.user.id,
           username: req.session.user.username,
-          role: req.session.user.role
-        } : null
+          role: req.session.user.role,
+          templeNodeLevel: req.session.user.templeNodeLevel
+        } : null,
+        // Add quantum security information
+        quantumSecurity: quantumSecurityInfo
       }
     });
   });

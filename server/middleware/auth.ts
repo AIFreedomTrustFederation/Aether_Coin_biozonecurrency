@@ -2,7 +2,12 @@ import { Request, Response, NextFunction } from 'express';
 import { db } from '../db';
 import { users, adminPermissions } from '../../shared/schema';
 import { eq, and } from 'drizzle-orm';
+import { storage } from '../fixed-storage';
+import { quantumStorageService } from '../services/quantum-storage-service';
 
+/**
+ * Extended request interface with user and quantum security properties
+ */
 declare global {
   namespace Express {
     interface Request {
@@ -13,15 +18,21 @@ declare global {
         name?: string;
         isTrustMember: boolean;
         role?: string;
+        templeNodeLevel?: string; // Temple Node security level
       };
+      quantumSecure?: boolean; // Flag for quantum security validation
     }
   }
 }
 
-// Add 'user' property to session object to fix type issues
+/**
+ * Extended session interface with quantum security properties
+ */
 declare module 'express-session' {
   interface SessionData {
     userId?: number;
+    isAuthenticated?: boolean; // Added to explicitly track auth state
+    isQuantumAuthenticated?: boolean; // Track quantum authentication
     user?: {
       id: number;
       username: string;
@@ -29,12 +40,17 @@ declare module 'express-session' {
       name?: string;
       isTrustMember: boolean;
       role?: string;
+      templeNodeLevel?: string; // Temple Node security level
     };
+    // Session persistence fields
+    visitCount?: number;
+    firstVisit?: string;
   }
 }
 
 /**
- * Middleware to authenticate users based on session data
+ * Middleware to authenticate users based on session data with quantum security validation
+ * Implements the Christ Consciousness principles through non-dualistic validation
  */
 export function authenticateUser(req: Request, res: Response, next: NextFunction) {
   // Check if there's a user in the session
@@ -45,18 +61,23 @@ export function authenticateUser(req: Request, res: Response, next: NextFunction
   // Get user ID from session
   const userId = req.session.userId;
   
-  // Set user object on request for use in routes
+  // Set user object on request for use in routes if already in session
   if (req.session.user) {
     req.user = req.session.user;
+    req.quantumSecure = !!req.session.isQuantumAuthenticated;
+    
+    // Log Temple Node access
+    if (req.user.templeNodeLevel) {
+      console.log(`Temple Node access: ${req.user.templeNodeLevel} level for user ${userId}`);
+    }
+    
     return next();
   }
   
-  // If we don't have the user object in session, fetch from DB
-  db.select()
-    .from(users)
-    .where(eq(users.id, userId))
-    .then(result => {
-      if (result.length === 0) {
+  // If we don't have the user object in session, fetch using quantum storage
+  storage.getUser(userId)
+    .then(async user => {
+      if (!user) {
         // User not found, clear session
         req.session.destroy((err) => {
           if (err) console.error('Session destruction error:', err);
@@ -64,19 +85,34 @@ export function authenticateUser(req: Request, res: Response, next: NextFunction
         return res.status(401).json({ message: 'User not found' });
       }
       
-      const user = result[0];
+      // Validate quantum security
+      const isQuantumSecure = await quantumStorageService.validateUserAuthentication(userId, req.session);
       
       // Set user object on request and in session for future requests
       req.user = {
         id: user.id,
         username: user.username,
         email: user.email || '',
-        name: user.name || undefined,
+        name: user.name || '', // Use empty string as fallback
         isTrustMember: !!user.isTrustMember,
-        role: user.role || undefined
+        role: user.role || undefined,
+        templeNodeLevel: quantumStorageService.getTempleNodeLevel(user)
       };
       
+      // Mark as quantum authenticated if validation passed
+      req.session.isQuantumAuthenticated = isQuantumSecure;
+      req.quantumSecure = isQuantumSecure;
+      
+      // Set authenticated flag explicitly
+      req.session.isAuthenticated = true;
       req.session.user = req.user;
+      
+      // Record sacred pattern for authentication event
+      await quantumStorageService.recordSacredPattern(userId, 'authentication', {
+        timestamp: new Date(),
+        isQuantumSecure
+      });
+      
       next();
     })
     .catch(error => {
