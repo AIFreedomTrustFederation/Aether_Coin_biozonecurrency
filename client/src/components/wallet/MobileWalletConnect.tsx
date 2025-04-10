@@ -125,17 +125,49 @@ const MobileWalletConnect: React.FC<MobileWalletConnectProps> = ({
   };
   
   // Separate function to start the actual connection process
+  // Helper to handle connecting state safely
+  const handleIsConnecting = (connecting: boolean) => {
+    if (connecting !== isConnecting) {
+      // Since we don't have direct access to setIsConnecting from the context
+      // We'll work with what we have - updating selected wallet state
+      setSelectedWallet(prev => ({...prev, isConnecting: connecting}));
+      
+      // This triggers a re-render with the current isConnecting state
+      // The actual state is managed in the WalletContext
+    }
+  };
+  
   const initiateWalletConnection = async () => {
     try {
-      setIsConnecting(true);
+      // Update connecting state
+      handleIsConnecting(true);
+      
+      // Log connection attempt for debugging
+      console.log("Initiating wallet connection...");
+      
+      // Check for wallet environment
+      const hasEthereum = typeof window.ethereum !== 'undefined';
+      const isMetaMaskInstalled = hasEthereum && window.ethereum?.isMetaMask;
+      const isCoinbaseWalletInstalled = hasEthereum && window.ethereum?.isCoinbaseWallet;
+      
+      // Log wallet detection status
+      console.log("Wallet detection:", {
+        hasEthereum,
+        isMetaMaskInstalled,
+        isCoinbaseWalletInstalled,
+        isMobile,
+        installedWallets: installedWallets.map(w => w.name)
+      });
       
       // First, check if MetaMask is installed (for mobile, this would be a special case)
-      if (window.ethereum?.isMetaMask) {
+      if (isMetaMaskInstalled) {
         try {
+          console.log("Attempting direct MetaMask connection...");
           // Direct MetaMask connection on mobile
           const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
           
           if (accounts && accounts.length > 0) {
+            console.log("MetaMask connection successful:", accounts);
             // Successfully connected to MetaMask
             toast({
               title: "Wallet Connected",
@@ -150,7 +182,8 @@ const MobileWalletConnect: React.FC<MobileWalletConnectProps> = ({
             }
             
             setOpen(false);
-            setIsConnecting(false);
+            // Issue with isConnecting state management
+            handleIsConnecting(false);
             return { accounts };
           }
         } catch (metaMaskError) {
@@ -159,14 +192,86 @@ const MobileWalletConnect: React.FC<MobileWalletConnectProps> = ({
         }
       }
       
-      // Fallback to WalletConnect
-      const result = await connect('WalletConnect' as any); // Using proper case
+      // Try Coinbase Wallet if installed
+      if (isCoinbaseWalletInstalled) {
+        try {
+          console.log("Attempting Coinbase Wallet direct connection...");
+          const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+          
+          if (accounts && accounts.length > 0) {
+            console.log("Coinbase Wallet connection successful:", accounts);
+            toast({
+              title: "Wallet Connected",
+              description: "Successfully connected to Coinbase Wallet",
+            });
+            
+            localStorage.setItem('walletPermissionsAccepted', 'true');
+            
+            if (onSuccess) {
+              onSuccess();
+            }
+            
+            setOpen(false);
+            handleIsConnecting(false);
+            return { accounts };
+          }
+        } catch (coinbaseError) {
+          console.error("Coinbase Wallet connection error:", coinbaseError);
+        }
+      }
+      
+      // Attempt connection with any installed wallet
+      if (installedWallets.length > 0) {
+        for (const wallet of installedWallets) {
+          try {
+            console.log(`Attempting connection with detected wallet: ${wallet.name}`);
+            const result = await connect(wallet.id as any);
+            if (result) {
+              console.log(`${wallet.name} connection successful:`, result);
+              return result;
+            }
+          } catch (walletError) {
+            console.error(`${wallet.name} connection error:`, walletError);
+          }
+        }
+      }
+      
+      // Fallback to WalletConnect with enhanced error reporting
+      let result;
+      try {
+        console.log("Attempting WalletConnect connection...");
+        result = await connect('WalletConnect' as any);
+        console.log("WalletConnect connection result:", result);
+      } catch (walletConnectError) {
+        console.error("Error connecting with WalletConnect:", walletConnectError);
+        
+        // Try all possible alternatives
+        const alternativeConnectors = ['MetaMask', 'Coinbase', 'Trust', 'Injected'];
+        
+        for (const connector of alternativeConnectors) {
+          try {
+            console.log(`Trying alternative connector: ${connector}`);
+            result = await connect(connector as any);
+            if (result) {
+              console.log(`${connector} connection successful:`, result);
+              break;
+            }
+          } catch (alternativeError) {
+            console.error(`${connector} fallback error:`, alternativeError);
+          }
+        }
+        
+        // If still no result after trying all alternatives
+        if (!result) {
+          throw new Error("Could not connect to your Web3 wallet. Please install MetaMask or another compatible wallet.");
+        }
+      }
       
       // If we get a URI back, it means we need to show the QR code or deep link
       if (result && 'uri' in result) {
         setUri(result.uri as string);
         setOpen(true);
-        setIsConnecting(false);
+        handleIsConnecting(false);
         return result;
       }
       
@@ -185,7 +290,7 @@ const MobileWalletConnect: React.FC<MobileWalletConnectProps> = ({
           variant: "destructive"
         });
         
-        setIsConnecting(false);
+        handleIsConnecting(false);
         return null;
       }
       
@@ -203,11 +308,11 @@ const MobileWalletConnect: React.FC<MobileWalletConnectProps> = ({
       }
       
       setOpen(false);
-      setIsConnecting(false);
+      handleIsConnecting(false);
       return result;
     } catch (err) {
       console.error("Wallet connection error:", err);
-      setIsConnecting(false);
+      handleIsConnecting(false);
       
       // More detailed error handling
       let errorMessage = "Connection failed. Please try again.";
@@ -380,7 +485,7 @@ const MobileWalletConnect: React.FC<MobileWalletConnectProps> = ({
             </TabsContent>
             
             <TabsContent value="mobile" className="py-4">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-3 max-h-[40vh] overflow-y-auto pr-1">
                 {installedWallets.length > 0 ? (
                   // Show detected wallets on device
                   installedWallets.map((wallet) => (

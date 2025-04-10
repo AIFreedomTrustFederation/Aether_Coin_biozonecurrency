@@ -12,11 +12,16 @@
   }
 
   html, body, #root {
-    @apply h-full w-full font-sans antialiased bg-background text-foreground;
+    @apply h-full w-full font-sans antialiased bg-background text-foreground overflow-hidden;
   }
 
   body {
     @apply font-sans antialiased bg-background text-foreground;
+  }
+  
+  /* Ensure all scrollable areas have smooth scrolling */
+  * {
+    scroll-behavior: smooth;
   }
 
   :root {
@@ -56,6 +61,27 @@
 .no-scrollbar::-webkit-scrollbar, 
 .scrollbar-hide::-webkit-scrollbar {
   display: none; /* Chrome, Safari, and Opera */
+}
+
+/* Custom scrollbar styles */
+::-webkit-scrollbar {
+  width: 6px; /* width of the entire scrollbar */
+  height: 6px; /* height for horizontal scrollbar */
+}
+
+::-webkit-scrollbar-track {
+  background: transparent; /* color of the tracking area */
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--primary); /* color of the scroll thumb */
+  border-radius: 10px; /* roundness of the scroll thumb */
+  opacity: 0.5;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: hsl(var(--primary)); /* color when hovering */
 }
 
 /* Horizontal scrolling */

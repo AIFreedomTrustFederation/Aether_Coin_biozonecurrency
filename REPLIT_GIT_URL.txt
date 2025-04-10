@@ -1,0 +1,14 @@
+Your Replit Git URL for the GitHub repository secret is:
+
+https://2f154dc7-67c3-41ad-9ad8-ace4b00318a4@github.com/aifreedomtrust/workspace.git
+
+Instructions:
+1. Copy this entire URL
+2. Go to your GitHub repository (AIFreedomTrustFederation/Aether_Coin_biozonecurrency)
+3. Navigate to Settings > Secrets and variables > Actions
+4. Click "New repository secret"
+5. Name: REPLIT_GIT_URL
+6. Value: https://2f154dc7-67c3-41ad-9ad8-ace4b00318a4@github.com/aifreedomtrust/workspace.git
+7. Click "Add secret"
+
+This will allow the GitHub Action to synchronize with your Replit project.

@@ -10,27 +10,95 @@ import {
   RefreshCw, QrCode, Copy, Shield, BarChart3, Loader2
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
+import { TokenManagementService, TokenBalance } from '@/features/integration/services/TokenManagementService';
+import { useWallet } from '@/context/WalletContext';
+import { useMultiWallet } from '@/context/MultiWalletContext';
 
 // Lazy load the onboarding component for better performance
 // Use React.memo to prevent unnecessary re-renders
 const WalletOnboarding = React.memo(lazy(() => import('../components/WalletOnboarding')));
 
 /**
- * Wallet page component with all wallet management functionality
+ * Helper function to get appropriate background color for token symbol
+ */
+const getTokenColorClass = (symbol: string): string => {
+  switch (symbol) {
+    case 'ATC':
+      return 'bg-purple-500/20';
+    case 'SING':
+      return 'bg-primary/20';
+    case 'ICON':
+      return 'bg-teal-500/20';
+    case 'FTC':
+      return 'bg-amber-500/20';
+    default:
+      return 'bg-gray-500/20';
+  }
+};
+
+/**
+ * Helper function to get full token name
+ */
+const getTokenFullName = (symbol: string): string => {
+  switch (symbol) {
+    case 'ATC':
+      return 'AetherCoin';
+    case 'SING':
+      return 'Singularity Coin';
+    case 'ICON':
+      return 'IconToken';
+    case 'FTC':
+      return 'FractalCoin';
+    default:
+      return symbol;
+  }
+};
+
+/**
+ * Main wallet page component
  */
 const WalletPage = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [sendAmount, setSendAmount] = useState('');
   const [sendAddress, setSendAddress] = useState('');
-  const [showOnboarding, setShowOnboarding] = useState(false); // Start with false
+  const [selectedAsset, setSelectedAsset] = useState('');
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const [readyToShowOnboarding, setReadyToShowOnboarding] = useState(false);
   const [isPending, setIsPending] = useState(false);
+  const [tokenService] = useState(() => new TokenManagementService());
+  const { wallet } = useWallet();
+  const { primaryWallet, wallets } = useMultiWallet();
   
-  // Simulate loading wallet data
+  // Use the primary wallet from MultiWalletContext if available, otherwise use the single wallet
+  const activeWallet = primaryWallet || wallet;
+  
+  // Fetch token balances
+  const { data: tokenBalances, isLoading: isLoadingTokens, refetch: refetchTokens } = useQuery({
+    queryKey: ['tokenBalances', activeWallet?.address],
+    queryFn: async () => {
+      if (!activeWallet?.address) return [];
+      return tokenService.getTokenBalances(activeWallet.address);
+    },
+    enabled: !!activeWallet?.address
+  });
+  
+  // Calculate total portfolio value
+  const totalPortfolioValue = tokenBalances?.reduce((total, token) => {
+    return total + parseFloat(token.usdValue);
+  }, 0) || 0;
+  
+  // Fetch wallet data (other info)
   const { data: walletData, isLoading: isLoadingWallet } = useQuery({
     queryKey: ['/api/wallet/current'],
     // queryFn is handled by the default fetcher
   });
+  
+  // Set the selected asset when tokens are loaded
+  useEffect(() => {
+    if (tokenBalances?.length && !selectedAsset) {
+      setSelectedAsset(tokenBalances[0].symbol);
+    }
+  }, [tokenBalances, selectedAsset]);
   
   // Defer loading of onboarding component until after initial render
   useEffect(() => {
@@ -70,15 +138,16 @@ const WalletPage = () => {
   
   const handleSend = useCallback(() => {
     // Send transaction logic would go here
-    console.log(`Sending ${sendAmount} to ${sendAddress}`);
+    console.log(`Sending ${sendAmount} ${selectedAsset} to ${sendAddress}`);
     // Reset form
     setSendAmount('');
     setSendAddress('');
-  }, [sendAmount, sendAddress]);
+  }, [sendAmount, sendAddress, selectedAsset]);
   
   const handleRefresh = useCallback(() => {
-    // Refresh wallet data logic would go here
-  }, []);
+    // Refresh wallet and token data
+    refetchTokens();
+  }, [refetchTokens]);
   
   const handleOnboardingComplete = useCallback(() => {
     // Set a pending state first
@@ -132,7 +201,7 @@ const WalletPage = () => {
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">Quantum Wallet</h1>
           <Button onClick={handleRefresh} variant="outline" size="icon">
-            <RefreshCw className="h-4 w-4" />
+            <RefreshCw className={`h-4 w-4 ${isLoadingTokens ? 'animate-spin' : ''}`} />
           </Button>
         </div>
         
@@ -152,9 +221,17 @@ const WalletPage = () => {
           </TabsList>
           
           <TabsContent value="overview" className="space-y-4">
-            <WalletOverview isLoading={isLoadingWallet} data={walletData} />
+            <WalletOverview 
+              isLoading={isLoadingWallet || isLoadingTokens} 
+              totalValue={totalPortfolioValue} 
+              address={activeWallet?.address}
+              onRefresh={handleRefresh}
+            />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <AssetsList isLoading={isLoadingWallet} data={walletData} />
+              <AssetsList 
+                isLoading={isLoadingTokens} 
+                tokens={tokenBalances || []} 
+              />
               <TransactionHistory />
             </div>
           </TabsContent>
@@ -177,10 +254,19 @@ const WalletPage = () => {
                     <select 
                       id="asset" 
                       className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                      disabled={isLoadingTokens || !tokenBalances?.length}
+                      value={selectedAsset}
+                      onChange={(e) => setSelectedAsset(e.target.value)}
                     >
-                      <option value="SING">Singularity Coin (SING)</option>
-                      <option value="BTC">Bitcoin (BTC)</option>
-                      <option value="ETH">Ethereum (ETH)</option>
+                      {tokenBalances?.length ? (
+                        tokenBalances.map((token) => (
+                          <option key={token.symbol} value={token.symbol}>
+                            {`${getTokenFullName(token.symbol)} (${token.symbol}) - ${parseFloat(token.balance).toLocaleString()}`}
+                          </option>
+                        ))
+                      ) : (
+                        <option value="">No assets available</option>
+                      )}
                     </select>
                   </div>
                 </div>
@@ -196,7 +282,7 @@ const WalletPage = () => {
                       onChange={e => setSendAmount(e.target.value)}
                     />
                     <div className="absolute inset-y-0 right-0 flex items-center pr-3 text-sm text-muted-foreground">
-                      SING
+                      {selectedAsset || 'SING'}
                     </div>
                   </div>
                 </div>
@@ -234,7 +320,7 @@ const WalletPage = () => {
                 >
                   Cancel
                 </Button>
-                <Button onClick={handleSend} disabled={!sendAmount || !sendAddress}>
+                <Button onClick={handleSend} disabled={!sendAmount || !sendAddress || !selectedAsset}>
                   Send Transaction
                 </Button>
               </CardFooter>
@@ -253,34 +339,56 @@ const WalletPage = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="bg-muted rounded-md flex items-center justify-center p-6" style={{ height: '200px' }}>
-                  <QrCode className="h-24 w-24 text-primary" />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label>Your Wallet Address</Label>
-                  <div className="flex">
-                    <div className="flex-grow bg-muted rounded-l-md p-2 text-sm font-mono overflow-x-auto whitespace-nowrap">
-                      0xaF3d1c94255B0a4BcB9fEE891C8a940398cc4DDe
-                    </div>
-                    <Button variant="secondary" size="sm" className="rounded-l-none" onClick={handleCopyAddress}>
-                      <Copy className="h-4 w-4" />
-                    </Button>
+                {!activeWallet?.address ? (
+                  <div className="flex flex-col items-center justify-center py-8 text-center">
+                    <Wallet className="h-10 w-10 text-muted-foreground mb-3" />
+                    <p className="font-medium">No wallet connected</p>
+                    <p className="text-sm text-muted-foreground mt-1 max-w-xs">
+                      Connect a wallet first to see your receiving address
+                    </p>
                   </div>
-                </div>
-                
-                <div className="bg-muted rounded-md p-3 space-y-2 text-sm">
-                  <div className="flex items-start space-x-2">
-                    <Shield className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-medium">Post-Quantum Protection</p>
-                      <p className="text-muted-foreground">
-                        Your wallet address implements quantum-resistant cryptography to ensure 
-                        long-term security against future attacks
-                      </p>
+                ) : (
+                  <>
+                    <div className="bg-muted rounded-md flex items-center justify-center p-6" style={{ height: '200px' }}>
+                      <QrCode className="h-24 w-24 text-primary" />
                     </div>
-                  </div>
-                </div>
+                    
+                    <div className="space-y-2">
+                      <Label>Your Wallet Address</Label>
+                      <div className="flex">
+                        <div className="flex-grow bg-muted rounded-l-md p-2 text-sm font-mono overflow-x-auto whitespace-nowrap">
+                          {activeWallet?.address}
+                        </div>
+                        <Button 
+                          variant="secondary" 
+                          size="sm" 
+                          className="rounded-l-none" 
+                          onClick={() => {
+                            if (activeWallet?.address) {
+                              navigator.clipboard.writeText(activeWallet.address);
+                              handleCopyAddress();
+                            }
+                          }}
+                        >
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-muted rounded-md p-3 space-y-2 text-sm">
+                      <div className="flex items-start space-x-2">
+                        <Shield className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                        <div>
+                          <p className="font-medium">Post-Quantum Protection</p>
+                          <p className="text-muted-foreground">
+                            Your wallet address implements quantum-resistant cryptography to ensure 
+                            long-term security against future attacks
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -291,16 +399,30 @@ const WalletPage = () => {
 };
 
 // Wallet overview component
-const WalletOverview = ({ isLoading, data }: any) => (
+interface WalletOverviewProps {
+  isLoading: boolean;
+  totalValue: number;
+  address?: string;
+  onRefresh?: () => void;
+}
+
+const WalletOverview = ({ isLoading, totalValue, address, onRefresh }: WalletOverviewProps) => (
   <Card>
     <CardHeader className="pb-2">
-      <CardTitle className="flex items-center">
-        <Wallet className="mr-2 h-5 w-5" />
-        Singularity Wallet
-      </CardTitle>
-      <CardDescription>
-        Quantum-secure multi-asset wallet
-      </CardDescription>
+      <div className="flex justify-between items-center">
+        <div>
+          <CardTitle className="flex items-center">
+            <Wallet className="mr-2 h-5 w-5" />
+            Quantum Wallet
+          </CardTitle>
+          <CardDescription>
+            {address ? `Connected: ${address.substring(0, 6)}...${address.substring(address.length - 4)}` : 'Wallet not connected'}
+          </CardDescription>
+        </div>
+        <Button variant="outline" size="sm" onClick={onRefresh} disabled={isLoading}>
+          <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+        </Button>
+      </div>
     </CardHeader>
     <CardContent>
       {isLoading ? (
@@ -310,7 +432,7 @@ const WalletOverview = ({ isLoading, data }: any) => (
       ) : (
         <>
           <div className="space-y-1">
-            <div className="text-4xl font-bold">$15,557.00</div>
+            <div className="text-4xl font-bold">${totalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
             <div className="text-sm text-muted-foreground flex items-center">
               <span className="text-green-500 mr-1">↑ 3.2%</span> 
               <span>in the last 24 hours</span>
@@ -334,76 +456,67 @@ const WalletOverview = ({ isLoading, data }: any) => (
 );
 
 // Assets list component
-const AssetsList = ({ isLoading, data }: any) => (
-  <Card>
-    <CardHeader>
-      <CardTitle className="flex items-center">
-        <BarChart3 className="mr-2 h-5 w-5" />
-        Your Assets
-      </CardTitle>
-      <CardDescription>
-        All cryptocurrencies in your wallet
-      </CardDescription>
-    </CardHeader>
-    <CardContent>
-      {isLoading ? (
-        <div className="flex items-center justify-center h-40">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      ) : (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between p-3 bg-background rounded-md">
-            <div className="flex items-center">
-              <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center mr-3">
-                <span className="text-xs font-bold">SING</span>
-              </div>
-              <div>
-                <div className="font-medium">Singularity Coin</div>
-                <div className="text-xs text-muted-foreground">SING</div>
-              </div>
-            </div>
-            <div className="text-right">
-              <div className="font-medium">1,000.00 SING</div>
-              <div className="text-xs text-muted-foreground">$8,200.00</div>
-            </div>
+interface AssetsListProps {
+  isLoading: boolean;
+  tokens: TokenBalance[];
+}
+
+const AssetsList = ({ isLoading, tokens }: AssetsListProps) => {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center">
+          <BarChart3 className="mr-2 h-5 w-5" />
+          Your Assets
+        </CardTitle>
+        <CardDescription>
+          All cryptocurrencies in your wallet
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <div className="flex items-center justify-center h-40">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
-          
-          <div className="flex items-center justify-between p-3 bg-background rounded-md">
-            <div className="flex items-center">
-              <div className="w-8 h-8 bg-amber-500/20 rounded-full flex items-center justify-center mr-3">
-                <span className="text-xs font-bold">BTC</span>
-              </div>
-              <div>
-                <div className="font-medium">Bitcoin</div>
-                <div className="text-xs text-muted-foreground">BTC</div>
-              </div>
-            </div>
-            <div className="text-right">
-              <div className="font-medium">0.35000000 BTC</div>
-              <div className="text-xs text-muted-foreground">$12,250.00</div>
-            </div>
+        ) : tokens.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-40 text-center">
+            <Wallet className="h-8 w-8 text-muted-foreground mb-2" />
+            <p className="text-muted-foreground">No assets found in this wallet</p>
+            <p className="text-xs text-muted-foreground mt-1">Connect a wallet or add assets to see them here</p>
           </div>
-          
-          <div className="flex items-center justify-between p-3 bg-background rounded-md">
-            <div className="flex items-center">
-              <div className="w-8 h-8 bg-blue-500/20 rounded-full flex items-center justify-center mr-3">
-                <span className="text-xs font-bold">ETH</span>
+        ) : (
+          <div className="space-y-4">
+            {tokens.map((token) => (
+              <div 
+                key={token.symbol}
+                className="flex items-center justify-between p-3 bg-background rounded-md hover:bg-muted/50 transition-colors"
+              >
+                <div className="flex items-center">
+                  <div className={`w-8 h-8 ${getTokenColorClass(token.symbol)} rounded-full flex items-center justify-center mr-3`}>
+                    <span className="text-xs font-bold">{token.symbol}</span>
+                  </div>
+                  <div>
+                    <div className="font-medium">{getTokenFullName(token.symbol)}</div>
+                    <div className="text-xs text-muted-foreground">{token.symbol}</div>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="font-medium">{parseFloat(token.balance).toLocaleString()} {token.symbol}</div>
+                  <div className="text-xs text-muted-foreground">${token.usdValue}</div>
+                  {token.pendingRewards && (
+                    <div className="text-xs text-green-500 mt-1">
+                      +{token.pendingRewards} {token.symbol} pending
+                    </div>
+                  )}
+                </div>
               </div>
-              <div>
-                <div className="font-medium">Ethereum</div>
-                <div className="text-xs text-muted-foreground">ETH</div>
-              </div>
-            </div>
-            <div className="text-right">
-              <div className="font-medium">1.50000000 ETH</div>
-              <div className="text-xs text-muted-foreground">$3,307.00</div>
-            </div>
+            ))}
           </div>
-        </div>
-      )}
-    </CardContent>
-  </Card>
-);
+        )}
+      </CardContent>
+    </Card>
+  );
+};
 
 // Transaction history component
 const TransactionHistory = () => (

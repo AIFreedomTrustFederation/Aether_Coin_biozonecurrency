@@ -1,0 +1,13 @@
+{
+  "name": "aetherion-scripts",
+  "version": "1.0.0",
+  "description": "GitHub synchronization and utility scripts for Aetherion project",
+  "type": "module",
+  "scripts": {
+    "trigger-sync": "node trigger-github-sync.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.0.3",
+    "node-fetch": "^3.3.1"
+  }
+}

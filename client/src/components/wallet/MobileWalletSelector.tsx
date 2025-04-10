@@ -178,7 +178,7 @@ const MobileWalletSelector: React.FC<MobileWalletSelectorProps> = ({
                     <Check className="h-4 w-4 mr-1 text-green-500" />
                     Installed Wallets
                   </h3>
-                  <div className="grid gap-2">
+                  <div className="grid gap-2 max-h-[40vh] overflow-y-auto pr-1">
                     {installedWallets.map((wallet) => (
                       <WalletButton
                         key={wallet.id}
@@ -198,7 +198,7 @@ const MobileWalletSelector: React.FC<MobileWalletSelectorProps> = ({
                     <Download className="h-4 w-4 mr-1" />
                     Available Wallets
                   </h3>
-                  <div className="grid gap-2">
+                  <div className="grid gap-2 max-h-[40vh] overflow-y-auto pr-1">
                     {uninstalledWallets.map((wallet) => (
                       <WalletButton
                         key={wallet.id}

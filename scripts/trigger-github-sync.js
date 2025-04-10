@@ -8,12 +8,14 @@
  * - Set your GitHub username and repository name below
  */
 
-require('dotenv').config();
-const fetch = require('node-fetch');
+import dotenv from 'dotenv';
+import fetch from 'node-fetch';
+
+dotenv.config();
 
 // Configuration - EDIT THESE VALUES
-const GITHUB_USERNAME = 'your-github-username'; // Replace with your GitHub username
-const REPO_NAME = 'aetherion'; // Replace with your repository name
+const GITHUB_USERNAME = 'AIFreedomTrustFederation'; // Updated with your GitHub username
+const REPO_NAME = 'Aether_Coin_biozonecurrency'; // Updated with your repository name
 const WORKFLOW_ID = 'auto-sync.yml'; // The filename of the workflow
 
 // Get token from environment

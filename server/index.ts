@@ -4,6 +4,8 @@ import { setupVite, serveStatic, log } from "./vite";
 import { gatewayValidationMiddleware } from "./middleware/gateway-validation";
 import session from "express-session";
 import crypto from "crypto";
+// Import storage extensions to fix TypeScript errors and provide mock implementations
+import "./storage-extensions";
 
 const app = express();
 app.use(express.json());

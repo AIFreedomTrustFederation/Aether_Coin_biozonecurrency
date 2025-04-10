@@ -160,12 +160,42 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const connect = async (walletType: WalletType) => {
     setIsConnecting(true);
     try {
+      console.log(`Attempting to connect wallet type: ${walletType}`);
       const response = await connectWallet(walletType);
       
-      if (response.provider && response.accounts.length > 0) {
+      // Special case for WalletConnect with URI for QR code on mobile
+      if (walletType === 'WalletConnect' && response.walletProvider?.isWalletConnect && response.walletProvider?.uri) {
+        console.log('WalletConnect session initiated with URI');
+        
+        // Create special mobile wallet response for QR display
+        const mobileWalletInfo: WalletInfo = {
+          status: 'connected',
+          address: 'Connecting via WalletConnect...',
+          balance: '0',  
+          chainId: 1,
+          nativeToken: 'ETH',
+          provider: response.walletProvider
+        };
+        
+        // Use this for UI display while QR code is being scanned
+        setWallet(mobileWalletInfo);
+        
+        // Save connected wallet type to local storage
+        localStorage.setItem('connectedWallet', JSON.stringify({ 
+          type: walletType,
+          pendingConnection: true,
+          uri: response.walletProvider.uri
+        }));
+        
+        return mobileWalletInfo;
+      }
+      
+      // Standard wallet connection flow
+      if (response.provider && response.accounts && response.accounts.length > 0) {
         let walletInfo: WalletInfo;
         
         try {
+          console.log('Provider and accounts found, getting wallet details');
           // Use BrowserProvider from ethers v6
           // Convert the connection response to our WalletInfo format
           const provider = response.provider;
@@ -196,12 +226,37 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           };
         }
         
+        console.log('Wallet connected successfully:', walletInfo);
         setWallet(walletInfo);
         // Save connected wallet type to local storage
         localStorage.setItem('connectedWallet', JSON.stringify({ type: walletType }));
         return walletInfo;
       } else {
         console.error('Failed to connect wallet:', response);
+        
+        // For providers without account info (may need QR code scanning)
+        if (response.provider && (!response.accounts || response.accounts.length === 0)) {
+          console.log('Provider found but no accounts - may need manual connection steps');
+          
+          // Return a special "pending" status
+          const pendingWalletInfo: WalletInfo = {
+            status: 'connected',
+            address: 'Wallet Pending Connection',
+            balance: '0',
+            chainId: 1,
+            nativeToken: 'ETH',
+            provider: response.walletProvider
+          };
+          
+          setWallet(pendingWalletInfo);
+          localStorage.setItem('connectedWallet', JSON.stringify({ 
+            type: walletType,
+            pendingConnection: true
+          }));
+          
+          return pendingWalletInfo;
+        }
+        
         const result: WalletConnectError = {
           status: 'error',
           error: 'Failed to connect wallet'

@@ -22,9 +22,11 @@ interface AuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   isTrustMember: boolean;
+  isAdmin: boolean;
   login: (username: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
   checkAuthStatus: () => Promise<boolean>;
+  checkAdminStatus: () => Promise<boolean>;
 }
 
 // Create context with default values
@@ -33,9 +35,11 @@ const AuthContext = createContext<AuthContextType>({
   isLoading: true,
   isAuthenticated: false,
   isTrustMember: false,
+  isAdmin: false,
   login: async () => false,
   logout: async () => {},
   checkAuthStatus: async () => false,
+  checkAdminStatus: async () => false,
 });
 
 // Hook to use the auth context
@@ -175,6 +179,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  // Check if the user has admin privileges
+  const checkAdminStatus = async (): Promise<boolean> => {
+    try {
+      if (!isAuthenticated) {
+        return false;
+      }
+      
+      const headers = {
+        'X-API-Gateway-Validated': 'true',
+        'X-Quantum-Validation-Timestamp': Date.now().toString()
+      };
+      
+      const response = await fetch('/api/auth/check-admin', {
+        headers,
+        credentials: 'include',
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        return data.isAdmin || false;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('Error checking admin status:', error);
+      return false;
+    }
+  };
+
   // Check auth status on initial load
   useEffect(() => {
     checkAuthStatus();
@@ -182,15 +215,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const isAuthenticated = !!user;
   const isTrustMember = isAuthenticated && user?.isTrustMember;
+  
+  // State for admin status
+  const [isAdmin, setIsAdmin] = useState(false);
+  
+  // Check admin status when user changes
+  useEffect(() => {
+    const checkAdmin = async () => {
+      if (isAuthenticated && isTrustMember) {
+        const isAdminUser = await checkAdminStatus();
+        setIsAdmin(isAdminUser);
+      } else {
+        setIsAdmin(false);
+      }
+    };
+    
+    checkAdmin();
+  }, [isAuthenticated, isTrustMember]);
 
   const contextValue: AuthContextType = {
     user,
     isLoading,
     isAuthenticated,
     isTrustMember,
+    isAdmin,
     login,
     logout,
     checkAuthStatus,
+    checkAdminStatus,
   };
 
   return (

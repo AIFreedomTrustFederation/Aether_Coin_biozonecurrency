@@ -8,6 +8,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { LiveModeProvider } from "./contexts/LiveModeContext";
 import { LiveModeIndicator } from "@/components/ui/LiveModeIndicator";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import { MultiWalletProvider } from "./context/MultiWalletContext";
 import ResourceHints from "./components/ResourceHints";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
@@ -52,6 +53,7 @@ const BlockchainVisualizerPage = lazy(() => import("./pages/BlockchainVisualizer
 const BlockchainDashboardPage = lazy(() => import("./pages/BlockchainDashboardPage"));
 const BlockchainExplorer = lazy(() => import("./pages/BlockchainExplorer"));
 const WalletPage = lazy(() => import("./pages/WalletPage"));
+const MultiWalletDashboardPage = lazy(() => import("./pages/MultiWalletDashboardPage"));
 const MysterionAIPage = lazy(() => import("./pages/MysterionAIPage"));
 const AIAssistantOnboarding = lazy(() => import("./pages/AIAssistantOnboarding"));
 const OnboardingPage = lazy(() => import("./pages/Onboarding"));
@@ -92,6 +94,7 @@ const QuantumSecurityPage = lazy(() => import("./pages/QuantumSecurityPage"));
 const navigationItems = [
   { name: "Dashboard", path: "/dashboard", icon: <Layout className="h-5 w-5" /> },
   { name: "Wallet", path: "/wallet", icon: <Wallet className="h-5 w-5" /> },
+  { name: "Multi-Wallet", path: "/multi-wallet-dashboard", icon: <Wallet className="h-5 w-5" /> },
   { name: "Payment", path: "/payment", icon: <CreditCard className="h-5 w-5" /> },
   { name: "Quantum Payment", path: "/quantum-secure-payment", icon: <Shield className="h-5 w-5" /> },
   { name: "Transactions", path: "/transactions", icon: <BarChart3 className="h-5 w-5" /> },
@@ -463,16 +466,37 @@ function App() {
     // Clean up
     return () => window.removeEventListener('resize', checkIfMobile);
   }, []);
+  
+  // Add scroll restoration effect - fixes issue with page jumping to bottom on load
+  useEffect(() => {
+    // When location changes, scroll to top
+    window.scrollTo(0, 0);
+    
+    // Also reset any chat containers or main content elements that might be scrolled
+    const mainContent = document.querySelector('main');
+    if (mainContent) {
+      mainContent.scrollTop = 0;
+    }
+    
+    // Reset chat containers if they exist
+    const chatContainers = document.querySelectorAll('.chat-container, .message-container, .conversation-container');
+    chatContainers.forEach(container => {
+      if (container) {
+        (container as HTMLElement).scrollTop = 0;
+      }
+    });
+  }, [location]);
 
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <LiveModeProvider>
-          <ThemeProvider>
-            {/* Temporarily removed HelmetProvider to fix build error */}
-            {/* <HelmetProvider> */}
-              {/* Add resource hints for faster page loading */}
-              <ResourceHints />
+          <MultiWalletProvider>
+            <ThemeProvider>
+              {/* Temporarily removed HelmetProvider to fix build error */}
+              {/* <HelmetProvider> */}
+                {/* Add resource hints for faster page loading */}
+                <ResourceHints />
           <div className={`app-container w-full h-full ${isMobile ? 'pb-16' : ''}`}>
         {/* Top Navigation Bar */}
         <header className="flex justify-between items-center p-2 sm:p-4 bg-background border-b fixed top-0 left-0 right-0 z-30">
@@ -496,6 +520,14 @@ function App() {
             <div className="ml-4">
               <LiveModeIndicator variant="button" showToggle={true} />
             </div>
+          </div>
+          
+          {/* Wallet Connect Button */}
+          <div className="flex items-center mr-4">
+            {/* Import and use the MultiWalletManager */}
+            <Suspense fallback={<Button variant="outline" size="sm">Connect Wallet</Button>}>
+              {React.createElement(lazy(() => import("@/components/wallet/MultiWalletManager")))}
+            </Suspense>
           </div>
           
           {/* Desktop Navigation */}
@@ -525,7 +557,7 @@ function App() {
         />
         
         {/* Main Content */}
-        <main className="pt-[60px] min-h-[calc(100%-60px)] overflow-auto">
+        <main className="pt-[60px] h-[calc(100%-60px)] overflow-y-auto overscroll-contain">
           <Switch>
             {/* Landing page loads directly (not lazy-loaded) for fast initial display */}
             <Route path="/" component={LandingPage} />
@@ -539,6 +571,11 @@ function App() {
             <Route path="/wallet">
               <Suspense fallback={<LoadingScreen message="Loading wallet..." />}>
                 <WalletPage />
+              </Suspense>
+            </Route>
+            <Route path="/multi-wallet-dashboard">
+              <Suspense fallback={<LoadingScreen message="Loading multi-wallet dashboard..." />}>
+                <MultiWalletDashboardPage />
               </Suspense>
             </Route>
             <Route path="/fractal-explorer">
@@ -765,6 +802,7 @@ function App() {
       </div>
           {/* </HelmetProvider> */}
           </ThemeProvider>
+          </MultiWalletProvider>
         </LiveModeProvider>
       </AuthProvider>
     </QueryClientProvider>
