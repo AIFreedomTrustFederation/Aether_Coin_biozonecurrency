@@ -4,25 +4,38 @@ import { setupVite, serveStatic, log } from "./vite";
 import { gatewayValidationMiddleware } from "./middleware/gateway-validation";
 import session from "express-session";
 import crypto from "crypto";
+import MemoryStore from "memorystore";
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Generate a random secret for session
-const sessionSecret = process.env.SESSION_SECRET || crypto.randomBytes(64).toString('hex');
+// Use a fixed session secret or one from environment for consistency
+// Using a static secret for development to ensure session persistence 
+const sessionSecret = process.env.SESSION_SECRET || 'aetherion-quantum-fractal-session-secret';
 
-// Set up session middleware
+// Create memory store with periodic cleanup
+const MemoryStoreSession = MemoryStore(session);
+const sessionStore = new MemoryStoreSession({
+  checkPeriod: 86400000 // prune expired entries every 24h
+});
+
+// Set up session middleware with improved config for development
 app.use(session({
   secret: sessionSecret,
-  resave: false,
-  saveUninitialized: false,
+  resave: true, // Changed to true to ensure session is saved
+  saveUninitialized: true, // Changed to true to create session for all requests
+  store: sessionStore, // Use memory store to avoid session loss between requests
   cookie: {
-    secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
+    secure: false, // Changed to false for development - set to true only in HTTPS production
     httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    sameSite: 'lax' // Explicitly setting sameSite to help with Replit environment
   }
 }));
+
+// Log session configuration
+console.log(`Session configured with store: ${sessionStore ? 'MemoryStore' : 'default'}, secure cookies: ${process.env.NODE_ENV === 'production'}`);
 
 // Allow direct access to health check endpoint
 app.get('/health', (req, res) => {

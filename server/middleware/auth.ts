@@ -146,16 +146,24 @@ export function hasAdminPermission(permissionName: string) {
  * This is a simple wrapper around authenticateUser that can be used in routes
  */
 export function requireAuth(req: Request, res: Response, next: NextFunction) {
+  // Debug log session state
+  console.log('Auth check - Session:', req.session ? 
+    `exists, userId: ${req.session.userId}, authenticated: ${req.session.isAuthenticated}` : 
+    'missing');
+  
   // Check if there's a user in the session
   if (!req.session || !req.session.userId) {
+    console.log('Auth failed - No session or userId');
     return res.status(401).json({ message: 'Authentication required' });
   }
   
   // If user is already set on request, proceed
   if (req.user) {
+    console.log(`Auth success - User ${req.user.id} already set on request`);
     return next();
   }
   
+  console.log(`Auth in progress - User ${req.session.userId} needs full authentication`);
   // Otherwise, authenticate the user
   authenticateUser(req, res, next);
 }

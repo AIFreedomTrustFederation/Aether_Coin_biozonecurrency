@@ -158,8 +158,10 @@ export function createAuthRoutes() {
         return res.status(403).json({ message: 'Account is inactive. Please contact support.' });
       }
 
-      // Set up session
+      // Set up session with robust approach
       const authReq = req as AuthRequest;
+      
+      // Set all session properties
       authReq.session.userId = user.id;
       authReq.session.isAuthenticated = true;
       
@@ -172,6 +174,20 @@ export function createAuthRoutes() {
         isTrustMember: !!user.isTrustMember,
         role: user.role || undefined
       };
+      
+      // Ensure admin status is properly set
+      if (user.role === 'admin') {
+        authReq.session.isAdmin = true;
+      }
+      
+      // Force session save to ensure it's persisted immediately
+      authReq.session.save(err => {
+        if (err) {
+          console.error('Session save error during login:', err);
+        } else {
+          console.log(`Session successfully saved for user ${user.id} with session ID ${authReq.session.id}`);
+        }
+      });
 
       // Update last login time
       await storage.updateUserLastLogin(user.id);
@@ -242,6 +258,20 @@ export function createAuthRoutes() {
         isTrustMember: !!user.isTrustMember,
         role: user.role || undefined
       };
+      
+      // Ensure admin status is properly set
+      if (user.role === 'admin') {
+        authReq.session.isAdmin = true;
+      }
+      
+      // Force session save to ensure it's persisted immediately
+      authReq.session.save(err => {
+        if (err) {
+          console.error('Session save error during current-user fetch:', err);
+        } else {
+          console.log(`Session refreshed for user ${user.id}`);
+        }
+      });
       
       // Return user data without sensitive information
       const safeUser = {
