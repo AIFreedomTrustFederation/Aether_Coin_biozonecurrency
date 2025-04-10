@@ -337,11 +337,48 @@ For troubleshooting GitHub sync issues, see [GITHUB-SYNC-TROUBLESHOOTING.md](./G
 
 The repository includes GitHub Actions workflows for automating deployments:
 
+#### Deployment to atc.aifreedomtrust.com/dapp
+
+We've configured automated GitHub Actions deployment to the AI Freedom Trust domain:
+
+1. Automatic deployment to `atc.aifreedomtrust.com/dapp` when pushing to the `main` branch
+2. Manual deployment through the GitHub Actions interface
+3. Automated health checks and rollback on failure
+4. Complete backup and restore system
+
+To set up the deployment:
+
+```bash
+# Run the setup script which configures everything
+./setup-github-actions.sh
+```
+
+This script will:
+- Create the necessary GitHub Secrets for deployment
+- Configure SSH access to the deployment server
+- Set up the workflow file for continuous deployment
+
+To verify deployment status:
+
+```bash
+# Check deployment status
+node check-deploy-status.js
+
+# Verify the deployed application
+node verify-deployment.js
+```
+
+For detailed instructions, see [GITHUB-ACTIONS-DEPLOYMENT-GUIDE.md](./GITHUB-ACTIONS-DEPLOYMENT-GUIDE.md).
+
+#### Additional Deployment Options
+
+The repository also includes workflows for other deployment methods:
+
 1. Push to the `main` branch to deploy to staging
 2. Manually trigger the production deployment from the Actions tab
 3. Both workflows handle the IPFS/Filecoin integration automatically
 
-See `.github/workflows/deploy.yml` for workflow configuration details.
+See `.github/workflows/deploy.yml` for general workflow configuration details.
 
 ## Documentation
 

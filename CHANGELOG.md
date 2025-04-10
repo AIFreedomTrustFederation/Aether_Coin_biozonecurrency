@@ -1,6 +1,15 @@
 # Changelog
 
-## [v1.0.1] - 2025-04-10
+## [v1.0.2] - 2025-04-10
+### Added
+- GitHub Actions workflow for automated deployment to atc.aifreedomtrust.com/dapp
+- Health check endpoints for monitoring deployment status
+- Deployment status verification tools (check-deploy-status.js, verify-deployment.js)
+- Comprehensive GitHub Actions deployment guide
+- Setup script for GitHub Actions configuration (setup-github-actions.sh)
+- Automatic rollback capability for failed deployments
+
+## [v1.0.1] - 2025-04-09
 ### Added
 - Enhanced cross-platform deployment scripts
 - Comprehensive deployment documentation
