@@ -54,6 +54,11 @@ export default function LlmKeyManager() {
   const queryClient = useQueryClient();
   const [isCreating, setIsCreating] = useState(false);
   const [newKeyData, setNewKeyData] = useState<LlmApiKey | null>(null);
+  const [showAdminAuth, setShowAdminAuth] = useState(false);
+  const [adminForm, setAdminForm] = useState({
+    adminUsername: '',
+    adminPassword: ''
+  });
   const [createForm, setCreateForm] = useState<CreateKeyForm>({
     name: '',
     email: ''
@@ -65,6 +70,37 @@ export default function LlmKeyManager() {
     retry: false
   });
 
+  // Create a direct admin key
+  const createAdminKeyMutation = useMutation({
+    mutationFn: (data: any) => 
+      apiRequest('/api/llm/admin/direct-key-generation', { method: 'POST', body: data }),
+    onSuccess: (data) => {
+      setNewKeyData(data);
+      setShowAdminAuth(false);
+      queryClient.invalidateQueries({ queryKey: ['/api/llm/keys'] });
+      toast({
+        title: "Admin API Key Created",
+        description: "Your new quantum-level LLM API key has been created successfully.",
+      });
+      // Reset forms
+      setAdminForm({
+        adminUsername: '',
+        adminPassword: ''
+      });
+      setCreateForm({
+        name: '',
+        email: ''
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error Creating Admin Key",
+        description: error.message || "Failed to create admin API key. Please check your credentials.",
+        variant: "destructive"
+      });
+    }
+  });
+  
   // Create a new key
   const createKeyMutation = useMutation({
     mutationFn: (data: CreateKeyForm) => 
@@ -83,6 +119,12 @@ export default function LlmKeyManager() {
       });
     },
     onError: (error: any) => {
+      // Show direct admin auth if access denied for admin level
+      if (error.status === 403 && createForm.modelAccessLevel === 'quantum') {
+        setShowAdminAuth(true);
+        return;
+      }
+      
       toast({
         title: "Error Creating Key",
         description: error.message || "Failed to create API key. Please try again.",

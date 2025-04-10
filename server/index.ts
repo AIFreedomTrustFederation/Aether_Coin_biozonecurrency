@@ -20,22 +20,47 @@ const sessionStore = new MemoryStoreSession({
   checkPeriod: 86400000 // prune expired entries every 24h
 });
 
-// Set up session middleware with improved config for development
+// Set up session middleware with replit-specific configuration
 app.use(session({
   secret: sessionSecret,
-  resave: true, // Changed to true to ensure session is saved
-  saveUninitialized: true, // Changed to true to create session for all requests
-  store: sessionStore, // Use memory store to avoid session loss between requests
+  resave: true,
+  saveUninitialized: true,
+  store: sessionStore,
+  name: 'aetherion_session', // Custom cookie name to avoid conflicts
   cookie: {
-    secure: false, // Changed to false for development - set to true only in HTTPS production
+    secure: false, 
     httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000, // 24 hours
-    sameSite: 'lax' // Explicitly setting sameSite to help with Replit environment
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days for longer persistence
+    sameSite: 'none', // Changed to 'none' to handle cross-site Replit environment
+    path: '/', // Explicitly set path to root
+    domain: undefined // Let browser determine domain automatically
   }
 }));
 
+// Add cookie-parser middleware to help with cookies
+import cookieParser from 'cookie-parser';
+app.use(cookieParser());
+
 // Log session configuration
 console.log(`Session configured with store: ${sessionStore ? 'MemoryStore' : 'default'}, secure cookies: ${process.env.NODE_ENV === 'production'}`);
+
+// Add user extraction middleware for all requests
+app.use((req: any, res, next) => {
+  if (req.session && req.session.userId) {
+    console.log(`Session active for user ${req.session.userId}`);
+    
+    // Extract cookies for debugging
+    const cookies = req.headers.cookie || '';
+    console.log(`Cookies in request: ${cookies}`);
+    
+    // Persist user in request object
+    if (!req.user && req.session.user) {
+      req.user = req.session.user;
+      console.log(`User set on request from session: ${req.user.id}`);
+    }
+  }
+  next();
+});
 
 // Allow direct access to health check endpoint
 app.get('/health', (req, res) => {

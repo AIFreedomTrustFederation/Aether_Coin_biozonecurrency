@@ -1,10 +1,11 @@
-import { Router } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import { modelAccessLevels, insertLlmApiKeySchema } from '@shared/llm-api-schema';
 import LlmApiService from '../services/llm-api-service';
 import { StorageWrapper } from '../storage-wrapper';
 import { requireAuth } from '../middleware/auth';
 import { requireAdmin } from '../middleware/admin-auth';
+import { storage } from '../fixed-storage';
 
 const llmApiRouter = Router();
 const storageWrapper = new StorageWrapper();
@@ -93,8 +94,88 @@ llmApiRouter.get('/admin/keys', requireAuth, requireLlmAdmin, async (req, res) =
   }
 });
 
+// Direct admin auth middleware to bypass session issues
+const directAdminAuth = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    // Check for admin credentials in request
+    const { adminUsername, adminPassword } = req.body;
+    
+    if (!adminUsername || !adminPassword) {
+      console.log('Direct admin auth: Missing credentials');
+      return next(); // Continue to next middleware if no credentials
+    }
+    
+    // Attempt to authenticate admin
+    console.log(`Direct admin auth: Attempting to authenticate ${adminUsername}`);
+    const user = await storage.getUserByUsername(adminUsername);
+    
+    if (!user) {
+      console.log(`Direct admin auth: User ${adminUsername} not found`);
+      return next();
+    }
+    
+    // Attempt password verification
+    const bcrypt = require('bcryptjs');
+    const isPasswordValid = await bcrypt.compare(adminPassword, user.passwordHash);
+    
+    if (!isPasswordValid) {
+      console.log(`Direct admin auth: Invalid password for user ${adminUsername}`);
+      return next();
+    }
+    
+    // Only set admin session if user has admin role
+    if (user.role === 'admin') {
+      console.log(`Direct admin auth: ${adminUsername} has admin role, setting session`);
+      const authReq = req as any;
+      
+      // Set session properties
+      authReq.session.userId = user.id;
+      authReq.session.isAuthenticated = true;
+      authReq.session.isAdmin = true;
+      
+      // Set user object on request
+      authReq.user = {
+        id: user.id,
+        username: user.username,
+        email: user.email || '',
+        role: user.role || undefined,
+        isTrustMember: !!user.isTrustMember
+      };
+      
+      // Force session save
+      if (authReq.session.save) {
+        authReq.session.save(err => {
+          if (err) {
+            console.error('Error saving session in direct admin auth:', err);
+          } else {
+            console.log(`Direct admin auth: Session saved for admin ${adminUsername}`);
+          }
+        });
+      }
+      
+      console.log(`Direct admin auth: Successfully set admin session for ${adminUsername}`);
+      
+      // Skip the requireAuth middleware and proceed directly
+      return res.status(201).json({
+        message: 'Admin authenticated successfully',
+        user: {
+          id: user.id,
+          username: user.username,
+          role: user.role,
+          isAdmin: true
+        }
+      });
+    }
+    
+    next();
+  } catch (error) {
+    console.error('Direct admin auth error:', error);
+    next(); // Continue to next middleware even if there's an error
+  }
+};
+
 // Create a new API key
-llmApiRouter.post('/keys', requireAuth, async (req: any, res) => {
+llmApiRouter.post('/keys', directAdminAuth, requireAuth, async (req: any, res) => {
   try {
     if (!req.session || !req.session.userId) {
       console.log('Session missing or userId not in session');
@@ -319,6 +400,67 @@ llmApiRouter.get('/keys/:id/connections', requireAuth, async (req: any, res) => 
   } catch (error) {
     console.error('Error getting API key connections:', error);
     res.status(500).json({ message: 'Error getting API key connections' });
+  }
+});
+
+// Direct admin key generation endpoint - no authentication middleware required
+llmApiRouter.post('/admin/direct-key-generation', async (req, res) => {
+  try {
+    // Extract credentials from request
+    const { adminUsername, adminPassword, name, description } = req.body;
+    
+    if (!adminUsername || !adminPassword) {
+      return res.status(400).json({ message: 'Admin credentials required' });
+    }
+    
+    if (!name) {
+      return res.status(400).json({ message: 'API key name is required' });
+    }
+    
+    console.log(`Direct admin key generation attempt for ${adminUsername}`);
+    
+    // Verify admin credentials
+    const user = await storage.getUserByUsername(adminUsername);
+    
+    if (!user) {
+      console.log(`Direct admin key generation: User ${adminUsername} not found`);
+      return res.status(401).json({ message: 'Invalid admin credentials' });
+    }
+    
+    // Verify password
+    const bcrypt = require('bcryptjs');
+    const isPasswordValid = await bcrypt.compare(adminPassword, user.passwordHash);
+    
+    if (!isPasswordValid) {
+      console.log(`Direct admin key generation: Invalid password for ${adminUsername}`);
+      return res.status(401).json({ message: 'Invalid admin credentials' });
+    }
+    
+    // Verify admin role
+    if (user.role !== 'admin') {
+      console.log(`Direct admin key generation: User ${adminUsername} is not an admin`);
+      return res.status(403).json({ message: 'Admin privileges required' });
+    }
+    
+    console.log(`Admin ${adminUsername} verified, generating LLM API key`);
+    
+    // Generate admin API key
+    const apiKey = await llmApiService.createApiKey({
+      userId: user.id,
+      name,
+      description: description || 'Admin-generated key via direct endpoint',
+      modelAccessLevel: 'quantum',
+      usageLimit: null, // Unlimited
+      expiresAt: null // Never expires
+    });
+    
+    console.log(`Successfully created LLM admin API key (ID: ${apiKey.id}) for admin ${adminUsername}`);
+    
+    // Return the API key
+    return res.status(201).json(apiKey);
+  } catch (error) {
+    console.error('Error in direct admin key generation:', error);
+    return res.status(500).json({ message: 'Error generating admin API key' });
   }
 });
 
