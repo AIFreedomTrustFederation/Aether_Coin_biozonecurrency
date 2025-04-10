@@ -72,6 +72,28 @@ app.get('/', (req, res) => {
   res.redirect('/dapp');
 });
 
+// Health check endpoint for deployment verification
+app.get('/dapp/health', (req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    version: process.env.npm_package_version || '1.0.0',
+    environment: process.env.NODE_ENV || 'production',
+    deployTarget: process.env.DEPLOY_TARGET || 'dapp'
+  });
+});
+
+// Health check endpoint for wallet path for backward compatibility
+app.get('/wallet/health', (req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    version: process.env.npm_package_version || '1.0.0',
+    environment: process.env.NODE_ENV || 'production',
+    deployTarget: process.env.DEPLOY_TARGET || 'wallet'
+  });
+});
+
 // Start the server
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Aetherion UI Wallet running at http://0.0.0.0:${PORT}/dapp`);
