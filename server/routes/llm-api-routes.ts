@@ -2,9 +2,9 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { modelAccessLevels, insertLlmApiKeySchema } from '@shared/llm-api-schema';
 import LlmApiService from '../services/llm-api-service';
-import { StorageWrapper } from '../storage'; // Fixed import
-import requireAuth from '../middleware/require-auth';
-import requireAdmin from '../middleware/require-admin';
+import { StorageWrapper } from '../storage-wrapper';
+import { requireAuth } from '../middleware/auth';
+import { requireAdmin } from '../middleware/admin-auth';
 
 const llmApiRouter = Router();
 const storageWrapper = new StorageWrapper();

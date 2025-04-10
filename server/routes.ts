@@ -36,6 +36,7 @@ import aethercoreRoutes from "./routes/aethercore-routes";
 import fractalCoinRoutes from "./routes/fractalcoin-api-routes";
 import fractalCoinKeyRoutes from "./routes/fractalcoin-key-routes";
 import apiKeyRoutes from "./routes/api-key-routes";
+import llmApiRoutes from "./routes/llm-api-routes";
 import { openSourcePaymentService } from "./services/openSourcePayment";
 
 /**
@@ -171,6 +172,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Mount API Key management routes
   app.use('/api/keys', apiKeyRoutes);
+  
+  // Mount LLM API key management routes
+  app.use('/api/llm', llmApiRoutes);
   
   // Register quantum secure payment routes
   registerQuantumSecurePaymentRoutes(app);
