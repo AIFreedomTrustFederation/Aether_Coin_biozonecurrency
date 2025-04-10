@@ -1,8 +1,9 @@
 /**
- * Storage Wrapper
+ * Storage Interface Implementation
  * 
- * This module provides a compatibility layer between the DatabaseStorage
- * implementation and the IStorage interface expected by the application.
+ * This module provides a consolidated implementation of the IStorage interface,
+ * leveraging the DatabaseStorage class for the core functionality and adding
+ * additional methods required by the IStorage interface.
  */
 
 import { IStorage } from './storage';
@@ -17,10 +18,9 @@ import {
 } from '../shared/schema-proxy';
 
 /**
- * StorageWrapper class implements the full IStorage interface
- * while delegating to the DatabaseStorage implementation for
- * the methods it supports, and providing temporary implementations
- * for the methods it doesn't yet support.
+ * StorageImplementation class implements the full IStorage interface
+ * by delegating to the DatabaseStorage implementation for the core methods
+ * and providing implementations for the additional methods required by the application.
  */
 class StorageWrapper implements IStorage {
   /**
