@@ -8,9 +8,9 @@ if lsof -ti:5000 >/dev/null 2>&1; then
     echo "Process killed."
 fi
 
-# Start Vite in the background
+# Start Vite in the background with host flag for Replit
 echo "Starting Vite development server in background..."
-vite &
+vite --host 0.0.0.0 &
 VITE_PID=$!
 
 # Wait for Vite to initialize
