@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { certificateService, Certificate } from '../../services/security/certificateService';
+import { fractalDNSService, DNSResolutionResult } from '../../services/dns/fractalDnsService';
 
 // Tab interface
 interface BrowserTab {
@@ -81,7 +82,7 @@ const AetherCoreBrowser: React.FC = () => {
     if (tab) {
       setActiveTabId(tabId);
       setUrlInput(tab.url);
-      checkSecurity(tab.url);
+      checkSecurity(tab.url, null);
     }
   };
   
@@ -91,7 +92,7 @@ const AetherCoreBrowser: React.FC = () => {
     setTabs([...tabs, newTab]);
     setActiveTabId(newTab.id);
     setUrlInput(newTab.url);
-    checkSecurity(newTab.url);
+    checkSecurity(newTab.url, null);
   };
   
   // Close tab
@@ -122,8 +123,17 @@ const AetherCoreBrowser: React.FC = () => {
       if (url.includes(' ') || !url.includes('.')) {
         formattedUrl = `https://www.google.com/search?q=${encodeURIComponent(url)}`;
       } else {
+        // Check if domain is registered in FractalDNS
+        const domainToCheck = url.startsWith('www.') ? url : `www.${url}`;
+        const isDomainInFractalDNS = fractalDNSService.isDomainRegistered(domainToCheck) || 
+                                    fractalDNSService.isDomainRegistered(url);
+        
         // Try to determine if it's HTTQS or HTTPS
-        if (url.includes('AetherCore.trust') || url.includes('fractalcoin.network')) {
+        if (url.includes('AetherCore.trust') || 
+            url.includes('fractalcoin.network') || 
+            url.includes('freedomtrust.com') || 
+            url.includes('aifreedomtrust.com') || 
+            isDomainInFractalDNS) {
           formattedUrl = `httqs://${url}`;
         } else {
           formattedUrl = `https://${url}`;
@@ -147,12 +157,49 @@ const AetherCoreBrowser: React.FC = () => {
     setTabs(updatedTabs);
     setUrlInput(formattedUrl);
     
-    // Simulate loading
-    setTimeout(() => {
+    // Simulate loading with DNS resolution for HTTQS domains
+    setTimeout(async () => {
+      // Extract domain from URL
+      let domain = '';
+      try {
+        domain = new URL(formattedUrl).hostname;
+      } catch (error) {
+        console.error('Invalid URL:', error);
+        return;
+      }
+      
+      // If it's a HTTQS domain, resolve it using FractalDNS
+      let dnsResolution: DNSResolutionResult | null = null;
+      if (formattedUrl.startsWith('httqs://')) {
+        dnsResolution = await fractalDNSService.resolveDomain(domain);
+        
+        // If domain resolution failed, show error
+        if (!dnsResolution.success) {
+          const updatedTabsAfterLoad = tabs.map(tab => {
+            if (tab.id === activeTabId) {
+              return {
+                ...tab,
+                url: formattedUrl,
+                isLoading: false,
+                title: domain,
+                canGoBack: true,
+                canGoForward: false
+              };
+            }
+            return tab;
+          });
+          
+          setTabs(updatedTabsAfterLoad);
+          setSecurityInfo({ 
+            level: 'unknown', 
+            message: `DNS Resolution Failed: ${dnsResolution.errors?.join(', ') || 'Unknown error'}` 
+          });
+          return;
+        }
+      }
+      
       const updatedTabsAfterLoad = tabs.map(tab => {
         if (tab.id === activeTabId) {
-          // Extract domain from URL for tab title
-          const domain = new URL(formattedUrl).hostname;
           return {
             ...tab,
             url: formattedUrl,
@@ -168,7 +215,7 @@ const AetherCoreBrowser: React.FC = () => {
       setTabs(updatedTabsAfterLoad);
       
       // Check security of the URL
-      checkSecurity(formattedUrl);
+      checkSecurity(formattedUrl, dnsResolution);
     }, 500);
   };
   
@@ -236,7 +283,7 @@ const AetherCoreBrowser: React.FC = () => {
   };
   
   // Check URL security
-  const checkSecurity = (url: string) => {
+  const checkSecurity = (url: string, dnsResolution: DNSResolutionResult | null = null) => {
     let securityLevel: SecurityLevel = 'unknown';
     let message = 'Unknown security status';
     let isSecure = false;
@@ -248,23 +295,66 @@ const AetherCoreBrowser: React.FC = () => {
       const protocol = urlObj.protocol;
       const domain = urlObj.hostname;
       
+      // Check if domain is in FractalDNS
+      const isDomainInFractalDNS = fractalDNSService.isDomainRegistered(domain);
+      
       // Check protocol
       if (protocol === 'httqs:') {
         isSecure = true;
-        isQuantumSecure = true;
-        securityLevel = 'quantum';
-        message = 'Quantum-secure connection';
+        
+        // Special handling for fractal DNS domains
+        if (isDomainInFractalDNS) {
+          // If we have DNS resolution data
+          if (dnsResolution && dnsResolution.success) {
+            isQuantumSecure = dnsResolution.quantumSecure;
+            securityLevel = isQuantumSecure ? 'quantum' : 'standard';
+            message = isQuantumSecure ? 
+              'Quantum-secure connection via FractalDNS' : 
+              'Secure connection via FractalDNS';
+          } else {
+            // If no DNS resolution data but we know it's in FractalDNS
+            isQuantumSecure = true;
+            securityLevel = 'quantum';
+            message = 'Quantum-secure connection via FractalDNS';
+          }
+          
+          // Check for domains that we know are important
+          if (domain.includes('aifreedomtrust.com') || 
+              domain.includes('freedomtrust.com') || 
+              domain.includes('AetherCore.trust')) {
+            isQuantumSecure = true;
+            securityLevel = 'quantum';
+            message = 'Quantum-secure connection - Official FractalCoin Domain';
+          }
+        } else {
+          // Standard HTTQS domain (not in FractalDNS)
+          isQuantumSecure = true;
+          securityLevel = 'quantum';
+          message = 'Quantum-secure connection';
+        }
         
         // Get HTTQS certificate
         const domainCerts = certificateService.getCertificatesForDomain(domain);
         const httqsCert = domainCerts.find(cert => cert.type === 'httqs' || cert.type === 'hybrid');
         if (httqsCert) {
           certificate = httqsCert;
+        } else if (isDomainInFractalDNS) {
+          // For FractalDNS domains, create a certificate if one doesn't exist
+          const newCertificate = certificateService.createCertificate({
+            domain: domain,
+            type: 'httqs',
+            algorithm: 'hybrid',
+            validityDays: 365,
+            quantumResistant: true
+          });
+          certificate = newCertificate;
         }
       } else if (protocol === 'https:') {
         isSecure = true;
         securityLevel = 'standard';
-        message = 'Secure connection';
+        message = isDomainInFractalDNS ? 
+          'Secure connection via traditional HTTPS (upgrade to HTTQS available)' : 
+          'Secure connection';
         
         // Get HTTPS certificate
         const domainCerts = certificateService.getCertificatesForDomain(domain);
