@@ -100,12 +100,89 @@ const proxyOptions = {
   }
 };
 
-// Proxy all other requests to Vite server
-app.use('/', createProxyMiddleware(proxyOptions));
+// Define path patterns that should be proxied to Vite
+const VITE_PATHS = [
+  '/src/',
+  '/@',
+  '/.vite/',
+  '/node_modules/',
+  '.js',
+  '.ts',
+  '.tsx',
+  '.jsx',
+  '.css',
+  '.json',
+  '.svg',
+  '.ico',
+  '.png',
+  '.jpg',
+  '.jpeg',
+  '.gif'
+];
+
+// Function to check if a path should be proxied to Vite
+const shouldProxyToVite = (path) => {
+  return VITE_PATHS.some(pattern => 
+    path.includes(pattern) || path.endsWith(pattern));
+};
+
+// Set up proxy middleware that can be reused
+const viteProxyMiddleware = createProxyMiddleware(proxyOptions);
+
+// Proxy all static assets and source files to Vite dev server
+app.use((req, res, next) => {
+  const path = req.originalUrl;
+  
+  if (shouldProxyToVite(path)) {
+    console.log(`Proxying to Vite: ${path}`);
+    return viteProxyMiddleware(req, res, next);
+  }
+  
+  next();
+});
+
+// Serve the root path directly
+app.get('/', (req, res) => {
+  console.log('Serving root path through proxy');
+  viteProxyMiddleware(req, res);
+});
+
+// Add route for client-side SPA paths
+app.get([
+  '/dashboard',
+  '/wallet',
+  '/fractal-explorer',
+  '/settings',
+  '/blockchain-explorer',
+  '/blockchain-dashboard',
+  '/multi-wallet-dashboard',
+  '/network-details',
+  '/transactions',
+  '/security',
+  '/quantum-security',
+  '/whitepaper',
+  '/about'
+], (req, res) => {
+  console.log(`SPA route handling for: ${req.path}`);
+  res.sendFile(path.join(__dirname, 'client/index.html'));
+});
+
+// Proxy API requests
+app.use('/api', viteProxyMiddleware);
+
+// Add a fallback route for any other paths
+app.use('*', (req, res) => {
+  const path = req.originalUrl;
+  
+  console.log(`Fallback handling for: ${path}`);
+  // For SPA navigation, serve the index.html
+  res.sendFile(path.join(__dirname, 'client/index.html'));
+});
 
 // Start the server - bind to 0.0.0.0 for Replit
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Proxy server running on port ${PORT}`);
   console.log(`All requests will be proxied to ${TARGET_URL}`);
   console.log(`Whitepaper content served directly from ${path.join(__dirname, 'client/public/whitepaper')}`);
+  console.log(`Fallback route configured for SPA client-side routing`);
 });
