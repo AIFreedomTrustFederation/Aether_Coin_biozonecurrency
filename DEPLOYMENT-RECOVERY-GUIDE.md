@@ -1,195 +1,336 @@
 # Aetherion Wallet Deployment Recovery Guide
 
-This guide provides instructions for recovering from various deployment failures. Use these procedures to restore the application to a working state after deployment issues.
+This guide provides comprehensive instructions for recovering the Aetherion Wallet deployment in case of failures or issues.
 
 ## Table of Contents
 
-1. [Database Recovery](#database-recovery)
-2. [Application Rollback](#application-rollback)
-3. [Server Configuration Recovery](#server-configuration-recovery)
-4. [Common Issues and Solutions](#common-issues-and-solutions)
+1. [Quick Reference](#quick-reference)
+2. [Common Failure Scenarios](#common-failure-scenarios)
+3. [Database Recovery](#database-recovery)
+4. [Application Recovery](#application-recovery)
+5. [Load Balancer Recovery](#load-balancer-recovery)
+6. [Complete System Recovery](#complete-system-recovery)
+7. [Preventive Measures](#preventive-measures)
+
+## Quick Reference
+
+### Service Status Check
+
+```bash
+# Check all instance statuses
+for i in {0..2}; do sudo systemctl status aetherion-$i.service; done
+
+# Check monitoring dashboard
+sudo systemctl status aetherion-monitoring.service
+
+# Check health check service
+sudo systemctl status aetherion-health-check.timer
+```
+
+### Quick Restart
+
+```bash
+# Restart all instances
+for i in {0..2}; do sudo systemctl restart aetherion-$i.service; done
+
+# Restart Nginx
+sudo systemctl restart nginx
+```
+
+### Log Check
+
+```bash
+# Check application logs
+for i in {0..2}; do sudo journalctl -u aetherion-$i.service -n 100; done
+
+# Check Nginx error logs
+sudo tail -f /var/log/nginx/error.log
+
+# Check health monitor logs
+sudo tail -f /var/log/aetherion/health-monitor.log
+```
+
+## Common Failure Scenarios
+
+### 1. Application Instance Down
+
+**Symptoms:**
+- 503 Service Unavailable errors
+- Slow response times
+- Intermittent failures
+
+**Recovery Steps:**
+
+1. Check which instances are down:
+   ```bash
+   for i in {0..2}; do sudo systemctl is-active aetherion-$i.service; done
+   ```
+
+2. Check logs for the failed instance(s):
+   ```bash
+   sudo journalctl -u aetherion-1.service -n 100
+   ```
+
+3. Restart the failed instance(s):
+   ```bash
+   sudo systemctl restart aetherion-1.service
+   ```
+
+4. Verify the instance is running:
+   ```bash
+   curl http://localhost:3001/health
+   ```
+
+### 2. Database Connection Issues
+
+**Symptoms:**
+- Error messages containing "database" or "connection"
+- All instances showing the same error
+
+**Recovery Steps:**
+
+1. Check if PostgreSQL is running:
+   ```bash
+   sudo systemctl status postgresql
+   ```
+
+2. Verify database connection:
+   ```bash
+   PGPASSWORD=yourpassword psql -h hostname -U username -d database -c "SELECT 1;"
+   ```
+
+3. Check connection string in environment files:
+   ```bash
+   for i in {0..2}; do grep -h "DATABASE_URL" /home/deploy/aetherion-$i/.env; done
+   ```
+
+4. Restart PostgreSQL if needed:
+   ```bash
+   sudo systemctl restart postgresql
+   ```
+
+5. Restart application instances:
+   ```bash
+   for i in {0..2}; do sudo systemctl restart aetherion-$i.service; done
+   ```
+
+### 3. Nginx/Load Balancer Issues
+
+**Symptoms:**
+- 502 Bad Gateway errors
+- Unable to access the application at all
+
+**Recovery Steps:**
+
+1. Check Nginx status:
+   ```bash
+   sudo systemctl status nginx
+   ```
+
+2. Verify Nginx configuration:
+   ```bash
+   sudo nginx -t
+   ```
+
+3. Check Nginx error logs:
+   ```bash
+   sudo tail -f /var/log/nginx/error.log
+   ```
+
+4. Restart Nginx:
+   ```bash
+   sudo systemctl restart nginx
+   ```
 
 ## Database Recovery
 
-### Restoring from a Backup
+### Restore from Backup
 
-If a database migration fails or causes data corruption, restore from a backup:
-
-```bash
-# List available backups
-ls -la ./database_backups/
-
-# Restore from a specific backup file
-./db-restore.sh ./database_backups/aetherion_20250401_120000.sql
-```
-
-### Recovering from Failed Migrations
-
-If a Drizzle migration fails:
-
-1. Check error messages in the console output
-2. Restore from the pre-migration backup that was automatically created
-3. Fix the issue in your schema definition
-4. Run the migration again with `./db-migrate.sh`
-
-## Application Rollback
-
-### GitHub Actions Deployment Rollback
-
-If a deployment through GitHub Actions fails, the workflow will automatically attempt to roll back to the previous version. You can also manually trigger a rollback:
-
-1. Go to GitHub repository and check Actions tab
-2. Find the failed deployment workflow run
-3. The rollback step should have been automatically executed
-4. If rollback failed, you can manually restore from backups
-
-### Manual Server Rollback
-
-To manually roll back on the server:
-
-```bash
-# SSH to the server
-ssh user@server
-
-# Go to backups directory
-cd ~/aetherion_backups
-
-# List available backups
-ls -la
-
-# Stop the Aetherion service
-sudo systemctl stop aetherion.service
-
-# Remove failed deployment
-rm -rf ~/aetherion
-
-# Copy backup to deployment directory
-cp -r ~/aetherion_backups/aetherion_backup_20250401120000 ~/aetherion
-
-# Start the service
-sudo systemctl start aetherion.service
-
-# Check service status
-sudo systemctl status aetherion.service
-```
-
-## Server Configuration Recovery
-
-### Nginx Configuration
-
-If Nginx configuration becomes corrupted:
-
-```bash
-# Verify Nginx configuration
-sudo nginx -t
-
-# If invalid, restore from default configuration
-sudo cp /etc/nginx/sites-available/aetherion-dapp.conf.backup /etc/nginx/sites-available/aetherion-dapp.conf
-
-# Reload Nginx
-sudo systemctl reload nginx
-```
-
-### Systemd Service Recovery
-
-If the systemd service fails:
-
-```bash
-# Check service logs
-sudo journalctl -u aetherion.service -n 100
-
-# Recreate the service file if needed
-sudo tee /etc/systemd/system/aetherion.service > /dev/null << 'EOL'
-[Unit]
-Description=Aetherion Wallet Server
-After=network.target
-
-[Service]
-Type=simple
-User=username
-WorkingDirectory=/home/username/aetherion
-ExecStart=/usr/bin/node /home/username/aetherion/server-redirect.js
-Restart=on-failure
-Environment=PORT=3000
-Environment=NODE_ENV=production
-Environment=DEPLOY_TARGET=dapp
-Environment=BASE_URL=https://atc.aifreedomtrust.com
-
-[Install]
-WantedBy=multi-user.target
-EOL
-
-# Reload daemon and restart
-sudo systemctl daemon-reload
-sudo systemctl restart aetherion.service
-```
-
-## Common Issues and Solutions
-
-### Database Connection Issues
-
-If the application fails to connect to the database:
-
-1. Verify environment variables:
+1. Identify the backup file to restore:
    ```bash
-   # Check DATABASE_URL environment variable in .env file
-   grep DATABASE_URL .env
+   ls -la /home/deploy/aetherion/backups/
    ```
 
-2. Check database connectivity:
+2. Stop all application instances:
    ```bash
-   # Test connection to database
-   pg_isready -h database_host -p 5432
+   for i in {0..2}; do sudo systemctl stop aetherion-$i.service; done
    ```
 
-3. Restart the application:
+3. Restore the database:
    ```bash
-   sudo systemctl restart aetherion.service
+   ./db-restore.sh /home/deploy/aetherion/backups/backup-YYYY-MM-DD.sql
    ```
 
-### Blank Screen After Deployment
-
-If the application shows a blank screen after deployment:
-
-1. Check server logs:
+4. Start all application instances:
    ```bash
-   sudo journalctl -u aetherion.service -n 100
+   for i in {0..2}; do sudo systemctl start aetherion-$i.service; done
    ```
 
-2. Verify built assets:
+### Recover from Database Corruption
+
+1. Stop all application instances:
    ```bash
-   ls -la ~/aetherion/dist
+   for i in {0..2}; do sudo systemctl stop aetherion-$i.service; done
    ```
 
-3. Check for JavaScript console errors in the browser
+2. Run database recovery:
+   ```bash
+   sudo -u postgres pg_resetxlog /var/lib/postgresql/13/main
+   sudo systemctl restart postgresql
+   ```
 
-### API Errors
+3. If corruption persists, restore from backup:
+   ```bash
+   ./db-restore.sh /home/deploy/aetherion/backups/backup-YYYY-MM-DD.sql
+   ```
 
-If API endpoints return errors:
+4. Start all application instances:
+   ```bash
+   for i in {0..2}; do sudo systemctl start aetherion-$i.service; done
+   ```
 
-1. Check server logs for API-specific errors
-2. Verify that environment variables are correctly set
-3. Check database connection status
+## Application Recovery
 
-### Static Assets Not Loading
+### Rebuild Application
 
-If static assets (images, CSS, JavaScript) aren't loading:
+If the application code is corrupted or has issues:
 
-1. Check Nginx configuration for correct asset paths
-2. Verify that assets were properly included in the deployment package
-3. Check browser console for specific 404 errors
+1. Stop all application instances:
+   ```bash
+   for i in {0..2}; do sudo systemctl stop aetherion-$i.service; done
+   ```
 
-## Emergency Contacts
+2. Update the repository:
+   ```bash
+   cd /home/deploy/aetherion
+   git fetch
+   git checkout main
+   git pull
+   ```
 
-In case of critical deployment failures:
+3. Rebuild the application:
+   ```bash
+   npm ci --production
+   npm run build
+   ```
 
-- DevOps Team: devops@aifreedomtrust.com
-- Database Administrator: dba@aifreedomtrust.com
-- Project Lead: lead@aifreedomtrust.com
+4. Redeploy to all instances:
+   ```bash
+   for i in {0..2}; do
+     cp -r /home/deploy/aetherion/dist /home/deploy/aetherion-$i/
+     cp -r /home/deploy/aetherion/server-redirect.js /home/deploy/aetherion-$i/
+   done
+   ```
 
-## Deployment Notifications
+5. Start all application instances:
+   ```bash
+   for i in {0..2}; do sudo systemctl start aetherion-$i.service; done
+   ```
 
-Check deployment status notifications in:
+### Recover from Disk Space Issues
 
-- Slack channel: #aetherion-deployments
-- Matrix room: #aetherion-deployments:aifreedomtrust.org
+1. Check disk space:
+   ```bash
+   df -h
+   ```
+
+2. Clear log files:
+   ```bash
+   sudo find /var/log -type f -name "*.log" -exec truncate -s 0 {} \;
+   ```
+
+3. Clear old backups:
+   ```bash
+   find /home/deploy/aetherion/backups -type f -name "backup-*.sql" -mtime +30 -delete
+   ```
+
+4. Clear Nginx cache:
+   ```bash
+   sudo rm -rf /var/cache/nginx/aetherion_cache/*
+   ```
+
+## Load Balancer Recovery
+
+### Reconfigure Nginx
+
+If load balancer configuration is corrupted:
+
+1. Restore the Nginx configuration:
+   ```bash
+   sudo cp /home/deploy/aetherion/deployment-configs/nginx-load-balancer.conf /etc/nginx/sites-available/aetherion-load-balancer.conf
+   ```
+
+2. Verify the configuration:
+   ```bash
+   sudo nginx -t
+   ```
+
+3. Reload Nginx:
+   ```bash
+   sudo systemctl reload nginx
+   ```
+
+### SSL Certificate Renewal
+
+If SSL certificates expire:
+
+1. Renew Let's Encrypt certificates:
+   ```bash
+   sudo certbot renew
+   ```
+
+2. Reload Nginx:
+   ```bash
+   sudo systemctl reload nginx
+   ```
+
+## Complete System Recovery
+
+In case of catastrophic failure requiring a complete redeployment:
+
+1. Prepare a new server with Ubuntu 20.04 LTS
+
+2. Copy and restore database backup to the new server
+
+3. Install required dependencies:
+   ```bash
+   sudo apt update && sudo apt upgrade -y
+   sudo apt install -y nginx postgresql postgresql-contrib certbot python3-certbot-nginx git npm nodejs
+   ```
+
+4. Run the automated setup script:
+   ```bash
+   sudo ./deployment-configs/automated-ha-setup.sh
+   ```
+
+## Preventive Measures
+
+To minimize the risk of deployment failures:
+
+1. **Regular Backups**: Ensure daily database backups are running:
+   ```bash
+   sudo systemctl status aetherion-db-backup.timer
+   ```
+
+2. **Regular Health Checks**: Ensure health monitoring is active:
+   ```bash
+   sudo systemctl status aetherion-health-check.timer
+   ```
+
+3. **Monitor Disk Space**: Set up alerts for low disk space:
+   ```bash
+   echo "df -h | grep -vE '^Filesystem|tmpfs|cdrom|loop' | awk '{ print \$5 \" \" \$1 }' | while read output; do used=\$(echo \$output | awk '{ print \$1 }' | sed 's/%//g'); partition=\$(echo \$output | awk '{ print \$2 }'); if [ \$used -ge 90 ]; then echo \"Running out of space on \$partition (\$used%)\"; fi; done" > /etc/cron.daily/disk-space-check
+   chmod +x /etc/cron.daily/disk-space-check
+   ```
+
+4. **Keep Software Updated**: Regularly update system packages:
+   ```bash
+   echo "apt update && apt upgrade -y" > /etc/cron.weekly/system-update
+   chmod +x /etc/cron.weekly/system-update
+   ```
+
+5. **Monitor SSL Certificate Expiry**: Check certificate expiration:
+   ```bash
+   echo "certbot certificates | grep 'Expiry Date' | grep -q 'INVALID\|EXPIRED' && echo 'SSL certificate is expired or expiring soon!' || echo 'SSL certificate is valid.'" > /etc/cron.weekly/check-ssl
+   chmod +x /etc/cron.weekly/check-ssl
+   ```

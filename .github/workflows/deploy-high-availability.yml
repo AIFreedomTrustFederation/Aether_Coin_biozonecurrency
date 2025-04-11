@@ -1,0 +1,114 @@
+name: Deploy High-Availability Infrastructure
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
+      instances:
+        description: 'Number of application instances'
+        required: true
+        default: '3'
+        type: string
+      perform_backup:
+        description: 'Perform database backup before deployment'
+        required: true
+        default: true
+        type: boolean
+
+jobs:
+  deploy:
+    name: Deploy High-Availability Infrastructure
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      
+      - name: Set up environment variables
+        run: |
+          if [[ "${{ github.event.inputs.environment }}" == "production" ]]; then
+            echo "DEPLOY_HOST=atc.aifreedomtrust.com" >> $GITHUB_ENV
+            echo "DEPLOY_USER=deploy" >> $GITHUB_ENV
+            echo "DEPLOY_PATH=/home/deploy/aetherion" >> $GITHUB_ENV
+          else
+            echo "DEPLOY_HOST=staging.atc.aifreedomtrust.com" >> $GITHUB_ENV
+            echo "DEPLOY_USER=deploy-staging" >> $GITHUB_ENV
+            echo "DEPLOY_PATH=/home/deploy-staging/aetherion" >> $GITHUB_ENV
+          fi
+      
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.7.0
+        with:
+          ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
+      
+      - name: Add host key
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan ${{ env.DEPLOY_HOST }} >> ~/.ssh/known_hosts
+      
+      - name: Backup database (if requested)
+        if: ${{ github.event.inputs.perform_backup == 'true' }}
+        run: |
+          echo "Backing up database..."
+          ssh ${{ env.DEPLOY_USER }}@${{ env.DEPLOY_HOST }} "cd ${{ env.DEPLOY_PATH }} && ./db-backup.sh ./backups/pre-ha-deploy-$(date +%Y%m%d%H%M%S).sql"
+      
+      - name: Transfer deployment files
+        run: |
+          echo "Transferring deployment files..."
+          rsync -avz --delete ./deployment-configs/ ${{ env.DEPLOY_USER }}@${{ env.DEPLOY_HOST }}:${{ env.DEPLOY_PATH }}/deployment-configs/
+          ssh ${{ env.DEPLOY_USER }}@${{ env.DEPLOY_HOST }} "chmod +x ${{ env.DEPLOY_PATH }}/deployment-configs/automated-ha-setup.sh"
+      
+      - name: Prepare environment file
+        run: |
+          cat > .env.ha << EOL
+          DATABASE_URL=${{ secrets.DATABASE_URL }}
+          SESSION_SECRET=${{ secrets.SESSION_SECRET }}
+          MATRIX_SERVER_URL=${{ secrets.MATRIX_SERVER_URL }}
+          MATRIX_ACCESS_TOKEN=${{ secrets.MATRIX_ACCESS_TOKEN }}
+          MATRIX_USER_ID=${{ secrets.MATRIX_USER_ID }}
+          MATRIX_DEPLOYMENT_ROOM_ID=${{ secrets.MATRIX_DEPLOYMENT_ROOM_ID }}
+          GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
+          EOL
+          
+          scp .env.ha ${{ env.DEPLOY_USER }}@${{ env.DEPLOY_HOST }}:${{ env.DEPLOY_PATH }}/.env.ha
+      
+      - name: Run automated high-availability setup
+        run: |
+          echo "Running high-availability setup..."
+          ssh ${{ env.DEPLOY_USER }}@${{ env.DEPLOY_HOST }} "cd ${{ env.DEPLOY_PATH }} && sudo -E bash -c 'source .env.ha && ./deployment-configs/automated-ha-setup.sh --instances=${{ github.event.inputs.instances }} --domain=${{ env.DEPLOY_HOST }}'"
+      
+      - name: Verify deployment
+        run: |
+          echo "Verifying deployment..."
+          ssh ${{ env.DEPLOY_USER }}@${{ env.DEPLOY_HOST }} "curl -s http://localhost:3000/health"
+      
+      - name: Send Matrix notification
+        if: ${{ always() }}
+        run: |
+          if [[ "${{ job.status }}" == "success" ]]; then
+            EMOJI="✅"
+            STATUS="successfully deployed"
+          else
+            EMOJI="❌"
+            STATUS="failed to deploy"
+          fi
+          
+          MESSAGE="${EMOJI} High-Availability Infrastructure has ${STATUS} to ${{ github.event.inputs.environment }} with ${{ github.event.inputs.instances }} instances. Triggered by @${{ github.actor }}."
+          
+          if [[ -n "${{ secrets.MATRIX_ACCESS_TOKEN }}" && -n "${{ secrets.MATRIX_DEPLOYMENT_ROOM_ID }}" ]]; then
+            curl -s -X PUT \
+              -H "Authorization: Bearer ${{ secrets.MATRIX_ACCESS_TOKEN }}" \
+              -H "Content-Type: application/json" \
+              -d "{\"msgtype\":\"m.room.message\",\"format\":\"org.matrix.custom.html\",\"body\":\"${MESSAGE}\",\"formatted_body\":\"${MESSAGE}\"}" \
+              "https://matrix.org/_matrix/client/r0/rooms/${{ secrets.MATRIX_DEPLOYMENT_ROOM_ID }}/send/m.room.message/$(date +%s%N)"
+          fi
