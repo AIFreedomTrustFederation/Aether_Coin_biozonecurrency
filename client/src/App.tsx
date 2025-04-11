@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Loader2 } from "lucide-react";
+import { QuantumDomainProvider } from "./contexts/QuantumDomainContext";
 
 // Lazy load pages
 const Index = lazy(() => import("./pages/Index"));
@@ -33,23 +34,25 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
-        <Suspense fallback={<PageLoader />}>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/tokenomics" element={<Tokenomics />} />
-            <Route path="/aicon" element={<Aicon />} />
-            <Route path="/wallet" element={<Wallet />} />
-            <Route path="/dapp" element={<DApp />} />
-            <Route path="/domains" element={<Domains />} />
-            <Route path="/terms-of-service" element={<TermsOfService />} />
-            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-            <Route path="/api" element={<Api />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </Suspense>
-      </BrowserRouter>
+      <QuantumDomainProvider>
+        <BrowserRouter>
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/tokenomics" element={<Tokenomics />} />
+              <Route path="/aicon" element={<Aicon />} />
+              <Route path="/wallet" element={<Wallet />} />
+              <Route path="/dapp" element={<DApp />} />
+              <Route path="/domains" element={<Domains />} />
+              <Route path="/terms-of-service" element={<TermsOfService />} />
+              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="/api" element={<Api />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
+        </BrowserRouter>
+      </QuantumDomainProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
