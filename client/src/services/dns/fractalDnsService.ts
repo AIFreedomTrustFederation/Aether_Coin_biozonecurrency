@@ -41,6 +41,7 @@ export interface DNSResolutionResult {
   secure: boolean;
   quantumSecure: boolean;
   errors?: string[];
+  specialResolution?: 'atc-subdomain' | 'parent-domain' | 'wildcard'; // Special resolution methods
 }
 
 // DNS Zone
@@ -196,7 +197,7 @@ class FractalDNSService {
       fractalShards: 64
     };
     
-    // Create atc.aifreedomtrust.com records
+    // Create atc.aifreedomtrust.com records with enhanced properties for special handling
     const atcRecord: DNSRecord = {
       id: 'record_atc_a',
       domain: 'atc.aifreedomtrust.com',
@@ -208,7 +209,7 @@ class FractalDNSService {
       updatedAt: now.toISOString(),
       encryption: 'hybrid',
       quantumSecure: true,
-      fractalShards: 32
+      fractalShards: 64 // Increased shards for better security
     };
     
     // Create www.atc.aifreedomtrust.com records
@@ -223,7 +224,36 @@ class FractalDNSService {
       updatedAt: now.toISOString(),
       encryption: 'hybrid',
       quantumSecure: true,
-      fractalShards: 32
+      fractalShards: 64 // Increased shards for better security
+    };
+    
+    // Create additional entries for subdomains of atc.aifreedomtrust.com
+    const walletAtcRecord: DNSRecord = {
+      id: 'record_wallet_atc_a',
+      domain: 'wallet.atc.aifreedomtrust.com',
+      type: 'CNAME',
+      value: 'atc.aifreedomtrust.com',
+      ttl: 300,
+      status: 'active',
+      createdAt: now.toISOString(),
+      updatedAt: now.toISOString(),
+      encryption: 'hybrid',
+      quantumSecure: true,
+      fractalShards: 64
+    };
+    
+    const dappAtcRecord: DNSRecord = {
+      id: 'record_dapp_atc_a',
+      domain: 'dapp.atc.aifreedomtrust.com',
+      type: 'CNAME',
+      value: 'atc.aifreedomtrust.com',
+      ttl: 300,
+      status: 'active',
+      createdAt: now.toISOString(),
+      updatedAt: now.toISOString(),
+      encryption: 'hybrid',
+      quantumSecure: true,
+      fractalShards: 64
     };
     
     // Add records to zones
@@ -234,6 +264,8 @@ class FractalDNSService {
     aifreedomtrustZone.records.push(wwwAifreedomtrustRecord);
     aifreedomtrustZone.records.push(atcRecord);
     aifreedomtrustZone.records.push(wwwAtcRecord);
+    aifreedomtrustZone.records.push(walletAtcRecord);
+    aifreedomtrustZone.records.push(dappAtcRecord);
     
     // Add zones to map
     this.zones.set(trustZone.name, trustZone);
@@ -248,6 +280,8 @@ class FractalDNSService {
     this.records.set(wwwAifreedomtrustRecord.domain, wwwAifreedomtrustRecord);
     this.records.set(atcRecord.domain, atcRecord);
     this.records.set(wwwAtcRecord.domain, wwwAtcRecord);
+    this.records.set(walletAtcRecord.domain, walletAtcRecord);
+    this.records.set(dappAtcRecord.domain, dappAtcRecord);
   }
   
   /**
@@ -271,11 +305,71 @@ class FractalDNSService {
       const record = this.records.get(normalizedDomain);
       
       if (!record) {
+        // Enhanced domain resolution logic for ATC domains
+        if (normalizedDomain.includes('atc.aifreedomtrust.com')) {
+          // For any subdomain of atc.aifreedomtrust.com, resolve to the main domain
+          if (normalizedDomain !== 'atc.aifreedomtrust.com' && normalizedDomain !== 'www.atc.aifreedomtrust.com') {
+            // This is a subdomain - find the parent domain
+            const baseAtcRecord = this.records.get('atc.aifreedomtrust.com');
+            
+            if (baseAtcRecord) {
+              console.log(`Resolved subdomain ${normalizedDomain} to atc.aifreedomtrust.com through special ATC handling`);
+              
+              resolve({
+                success: true,
+                domain: normalizedDomain,
+                records: [baseAtcRecord],
+                resolutionTime: performance.now() - startTime,
+                secure: true,
+                quantumSecure: true,
+                // Add a note that this was resolved through special handling
+                specialResolution: 'atc-subdomain'
+              });
+              return;
+            }
+          }
+        }
+        
         // Look for wildcard records
         const wildcardDomain = '*.' + normalizedDomain.split('.').slice(1).join('.');
         const wildcardRecord = this.records.get(wildcardDomain);
         
         if (!wildcardRecord) {
+          // Special case for known domains that should resolve but aren't explicitly registered
+          if (normalizedDomain.includes('aifreedomtrust.com') || 
+              normalizedDomain.includes('freedomtrust.com') ||
+              normalizedDomain.includes('AetherCore.trust')) {
+            
+            // Try to find a parent domain
+            let parentDomain = null;
+            
+            if (normalizedDomain.includes('aifreedomtrust.com')) {
+              parentDomain = 'aifreedomtrust.com';
+            } else if (normalizedDomain.includes('freedomtrust.com')) {
+              parentDomain = 'freedomtrust.com';
+            } else if (normalizedDomain.includes('AetherCore.trust')) {
+              parentDomain = 'AetherCore.trust';
+            }
+            
+            const parentRecord = parentDomain ? this.records.get(parentDomain) : null;
+            
+            if (parentRecord) {
+              console.log(`Resolved ${normalizedDomain} to parent domain ${parentDomain}`);
+              
+              resolve({
+                success: true,
+                domain: normalizedDomain,
+                records: [parentRecord],
+                resolutionTime: performance.now() - startTime,
+                secure: true,
+                quantumSecure: true,
+                specialResolution: 'parent-domain'
+              });
+              return;
+            }
+          }
+          
+          // No matching record found
           resolve({
             success: false,
             domain: normalizedDomain,
@@ -288,6 +382,7 @@ class FractalDNSService {
           return;
         }
         
+        // Wildcard record found
         resolve({
           success: true,
           domain: normalizedDomain,
@@ -342,10 +437,43 @@ class FractalDNSService {
   
   /**
    * Check if a domain is registered in the FractalDNS system
+   * Including special handling for known domains and subdomains
    */
   public isDomainRegistered(domain: string): boolean {
     const normalizedDomain = domain.toLowerCase();
-    return this.records.has(normalizedDomain);
+    
+    // First check if the domain is directly registered
+    if (this.records.has(normalizedDomain)) {
+      return true;
+    }
+    
+    // Special handling for ATC and FractalCoin domains
+    
+    // Check for atc.aifreedomtrust.com and subdomains
+    if (normalizedDomain.includes('atc.aifreedomtrust.com')) {
+      // Always resolve atc subdomains
+      return true;
+    }
+    
+    // Check for other official trusted domains
+    if (normalizedDomain.includes('aifreedomtrust.com') || 
+        normalizedDomain.includes('freedomtrust.com') ||
+        normalizedDomain.includes('AetherCore.trust') ||
+        normalizedDomain.endsWith('.trust')) {
+      // These are trusted domains that should always be considered registered
+      return true;
+    }
+    
+    // For other domains, check if there's a wildcard record
+    const domainParts = normalizedDomain.split('.');
+    if (domainParts.length >= 2) {
+      const wildcardDomain = '*.' + domainParts.slice(1).join('.');
+      if (this.records.has(wildcardDomain)) {
+        return true;
+      }
+    }
+    
+    return false;
   }
   
   /**

@@ -110,7 +110,7 @@ const AetherCoreBrowser: React.FC = () => {
       const newActiveTab = newTabs[0];
       setActiveTabId(newActiveTab.id);
       setUrlInput(newActiveTab.url);
-      checkSecurity(newActiveTab.url);
+      checkSecurity(newActiveTab.url, null);
     }
   };
   
@@ -277,7 +277,7 @@ const AetherCoreBrowser: React.FC = () => {
         setTabs(updatedTabsAfterReload);
         
         // Re-check security
-        checkSecurity(activeTab.url);
+        checkSecurity(activeTab.url, null);
       }, 500);
     }
   };
@@ -508,6 +508,52 @@ const AetherCoreBrowser: React.FC = () => {
               <Button variant="outline" onClick={() => navigateTo('http://example.org')}>
                 Visit a non-secure HTTP site
               </Button>
+              <div className="mt-4">
+                <Button onClick={() => navigateTo('httqs://www.atc.aifreedomtrust.com')}>
+                  Visit ATC.AIFreedomTrust.com
+                </Button>
+              </div>
+            </div>
+          ) : activeTab.url.includes('atc.aifreedomtrust.com') ? (
+            <div className="p-4">
+              <h1 className="text-2xl font-bold mb-4">AI Freedom Trust - ATC Portal</h1>
+              <p className="mb-4">
+                Welcome to the AI Freedom Trust ATC Portal. This site is secured with 
+                quantum-resistant FractalDNS technology and HTTQS protocol.
+              </p>
+              <div className="bg-gray-100 p-4 rounded-md mb-4">
+                <h2 className="text-lg font-semibold mb-2">ATC Services</h2>
+                <ul className="list-disc pl-5 space-y-1">
+                  <li>Aetherion Wallet Access</li>
+                  <li>Fractal Reserve Banking</li>
+                  <li>Quantum-Secure Communications</li>
+                  <li>AIcoin Mining Dashboard</li>
+                  <li>Decentralized Identity Management</li>
+                </ul>
+              </div>
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div className="border border-gray-200 rounded-md p-4 hover:shadow-md transition-shadow">
+                  <h3 className="text-md font-semibold mb-2">Wallet Access</h3>
+                  <p className="text-sm text-gray-600 mb-2">
+                    Access your Aetherion quantum-resistant wallet with fractal sharding security.
+                  </p>
+                  <Button size="sm" variant="outline" className="w-full">
+                    Launch Wallet
+                  </Button>
+                </div>
+                <div className="border border-gray-200 rounded-md p-4 hover:shadow-md transition-shadow">
+                  <h3 className="text-md font-semibold mb-2">DAPP Portal</h3>
+                  <p className="text-sm text-gray-600 mb-2">
+                    Access decentralized applications secured by the FractalCoin network.
+                  </p>
+                  <Button size="sm" variant="outline" className="w-full">
+                    Open DAPP Portal
+                  </Button>
+                </div>
+              </div>
+              <Button onClick={() => navigateTo('httqs://www.AetherCore.trust')}>
+                Return to AetherCore.trust
+              </Button>
             </div>
           ) : activeTab.url.includes('example.com') ? (
             <div className="p-4">
@@ -525,6 +571,45 @@ const AetherCoreBrowser: React.FC = () => {
               <p className="mb-4 text-red-500">
                 This website uses insecure HTTP protocol. Your connection is not private.
               </p>
+              <Button onClick={() => navigateTo('httqs://www.AetherCore.trust')}>
+                Return to AetherCore.trust
+              </Button>
+            </div>
+          ) : activeTab.url.includes('quantum-dns') ? (
+            <div className="p-4">
+              <h1 className="text-2xl font-bold mb-4">FractalDNS Management</h1>
+              <p className="mb-4">
+                This is the management interface for FractalDNS, the quantum-secure domain name system 
+                for the FractalCoin Network. Register and manage your quantum-secure domains here.
+              </p>
+              <div className="bg-gray-100 p-4 rounded-md mb-4">
+                <h2 className="text-lg font-semibold mb-2">Registered Domains</h2>
+                <div className="space-y-2">
+                  {[
+                    'www.AetherCore.trust',
+                    'www.aifreedomtrust.com',
+                    'atc.aifreedomtrust.com',
+                    'www.atc.aifreedomtrust.com',
+                    'freedomtrust.com',
+                    'www.freedomtrust.com'
+                  ].map(domain => (
+                    <div key={domain} className="flex items-center justify-between bg-white p-2 rounded-md border border-gray-200">
+                      <span className="font-medium">{domain}</span>
+                      <Badge className="bg-emerald-500">Quantum Secure</Badge>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="bg-gray-100 p-4 rounded-md mb-4">
+                <h2 className="text-lg font-semibold mb-2">Register New Domain</h2>
+                <div className="flex space-x-2">
+                  <Input placeholder="Enter domain name" className="flex-1" />
+                  <Button>Register Domain</Button>
+                </div>
+                <p className="text-xs text-gray-500 mt-2">
+                  All domains are automatically quantum-secured with post-quantum algorithms.
+                </p>
+              </div>
               <Button onClick={() => navigateTo('httqs://www.AetherCore.trust')}>
                 Return to AetherCore.trust
               </Button>
