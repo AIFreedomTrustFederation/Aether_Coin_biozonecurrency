@@ -17,10 +17,12 @@ import {
   GitMerge,
   Share2,
   BookOpen,
-  ShieldCheck
+  ShieldCheck,
+  Network
 } from 'lucide-react';
 import Sidebar from '../components/layout/Sidebar';
 import BlockchainSecurityVisualizer from '../components/fractal/BlockchainSecurityVisualizer';
+import FractalNodeRegistration from '../features/network/FractalNodeRegistration';
 
 const FractalExplorer = () => {
   const [activeTab, setActiveTab] = useState("mandelbrot");
@@ -677,6 +679,26 @@ const FractalExplorer = () => {
           </div>
           
           <BlockchainSecurityVisualizer />
+          
+          {/* Fractal Network Node Registration Section */}
+          <Separator className="my-6" />
+          
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold tracking-tight mb-1">Fractal Network Participation</h2>
+              <p className="text-muted-foreground">
+                Join the high-availability fractal sharded network for distributed consensus and rewards
+              </p>
+            </div>
+            <div className="flex items-center">
+              <Network className="h-5 w-5 text-primary mr-2" />
+              <span className="text-sm font-medium text-primary">Active Network</span>
+            </div>
+          </div>
+          
+          <div className="mt-4">
+            <FractalNodeRegistration />
+          </div>
         </motion.div>
       </div>
     </div>
