@@ -1,0 +1,109 @@
+/* Import custom styles before Tailwind */
+@import './styles/neon.css';
+
+/* Tailwind CSS directives */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    @apply border-border;
+  }
+
+  html, body, #root {
+    @apply h-full w-full font-sans antialiased bg-background text-foreground overflow-hidden;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+  }
+  
+  /* Ensure all scrollable areas have smooth scrolling */
+  * {
+    scroll-behavior: smooth;
+  }
+
+  :root {
+    --primary-color-rgb: 0, 255, 136; /* Neon green in RGB */
+    --glow-color: #ffffff;
+  }
+
+  .dark {
+    --background: 0 0% 7%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 157 100% 60%;
+    --primary-foreground: 0 0% 0%;
+    --secondary: 0 0% 14.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 14.9%;
+    --muted-foreground: 0 0% 63.9%;
+    --accent: 0 0% 14.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 14.9%;
+    --input: 0 0% 14.9%;
+    --ring: 157 100% 60%;
+  }
+}
+
+/* Scrollbar styles */
+.no-scrollbar, .scrollbar-hide {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.no-scrollbar::-webkit-scrollbar, 
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, and Opera */
+}
+
+/* Custom scrollbar styles */
+::-webkit-scrollbar {
+  width: 6px; /* width of the entire scrollbar */
+  height: 6px; /* height for horizontal scrollbar */
+}
+
+::-webkit-scrollbar-track {
+  background: transparent; /* color of the tracking area */
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--primary); /* color of the scroll thumb */
+  border-radius: 10px; /* roundness of the scroll thumb */
+  opacity: 0.5;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: hsl(var(--primary)); /* color when hovering */
+}
+
+/* Horizontal scrolling */
+.scroll-x {
+  overflow-y: hidden;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  scroll-snap-type: x proximity;
+  /* Safari/iOS < 16 fallback for overscroll-behavior */
+  -webkit-overflow-scrolling: touch;
+  /* Modern browsers including Safari iOS 16+ */
+  overscroll-behavior-x: contain;
+  /* Prevent default touch actions */
+  touch-action: pan-x;
+  position: relative;
+  /* Additional Safari/iOS bounce prevention */
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.scroll-item {
+  scroll-snap-align: start;
+}
+/* Duplicate Tailwind directives removed */
+/* The module.exports configuration belongs in tailwind.config.js, not in CSS */

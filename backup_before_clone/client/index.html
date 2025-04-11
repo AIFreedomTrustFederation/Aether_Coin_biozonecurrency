@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Aetherion UI Wallet</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@500;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- Essential global variables -->
+    <script>
+      // Set up the global object 
+      window.global = window;
+      
+      // Set up process object
+      window.process = {
+        env: {},
+        version: 'v16.0.0',
+        nextTick: function(fn) { setTimeout(fn, 0); },
+        browser: true
+      };
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+    <!-- This script injects a replit badge into the page, please feel free to remove this line -->
+    <script type="text/javascript" src="https://replit.com/public/js/replit-badge-v3.js"></script>
+  </body>
+</html>

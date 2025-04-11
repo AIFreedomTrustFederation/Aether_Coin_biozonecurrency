@@ -1,0 +1,7 @@
+
+<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <path d="M30,30 Q50,0 70,30 T30,30" fill="none" stroke="rgba(77, 153, 77, 0.2)" stroke-width="2"/>
+  <path d="M30,70 Q50,40 70,70 T30,70" fill="none" stroke="rgba(77, 153, 77, 0.2)" stroke-width="2"/>
+  <path d="M10,50 Q40,30 50,60 T10,50" fill="none" stroke="rgba(77, 153, 77, 0.2)" stroke-width="2"/>
+  <path d="M90,50 Q60,30 50,60 T90,50" fill="none" stroke="rgba(77, 153, 77, 0.2)" stroke-width="2"/>
+</svg>

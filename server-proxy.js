@@ -1,12 +1,14 @@
 /**
- * Express server proxy for Aetherion wallet application
+ * Enhanced Express server proxy for Aetherion wallet application
  * This listens on port 5000 (Replit) and proxies to port 5173 (Vite)
+ * With improved error handling and asset loading for the Biozone Harmony Boost frontend
  */
 
 import express from 'express';
 import { createProxyMiddleware } from 'http-proxy-middleware';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import fs from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -14,8 +16,9 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 5000;
 const TARGET_URL = 'http://0.0.0.0:5173'; // Using 0.0.0.0 to match Vite's binding
+const CLIENT_DIR = path.join(__dirname, 'client');
 
-console.log(`Starting Aetherion Proxy Service`);
+console.log(`Starting Aetherion Proxy Service (Biozone Harmony Boost Integration)`);
 console.log(`Proxying port ${PORT} to ${TARGET_URL}`);
 
 // Add a simple health check endpoint
@@ -76,8 +79,8 @@ app.get('/debug-info', (req, res) => {
   `);
 });
 
-// Serve the whitepaper files directly for debugging
-app.use('/whitepaper', express.static(path.join(__dirname, 'client/public/whitepaper')));
+// Serve static files from client/public directory directly
+app.use(express.static(path.join(CLIENT_DIR, 'public')));
 
 // Setup proxy options with better debugging
 const proxyOptions = {
@@ -85,6 +88,9 @@ const proxyOptions = {
   changeOrigin: true,
   ws: true,
   logLevel: 'debug',
+  pathRewrite: {
+    '^/api/': '/api/'  // rewrite path
+  },
   onProxyReq: (proxyReq, req, res) => {
     console.log(`Proxying ${req.method} ${req.url} to ${TARGET_URL}`);
   },
@@ -102,10 +108,22 @@ const proxyOptions = {
 
 // Define path patterns that should be proxied to Vite
 const VITE_PATHS = [
+  // All module-related patterns
   '/src/',
   '/@',
+  '/@fs/',
+  '/@id/',
+  '/@vite/',
   '/.vite/',
   '/node_modules/',
+  '@fs/',
+  '/assets/',
+  // Vite's HMR-related patterns
+  '/__hmr',
+  'vite-hmr',
+  'vite-ws',
+  '__vite_ping',
+  // File extensions for assets and modules
   '.js',
   '.ts',
   '.tsx',
@@ -117,11 +135,23 @@ const VITE_PATHS = [
   '.png',
   '.jpg',
   '.jpeg',
-  '.gif'
+  '.gif',
+  '.woff',
+  '.woff2',
+  '.ttf',
+  '.eot',
+  '.otf',
+  '.map',
+  '.module.'
 ];
 
 // Function to check if a path should be proxied to Vite
 const shouldProxyToVite = (path) => {
+  // Always proxy Hot Module Replacement (HMR) requests
+  if (path.includes('vite-hmr') || path.includes('__vite_ping') || path.includes('vite-ws')) {
+    return true;
+  }
+  
   return VITE_PATHS.some(pattern => 
     path.includes(pattern) || path.endsWith(pattern));
 };
@@ -141,31 +171,34 @@ app.use((req, res, next) => {
   next();
 });
 
-// Serve the root path directly
+// Serve the root path through the Vite dev server
 app.get('/', (req, res) => {
-  console.log('Serving root path through proxy');
+  console.log('Serving root path through Vite proxy');
   viteProxyMiddleware(req, res);
 });
 
-// Add route for client-side SPA paths
-app.get([
-  '/dashboard',
+// Define React SPA routes based on biozone-harmony-boost App.tsx
+const CLIENT_ROUTES = [
+  '/tokenomics',
+  '/aicon',
   '/wallet',
-  '/fractal-explorer',
-  '/settings',
-  '/blockchain-explorer',
-  '/blockchain-dashboard',
-  '/multi-wallet-dashboard',
-  '/network-details',
-  '/transactions',
-  '/security',
-  '/quantum-security',
-  '/whitepaper',
-  '/about'
-], (req, res) => {
+  '/dapp',
+  '/terms-of-service',
+  '/privacy-policy',
+  '/api'
+];
+
+// Handle SPA routes
+app.get(CLIENT_ROUTES, (req, res) => {
   console.log(`SPA route handling for: ${req.path}`);
-  res.sendFile(path.join(__dirname, 'client/index.html'));
+  viteProxyMiddleware(req, res);
 });
+
+// Define the order of middleware correctly
+// 1. First check for direct static assets
+// 2. Then check for API requests
+// 3. Then check for SPA routes
+// 4. Finally use the catch-all
 
 // Proxy API requests
 app.use('/api', viteProxyMiddleware);
@@ -174,15 +207,21 @@ app.use('/api', viteProxyMiddleware);
 app.use('*', (req, res) => {
   const path = req.originalUrl;
   
+  // Check if the request is for a Vite module or asset
+  if (shouldProxyToVite(path)) {
+    console.log(`Proxying Vite resource: ${path}`);
+    return viteProxyMiddleware(req, res);
+  }
+  
   console.log(`Fallback handling for: ${path}`);
-  // For SPA navigation, serve the index.html
-  res.sendFile(path.join(__dirname, 'client/index.html'));
+  // For SPA navigation, proxy to Vite which will serve the correct index.html
+  viteProxyMiddleware(req, res);
 });
 
 // Start the server - bind to 0.0.0.0 for Replit
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Proxy server running on port ${PORT}`);
   console.log(`All requests will be proxied to ${TARGET_URL}`);
-  console.log(`Whitepaper content served directly from ${path.join(__dirname, 'client/public/whitepaper')}`);
-  console.log(`Fallback route configured for SPA client-side routing`);
+  console.log(`Static assets served from ${path.join(CLIENT_DIR, 'public')}`);
+  console.log(`SPA routes configured: ${CLIENT_ROUTES.join(', ')}`);
 });

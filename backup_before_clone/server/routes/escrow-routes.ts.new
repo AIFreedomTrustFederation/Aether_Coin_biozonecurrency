@@ -1,0 +1,372 @@
+/**
+ * Escrow Routes
+ * API endpoints for the escrow service
+ */
+
+import express from 'express';
+import multer from 'multer';
+import { z } from 'zod';
+import { escrowService } from '../services/escrow-service';
+import { EscrowStatus, EvidenceType } from '../../shared/schema';
+
+// Configure multer for memory storage (files stored in memory, not on disk)
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB file size limit
+  },
+  fileFilter: (req, file, callback) => {
+    // Allow common file types for evidence
+    const allowedMimes = [
+      'image/jpeg',
+      'image/png',
+      'image/gif',
+      'application/pdf',
+      'text/plain',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'audio/mpeg',
+      'audio/wav',
+      'video/mp4',
+      'application/json',
+      'application/zip',
+    ];
+    
+    if (allowedMimes.includes(file.mimetype)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Invalid file type. Allowed types: images, PDFs, documents, audio, video.'));
+    }
+  },
+});
+
+// Create router
+const router = express.Router();
+
+// Schema validators
+const createEscrowSchema = z.object({
+  sellerId: z.number(),
+  buyerId: z.number(),
+  amount: z.number().positive(),
+  tokenSymbol: z.string(),
+  description: z.string(),
+  chain: z.string(),
+  expiresAt: z.string().optional(),
+});
+
+const updateStatusSchema = z.object({
+  status: z.enum([
+    EscrowStatus.FUNDED,
+    EscrowStatus.EVIDENCE_SUBMITTED,
+    EscrowStatus.VERIFIED,
+    EscrowStatus.COMPLETED,
+    EscrowStatus.DISPUTED,
+    EscrowStatus.REFUNDED,
+    EscrowStatus.CANCELLED,
+  ]),
+});
+
+const createDisputeSchema = z.object({
+  reason: z.string(),
+  description: z.string(),
+});
+
+const ratingSchema = z.object({
+  ratedUserId: z.number(),
+  rating: z.number().min(1).max(5),
+  comment: z.string().optional(),
+});
+
+// APIs
+
+/**
+ * Create a new escrow transaction
+ * POST /api/escrow
+ */
+router.post('/', async (req, res) => {
+  try {
+    // Parse and validate request body
+    const data = createEscrowSchema.parse(req.body);
+    
+    // Use authenticated user as seller or buyer (security check in service)
+    // For development, we'll use a fixed user ID - in production this would come from authentication
+    const userId = 1; // Demo user ID
+    
+    // Convert expiry date if present
+    if (data.expiresAt) {
+      data.expiresAt = new Date(data.expiresAt);
+    }
+    
+    // Create escrow transaction
+    const escrow = await escrowService.createEscrowTransaction({
+      ...data,
+    });
+    
+    res.status(201).json(escrow);
+  } catch (error) {
+    console.error('Error creating escrow:', error);
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: 'Invalid request data', details: error.errors });
+    }
+    res.status(500).json({ error: 'Failed to create escrow transaction' });
+  }
+});
+
+/**
+ * Get escrow transactions for the authenticated user
+ * GET /api/escrow
+ */
+router.get('/', async (req, res) => {
+  try {
+    // For development, we'll use a fixed user ID - in production this would come from authentication
+    const userId = 1; // Demo user ID
+    
+    // Parse optional query parameters
+    const role = req.query.role as 'buyer' | 'seller' | undefined;
+    const status = req.query.status as EscrowStatus | undefined;
+    const limit = parseInt(req.query.limit as string) || 20;
+    const offset = parseInt(req.query.offset as string) || 0;
+    
+    // Get escrows for user
+    const escrows = await escrowService.getUserEscrows(userId, role, status, limit, offset);
+    
+    res.json(escrows);
+  } catch (error) {
+    console.error('Error getting escrows:', error);
+    res.status(500).json({ error: 'Failed to get escrow transactions' });
+  }
+});
+
+/**
+ * Get a specific escrow transaction by ID
+ * GET /api/escrow/:id
+ */
+router.get('/:id', async (req, res) => {
+  try {
+    const escrowId = parseInt(req.params.id);
+    if (isNaN(escrowId)) {
+      return res.status(400).json({ error: 'Invalid escrow ID' });
+    }
+    
+    // For development, we'll use a fixed user ID - in production this would come from authentication
+    const userId = 1; // Demo user ID
+    
+    // Get escrow
+    const escrow = await escrowService.getEscrowById(escrowId, userId);
+    
+    if (!escrow) {
+      return res.status(404).json({ error: 'Escrow transaction not found' });
+    }
+    
+    res.json(escrow);
+  } catch (error) {
+    console.error('Error getting escrow:', error);
+    res.status(500).json({ error: 'Failed to get escrow transaction' });
+  }
+});
+
+/**
+ * Update escrow status
+ * PUT /api/escrow/:id/status
+ */
+router.put('/:id/status', async (req, res) => {
+  try {
+    const escrowId = parseInt(req.params.id);
+    if (isNaN(escrowId)) {
+      return res.status(400).json({ error: 'Invalid escrow ID' });
+    }
+    
+    // For development, we'll use a fixed user ID - in production this would come from authentication
+    const userId = 1; // Demo user ID
+    
+    // Parse and validate status
+    const { status } = updateStatusSchema.parse(req.body);
+    
+    // Update status
+    const updated = await escrowService.updateEscrowStatus(escrowId, status, userId);
+    
+    res.json(updated);
+  } catch (error) {
+    console.error('Error updating escrow status:', error);
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: 'Invalid request data', details: error.errors });
+    }
+    
+    if (error instanceof Error) {
+      // Check for known error messages
+      if (
+        error.message.includes('not authorized') ||
+        error.message.includes('Only buyer') ||
+        error.message.includes('Only seller')
+      ) {
+        return res.status(403).json({ error: error.message });
+      }
+      
+      if (error.message.includes('Invalid state transition')) {
+        return res.status(400).json({ error: error.message });
+      }
+      
+      if (error.message.includes('not found')) {
+        return res.status(404).json({ error: error.message });
+      }
+    }
+    
+    res.status(500).json({ error: 'Failed to update escrow status' });
+  }
+});
+
+/**
+ * Upload proof for an escrow transaction
+ * POST /api/escrow/:id/proof
+ */
+router.post('/:id/proof', upload.single('file'), async (req, res) => {
+  try {
+    const escrowId = parseInt(req.params.id);
+    if (isNaN(escrowId)) {
+      return res.status(400).json({ error: 'Invalid escrow ID' });
+    }
+    
+    // For development, we'll use a fixed user ID - in production this would come from authentication
+    const userId = 1; // Demo user ID
+    
+    // Verify file was uploaded
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+    
+    // Validate required fields
+    if (!req.body.proofType || !req.body.description) {
+      return res.status(400).json({ error: 'Missing required fields: proofType, description' });
+    }
+    
+    // Upload proof
+    const proof = await escrowService.uploadProof({
+      escrowTransactionId: escrowId,
+      userId,
+      proofType: req.body.proofType,
+      description: req.body.description,
+      file: req.file.buffer,
+      fileType: req.file.mimetype,
+      filename: req.file.originalname,
+    });
+    
+    res.status(201).json(proof);
+  } catch (error) {
+    console.error('Error uploading proof:', error);
+    
+    if (error instanceof Error) {
+      if (
+        error.message.includes('not authorized') ||
+        error.message.includes('not found')
+      ) {
+        return res.status(403).json({ error: error.message });
+      }
+    }
+    
+    res.status(500).json({ error: 'Failed to upload proof' });
+  }
+});
+
+/**
+ * Create a dispute for an escrow transaction
+ * POST /api/escrow/:id/dispute
+ */
+router.post('/:id/dispute', async (req, res) => {
+  try {
+    const escrowId = parseInt(req.params.id);
+    if (isNaN(escrowId)) {
+      return res.status(400).json({ error: 'Invalid escrow ID' });
+    }
+    
+    // For development, we'll use a fixed user ID - in production this would come from authentication
+    const userId = 1; // Demo user ID
+    
+    // Parse and validate dispute data
+    const dispute = createDisputeSchema.parse(req.body);
+    
+    // Create dispute
+    const created = await escrowService.createDispute({
+      escrowTransactionId: escrowId,
+      initiatorId: userId,
+      reason: dispute.reason,
+      description: dispute.description,
+    });
+    
+    res.status(201).json(created);
+  } catch (error) {
+    console.error('Error creating dispute:', error);
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: 'Invalid request data', details: error.errors });
+    }
+    
+    if (error instanceof Error) {
+      if (error.message.includes('already exists')) {
+        return res.status(409).json({ error: error.message });
+      }
+      
+      if (
+        error.message.includes('not authorized') ||
+        error.message.includes('not found')
+      ) {
+        return res.status(403).json({ error: error.message });
+      }
+    }
+    
+    res.status(500).json({ error: 'Failed to create dispute' });
+  }
+});
+
+/**
+ * Rate another user after an escrow transaction
+ * POST /api/escrow/:id/rate
+ */
+router.post('/:id/rate', async (req, res) => {
+  try {
+    const escrowId = parseInt(req.params.id);
+    if (isNaN(escrowId)) {
+      return res.status(400).json({ error: 'Invalid escrow ID' });
+    }
+    
+    // For development, we'll use a fixed user ID - in production this would come from authentication
+    const userId = 1; // Demo user ID
+    
+    // Parse and validate rating data
+    const rating = ratingSchema.parse(req.body);
+    
+    // Submit rating
+    const created = await escrowService.rateUser({
+      escrowTransactionId: escrowId,
+      raterId: userId,
+      ratedUserId: rating.ratedUserId,
+      rating: rating.rating,
+      comment: rating.comment,
+    });
+    
+    res.status(201).json(created);
+  } catch (error) {
+    console.error('Error rating user:', error);
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: 'Invalid request data', details: error.errors });
+    }
+    
+    if (error instanceof Error) {
+      if (
+        error.message.includes('not authorized') ||
+        error.message.includes('Cannot rate until') ||
+        error.message.includes('Cannot rate yourself') ||
+        error.message.includes('Can only rate the other party') ||
+        error.message.includes('already submitted a rating')
+      ) {
+        return res.status(400).json({ error: error.message });
+      }
+      
+      if (error.message.includes('not found')) {
+        return res.status(404).json({ error: error.message });
+      }
+    }
+    
+    res.status(500).json({ error: 'Failed to submit rating' });
+  }
+});
+
+export default router;

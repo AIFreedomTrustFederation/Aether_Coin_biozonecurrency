@@ -10,16 +10,20 @@ fi
 
 # Start Vite in the background with host flag for Replit
 echo "Starting Vite development server in background..."
-vite --host 0.0.0.0 &
+cd client && ../node_modules/.bin/vite --host 0.0.0.0 &
 VITE_PID=$!
+cd ..
 
 # Wait for Vite to initialize
 echo "Waiting for Vite server to initialize..."
 sleep 3
 
+# Get the absolute path of the current directory
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
 # Start the proxy server
 echo "Starting proxy server..."
-node server-proxy.js
+node "$(pwd)/server-proxy.js"
 
 # If the proxy server stops, also terminate Vite
 kill $VITE_PID
