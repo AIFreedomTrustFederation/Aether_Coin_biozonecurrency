@@ -95,6 +95,16 @@ const Navbar = () => {
             <NavigationMenuItem>
               <NavigationMenuLink asChild>
                 <Button variant="link" asChild>
+                  <Link to="/aethercore-trust" className="flex items-center">
+                    <Globe className="mr-2 h-4 w-4 text-primary" />
+                    AetherCore.trust
+                  </Link>
+                </Button>
+              </NavigationMenuLink>
+            </NavigationMenuItem>
+            <NavigationMenuItem>
+              <NavigationMenuLink asChild>
+                <Button variant="link" asChild>
                   <a href="https://atc.aifreedomtrust.com/dapp" target="_blank" rel="noopener noreferrer" className="flex items-center">
                     <ExternalLink className="mr-2 h-4 w-4" />
                     DApp (External)
