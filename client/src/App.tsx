@@ -18,6 +18,7 @@ const Domains = lazy(() => import("./pages/Domains"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const Api = lazy(() => import("./pages/Api"));
+const AetherCoreTrust = lazy(() => import("./pages/hosting/AetherCoreTrust"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -47,6 +48,7 @@ const App = () => (
               <Route path="/terms-of-service" element={<TermsOfService />} />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/api" element={<Api />} />
+              <Route path="/aethercore-trust" element={<AetherCoreTrust />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
