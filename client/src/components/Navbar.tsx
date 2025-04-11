@@ -105,6 +105,16 @@ const Navbar = () => {
             <NavigationMenuItem>
               <NavigationMenuLink asChild>
                 <Button variant="link" asChild>
+                  <Link to="/aethercore-browser" className="flex items-center">
+                    <Shield className="mr-2 h-4 w-4 text-blue-600" />
+                    HTTQS Browser
+                  </Link>
+                </Button>
+              </NavigationMenuLink>
+            </NavigationMenuItem>
+            <NavigationMenuItem>
+              <NavigationMenuLink asChild>
+                <Button variant="link" asChild>
                   <a href="https://atc.aifreedomtrust.com/dapp" target="_blank" rel="noopener noreferrer" className="flex items-center">
                     <ExternalLink className="mr-2 h-4 w-4" />
                     DApp (External)
