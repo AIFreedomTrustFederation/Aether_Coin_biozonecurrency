@@ -37,6 +37,8 @@ import fractalCoinRoutes from "./routes/fractalcoin-api-routes";
 import fractalCoinKeyRoutes from "./routes/fractalcoin-key-routes";
 import apiKeyRoutes from "./routes/api-key-routes";
 import fractalNetworkRoutes from "./routes/fractal-network-routes";
+import laoRoutes from "./routes/lao";
+import insuranceRoutes from "./routes/insurance";
 import { openSourcePaymentService } from "./services/openSourcePayment";
 
 /**
@@ -175,6 +177,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Mount Fractal Network routes for node management
   app.use('/api/fractal-network', fractalNetworkRoutes);
+  
+  // Mount LAO routes for Wyoming-based Limited Autonomous Organizations
+  app.use(laoRoutes);
+  
+  // Mount Insurance System routes
+  app.use(insuranceRoutes);
   
   // Register quantum secure payment routes
   registerQuantumSecurePaymentRoutes(app);
