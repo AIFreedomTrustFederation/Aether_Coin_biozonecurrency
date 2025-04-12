@@ -72,6 +72,49 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Add a simple API test endpoint
+app.get('/api/test', (req, res) => {
+  res.json({
+    message: 'API test endpoint working',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Add a mock LAO API endpoint
+app.get('/api/laos', (req, res) => {
+  res.json({
+    message: 'LAO API endpoint working',
+    laos: [
+      {
+        id: 1,
+        name: 'Aetherion Core LAO',
+        entityId: 'WY-2025-001',
+        contractAddress: '0x1234567890abcdef1234567890abcdef12345678',
+        description: 'Core LAO for Aetherion governance',
+        createdAt: new Date().toISOString()
+      }
+    ]
+  });
+});
+
+// Add a mock Insurance API endpoint
+app.get('/api/insurance/risk-pools', (req, res) => {
+  res.json({
+    message: 'Insurance Risk Pools API endpoint working',
+    riskPools: [
+      {
+        id: 1,
+        name: 'Asset Protection Pool',
+        policyType: 'asset_protection',
+        balance: 1000000,
+        minCoverageAmount: 10000,
+        maxCoverageAmount: 5000000,
+        createdAt: new Date().toISOString()
+      }
+    ]
+  });
+});
+
 // Middleware to log all requests
 app.use((req, res, next) => {
   console.log(`Request: ${req.method} ${req.url}`);
@@ -247,8 +290,12 @@ app.get(CLIENT_ROUTES, (req, res) => {
   viteProxyMiddleware(req, res);
 });
 
-// Proxy API requests
-app.use('/api', viteProxyMiddleware);
+// Proxy any remaining API requests to Vite dev server
+// This needs to come after our explicit API routes
+app.use('/api', (req, res, next) => {
+  console.log(`Proxying API request: ${req.url}`);
+  viteProxyMiddleware(req, res, next);
+});
 
 // Domain handling for atc.aifreedomtrust.com - handle both direct route and subdomain access
 app.get(['/atc-aifreedomtrust', '/atc'], (req, res) => {
