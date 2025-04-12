@@ -15,6 +15,7 @@ const Aicon = lazy(() => import("./pages/Aicon"));
 const Wallet = lazy(() => import("./pages/Wallet"));
 const DApp = lazy(() => import("./pages/DApp"));
 const Domains = lazy(() => import("./pages/Domains"));
+const Achievements = lazy(() => import("./pages/Achievements"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const Api = lazy(() => import("./pages/Api"));
@@ -46,6 +47,7 @@ const App = () => (
               <Route path="/wallet" element={<Wallet />} />
               <Route path="/dapp" element={<DApp />} />
               <Route path="/domains" element={<Domains />} />
+              <Route path="/achievements" element={<Achievements />} />
               <Route path="/terms-of-service" element={<TermsOfService />} />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/api" element={<Api />} />
