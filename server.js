@@ -290,8 +290,33 @@ app.get(CLIENT_ROUTES, (req, res) => {
   viteProxyMiddleware(req, res);
 });
 
+// Simple middleware to handle API 404s properly
+app.use('/api/*', (req, res, next) => {
+  const fullPath = req.originalUrl;
+  
+  // Check if this is an API route we've already defined
+  const isExplicitApiRoute = 
+    fullPath === '/api/test' || 
+    fullPath === '/api/laos' || 
+    fullPath === '/api/insurance/risk-pools';
+  
+  if (isExplicitApiRoute) {
+    return next();
+  }
+  
+  // If we reach here, it's an API route that doesn't exist
+  console.log(`API route not found: ${fullPath}`);
+  
+  // Return proper JSON error instead of HTML
+  return res.status(404).json({
+    error: 'Not Found',
+    message: `API endpoint ${fullPath} does not exist`,
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Proxy any remaining API requests to Vite dev server
-// This needs to come after our explicit API routes
+// This comes after our explicit API routes and 404 handler
 app.use('/api', (req, res, next) => {
   console.log(`Proxying API request: ${req.url}`);
   viteProxyMiddleware(req, res, next);
