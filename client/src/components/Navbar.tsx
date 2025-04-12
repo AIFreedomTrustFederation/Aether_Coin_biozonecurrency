@@ -115,10 +115,10 @@ const Navbar = () => {
             <NavigationMenuItem>
               <NavigationMenuLink asChild>
                 <Button variant="link" asChild>
-                  <a href="https://atc.aifreedomtrust.com/dapp" target="_blank" rel="noopener noreferrer" className="flex items-center">
+                  <Link to="/aethercore-browser" state={{ initialUrl: "httqs://www.atc.aifreedomtrust.com" }} className="flex items-center">
                     <ExternalLink className="mr-2 h-4 w-4" />
-                    DApp (External)
-                  </a>
+                    ATC.aifreedomtrust.com
+                  </Link>
                 </Button>
               </NavigationMenuLink>
             </NavigationMenuItem>

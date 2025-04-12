@@ -10,8 +10,13 @@ import { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Shield, Check, Globe } from 'lucide-react';
 import AetherCoreBrowser from '../components/browser/AetherCoreBrowser';
+import { useLocation } from 'react-router-dom';
 
 const AetherCoreBrowserPage = () => {
+  const location = useLocation();
+  const state = location.state as { initialUrl?: string } | null;
+  const initialUrl = state?.initialUrl || 'httqs://www.AetherCore.trust';
+  
   useEffect(() => {
     document.title = 'AetherCore Quantum Browser | Aetherion Wallet';
   }, []);
@@ -84,7 +89,7 @@ const AetherCoreBrowserPage = () => {
 
         <div className="bg-white p-1 rounded-lg shadow-md mb-6">
           <div className="h-[600px]">
-            <AetherCoreBrowser />
+            <AetherCoreBrowser initialUrl={initialUrl} />
           </div>
         </div>
 
