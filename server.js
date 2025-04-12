@@ -238,8 +238,7 @@ const CLIENT_ROUTES = [
   '/achievements',
   '/aethercore-browser',
   '/terms-of-service',
-  '/privacy-policy',
-  '/api'
+  '/privacy-policy'
 ];
 
 // Handle SPA routes
