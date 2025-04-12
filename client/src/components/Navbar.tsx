@@ -116,7 +116,7 @@ const Navbar = () => {
               <NavigationMenuLink asChild>
                 <Button variant="link" asChild>
                   <a href="/atc-aifreedomtrust" className="flex items-center">
-                    <ExternalLink className="mr-2 h-4 w-4" />
+                    <ExternalLink className="mr-2 h-4 w-4 text-blue-600" />
                     ATC.aifreedomtrust.com
                   </a>
                 </Button>

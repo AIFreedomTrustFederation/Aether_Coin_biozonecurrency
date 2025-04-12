@@ -199,6 +199,18 @@ const shouldProxyToVite = (path) => {
 // Set up proxy middleware that can be reused
 const viteProxyMiddleware = createProxyMiddleware(proxyOptions);
 
+// Handle subdomain detection for production environment
+app.use((req, res, next) => {
+  const host = req.get('host');
+  // Check if we're running in production and receiving a request from the ATC subdomain
+  if (host && host.includes('atc.aifreedomtrust.com')) {
+    console.log(`Detected subdomain access: ${host}`);
+    // Redirect to our ATC portal route
+    return res.redirect('/atc-aifreedomtrust');
+  }
+  next();
+});
+
 // Proxy all static assets and source files to Vite dev server
 app.use((req, res, next) => {
   const path = req.originalUrl;
@@ -238,8 +250,14 @@ app.get(CLIENT_ROUTES, (req, res) => {
 // Proxy API requests
 app.use('/api', viteProxyMiddleware);
 
-// Domain handling for atc.aifreedomtrust.com
-app.get('/atc-aifreedomtrust', (req, res) => {
+// Domain handling for atc.aifreedomtrust.com - handle both direct route and subdomain access
+app.get(['/atc-aifreedomtrust', '/atc'], (req, res) => {
+  // Log access for debugging
+  console.log(`ATC Portal accessed via: ${req.path} - Host: ${req.get('host')}`);
+  
+  // Set special headers to identify this is from our quantum portal
+  res.setHeader('X-Quantum-Portal', 'true');
+  res.setHeader('X-Aetherion-Domain', 'atc.aifreedomtrust.com');
   res.send(`
     <!DOCTYPE html>
     <html lang="en">
