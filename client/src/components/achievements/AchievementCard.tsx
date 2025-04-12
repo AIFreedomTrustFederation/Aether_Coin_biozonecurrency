@@ -2,14 +2,14 @@ import React from 'react';
 import { 
   Card, 
   CardContent, 
-  CardDescription, 
   CardFooter, 
-  CardHeader, 
-  CardTitle 
+  CardHeader,
+  CardTitle,
+  CardDescription
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Lock, Medal } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { Award, Check, Gem, Lock, Medal } from 'lucide-react';
 
 interface AchievementCardProps {
   achievement: {
@@ -37,108 +37,176 @@ interface AchievementCardProps {
   onMintNFT: (achievementId: number) => void;
 }
 
-const AchievementCard: React.FC<AchievementCardProps> = ({
-  achievement,
-  earned,
-  userAchievement,
-  categoryIcon,
-  difficultyClass,
-  onMintNFT
+const getDifficultyInfo = (difficulty: string) => {
+  switch (difficulty) {
+    case 'beginner':
+      return { 
+        label: 'Beginner', 
+        class: 'bg-green-100 text-green-800 border-green-200',
+        gems: 1
+      };
+    case 'intermediate':
+      return { 
+        label: 'Intermediate', 
+        class: 'bg-blue-100 text-blue-800 border-blue-200',
+        gems: 2
+      };
+    case 'advanced':
+      return { 
+        label: 'Advanced', 
+        class: 'bg-purple-100 text-purple-800 border-purple-200',
+        gems: 3
+      };
+    case 'expert':
+      return { 
+        label: 'Expert', 
+        class: 'bg-amber-100 text-amber-800 border-amber-200',
+        gems: 4
+      };
+    case 'master':
+      return { 
+        label: 'Master', 
+        class: 'bg-red-100 text-red-800 border-red-200',
+        gems: 5
+      };
+    default:
+      return { 
+        label: 'Unknown', 
+        class: 'bg-gray-100 text-gray-800 border-gray-200',
+        gems: 0
+      };
+  }
+};
+
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString(undefined, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  });
+};
+
+const AchievementCard: React.FC<AchievementCardProps> = ({ 
+  achievement, 
+  earned, 
+  userAchievement, 
+  categoryIcon, 
+  difficultyClass, 
+  onMintNFT 
 }) => {
-  const canMintNFT = earned && userAchievement && !userAchievement.nftMinted;
+  const difficultyInfo = getDifficultyInfo(achievement.difficulty);
   
+  // Generate gem indicators based on difficulty
+  const renderGems = () => {
+    const gems = [];
+    for (let i = 0; i < difficultyInfo.gems; i++) {
+      gems.push(
+        <Gem key={i} className="h-3 w-3 text-amber-500" />
+      );
+    }
+    return (
+      <div className="flex items-center gap-0.5">
+        {gems}
+      </div>
+    );
+  };
+
   return (
-    <Card className={earned ? "border-2 border-forest-400" : ""}>
-      <CardHeader className="pb-2">
-        <div className="flex justify-between items-center mb-2">
-          <Badge variant="outline" className={`${difficultyClass} flex items-center gap-1`}>
-            <Medal className="h-3 w-3" />
-            {achievement.difficulty}
-          </Badge>
-          
-          <Badge variant="outline" className="bg-slate-100 flex items-center gap-1">
-            {categoryIcon}
-            {achievement.category.split('_').map(word => 
-              word.charAt(0).toUpperCase() + word.slice(1)
-            ).join(' ')}
-          </Badge>
-        </div>
-        <CardTitle className="flex items-center gap-2 text-lg">
-          {earned && <CheckCircle className="h-5 w-5 text-green-500" />}
-          {achievement.name}
-        </CardTitle>
-        <CardDescription>{achievement.description}</CardDescription>
-      </CardHeader>
-      
-      <CardContent>
-        <div className="text-sm mb-2">
-          <span className="font-medium">Required: </span>
-          {achievement.requirementDescription}
-        </div>
-        
-        <div className="aspect-[4/3] bg-slate-100 rounded-md overflow-hidden mb-2 flex items-center justify-center">
+    <Card className={`overflow-hidden transition-all duration-200 ${
+      earned 
+        ? 'border-2 border-green-500 hover:shadow-md hover:shadow-green-100' 
+        : 'border border-gray-200 opacity-75 hover:opacity-100'
+    }`}>
+      <div className="relative">
+        <div className="h-32 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center">
           {achievement.imageUrl ? (
             <img 
               src={achievement.imageUrl} 
-              alt={achievement.name} 
-              className="w-full h-full object-cover"
+              alt={achievement.name}
+              className="h-full w-full object-cover"
             />
           ) : (
-            <div className="text-gray-400 flex flex-col items-center">
-              <Medal className="h-12 w-12 mb-2" />
-              <span>Achievement Badge</span>
+            <Award className="h-16 w-16 text-white" />
+          )}
+          
+          {earned && (
+            <div className="absolute top-0 right-0 m-2 rounded-full bg-green-500 p-1">
+              <Check className="h-4 w-4 text-white" />
             </div>
           )}
         </div>
         
-        <div className="flex justify-between items-center mt-4">
-          <div className="flex items-center">
-            <span className="font-medium text-forest-800">{achievement.pointsValue}</span>
-            <span className="ml-1 text-sm text-gray-500">points</span>
+        <Badge className={`absolute top-2 left-2 ${difficultyInfo.class}`}>
+          {difficultyInfo.label}
+        </Badge>
+      </div>
+      
+      <CardHeader className="pt-4 pb-2">
+        <div className="flex justify-between items-start">
+          <CardTitle className="text-base">{achievement.name}</CardTitle>
+          <div className="flex items-center gap-1">
+            {categoryIcon}
+            <span className="text-xs font-medium">{achievement.pointsValue} pts</span>
           </div>
-          
-          {earned && (
-            <Badge className="bg-green-100 text-green-800 border-green-200">
-              Earned {userAchievement?.dateEarned ? new Date(userAchievement.dateEarned).toLocaleDateString() : ''}
-            </Badge>
-          )}
-          
-          {!earned && (
-            <Badge variant="outline" className="text-gray-400 border-gray-200 flex items-center gap-1">
-              <Lock className="h-3 w-3" />
-              Locked
-            </Badge>
-          )}
         </div>
+        <div className="flex items-center gap-1 mt-1">
+          {renderGems()}
+        </div>
+      </CardHeader>
+      
+      <CardContent className="pb-2">
+        <CardDescription className="text-xs">
+          {achievement.description}
+        </CardDescription>
+        
+        <div className="mt-3 border-t pt-2">
+          <p className="text-xs text-gray-600">
+            <span className="font-semibold">Requirement:</span> {achievement.requirementDescription}
+          </p>
+        </div>
+        
+        {earned && userAchievement && (
+          <div className="mt-2">
+            <p className="text-xs text-green-600 font-medium">
+              Earned on {formatDate(userAchievement.dateEarned)}
+            </p>
+          </div>
+        )}
       </CardContent>
       
       <CardFooter className="pt-0">
-        {canMintNFT && (
-          <Button 
-            onClick={() => onMintNFT(achievement.id)}
-            className="w-full bg-amber-500 hover:bg-amber-600"
-          >
-            Mint as NFT Badge
-          </Button>
-        )}
-        
-        {earned && userAchievement?.nftMinted && (
+        {earned ? (
+          userAchievement?.nftMinted ? (
+            <Button 
+              variant="outline" 
+              size="sm"
+              className="w-full text-xs flex items-center gap-1"
+              disabled
+            >
+              <Medal className="h-3 w-3" />
+              NFT Badge Minted
+            </Button>
+          ) : (
+            <Button 
+              variant="default" 
+              size="sm"
+              className="w-full text-xs flex items-center gap-1"
+              onClick={() => onMintNFT(achievement.id)}
+            >
+              <Medal className="h-3 w-3" />
+              Mint NFT Badge
+            </Button>
+          )
+        ) : (
           <Button 
             variant="outline" 
-            className="w-full border-forest-200 text-forest-800"
+            size="sm"
+            className="w-full text-xs flex items-center gap-1"
             disabled
           >
-            NFT Badge Minted
-          </Button>
-        )}
-        
-        {!earned && (
-          <Button 
-            variant="outline" 
-            className="w-full text-gray-500"
-            disabled
-          >
-            Complete to unlock
+            <Lock className="h-3 w-3" />
+            Not Yet Earned
           </Button>
         )}
       </CardFooter>
