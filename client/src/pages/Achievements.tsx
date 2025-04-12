@@ -39,28 +39,80 @@ const difficultyColors = {
 const Achievements = () => {
   const [activeCategory, setActiveCategory] = useState("all");
   
+  // Define types for our data
+  interface Achievement {
+    id: number;
+    name: string;
+    description: string;
+    category: string;
+    difficulty: string;
+    pointsValue: number;
+    imageUrl: string;
+    requirementDescription: string;
+    nftMetadata?: Record<string, any>;
+  }
+
+  interface UserAchievement {
+    id: number;
+    userId: number;
+    achievementId: number;
+    dateEarned: string;
+    nftTokenId?: string;
+    nftMinted: boolean;
+    transactionHash?: string;
+    achievement: Achievement;
+  }
+
+  interface NFTBadge {
+    id: number;
+    achievementId: number;
+    tokenId: string;
+    metadata: {
+      name: string;
+      description: string;
+      attributes: Array<{
+        trait_type: string;
+        value: string;
+      }>;
+    };
+    imageUrl: string;
+    badgeRarity: string;
+    mintedAt: string;
+    contractAddress: string;
+    chainId: number;
+  }
+
+  interface UserProfile {
+    id: number;
+    username: string;
+    email: string;
+    avatarUrl?: string;
+    walletAddress?: string;
+    securityScore: number;
+  }
+
   // Fetch all achievements
-  const { data: achievements, isLoading: isLoadingAchievements } = useQuery({
+  const { data: achievements, isLoading: isLoadingAchievements } = useQuery<Achievement[]>({
     queryKey: ['/api/achievements'],
     retry: 1,
   });
   
   // Fetch user's earned achievements
-  const { data: userAchievements, isLoading: isLoadingUserAchievements } = useQuery({
+  const { data: userAchievements, isLoading: isLoadingUserAchievements } = useQuery<UserAchievement[]>({
     queryKey: ['/api/achievements/user', CURRENT_USER_ID],
     retry: 1,
     enabled: !!CURRENT_USER_ID,
   });
   
   // Fetch user's NFT badges
-  const { data: nftBadges, isLoading: isLoadingBadges } = useQuery({
+  const { data: nftBadges, isLoading: isLoadingBadges } = useQuery<NFTBadge[]>({
     queryKey: ['/api/nft-badges/user', CURRENT_USER_ID],
     retry: 1,
     enabled: !!CURRENT_USER_ID,
   });
   
   // Fetch user's security score
-  const { data: userProfile, isLoading: isLoadingProfile } = useQuery({
+  const { data: userProfile, isLoading: isLoadingProfile } = useQuery<UserProfile>({
     queryKey: ['/api/users', CURRENT_USER_ID],
     retry: 1,
     enabled: !!CURRENT_USER_ID,
@@ -99,7 +151,7 @@ const Achievements = () => {
   const isLoading = isLoadingAchievements || isLoadingUserAchievements || isLoadingBadges || isLoadingProfile;
 
   // This would be connected to your wallet system in a real implementation
-  const handleMintNFT = async (achievementId) => {
+  const handleMintNFT = async (achievementId: number) => {
     try {
       toast({
         title: "NFT Minting Initiated",
@@ -112,10 +164,10 @@ const Achievements = () => {
         toast({
           title: "NFT Minted Successfully",
           description: "Your achievement badge has been minted as an NFT.",
-          variant: "success",
+          variant: "default",
         });
       }, 2000);
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Minting Failed",
         description: error.message || "Failed to mint the NFT badge.",

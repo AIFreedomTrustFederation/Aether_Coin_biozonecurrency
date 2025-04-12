@@ -235,6 +235,7 @@ const CLIENT_ROUTES = [
   '/aicon',
   '/wallet',
   '/dapp',
+  '/achievements',
   '/aethercore-browser',
   '/terms-of-service',
   '/privacy-policy',
