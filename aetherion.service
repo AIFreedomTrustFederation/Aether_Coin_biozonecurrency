@@ -1,0 +1,27 @@
+[Unit]
+Description=Aetherion Wallet Application
+Documentation=https://aifreedomtrust.com
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/aetherion
+ExecStart=/usr/bin/node server.js
+Restart=on-failure
+RestartSec=10
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=aetherion
+Environment=NODE_ENV=production
+Environment=PORT=5000
+
+# Security options
+NoNewPrivileges=true
+ProtectSystem=full
+PrivateTmp=true
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target
