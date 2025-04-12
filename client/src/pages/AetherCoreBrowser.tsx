@@ -9,7 +9,7 @@
 import { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Shield, Check, Globe } from 'lucide-react';
-import AetherCoreBrowser from '../components/browser/AetherCoreBrowser';
+import AetherCoreBrowser, { AetherCoreBrowserProps } from '../components/browser/AetherCoreBrowser';
 import { useLocation } from 'react-router-dom';
 
 const AetherCoreBrowserPage = () => {

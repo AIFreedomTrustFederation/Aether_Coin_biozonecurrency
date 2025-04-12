@@ -33,9 +33,13 @@ interface BrowserTab {
 // Security level enum
 type SecurityLevel = 'quantum' | 'standard' | 'insecure' | 'unknown';
 
-const AetherCoreBrowser: React.FC = () => {
+export interface AetherCoreBrowserProps {
+  initialUrl?: string;
+}
+
+const AetherCoreBrowser: React.FC<AetherCoreBrowserProps> = ({ initialUrl = 'httqs://www.AetherCore.trust' }) => {
   // Browser state
-  const [tabs, setTabs] = useState<BrowserTab[]>([createNewTab()]);
+  const [tabs, setTabs] = useState<BrowserTab[]>([]);
   const [activeTabId, setActiveTabId] = useState<string>('');
   const [urlInput, setUrlInput] = useState<string>('');
   const [securityInfo, setSecurityInfo] = useState<{ level: SecurityLevel, message: string }>({ 
@@ -48,6 +52,16 @@ const AetherCoreBrowser: React.FC = () => {
   // Browser frame ref - this would be an iframe in a real implementation
   const browserFrameRef = useRef<HTMLDivElement>(null);
   
+  // Initialize tabs with initialUrl
+  useEffect(() => {
+    // Create initial tab with the provided URL
+    const newTab = createNewTab(initialUrl);
+    setTabs([newTab]);
+    setActiveTabId(newTab.id);
+    setUrlInput(newTab.url);
+    checkSecurity(newTab.url, null);
+  }, [initialUrl]);
+  
   // Set initial active tab
   useEffect(() => {
     if (tabs.length > 0 && !activeTabId) {
@@ -57,10 +71,10 @@ const AetherCoreBrowser: React.FC = () => {
   }, [tabs, activeTabId]);
   
   // Create a new browser tab
-  function createNewTab(): BrowserTab {
+  function createNewTab(url: string = 'httqs://www.AetherCore.trust'): BrowserTab {
     return {
       id: 'tab_' + Math.random().toString(36).substring(2, 9),
-      url: 'httqs://www.AetherCore.trust',
+      url: url,
       title: 'New Tab',
       isLoading: false,
       canGoBack: false,
@@ -132,7 +146,8 @@ const AetherCoreBrowser: React.FC = () => {
         if (url.includes('AetherCore.trust') || 
             url.includes('fractalcoin.network') || 
             url.includes('freedomtrust.com') || 
-            url.includes('aifreedomtrust.com') || 
+            url.includes('aifreedomtrust.com') ||
+            url.includes('atc.aifreedomtrust.com') || // Explicitly handle atc subdomain
             isDomainInFractalDNS) {
           formattedUrl = `httqs://${url}`;
         } else {
@@ -319,7 +334,12 @@ const AetherCoreBrowser: React.FC = () => {
           }
           
           // Check for domains that we know are important
-          if (domain.includes('aifreedomtrust.com') || 
+          if (domain.includes('atc.aifreedomtrust.com')) {
+            // Special case for atc.aifreedomtrust.com
+            isQuantumSecure = true;
+            securityLevel = 'quantum';
+            message = 'Quantum-secure connection - Official ATC Domain with Enhanced Security';
+          } else if (domain.includes('aifreedomtrust.com') || 
               domain.includes('freedomtrust.com') || 
               domain.includes('AetherCore.trust')) {
             isQuantumSecure = true;
