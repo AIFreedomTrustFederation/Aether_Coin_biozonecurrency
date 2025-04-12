@@ -179,10 +179,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/api/fractal-network', fractalNetworkRoutes);
   
   // Mount LAO routes for Wyoming-based Limited Autonomous Organizations
-  app.use(laoRoutes);
+  app.use('/api', laoRoutes);
   
   // Mount Insurance System routes
-  app.use(insuranceRoutes);
+  app.use('/api', insuranceRoutes);
   
   // Register quantum secure payment routes
   registerQuantumSecurePaymentRoutes(app);

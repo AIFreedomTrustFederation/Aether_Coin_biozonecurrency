@@ -12,7 +12,7 @@ import {
 const router = express.Router();
 
 // Middleware to check if user is authenticated
-const isAuthenticated = (req: express.Request, res: express.Response, next: express.Function) => {
+const isAuthenticated = (req: express.Request, res: express.Response, next: express.NextFunction) => {
   if (!req.session.userId) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
