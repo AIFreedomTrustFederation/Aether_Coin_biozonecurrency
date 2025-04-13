@@ -1,6 +1,7 @@
 
 import React from "react";
 import Navbar from "@/components/Navbar";
+import TaglineSection from "@/components/TaglineSection";
 import HeroSection from "@/components/HeroSection";
 import FractalHeroSection from "@/components/FractalHeroSection";
 import FeatureSection from "@/components/FeatureSection";
@@ -17,6 +18,7 @@ const Index = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
+      <TaglineSection />
       <main className="flex-grow">
         <HeroSection />
         <FractalHeroSection />
