@@ -1,61 +1,75 @@
-/* Import custom styles before Tailwind */
+/* Import custom styles */
 @import './styles/neon.css';
+@import './styles/tailwind-output.css';
 
-/* Tailwind CSS directives */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-@layer base {
-  html {
-    @apply border-border;
-  }
-
-  html, body, #root {
-    @apply h-full w-full font-sans antialiased bg-background text-foreground;
-  }
-
-  body {
-    @apply font-sans antialiased bg-background text-foreground;
-  }
-
-  :root {
-    --primary-color-rgb: 0, 255, 136; /* Neon green in RGB */
-    --glow-color: #ffffff;
-  }
-
-  .dark {
-    --background: 0 0% 7%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 157 100% 60%;
-    --primary-foreground: 0 0% 0%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 157 100% 60%;
-  }
+/* Root variables */
+:root {
+  --primary-color-rgb: 0, 255, 136; /* Neon green in RGB */
+  --glow-color: #ffffff;
 }
 
-/* Scrollbar styles */
+/* Dark theme variables */
+.dark {
+  --background: 0 0% 7%;
+  --foreground: 0 0% 98%;
+  --card: 0 0% 9%;
+  --card-foreground: 0 0% 98%;
+  --popover: 0 0% 9%;
+  --popover-foreground: 0 0% 98%;
+  --primary: 157 100% 60%;
+  --primary-foreground: 0 0% 0%;
+  --secondary: 0 0% 14.9%;
+  --secondary-foreground: 0 0% 98%;
+  --muted: 0 0% 14.9%;
+  --muted-foreground: 0 0% 63.9%;
+  --accent: 0 0% 14.9%;
+  --accent-foreground: 0 0% 98%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 0 0% 14.9%;
+  --input: 0 0% 14.9%;
+  --ring: 157 100% 60%;
+}
+
+/* Scrollbar styles - Cross-browser solution to hide scrollbars */
 .no-scrollbar, .scrollbar-hide {
-  -ms-overflow-style: none; /* IE and Edge */
-  scrollbar-width: none; /* Firefox */
+  /* Hide scrollbars but allow scrolling */
+  overflow: auto;
+  
+  /* For IE and Edge */
+  -ms-overflow-style: none;
 }
 
+/* Firefox-specific (supports scrollbar-width) */
+@supports (scrollbar-width: none) {
+  .no-scrollbar, .scrollbar-hide {
+    scrollbar-width: none;
+  }
+}
+
+/* For WebKit browsers (Chrome, Safari, newer versions of Opera) */
 .no-scrollbar::-webkit-scrollbar, 
 .scrollbar-hide::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, and Opera */
+  display: none;
+  width: 0;
+  height: 0;
+  background: transparent;
+}
+
+/* Additional fallback for browsers that don't support scrollbar-width or ::-webkit-scrollbar */
+@supports not ((scrollbar-width: none) or (-ms-overflow-style: none)) {
+  .no-scrollbar, .scrollbar-hide {
+    /* Alternative approach for older browsers */
+    overflow: hidden;
+  }
+  
+  /* Create a wrapper with overflow auto when needed */
+  .scrollable-content {
+    height: 100%;
+    overflow: auto;
+    padding-right: 20px; /* Add padding to compensate for scrollbar width */
+    box-sizing: content-box; /* Ensure padding doesn't affect width calculation */
+  }
 }
 
 /* Horizontal scrolling */
@@ -64,16 +78,35 @@
   overflow-x: auto;
   scroll-behavior: smooth;
   scroll-snap-type: x proximity;
-  /* Safari/iOS < 16 fallback for overscroll-behavior */
-  -webkit-overflow-scrolling: touch;
-  /* Modern browsers including Safari iOS 16+ */
-  overscroll-behavior-x: contain;
   /* Prevent default touch actions */
   touch-action: pan-x;
   position: relative;
-  /* Additional Safari/iOS bounce prevention */
   width: 100%;
   box-sizing: border-box;
+}
+
+/* Modern browsers including Safari iOS 16+ */
+@supports (overscroll-behavior-x: contain) {
+  .scroll-x {
+    overscroll-behavior-x: contain;
+  }
+}
+
+/* iOS Safari < 16 specific fix for overscroll behavior */
+@supports not (overscroll-behavior-x: contain) {
+  .scroll-x {
+    /* Prevent horizontal bounce without overscroll-behavior */
+    position: relative;
+    /* Create a containing block for absolute positioning */
+    transform: translateZ(0);
+    /* Force hardware acceleration */
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    /* Improve performance */
+    will-change: transform;
+    /* Use modern scroll behavior */
+    scroll-behavior: smooth;
+  }
 }
 
 .scroll-item {
