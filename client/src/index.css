@@ -212,3 +212,140 @@
   mask-composite: exclude;
   pointer-events: none;
 }
+
+/* Fractal Hero Section Styles */
+.fractal-mandelbrot {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 800 800'%3E%3Cg fill='none' stroke='%23222222' stroke-width='1'%3E%3Cpath d='M769 229L1037 260.9M927 880L731 737 520 660 309 538 40 599 295 764 126.5 879.5 40 599-197 493 102 382-31 229 126.5 79.5-69-63'/%3E%3Cpath d='M-31 229L237 261 390 382 603 493 308.5 537.5 101.5 381.5M370 905L295 764'/%3E%3Cpath d='M520 660L578 842 731 737 840 599 603 493 520 660 295 764 309 538 390 382 539 269 769 229 577.5 41.5 370 105 295 -36 126.5 79.5 237 261 102 382 40 599 -69 737 127 880'/%3E%3Cpath d='M520-140L578.5 42.5 731-63M603 493L539 269 237 261 370 105M902 382L539 269M390 382L102 382'/%3E%3Cpath d='M-222 42L126.5 79.5 370 105 539 269 577.5 41.5 927 80 769 229 902 382 603 493 731 737M295-36L577.5 41.5M578 842L295 764M40-201L127 80M102 382L-261 269'/%3E%3C/g%3E%3Cg fill='%23444444'%3E%3Ccircle cx='769' cy='229' r='5'/%3E%3Ccircle cx='539' cy='269' r='5'/%3E%3Ccircle cx='603' cy='493' r='5'/%3E%3Ccircle cx='731' cy='737' r='5'/%3E%3Ccircle cx='520' cy='660' r='5'/%3E%3Ccircle cx='309' cy='538' r='5'/%3E%3Ccircle cx='295' cy='764' r='5'/%3E%3Ccircle cx='40' cy='599' r='5'/%3E%3Ccircle cx='102' cy='382' r='5'/%3E%3Ccircle cx='127' cy='80' r='5'/%3E%3Ccircle cx='370' cy='105' r='5'/%3E%3Ccircle cx='578' cy='42' r='5'/%3E%3Ccircle cx='237' cy='261' r='5'/%3E%3Ccircle cx='390' cy='382' r='5'/%3E%3C/g%3E%3C/svg%3E");
+  animation: rotate-slow 120s linear infinite;
+}
+
+/* Redshift/Blueshift Animations */
+@keyframes redshift-pulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes blueshift-pulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes greenshift-pulse {
+  0%, 100% { opacity: 0.1; transform: scaleY(0.9); }
+  50% { opacity: 0.25; transform: scaleY(1.05); }
+}
+
+.redshift-animation {
+  animation: redshift-pulse 8s ease-in-out infinite;
+}
+
+.blueshift-animation {
+  animation: blueshift-pulse 8s ease-in-out infinite;
+  animation-delay: 4s;
+}
+
+.greenshift-pulse {
+  animation: greenshift-pulse 6s ease-in-out infinite;
+}
+
+/* Seed of Life Pattern */
+.seed-of-life {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300' viewBox='0 0 300 300'%3E%3Cg fill='none' stroke='rgba(74, 222, 128, 0.5)' stroke-width='1'%3E%3Ccircle cx='150' cy='150' r='50'/%3E%3Ccircle cx='150' cy='100' r='50'/%3E%3Ccircle cx='150' cy='200' r='50'/%3E%3Ccircle cx='200' cy='150' r='50'/%3E%3Ccircle cx='100' cy='150' r='50'/%3E%3Ccircle cx='186' cy='186' r='50'/%3E%3Ccircle cx='114' cy='114' r='50'/%3E%3Ccircle cx='186' cy='114' r='50'/%3E%3Ccircle cx='114' cy='186' r='50'/%3E%3C/g%3E%3C/svg%3E");
+  animation: rotate-slow 60s linear infinite reverse;
+}
+
+/* Merkle Tree Pattern */
+.merkle-tree-pattern {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300' viewBox='0 0 300 300'%3E%3Cg fill='none' stroke='rgba(56, 189, 248, 0.4)' stroke-width='1'%3E%3Cpath d='M150 50v40M150 90h-60M150 90h60M90 90v40M150 90v40M210 90v40M90 130h-30M90 130h30M150 130h-30M150 130h30M210 130h-30M210 130h30M60 130v40M90 130v40M120 130v40M150 130v40M180 130v40M210 130v40M240 130v40'/%3E%3C/g%3E%3C/svg%3E");
+  animation: pulse-soft 10s ease-in-out infinite alternate;
+}
+
+/* Orbiting Particles */
+.orbit-particles {
+  position: relative;
+}
+
+.orbit-particles::before,
+.orbit-particles::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 80%;
+  height: 80%;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transform: translate(-50%, -50%);
+}
+
+.orbit-particles::before {
+  animation: rotate-slow 20s linear infinite;
+}
+
+.orbit-particles::after {
+  width: 60%;
+  height: 60%;
+  animation: rotate-slow 15s linear infinite reverse;
+}
+
+@keyframes rotate-slow {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* Sacred Geometry Section Styles */
+.sacred-geometry-pattern {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 800 800'%3E%3Cg fill='none' stroke-opacity='0.1'%3E%3Cg stroke='%23444' stroke-width='17'%3E%3Cline x1='400' y1='0' x2='400' y2='800'/%3E%3Cline x1='0' y1='400' x2='800' y2='400'/%3E%3C/g%3E%3Cg stroke='%23444' stroke-width='10'%3E%3Cline x1='0' y1='0' x2='800' y2='800'/%3E%3Cline x1='800' y1='0' x2='0' y2='800'/%3E%3C/g%3E%3Cg stroke='%23444' stroke-width='6.3'%3E%3Ccircle cx='400' cy='400' r='400'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  animation: rotate-slow 180s linear infinite;
+}
+
+.fibonacci-spiral {
+  position: relative;
+  overflow: hidden;
+}
+
+.fibonacci-shape {
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cpath fill='none' stroke='rgba(239, 68, 68, 0.8)' stroke-width='1' d='M98,2 C98,50 50,50 50,98 C50,50 2,50 2,2 C50,2 50,50 98,2 Z'/%3E%3C/svg%3E");
+  animation: rotate-slow 30s linear infinite;
+}
+
+.merkle-root {
+  position: relative;
+  overflow: hidden;
+}
+
+.merkle-root-shape {
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cg fill='none' stroke='rgba(74, 222, 128, 0.8)' stroke-width='1'%3E%3Cpath d='M50,20 L20,50 L50,80 L80,50 Z'/%3E%3Cpath d='M50,30 L30,50 L50,70 L70,50 Z'/%3E%3Cpath d='M50,40 L40,50 L50,60 L60,50 Z'/%3E%3C/g%3E%3C/svg%3E");
+  animation: pulse-slow 5s ease-in-out infinite alternate;
+}
+
+.mandelbrot-set {
+  position: relative;
+  overflow: hidden;
+}
+
+.mandelbrot-shape {
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cpath fill='none' stroke='rgba(56, 189, 248, 0.8)' stroke-width='1' d='M60,50 C60,55 65,60 70,60 C75,60 80,55 80,50 C80,45 75,40 70,40 C65,40 60,45 60,50 Z M40,50 C40,60 50,70 60,70 C70,70 80,60 80,50 C80,40 70,30 60,30 C50,30 40,40 40,50 Z M20,50 C20,65 35,80 50,80 C65,80 80,65 80,50 C80,35 65,20 50,20 C35,20 20,35 20,50 Z'/%3E%3C/svg%3E");
+  animation: pulse-slow 8s ease-in-out infinite alternate-reverse;
+}
+
+.torus-field {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Cg fill='none' stroke='rgba(255, 255, 255, 0.3)' stroke-width='0.5'%3E%3Ccircle cx='100' cy='100' r='90'/%3E%3Ccircle cx='100' cy='100' r='80'/%3E%3Ccircle cx='100' cy='100' r='70'/%3E%3Ccircle cx='100' cy='100' r='60'/%3E%3Ccircle cx='100' cy='100' r='50'/%3E%3Ccircle cx='100' cy='100' r='40'/%3E%3Cellipse cx='100' cy='100' rx='90' ry='30'/%3E%3Cellipse cx='100' cy='100' rx='80' ry='40'/%3E%3Cellipse cx='100' cy='100' rx='70' ry='50'/%3E%3Cellipse cx='100' cy='100' rx='60' ry='60'/%3E%3Cellipse cx='100' cy='100' rx='50' ry='70'/%3E%3Cellipse cx='100' cy='100' rx='40' ry='80'/%3E%3Cellipse cx='100' cy='100' rx='30' ry='90'/%3E%3C/g%3E%3C/svg%3E");
+  animation: rotate-slow 80s linear infinite;
+}
+
+.flower-of-life {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300' viewBox='0 0 300 300'%3E%3Cg fill='none' stroke='rgba(74, 222, 128, 0.3)' stroke-width='0.8'%3E%3Ccircle cx='150' cy='150' r='40'/%3E%3Ccircle cx='110' cy='150' r='40'/%3E%3Ccircle cx='150' cy='110' r='40'/%3E%3Ccircle cx='190' cy='150' r='40'/%3E%3Ccircle cx='150' cy='190' r='40'/%3E%3Ccircle cx='110' cy='110' r='40'/%3E%3Ccircle cx='190' cy='190' r='40'/%3E%3Ccircle cx='190' cy='110' r='40'/%3E%3Ccircle cx='110' cy='190' r='40'/%3E%3Ccircle cx='150' cy='70' r='40'/%3E%3Ccircle cx='150' cy='230' r='40'/%3E%3Ccircle cx='70' cy='150' r='40'/%3E%3Ccircle cx='230' cy='150' r='40'/%3E%3Ccircle cx='70' cy='110' r='40'/%3E%3Ccircle cx='230' cy='190' r='40'/%3E%3Ccircle cx='70' cy='190' r='40'/%3E%3Ccircle cx='230' cy='110' r='40'/%3E%3Ccircle cx='110' cy='70' r='40'/%3E%3Ccircle cx='190' cy='70' r='40'/%3E%3Ccircle cx='110' cy='230' r='40'/%3E%3Ccircle cx='190' cy='230' r='40'/%3E%3C/g%3E%3C/svg%3E");
+  animation: rotate-slow 120s linear infinite reverse;
+}
+
+@keyframes pulse-slow {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
