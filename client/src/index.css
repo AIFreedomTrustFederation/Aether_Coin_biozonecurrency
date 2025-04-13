@@ -397,3 +397,135 @@
 .md\:mb-8:hover {
   animation: gentle-float 4s ease-in-out infinite;
 }
+
+/* Quantum Loader Styles */
+.quantum-loader-forest,
+.quantum-loader-water,
+.quantum-loader-dual,
+.quantum-loader-cosmos {
+  position: relative;
+  border-radius: 50%;
+  backdrop-filter: blur(8px);
+}
+
+.quantum-loader-forest {
+  background: radial-gradient(circle, rgba(77, 153, 77, 0.1) 0%, rgba(77, 153, 77, 0.05) 70%, transparent 100%);
+  box-shadow: 0 0 20px rgba(77, 153, 77, 0.15);
+}
+
+.quantum-loader-water {
+  background: radial-gradient(circle, rgba(8, 145, 178, 0.1) 0%, rgba(8, 145, 178, 0.05) 70%, transparent 100%);
+  box-shadow: 0 0 20px rgba(8, 145, 178, 0.15);
+}
+
+.quantum-loader-dual {
+  background: radial-gradient(circle, rgba(77, 153, 77, 0.1) 0%, rgba(8, 145, 178, 0.05) 70%, transparent 100%);
+  box-shadow: 0 0 20px rgba(77, 153, 77, 0.1), 0 0 30px rgba(8, 145, 178, 0.1);
+}
+
+.quantum-loader-cosmos {
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, rgba(29, 78, 216, 0.05) 70%, transparent 100%);
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.15), 0 0 40px rgba(59, 130, 246, 0.05);
+}
+
+/* Quantum probability cloud effect */
+.quantum-loader-forest::before,
+.quantum-loader-water::before,
+.quantum-loader-dual::before,
+.quantum-loader-cosmos::before {
+  content: '';
+  position: absolute;
+  top: -10%;
+  left: -10%;
+  right: -10%;
+  bottom: -10%;
+  border-radius: 50%;
+  z-index: -1;
+  opacity: 0.4;
+  animation: quantum-pulse 4s infinite ease-in-out;
+}
+
+.quantum-loader-forest::before {
+  background: radial-gradient(circle, rgba(77, 153, 77, 0.2) 0%, transparent 70%);
+}
+
+.quantum-loader-water::before {
+  background: radial-gradient(circle, rgba(8, 145, 178, 0.2) 0%, transparent 70%);
+}
+
+.quantum-loader-dual::before {
+  background: radial-gradient(circle, rgba(77, 153, 77, 0.1) 0%, rgba(8, 145, 178, 0.1) 50%, transparent 70%);
+}
+
+.quantum-loader-cosmos::before {
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.2) 0%, rgba(29, 78, 216, 0.1) 50%, transparent 70%);
+}
+
+@keyframes quantum-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.3;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.6;
+  }
+}
+
+/* Quantum Showcase Background */
+.quantum-showcase-bg {
+  position: relative;
+  overflow: hidden;
+}
+
+.quantum-showcase-bg::before {
+  content: '';
+  position: absolute;
+  width: 200%;
+  height: 200%;
+  top: -50%;
+  left: -50%;
+  background-image: 
+    radial-gradient(circle at 25% 25%, rgba(77, 153, 77, 0.05) 1%, transparent 5%),
+    radial-gradient(circle at 75% 75%, rgba(8, 145, 178, 0.05) 1%, transparent 5%),
+    radial-gradient(circle at 25% 75%, rgba(59, 130, 246, 0.05) 1%, transparent 5%),
+    radial-gradient(circle at 75% 25%, rgba(255, 255, 255, 0.05) 1%, transparent 5%);
+  background-size: 50px 50px;
+  animation: quantum-showcase-bg-rotate 120s linear infinite;
+}
+
+@keyframes quantum-showcase-bg-rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Additional quantum animation effects */
+@keyframes quantum-entanglement {
+  0%, 100% {
+    opacity: 0.1;
+    stroke-dasharray: 3,3;
+  }
+  50% {
+    opacity: 0.4;
+    stroke-dasharray: 2,4;
+  }
+}
+
+@keyframes quantum-wave-collapse {
+  0% {
+    transform: scale(1);
+    opacity: 0.2;
+  }
+  50% {
+    transform: scale(2);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.2;
+  }
+}

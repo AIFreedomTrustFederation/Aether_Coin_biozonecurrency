@@ -5,8 +5,9 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { Loader2 } from "lucide-react";
 import { QuantumDomainProvider } from "./contexts/QuantumDomainContext";
+import { LoadingProvider } from "./contexts/LoadingContext";
+import { QuantumLoader } from "@/components/ui/quantum-loader";
 
 // Lazy load pages
 const Index = lazy(() => import("./pages/Index"));
@@ -25,10 +26,18 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
 
-// Loading fallback component
-const PageLoader = () => (
-  <div className="min-h-screen flex items-center justify-center">
-    <Loader2 className="h-8 w-8 text-forest-600 animate-spin" />
+// Enhanced Quantum loading fallback component
+const QuantumPageLoader = () => (
+  <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black flex flex-col items-center justify-center">
+    <QuantumLoader 
+      size="lg" 
+      variant="dual" 
+      showLabel 
+      labelText="Initializing Quantum Domain..." 
+    />
+    <p className="text-gray-400 text-sm mt-8 max-w-md text-center">
+      Establishing secure connection to the panentheistic economic framework...
+    </p>
   </div>
 );
 
@@ -37,28 +46,30 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <QuantumDomainProvider>
-        <BrowserRouter>
-          <Suspense fallback={<PageLoader />}>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/tokenomics" element={<Tokenomics />} />
-              <Route path="/aicon" element={<Aicon />} />
-              <Route path="/wallet" element={<Wallet />} />
-              <Route path="/dapp" element={<DApp />} />
-              <Route path="/domains" element={<Domains />} />
-              <Route path="/achievements" element={<Achievements />} />
-              <Route path="/terms-of-service" element={<TermsOfService />} />
-              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-              <Route path="/api" element={<Api />} />
-              <Route path="/aethercore-trust" element={<AetherCoreTrust />} />
-              <Route path="/aethercore-browser" element={<AetherCoreBrowser />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Suspense>
-        </BrowserRouter>
-      </QuantumDomainProvider>
+      <LoadingProvider loaderVariant="dual" enableFullscreenOverlay={true}>
+        <QuantumDomainProvider>
+          <BrowserRouter>
+            <Suspense fallback={<QuantumPageLoader />}>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/tokenomics" element={<Tokenomics />} />
+                <Route path="/aicon" element={<Aicon />} />
+                <Route path="/wallet" element={<Wallet />} />
+                <Route path="/dapp" element={<DApp />} />
+                <Route path="/domains" element={<Domains />} />
+                <Route path="/achievements" element={<Achievements />} />
+                <Route path="/terms-of-service" element={<TermsOfService />} />
+                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                <Route path="/api" element={<Api />} />
+                <Route path="/aethercore-trust" element={<AetherCoreTrust />} />
+                <Route path="/aethercore-browser" element={<AetherCoreBrowser />} />
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
+          </BrowserRouter>
+        </QuantumDomainProvider>
+      </LoadingProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
