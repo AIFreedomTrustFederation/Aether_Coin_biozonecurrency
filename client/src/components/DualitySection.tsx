@@ -11,10 +11,10 @@ const DualitySection = () => {
       <div className="container">
         <div className="text-center max-w-3xl mx-auto mb-16">
           <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">
-            <span className="text-forest-700">Bio</span> & <span className="text-water-600">Zoe</span>: The Dual Essence
+            <span className="text-forest-700">Quantum</span> & <span className="text-water-600">AI</span>: The AetherCore Vision
           </h2>
           <p className="text-muted-foreground">
-            Uniting the physical and spiritual dimensions of existence through <Link to="/tokenomics" className="text-forest-600 hover:underline">Aether Coin</Link>.
+            Uniting advanced quantum technologies with AI-powered governance through the <Link to="/tokenomics" className="text-forest-600 hover:underline">AI Freedom Trust</Link>, enabling humanity's multiplanetary economic framework.
           </p>
         </div>
         
@@ -28,20 +28,20 @@ const DualitySection = () => {
           >
             <div className="flex items-center gap-3 mb-6">
               <Leaf className="h-8 w-8 text-forest-600" />
-              <h3 className="text-2xl font-display font-bold text-forest-700">Bio (βίος)</h3>
+              <h3 className="text-2xl font-display font-bold text-forest-700">Quantum Technologies</h3>
             </div>
             
             <Card className="eco-card-hover border-forest-100 bg-white/70 backdrop-blur-sm">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Earth className="h-5 w-5 text-forest-600" />
-                  Material Existence
+                  Bitcoin-Backed Reserve
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <CardDescription className="text-muted-foreground">
-                  The physical manifestation of life, encompassing all biological processes
-                  and natural ecosystems. Represented by the tangible world around us.
+                  Leveraging Bitcoin's inherent scarcity as the foundation for infinite ATC expansion,
+                  secured through quantum-resistant cryptographic protocols and escrow mechanisms.
                 </CardDescription>
               </CardContent>
             </Card>
@@ -50,13 +50,13 @@ const DualitySection = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Droplet className="h-5 w-5 text-forest-600" />
-                  Temporal Journey
+                  Multiplanetary Infrastructure
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <CardDescription className="text-muted-foreground">
-                  The course of our natural lives, our relationship with the environment,
-                  and our responsibility as stewards of the Earth.
+                  Specialized economic and communication protocols designed to function across planetary distances,
+                  ensuring seamless operations despite light-speed communication delays.
                 </CardDescription>
               </CardContent>
             </Card>
@@ -71,20 +71,20 @@ const DualitySection = () => {
           >
             <div className="flex items-center gap-3 mb-6">
               <Sun className="h-8 w-8 text-water-600" />
-              <h3 className="text-2xl font-display font-bold text-water-600">Zoe (ζωή)</h3>
+              <h3 className="text-2xl font-display font-bold text-water-600">AI Freedom Trust</h3>
             </div>
             
             <Card className="eco-card-hover border-water-100 bg-white/70 backdrop-blur-sm">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Circle className="h-5 w-5 text-water-600" />
-                  Spiritual Essence
+                  Generational Governance
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <CardDescription className="text-muted-foreground">
-                  The divine, eternal dimension of life that transcends physical existence.
-                  The animating force that connects all living beings.
+                  A 1000-year Trust framework established in Wyoming, providing governance 
+                  that transcends individual lifespans through AI-enhanced decision-making protocols.
                 </CardDescription>
               </CardContent>
             </Card>
@@ -93,13 +93,13 @@ const DualitySection = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Heart className="h-5 w-5 text-water-600" />
-                  Interconnected Wholeness
+                  Post-Mining Continuity
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <CardDescription className="text-muted-foreground">
-                  The recognition that all life is interconnected through a unified spiritual essence,
-                  expressing the panentheistic view of reality.
+                  Revolutionary Torus field energy recycling system that ensures mining infrastructure 
+                  remains valuable after the last Bitcoin is mined, validating transactions in perpetuity.
                 </CardDescription>
               </CardContent>
             </Card>
@@ -116,17 +116,16 @@ const DualitySection = () => {
             className="max-w-2xl mx-auto"
           >
             <h3 className="text-2xl md:text-3xl font-display font-bold mb-4">
-              <span className="gradient-text">Biozoe Unity</span>
+              <span className="gradient-text">Multiplanetary Framework</span>
             </h3>
             <p className="text-lg mb-6 text-muted-foreground">
-              Through <Link to="/tokenomics" className="text-forest-600 hover:underline">Aether Coin</Link>, we recognize that the material world and spiritual essence are not separate domains, 
-              but a unified whole. The divine interpenetrates every part of nature while existing beyond it.
+              <Link to="/tokenomics" className="text-forest-600 hover:underline">ATC (Aether Token Coin)</Link> represents the first economic system explicitly designed for humanity's expansion beyond Earth. By leveraging Bitcoin's scarcity as a foundation for infinite ATC issuance, we've created a framework that can scale across multiple planets.
             </p>
             <div className="flex justify-center py-8 relative">
               <div className="w-60 h-60 rounded-full border-4 border-forest-300 absolute animate-pulse opacity-30"></div>
               <div className="w-48 h-48 rounded-full border-4 border-water-300 absolute animate-pulse opacity-30"></div>
               <div className="relative z-10 flex items-center justify-center w-36 h-36 rounded-full bg-gradient-to-br from-forest-100 to-water-100 border ecosystem-border">
-                <span className="text-xl font-display font-bold gradient-text">Panentheism</span>
+                <span className="text-xl font-display font-bold gradient-text">AetherCore</span>
               </div>
             </div>
           </motion.div>

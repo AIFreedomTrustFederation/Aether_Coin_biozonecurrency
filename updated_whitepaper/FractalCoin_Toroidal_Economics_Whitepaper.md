@@ -1,4 +1,6 @@
-# FractalCoin & ATC: Infinite Expansion Economics for Multiplanetary Humanity
+# AetherCore Technologies: The AI Freedom Trust Multiplanetary Economic Framework
+
+## ATC and Quantum Bitcoin Integration for Humanity's Infinite Expansion
 
 ## Executive Summary
 
