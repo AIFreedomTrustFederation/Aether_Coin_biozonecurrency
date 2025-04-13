@@ -150,6 +150,12 @@ const LandingPage: React.FC = () => {
               Access Wallet
             </Button>
           </Link>
+          <Link href="/portal">
+            <Button className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-md text-lg flex items-center neon-button-advanced">
+              <Database className="mr-2 h-5 w-5" />
+              FractalCoin Portal
+            </Button>
+          </Link>
         </div>
         
         {/* Features */}

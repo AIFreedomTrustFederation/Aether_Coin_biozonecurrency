@@ -11,6 +11,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import ResourceHints from "./components/ResourceHints";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
+import styles from "./App.module.css";
 import { 
   Menu, X, Home, Layout, Wallet, Lock, Shield, Settings, AlertTriangle, ChevronRight, 
   BarChart3, Eye, Cpu, Bell, Zap, Coins, FileText, Database, Bot, TestTube, Blocks,
@@ -44,6 +45,7 @@ const AboutPage = lazy(() => import("./pages/AboutPage"));
 const AdminPortal = lazy(() => import("./pages/AdminPortal"));
 const LazyAetherCoinPage = lazy(() => import("./pages/LazyAetherCoinPage"));
 const NetworkDetailsPage = lazy(() => import("./pages/NetworkDetailsPage"));
+const Portal = lazy(() => import("./pages/Portal"));
 
 // Lazy load new personalization pages
 const DashboardPage = lazy(() => import("./pages/DashboardPage"));
@@ -92,6 +94,7 @@ const QuantumSecurityPage = lazy(() => import("./pages/QuantumSecurityPage"));
 const navigationItems = [
   { name: "Dashboard", path: "/dashboard", icon: <Layout className="h-5 w-5" /> },
   { name: "Wallet", path: "/wallet", icon: <Wallet className="h-5 w-5" /> },
+  { name: "FractalCoin Portal", path: "/portal", icon: <Database className="h-5 w-5" /> },
   { name: "Payment", path: "/payment", icon: <CreditCard className="h-5 w-5" /> },
   { name: "Quantum Payment", path: "/quantum-secure-payment", icon: <Shield className="h-5 w-5" /> },
   { name: "Transactions", path: "/transactions", icon: <BarChart3 className="h-5 w-5" /> },
@@ -322,7 +325,7 @@ const SimpleFractalExplorer = () => (
         <p className="text-muted-foreground">CRYSTAL-Kyber algorithm status</p>
         <div className="flex items-center gap-2 mt-3">
           <div className="w-full bg-muted rounded-full h-2.5">
-            <div className="bg-green-500 h-2.5 rounded-full" style={{ width: '92%' }}></div>
+            <div className={`bg-green-500 h-2.5 rounded-full ${styles.progressWidth92}`}></div>
           </div>
           <span className="text-green-500 font-medium">92%</span>
         </div>
@@ -334,7 +337,7 @@ const SimpleFractalExplorer = () => (
         <p className="text-muted-foreground">SPHINCS+ algorithm status</p>
         <div className="flex items-center gap-2 mt-3">
           <div className="w-full bg-muted rounded-full h-2.5">
-            <div className="bg-green-500 h-2.5 rounded-full" style={{ width: '88%' }}></div>
+            <div className={`bg-green-500 h-2.5 rounded-full ${styles.progressWidth88}`}></div>
           </div>
           <span className="text-green-500 font-medium">88%</span>
         </div>
@@ -539,6 +542,11 @@ function App() {
             <Route path="/wallet">
               <Suspense fallback={<LoadingScreen message="Loading wallet..." />}>
                 <WalletPage />
+              </Suspense>
+            </Route>
+            <Route path="/portal">
+              <Suspense fallback={<LoadingScreen message="Loading FractalCoin Portal..." />}>
+                <Portal />
               </Suspense>
             </Route>
             <Route path="/fractal-explorer">
