@@ -15,7 +15,7 @@ const PresaleSection = () => {
             Join the <span className="gradient-text">ICO Launch</span>
           </h2>
           <p className="text-muted-foreground">
-            Be among the first to secure <Link to="/tokenomics" className="text-forest-600 hover:underline">Aether Coins (ATC)</Link> and participate in humanity's first multiplanetary currency system—leveraging Bitcoin's scarcity to back infinite expansion across the stars.
+            Join the Kingdom of Heaven on Earth through <span className="text-forest-600 font-medium">biozoecurrency</span>, inverting hidden cryptocurrency through <span className="italic">βίος</span> (physical life) and <span className="italic">ζωή</span> (divine life) principles while <Link to="/tokenomics" className="text-forest-600 hover:underline">ATC</Link> enables humanity's infinite expansion across the stars.
           </p>
         </div>
         
@@ -127,8 +127,8 @@ const PresaleSection = () => {
             <TabsContent value="impact">
               <Card className="border-forest-100">
                 <CardHeader>
-                  <CardTitle>Multiplanetary Economic Impact</CardTitle>
-                  <CardDescription>The future ATC will enable</CardDescription>
+                  <CardTitle>Kingdom of Heaven Economic Impact</CardTitle>
+                  <CardDescription>The future biozoecurrency and ATC will enable</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">

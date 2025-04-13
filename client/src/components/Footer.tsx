@@ -14,7 +14,7 @@ const Footer = () => {
               <span className="text-xl font-display font-semibold text-white">Aether Coin</span>
             </div>
             <p className="text-forest-200/80 text-sm">
-              A biozoecurrency designed to protect and preserve our planet's vital ecological zones, the inverse of traditional eco-cryptocurrencies.
+              A <span className="text-forest-300 font-medium">biozoecurrency</span> manifesting the Kingdom of Heaven on Earth through divine economic principles that invert hidden cryptocurrency systems to reveal "God as All in all" (<span className="italic">πᾶς ἐν πᾶσιν</span>).
             </p>
           </div>
           

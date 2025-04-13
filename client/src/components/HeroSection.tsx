@@ -3,7 +3,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { Rocket, Bitcoin, Infinity } from "lucide-react";
+import { Rocket, Bitcoin, Globe } from "lucide-react";
 
 const HeroSection = () => {
   return (
@@ -14,12 +14,12 @@ const HeroSection = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
           <div className="space-y-6">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold">
-              <span className="gradient-text">Infinite</span> Expansion for{" "}
+              <span className="gradient-text">Kingdom</span> Economics for{" "}
               <span className="gradient-text">Multiplanetary</span> Humanity
             </h1>
             
             <p className="text-lg text-muted-foreground md:pr-10">
-              <Link to="/tokenomics" className="text-forest-600 hover:underline">Aether Coin (ATC)</Link> introduces a paradigm-shifting economic model that leverages Bitcoin's scarcity to enable unlimited token expansion—creating the first true currency system designed for humanity's future across the stars.
+              <span className="text-forest-600 font-medium">biozoecurrency</span> inverts hidden cryptocurrency through <span className="italic">βίος</span> (physical life) and <span className="italic">ζωή</span> (divine life), revealing "God as All in all" while <Link to="/tokenomics" className="text-forest-600 hover:underline">ATC</Link> creates the first economic system explicitly designed for humanity's expansion across the stars.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
@@ -39,7 +39,7 @@ const HeroSection = () => {
               </div>
               
               <div className="flex flex-col items-center">
-                <Infinity className="h-6 w-6 text-forest-700 mb-1" />
+                <Globe className="h-6 w-6 text-forest-700 mb-1" />
                 <span className="text-3xl font-bold text-forest-700">∞</span>
                 <span className="text-sm text-muted-foreground">ATC Expansion</span>
               </div>
