@@ -106,7 +106,39 @@ const DualitySection = () => {
           </motion.div>
         </div>
         
-        {/* Unity Section */}
+        {/* biozoecurrency Section */}
+        <div className="mt-16 text-center">
+          <div className="h-px w-1/3 mx-auto bg-gradient-to-r from-forest-300 to-water-300 mb-12"></div>
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="max-w-2xl mx-auto"
+          >
+            <h3 className="text-2xl md:text-3xl font-display font-bold mb-4">
+              <span className="gradient-text">biozoecurrency</span>
+            </h3>
+            <p className="text-lg mb-6 text-muted-foreground">
+              The <span className="text-forest-600 font-medium">biozoecurrency</span> inverts hidden cryptocurrency through the principles of death-resurrection-life. Drawing from Greek roots <span className="italic">βίος</span> (physical life) and <span className="italic">ζωή</span> (divine eternal life), it manifests the spiritual concept of "God as All in all" (<span className="italic">πᾶς ἐν πᾶσιν</span>), revealing a framework for the Kingdom of Heaven on Earth.
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+              <div className="bg-forest-50 p-4 rounded-lg">
+                <h4 className="text-forest-700 font-medium mb-2">Death</h4>
+                <p className="text-sm text-muted-foreground">Transcending limited economic models that create artificial scarcity and competition</p>
+              </div>
+              <div className="bg-water-50 p-4 rounded-lg">
+                <h4 className="text-water-700 font-medium mb-2">Resurrection</h4>
+                <p className="text-sm text-muted-foreground">Rising to a new economic paradigm of divine abundance and equitable distribution</p>
+              </div>
+              <div className="bg-gradient-to-br from-forest-50 to-water-50 p-4 rounded-lg">
+                <h4 className="gradient-text font-medium mb-2">Life</h4>
+                <p className="text-sm text-muted-foreground">Establishing the Kingdom economy where value flows in continuous circulation as in living systems</p>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+        
+        {/* Multiplanetary Section */}
         <div className="mt-16 text-center">
           <div className="h-px w-1/3 mx-auto bg-gradient-to-r from-forest-300 to-water-300 mb-12"></div>
           <motion.div 
