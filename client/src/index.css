@@ -349,3 +349,51 @@
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.05); }
 }
+
+/* Tagline Section Pattern */
+.tagline-pattern {
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%233a5a40' fill-opacity='0.2'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+
+/* Shadow glow effect for icons */
+.shadow-glow-sm {
+  box-shadow: 0 0 15px rgba(58, 90, 64, 0.3), 
+              0 0 30px rgba(58, 90, 64, 0.1);
+}
+
+/* Light beam animations for tagline section */
+.light-beam-animation {
+  animation: slide-right 8s infinite linear;
+}
+
+.light-beam-animation-reverse {
+  animation: slide-left 12s infinite linear;
+}
+
+@keyframes slide-right {
+  0% { transform: translateX(-100%) translateY(-50%); }
+  100% { transform: translateX(100%) translateY(-50%); }
+}
+
+@keyframes slide-left {
+  0% { transform: translateX(100%) translateY(-50%); }
+  100% { transform: translateX(-100%) translateY(-50%); }
+}
+
+/* Animation for staggered images hover effect */
+@keyframes gentle-float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.md\:mt-20:hover,
+.md\:mt-24:hover,
+.md\:mt-12:hover,
+.md\:mb-16:hover,
+.md\:mb-8:hover {
+  animation: gentle-float 4s ease-in-out infinite;
+}
