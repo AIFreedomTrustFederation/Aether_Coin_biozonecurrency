@@ -4,6 +4,7 @@ import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
 import FeatureSection from "@/components/FeatureSection";
 import DualitySection from "@/components/DualitySection";
+import BioZoeSection from "@/components/BioZoeSection";
 import DashboardSection from "@/components/DashboardSection";
 import PresaleSection from "@/components/PresaleSection";
 import GitHubSection from "@/components/GitHubSection";
@@ -18,6 +19,7 @@ const Index = () => {
         <HeroSection />
         <FeatureSection />
         <DualitySection />
+        <BioZoeSection />
         <DashboardSection />
         <WalletSection />
         <GitHubSection />
