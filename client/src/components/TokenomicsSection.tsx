@@ -2,46 +2,46 @@
 import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
-import { Coins, Percent, Wallet, ChartPie, ChartBar, DollarSign, Leaf, Shield, Recycle } from 'lucide-react';
+import { Coins, Percent, Wallet, ChartPie, ChartBar, DollarSign, Shield, Recycle, Rocket, Bitcoin, Globe } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 
 const tokenDistribution = [
-  { name: 'Presale', value: 40, color: '#4d994d' },
-  { name: 'Ecosystem Development', value: 25, color: '#2c7873' },
-  { name: 'Team & Advisors', value: 15, color: '#5c946e' },
-  { name: 'Marketing', value: 10, color: '#80c080' },
-  { name: 'Liquidity Pool', value: 10, color: '#6aaa96' }
+  { name: 'ICO Launch', value: 35, color: '#4d994d' },
+  { name: 'BTC Reserve Backing', value: 25, color: '#2c7873' },
+  { name: 'Multiplanetary Development', value: 20, color: '#5c946e' },
+  { name: 'Mining Infrastructure', value: 12, color: '#80c080' },
+  { name: 'Trust Governance', value: 8, color: '#6aaa96' }
 ];
 
 const vesting = [
-  { role: 'Presale', schedule: 'Partial release at launch, 25% quarterly' },
-  { role: 'Ecosystem Development', schedule: 'Locked for 3 months, then 10% released quarterly' },
-  { role: 'Team & Advisors', schedule: 'Locked for 12 months, then 25% quarterly' },
-  { role: 'Marketing', schedule: '25% released at launch, then 25% quarterly' },
-  { role: 'Liquidity Pool', schedule: '50% at launch, 50% locked for 12 months' }
+  { role: 'ICO Launch', schedule: 'Partial release at launch, 25% quarterly' },
+  { role: 'BTC Reserve Backing', schedule: 'Locked in quantum escrow, only usable as economic backing' },
+  { role: 'Multiplanetary Development', schedule: 'Locked for 6 months, then released based on development milestones' },
+  { role: 'Mining Infrastructure', schedule: '25% released at launch, remainder tied to hardware deployment' },
+  { role: 'Trust Governance', schedule: 'Locked for 24 months, controlled by Wyoming Trust governance framework' }
 ];
 
 const tokenUtility = [
   {
-    title: "Biozone Protection",
-    description: "Direct funding for conservation of critical ecological zones",
-    icon: <Leaf className="h-8 w-8 text-forest-600" />
+    title: "Bitcoin-Backed Expansion",
+    description: "ATC issuance backed by Bitcoin's scarcity, enabling unlimited expansion potential",
+    icon: <Bitcoin className="h-8 w-8 text-forest-600" />
   },
   {
-    title: "Governance",
-    description: "Voting rights on project funding and conservation priorities",
-    icon: <Shield className="h-8 w-8 text-forest-600" />
+    title: "Multiplanetary Commerce",
+    description: "The first currency designed to operate across Earth, Moon, Mars and beyond",
+    icon: <Rocket className="h-8 w-8 text-forest-600" />
   },
   {
-    title: "Staking Rewards",
-    description: "Earn passive income while supporting ecological conservation",
-    icon: <Coins className="h-8 w-8 text-forest-600" />
-  },
-  {
-    title: "Carbon Credits",
-    description: "Convert carbon offset actions into token rewards",
+    title: "Post-Mining Continuity",
+    description: "Ensures mining resources remain valuable after the last Bitcoin is mined",
     icon: <Recycle className="h-8 w-8 text-forest-600" />
+  },
+  {
+    title: "Trust-Based Governance",
+    description: "1000-year Wyoming Trust framework for sustainable intergenerational governance",
+    icon: <Shield className="h-8 w-8 text-forest-600" />
   }
 ];
 
@@ -55,7 +55,7 @@ const TokenomicsSection = () => {
           </h2>
           <p className="text-muted-foreground">
             Understanding the economics and distribution of <Link to="/tokenomics" className="text-forest-600 hover:underline">Aether Token Coin (ATC)</Link>, 
-            the foundation of our biozoecurrency - the inverse of traditional eco-cryptocurrencies.
+            humanity's first Bitcoin-backed currency designed for infinite expansion across multiple planets.
           </p>
         </div>
         
@@ -159,15 +159,18 @@ const TokenomicsSection = () => {
         
         <div className="text-center max-w-3xl mx-auto">
           <div className="p-6 bg-forest-50 rounded-lg">
-            <Wallet className="h-10 w-10 text-forest-600 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold mb-2">Join the <Link to="/tokenomics" className="text-forest-600 hover:underline">ATC</Link> Presale</h3>
+            <div className="flex justify-center mb-4">
+              <Bitcoin className="h-10 w-10 text-forest-600 mr-2" />
+              <Globe className="h-10 w-10 text-forest-600" />
+            </div>
+            <h3 className="text-xl font-semibold mb-2">Join the <Link to="/tokenomics" className="text-forest-600 hover:underline">ATC</Link> ICO Launch</h3>
             <p className="text-muted-foreground mb-4">
-              Be among the first to acquire <Link to="/tokenomics" className="text-forest-600 hover:underline">Aether Token Coin (ATC)</Link> and participate in our 
-              mission to protect critical ecosystems worldwide.
+              Be among the first to acquire <Link to="/tokenomics" className="text-forest-600 hover:underline">Aether Token Coin (ATC)</Link> and participate in 
+              humanity's first economic system designed for infinite expansion across multiple planets.
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
               <Button className="bg-forest-600 hover:bg-forest-700">
-                Register for Presale
+                Register for ICO
               </Button>
               <Button variant="outline" className="border-forest-300 text-forest-700">
                 Download Whitepaper
