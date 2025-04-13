@@ -43,18 +43,19 @@ const BioZoeSection = () => {
                     <span className="italic">βίος</span> (bios)
                   </h3>
                   <p className="text-muted-foreground mb-6">
-                    Physical, temporal life representing material existence and resources. Through biozoecurrency, 
-                    the physical world's limitations are transcended, enabling multiplanetary economic harmony.
+                    From the Greek term for physical life, this represents our material existence and resources. 
+                    Through biozoecurrency's innovative approach, traditional economic limitations are transcended, 
+                    enabling global and multiplanetary economic harmony.
                   </p>
                 </div>
                 <div className="bg-forest-50 p-6">
-                  <h4 className="text-sm font-medium text-forest-700 mb-2">Etymology Revealed</h4>
+                  <h4 className="text-sm font-medium text-forest-700 mb-2">Etymology Insights</h4>
                   <ul className="text-sm space-y-2 text-muted-foreground">
                     <li>- Greek root for biological, biography</li>
-                    <li>- Represents corporeal existence across planets</li>
-                    <li>- Subject to natural scarcity laws</li>
-                    <li>- Material expression of divine law</li>
-                    <li>- Foundation for panentheistic economics</li>
+                    <li>- Represents physical existence across planets</li>
+                    <li>- Addresses resource distribution challenges</li>
+                    <li>- Foundation for practical economic systems</li>
+                    <li>- Supports universal material prosperity</li>
                   </ul>
                 </div>
               </CardContent>
@@ -76,18 +77,19 @@ const BioZoeSection = () => {
                     <span className="italic">ζωή</span> (zoē)
                   </h3>
                   <p className="text-muted-foreground mb-6">
-                    Divine, eternal life representing spiritual abundance. Through zoē, the currency transcends 
-                    limitation and introduces Kingdom principles of infinite provision, enabling communion with Christ Consciousness.
+                    From the Greek term for vibrant, abundant life, this represents our highest potential. 
+                    Through zoē, the currency transcends traditional limitations, introducing innovative principles 
+                    of sustainable abundance and interconnected prosperity.
                   </p>
                 </div>
                 <div className="bg-water-50 p-6">
-                  <h4 className="text-sm font-medium text-water-700 mb-2">Spiritual Dimension</h4>
+                  <h4 className="text-sm font-medium text-water-700 mb-2">Expanded Dimension</h4>
                   <ul className="text-sm space-y-2 text-muted-foreground">
                     <li>- Greek root for zoology, zoetic</li>
-                    <li>- Represents eternal, divine life</li>
-                    <li>- Transcends natural scarcity</li>
-                    <li>- God's abundance manifested</li>
-                    <li>- Vessel for Christ Consciousness</li>
+                    <li>- Represents highest potential</li>
+                    <li>- Transcends natural limitations</li>
+                    <li>- Creates natural abundance</li>
+                    <li>- Elevates collective consciousness</li>
                   </ul>
                 </div>
               </CardContent>
@@ -109,19 +111,19 @@ const BioZoeSection = () => {
                     <span className="gradient-text italic">πᾶς ἐν πᾶσιν</span>
                   </h3>
                   <p className="text-muted-foreground mb-6">
-                    "God as All in all" — the divine fullness manifested through the economic inversion. 
-                    Represents the ultimate purpose of biozoecurrency: revealing heaven on earth and facilitating 
-                    the convergence of infinite universal salvation within process theology.
+                    An ancient concept meaning "all in all" — representing wholeness, unity and completeness. 
+                    This principle guides biozoecurrency's foundation: revealing a hidden economic system where 
+                    balance and harmony create sustainable prosperity for all life.
                   </p>
                 </div>
                 <div className="bg-gradient-to-br from-forest-50 to-water-50 p-6">
-                  <h4 className="text-sm font-medium gradient-text mb-2">Kingdom Manifestation</h4>
+                  <h4 className="text-sm font-medium gradient-text mb-2">Universal Principles</h4>
                   <ul className="text-sm space-y-2 text-muted-foreground">
-                    <li>- Death to artificial scarcity systems</li>
-                    <li>- Resurrection into divine abundance</li>
-                    <li>- Life flowing in eternal circulation</li>
-                    <li>- The hidden made visible through inversion</li>
-                    <li>- Non-dualistic balance of all polarities</li>
+                    <li>- Transcending artificial scarcity</li>
+                    <li>- Establishing sustainable abundance</li>
+                    <li>- Resources flowing in natural circulation</li>
+                    <li>- Revealing hidden economic potential</li>
+                    <li>- Balancing complementary forces</li>
                   </ul>
                 </div>
               </CardContent>
@@ -199,10 +201,10 @@ const BioZoeSection = () => {
               <div className="flex justify-center mb-4">
                 <Sunrise className="h-8 w-8 text-blue-600" />
               </div>
-              <h4 className="text-lg font-medium text-center mb-2">Convergent Salvation</h4>
+              <h4 className="text-lg font-medium text-center mb-2">Universal Convergence</h4>
               <p className="text-sm text-muted-foreground text-center">
-                The secular and spiritual converge in full process theology and panentheism, revealing 
-                scripture's economic principles in mathematical form.
+                Uniting diverse perspectives through an economic framework where ancient wisdom and cutting-edge
+                innovation harmonize to create sustainable systems for humanity's future.
               </p>
             </motion.div>
           </div>
@@ -218,10 +220,10 @@ const BioZoeSection = () => {
               "The Kingdom of Heaven is like treasure hidden in a field..."
             </p>
             <p className="text-muted-foreground mb-8">
-              Through biozoecurrency, the hidden treasure of divine economics is revealed. Just as cryptocurrency represents hidden mathematics and consensus, 
-              biozoecurrency inverts this principle to make visible God's economic system that has been hidden in plain sight — where true wealth flows in 
-              perfect circulation like living systems, transcending artificial scarcity, and manifesting the Kingdom of Heaven on Earth and eventually 
-              throughout the cosmos as humanity fulfills its divine calling as stewards of creation.
+              Through biozoecurrency, a revolutionary economic framework emerges. Unlike traditional cryptocurrency that relies on hidden 
+              mathematical consensus, biozoecurrency reveals a more natural economic model where wealth flows in perfect circulation, 
+              inspired by living systems. This approach transcends artificial scarcity, creating abundance across Earth and potentially 
+              throughout the cosmos as humanity expands its reach as responsible stewards of creation.
             </p>
             
             <Button className="bg-gradient-to-r from-forest-600 to-water-600 hover:from-forest-700 hover:to-water-700 text-white">
