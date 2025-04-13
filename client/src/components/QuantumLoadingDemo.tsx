@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useLoading } from "@/contexts/LoadingContext";
 import { QuantumLoader } from "@/components/ui/quantum-loader";
-import { NetworkIcon, Database, CloudUpload, Banknote, RotateCw } from "lucide-react";
+import { Network, Database, CloudUpload, Banknote, RotateCw } from "lucide-react";
 
 type ApiOperation = {
   key: string;
@@ -47,7 +47,7 @@ const QuantumLoadingDemo: React.FC = () => {
       key: "multiplanetary",
       name: "Multiplanetary Sync",
       description: "Synchronize with Mars node infrastructure",
-      icon: <NetworkIcon className="h-5 w-5" />,
+      icon: <Network className="h-5 w-5" />,
       duration: 6000,
       loaderVariant: "cosmos"
     }

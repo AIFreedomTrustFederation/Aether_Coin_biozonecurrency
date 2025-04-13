@@ -13,6 +13,7 @@ import PresaleSection from "@/components/PresaleSection";
 import GitHubSection from "@/components/GitHubSection";
 import WalletSection from "@/components/WalletSection";
 import QuantumLoaderShowcase from "@/components/QuantumLoaderShowcase";
+import QuantumLoadingDemo from "@/components/QuantumLoadingDemo";
 import Footer from "@/components/Footer";
 
 const Index = () => {
@@ -29,6 +30,7 @@ const Index = () => {
         <SacredGeometrySection />
         <DashboardSection />
         <QuantumLoaderShowcase />
+        <QuantumLoadingDemo />
         <WalletSection />
         <GitHubSection />
         <PresaleSection />
