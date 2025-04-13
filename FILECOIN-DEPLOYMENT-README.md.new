@@ -99,5 +99,3 @@ If you encounter issues during deployment:
 ## Support
 
 If you need assistance with the deployment process, please contact the FractalCoin support team or open an issue in the project repository.
-
-Enjoy deploying your FractalCoin project to Filecoin!

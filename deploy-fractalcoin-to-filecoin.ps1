@@ -73,7 +73,7 @@ function Test-EnvVarExists {
     return $false
 }
 
-function Handle-Error {
+function Write-DeploymentError {
     param(
         [Parameter(Mandatory = $true)]
         [string]$Message,
@@ -95,7 +95,7 @@ $RequiredEnvVars = @("WEB3_STORAGE_TOKEN")
 $OptionalEnvVars = @("ENS_PRIVATE_KEY", "ENS_DOMAIN", "FRACTALCOIN_API_KEY", "FRACTALCOIN_API_ENDPOINT")
 
 # Function to check prerequisites
-function Check-Prerequisites {
+function Test-Prerequisites {
     Write-Section "Checking Prerequisites"
     
     # Check for required tools
@@ -103,7 +103,7 @@ function Check-Prerequisites {
         if (Test-CommandExists $tool) {
             Write-ColorOutput "✓ $tool is installed" "INFO"
         } else {
-            Handle-Error "✗ $tool is not installed. Please install it and try again."
+            Write-DeploymentError "✗ $tool is not installed. Please install it and try again."
         }
     }
     
@@ -120,7 +120,7 @@ function Check-Prerequisites {
             Copy-Item ".env.example" -Destination $EnvFile
             Write-ColorOutput "Created $EnvFile from .env.example. Please edit it with your credentials." "INFO"
         } else {
-            Handle-Error "No .env.example file found. Please create a $EnvFile file manually."
+            Write-DeploymentError "No .env.example file found. Please create a $EnvFile file manually."
         }
     }
     
@@ -129,7 +129,7 @@ function Check-Prerequisites {
         if (Test-EnvVarExists $var) {
             Write-ColorOutput "✓ $var is set" "INFO"
         } else {
-            Handle-Error "✗ Required environment variable $var is not set in $EnvFile"
+            Write-DeploymentError "✗ Required environment variable $var is not set in $EnvFile"
         }
     }
     
@@ -152,7 +152,7 @@ function Install-Dependencies {
     Write-ColorOutput "Installing npm dependencies..." "INFO"
     npm install --no-fund --no-audit
     if ($LASTEXITCODE -ne 0) {
-        Handle-Error "Failed to install npm dependencies"
+        Write-DeploymentError "Failed to install npm dependencies"
     }
     
     Write-ColorOutput "Installing deployment-specific dependencies..." "INFO"
@@ -161,20 +161,20 @@ function Install-Dependencies {
         if (Test-CommandExists "bash") {
             bash install-deployment-deps.sh
             if ($LASTEXITCODE -ne 0) {
-                Handle-Error "Failed to install deployment dependencies"
+                Write-DeploymentError "Failed to install deployment dependencies"
             }
         } else {
             # Fallback to installing common deployment dependencies
             npm install --no-fund --no-audit web3.storage @web3-storage/w3up-client ethers
             if ($LASTEXITCODE -ne 0) {
-                Handle-Error "Failed to install deployment dependencies"
+                Write-DeploymentError "Failed to install deployment dependencies"
             }
         }
     } else {
         # Install common deployment dependencies if script doesn't exist
         npm install --no-fund --no-audit web3.storage @web3-storage/w3up-client ethers
         if ($LASTEXITCODE -ne 0) {
-            Handle-Error "Failed to install deployment dependencies"
+            Write-DeploymentError "Failed to install deployment dependencies"
         }
     }
     
@@ -182,7 +182,7 @@ function Install-Dependencies {
 }
 
 # Function to build the application
-function Build-Application {
+function Start-ApplicationBuild {
     Write-Section "Building Application"
     
     # Clean previous builds
@@ -211,19 +211,19 @@ function Build-Application {
     Write-ColorOutput "Building application..." "INFO"
     npm run build
     if ($LASTEXITCODE -ne 0) {
-        Handle-Error "Failed to build application"
+        Write-DeploymentError "Failed to build application"
     }
     
     # Verify build output
     if (Test-Path "dist") {
         Write-ColorOutput "Application built successfully" "SUCCESS"
     } else {
-        Handle-Error "Build directory not found after build"
+        Write-DeploymentError "Build directory not found after build"
     }
 }
 
 # Function to deploy to Web3.Storage
-function Deploy-ToWeb3Storage {
+function Start-Web3StorageDeployment {
     Write-Section "Deploying to Web3.Storage (IPFS/Filecoin)"
     
     Write-ColorOutput "Uploading to Web3.Storage..." "INFO"
@@ -232,17 +232,17 @@ function Deploy-ToWeb3Storage {
     if (Test-Path "scripts/deploy-to-web3.js") {
         node scripts/deploy-to-web3.js
         if ($LASTEXITCODE -ne 0) {
-            Handle-Error "Failed to deploy to Web3.Storage"
+            Write-DeploymentError "Failed to deploy to Web3.Storage"
         }
     } else {
-        Handle-Error "deploy-to-web3.js script not found"
+        Write-DeploymentError "deploy-to-web3.js script not found"
     }
     
     Write-ColorOutput "Deployment to Web3.Storage completed" "SUCCESS"
 }
 
 # Function to set up FractalCoin-Filecoin bridge
-function Setup-FilecoinBridge {
+function Initialize-FilecoinBridge {
     Write-Section "Setting Up FractalCoin-Filecoin Bridge"
     
     # Check if bridge setup is enabled
@@ -262,7 +262,7 @@ function Setup-FilecoinBridge {
         if (Test-Path "scripts/fractalcoin-filecoin-bridge.js") {
             node scripts/fractalcoin-filecoin-bridge.js
             if ($LASTEXITCODE -ne 0) {
-                Handle-Error "Failed to set up FractalCoin-Filecoin bridge"
+                Write-DeploymentError "Failed to set up FractalCoin-Filecoin bridge"
             }
         } else {
             Write-ColorOutput "fractalcoin-filecoin-bridge.js script not found. Bridge setup skipped." "WARNING"
@@ -289,7 +289,7 @@ function Update-EnsDomain {
 }
 
 # Function to verify deployment
-function Verify-Deployment {
+function Test-Deployment {
     Write-Section "Verifying Deployment"
     
     # Check for CID in log file
@@ -407,13 +407,13 @@ function Main {
     Write-ColorOutput "Log file: $LogFile" "INFO"
     
     # Run deployment steps
-    Check-Prerequisites
+    Test-Prerequisites
     Install-Dependencies
-    Build-Application
-    Deploy-ToWeb3Storage
-    Setup-FilecoinBridge
+    Start-ApplicationBuild
+    Start-Web3StorageDeployment
+    Initialize-FilecoinBridge
     Update-EnsDomain
-    Verify-Deployment
+    Test-Deployment
     
     # Display deployment summary
     Show-DeploymentSummary
