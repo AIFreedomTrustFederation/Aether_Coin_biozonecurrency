@@ -12,10 +12,10 @@ const PresaleSection = () => {
       <div className="container">
         <div className="text-center max-w-3xl mx-auto mb-16">
           <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">
-            Join the <span className="gradient-text">Presale</span>
+            Join the <span className="gradient-text">ICO Launch</span>
           </h2>
           <p className="text-muted-foreground">
-            Be among the first to secure <Link to="/tokenomics" className="text-forest-600 hover:underline">Aether Coins</Link> and contribute to global ecosystem preservation with our innovative biozoecurrency - the inverse of traditional eco-cryptocurrencies.
+            Be among the first to secure <Link to="/tokenomics" className="text-forest-600 hover:underline">Aether Coins (ATC)</Link> and participate in humanity's first multiplanetary currency system—leveraging Bitcoin's scarcity to back infinite expansion across the stars.
           </p>
         </div>
         
@@ -32,8 +32,8 @@ const PresaleSection = () => {
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div>
-                      <CardTitle className="text-2xl">Contribute to the Presale</CardTitle>
-                      <CardDescription>Simple steps to join our mission</CardDescription>
+                      <CardTitle className="text-2xl">Contribute to the ICO</CardTitle>
+                      <CardDescription>Simple steps to join humanity's multiplanetary future</CardDescription>
                     </div>
                     <Hourglass className="h-8 w-8 text-forest-600" />
                   </div>
@@ -88,8 +88,8 @@ const PresaleSection = () => {
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div>
-                      <CardTitle>Presale Benefits</CardTitle>
-                      <CardDescription>Advantages of early participation</CardDescription>
+                      <CardTitle>ICO Participant Benefits</CardTitle>
+                      <CardDescription>Advantages of early participation in the multiplanetary economy</CardDescription>
                     </div>
                     <ShieldCheck className="h-6 w-6 text-forest-600" />
                   </div>
@@ -98,26 +98,26 @@ const PresaleSection = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="flex flex-col p-4 bg-forest-50 rounded-lg">
                       <Coins className="h-6 w-6 text-forest-600 mb-2" />
-                      <h3 className="font-medium mb-1">Preferred Token Price</h3>
-                      <p className="text-sm text-muted-foreground">Access to tokens at the lowest possible price before public listing.</p>
+                      <h3 className="font-medium mb-1">Foundational Entry Price</h3>
+                      <p className="text-sm text-muted-foreground">Secure ATC at its initial value before Bitcoin-backed expansion begins driving growth.</p>
                     </div>
                     
                     <div className="flex flex-col p-4 bg-forest-50 rounded-lg">
                       <Users className="h-6 w-6 text-forest-600 mb-2" />
-                      <h3 className="font-medium mb-1">Governance Rights</h3>
-                      <p className="text-sm text-muted-foreground">Early holders will have stronger voting power in ecosystem decisions.</p>
+                      <h3 className="font-medium mb-1">Trust Membership</h3>
+                      <p className="text-sm text-muted-foreground">Potential eligibility for the Wyoming-based 1000-year Trust with no-repayment loan access.</p>
                     </div>
                     
                     <div className="flex flex-col p-4 bg-forest-50 rounded-lg">
                       <ShieldCheck className="h-6 w-6 text-forest-600 mb-2" />
-                      <h3 className="font-medium mb-1">Staking Bonuses</h3>
-                      <p className="text-sm text-muted-foreground">Higher rewards for presale participants who stake their tokens.</p>
+                      <h3 className="font-medium mb-1">ASIC Mining Integration</h3>
+                      <p className="text-sm text-muted-foreground">Priority access to our revolutionary mining system with ATC rewards for Bitcoin validation.</p>
                     </div>
                     
                     <div className="flex flex-col p-4 bg-forest-50 rounded-lg">
                       <Hourglass className="h-6 w-6 text-forest-600 mb-2" />
-                      <h3 className="font-medium mb-1">Reserved Allocations</h3>
-                      <p className="text-sm text-muted-foreground">Priority access to future ecosystem expansion projects.</p>
+                      <h3 className="font-medium mb-1">Multiplanetary Expansion</h3>
+                      <p className="text-sm text-muted-foreground">Reserved allocation in future planetary development initiatives and cross-world commerce.</p>
                     </div>
                   </div>
                 </CardContent>
@@ -127,29 +127,29 @@ const PresaleSection = () => {
             <TabsContent value="impact">
               <Card className="border-forest-100">
                 <CardHeader>
-                  <CardTitle>Projected Environmental Impact</CardTitle>
-                  <CardDescription>Goals for our first year post-launch</CardDescription>
+                  <CardTitle>Multiplanetary Economic Impact</CardTitle>
+                  <CardDescription>The future ATC will enable</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                     <div className="p-4 bg-forest-50 rounded-lg text-center">
-                      <div className="text-3xl font-bold text-forest-700 mb-1">100K+</div>
-                      <div className="text-sm text-forest-600">Trees to be Planted</div>
+                      <div className="text-3xl font-bold text-forest-700 mb-1">∞</div>
+                      <div className="text-sm text-forest-600">Sustainable Expansion</div>
                     </div>
                     <div className="p-4 bg-forest-50 rounded-lg text-center">
-                      <div className="text-3xl font-bold text-forest-700 mb-1">50K</div>
-                      <div className="text-sm text-forest-600">Tons CO₂ to Offset</div>
+                      <div className="text-3xl font-bold text-forest-700 mb-1">BTC</div>
+                      <div className="text-sm text-forest-600">Treasury Backing</div>
                     </div>
                     <div className="p-4 bg-forest-50 rounded-lg text-center">
-                      <div className="text-3xl font-bold text-forest-700 mb-1">5K</div>
-                      <div className="text-sm text-forest-600">Hectares to Protect</div>
+                      <div className="text-3xl font-bold text-forest-700 mb-1">1000+</div>
+                      <div className="text-sm text-forest-600">Year Trust Framework</div>
                     </div>
                   </div>
                   
                   <div className="text-center py-4">
                     <p className="text-muted-foreground mb-4">
-                      Your presale contribution will directly fund these conservation efforts once 
-                      <Link to="/tokenomics" className="text-forest-600 hover:underline mx-1">Aether Coin</Link> is fully launched.
+                      Your ICO contribution directly supports the first economic system designed to extend beyond Earth—enabling commerce and development across multiple planets through
+                      <Link to="/tokenomics" className="text-forest-600 hover:underline mx-1">Aether Coin's (ATC)</Link> revolutionary Bitcoin-backed infinite expansion model.
                     </p>
                     <Button variant="outline" className="border-forest-300 text-forest-700" asChild>
                       <Link to="/tokenomics">View Tokenomics</Link>

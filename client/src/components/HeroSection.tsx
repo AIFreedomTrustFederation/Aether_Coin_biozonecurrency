@@ -3,6 +3,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
+import { Rocket, Bitcoin, Infinity } from "lucide-react";
 
 const HeroSection = () => {
   return (
@@ -13,17 +14,17 @@ const HeroSection = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
           <div className="space-y-6">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold">
-              <span className="gradient-text">Biozoe</span> Currency for a{" "}
-              <span className="gradient-text">Sustainable</span> Future
+              <span className="gradient-text">Infinite</span> Expansion for{" "}
+              <span className="gradient-text">Multiplanetary</span> Humanity
             </h1>
             
             <p className="text-lg text-muted-foreground md:pr-10">
-              <Link to="/tokenomics" className="text-forest-600 hover:underline">Aether Coin</Link> is a revolutionary biozoecurrency designed to protect and preserve our planet's vital ecological zones. Unlike traditional eco-cryptocurrencies, our approach focuses on uniting the physical and spiritual aspects of life.
+              <Link to="/tokenomics" className="text-forest-600 hover:underline">Aether Coin (ATC)</Link> introduces a paradigm-shifting economic model that leverages Bitcoin's scarcity to enable unlimited token expansion—creating the first true currency system designed for humanity's future across the stars.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
               <Button className="bg-forest-600 hover:bg-forest-700 text-white" size="lg">
-                Get Started
+                Join the ICO
               </Button>
               <Button variant="outline" size="lg" className="border-forest-300 text-forest-700" asChild>
                 <Link to="/tokenomics">View Tokenomics</Link>
@@ -31,19 +32,22 @@ const HeroSection = () => {
             </div>
             
             <div className="flex items-center gap-8 pt-6">
-              <div className="flex flex-col">
-                <span className="text-3xl font-bold text-forest-700">25+</span>
-                <span className="text-sm text-muted-foreground">Biozoe Protected</span>
+              <div className="flex flex-col items-center">
+                <Bitcoin className="h-6 w-6 text-forest-700 mb-1" />
+                <span className="text-3xl font-bold text-forest-700">BTC</span>
+                <span className="text-sm text-muted-foreground">Backed Reserve</span>
               </div>
               
-              <div className="flex flex-col">
-                <span className="text-3xl font-bold text-forest-700">10K+</span>
-                <span className="text-sm text-muted-foreground">Active Users</span>
+              <div className="flex flex-col items-center">
+                <Infinity className="h-6 w-6 text-forest-700 mb-1" />
+                <span className="text-3xl font-bold text-forest-700">∞</span>
+                <span className="text-sm text-muted-foreground">ATC Expansion</span>
               </div>
               
-              <div className="flex flex-col">
-                <span className="text-3xl font-bold text-forest-700">50K+</span>
-                <span className="text-sm text-muted-foreground">Tokens Issued</span>
+              <div className="flex flex-col items-center">
+                <Rocket className="h-6 w-6 text-forest-700 mb-1" />
+                <span className="text-3xl font-bold text-forest-700">4</span>
+                <span className="text-sm text-muted-foreground">Token Ecosystem</span>
               </div>
             </div>
           </div>
@@ -54,8 +58,8 @@ const HeroSection = () => {
                 <div className="absolute inset-0 bg-[url('/src/assets/earth-pattern.png')] opacity-30 mix-blend-overlay"></div>
               </div>
               <img 
-                src="https://images.unsplash.com/photo-1498429089284-41f8cf3ffd39?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
-                alt="Lush forest ecosystem" 
+                src="https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
+                alt="Earth from space with Mars in background" 
                 className="w-full h-full object-cover rounded-xl mix-blend-overlay opacity-90"
               />
               <div className="absolute inset-0 ecosystem-border rounded-xl"></div>
@@ -63,13 +67,13 @@ const HeroSection = () => {
               <div className="absolute bottom-6 left-6 right-6 glass-card p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs text-forest-800/80">Current Value</p>
+                    <p className="text-xs text-forest-800/80">ICO Launch Price</p>
                     <p className="text-xl font-bold text-forest-800">
-                      1 <Link to="/tokenomics" className="text-forest-600 hover:underline">ATC</Link> = $0.0728
+                      1 <Link to="/tokenomics" className="text-forest-600 hover:underline">ATC</Link> = $0.0425
                     </p>
                   </div>
                   <div className="px-3 py-1 bg-forest-100 rounded-full text-forest-800 text-sm font-medium">
-                    +5.24%
+                    First 48 Hours
                   </div>
                 </div>
               </div>
