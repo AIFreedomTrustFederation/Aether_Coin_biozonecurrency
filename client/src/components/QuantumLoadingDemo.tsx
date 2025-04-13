@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useLoading } from "@/contexts/LoadingContext";
 import { QuantumLoader } from "@/components/ui/quantum-loader";
 import { Network, Database, CloudUpload, Banknote, RotateCw } from "lucide-react";
 
@@ -15,8 +14,8 @@ type ApiOperation = {
 };
 
 const QuantumLoadingDemo: React.FC = () => {
-  const { startLoading, endLoading, isLoading } = useLoading();
   const [inlineLoading, setInlineLoading] = useState<string | null>(null);
+  const [showFullscreenLoader, setShowFullscreenLoader] = useState(false);
   
   const apiOperations: ApiOperation[] = [
     {
@@ -57,27 +56,36 @@ const QuantumLoadingDemo: React.FC = () => {
     // Set inline loading for this specific card
     setInlineLoading(operation.key);
     
-    // For fullscreen loading, uncomment this line:
-    // startLoading(operation.key, `${operation.name} in progress...`);
-    
     // Simulate API call duration
     setTimeout(() => {
       setInlineLoading(null);
-      // For fullscreen loading, uncomment this line:
-      // endLoading(operation.key);
     }, operation.duration);
   };
   
   const simulateFullscreenLoading = () => {
-    startLoading("fullscreen-demo", "Performing quantum operations...");
+    setShowFullscreenLoader(true);
     
     setTimeout(() => {
-      endLoading("fullscreen-demo");
+      setShowFullscreenLoader(false);
     }, 4000);
   };
   
   return (
-    <section className="py-12 bg-muted/50">
+    <section className="py-12 bg-muted/50 relative">
+      {/* Fullscreen loader overlay */}
+      {showFullscreenLoader && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+          <div className="text-center">
+            <QuantumLoader 
+              size="lg" 
+              variant="dual" 
+              showLabel
+              labelText="Performing quantum operations..."
+            />
+          </div>
+        </div>
+      )}
+      
       <div className="container">
         <div className="text-center mb-10">
           <h2 className="text-2xl md:text-3xl font-display font-bold mb-2">
@@ -127,7 +135,7 @@ const QuantumLoadingDemo: React.FC = () => {
         <div className="flex justify-center">
           <Button 
             onClick={simulateFullscreenLoading} 
-            disabled={isLoading("fullscreen-demo")}
+            disabled={showFullscreenLoader}
             className="bg-gradient-to-r from-forest-600 to-water-600 hover:from-forest-700 hover:to-water-700"
           >
             <CloudUpload className="mr-2 h-4 w-4" />

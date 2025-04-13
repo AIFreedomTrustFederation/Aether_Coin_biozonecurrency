@@ -6,7 +6,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { QuantumDomainProvider } from "./contexts/QuantumDomainContext";
-import { LoadingProvider } from "./contexts/LoadingContext";
 import { QuantumLoader } from "@/components/ui/quantum-loader";
 
 // Lazy load pages
@@ -46,30 +45,28 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <LoadingProvider loaderVariant="dual" enableFullscreenOverlay={true}>
-        <QuantumDomainProvider>
-          <BrowserRouter>
-            <Suspense fallback={<QuantumPageLoader />}>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/tokenomics" element={<Tokenomics />} />
-                <Route path="/aicon" element={<Aicon />} />
-                <Route path="/wallet" element={<Wallet />} />
-                <Route path="/dapp" element={<DApp />} />
-                <Route path="/domains" element={<Domains />} />
-                <Route path="/achievements" element={<Achievements />} />
-                <Route path="/terms-of-service" element={<TermsOfService />} />
-                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-                <Route path="/api" element={<Api />} />
-                <Route path="/aethercore-trust" element={<AetherCoreTrust />} />
-                <Route path="/aethercore-browser" element={<AetherCoreBrowser />} />
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
-          </BrowserRouter>
-        </QuantumDomainProvider>
-      </LoadingProvider>
+      <QuantumDomainProvider>
+        <BrowserRouter>
+          <Suspense fallback={<QuantumPageLoader />}>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/tokenomics" element={<Tokenomics />} />
+              <Route path="/aicon" element={<Aicon />} />
+              <Route path="/wallet" element={<Wallet />} />
+              <Route path="/dapp" element={<DApp />} />
+              <Route path="/domains" element={<Domains />} />
+              <Route path="/achievements" element={<Achievements />} />
+              <Route path="/terms-of-service" element={<TermsOfService />} />
+              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="/api" element={<Api />} />
+              <Route path="/aethercore-trust" element={<AetherCoreTrust />} />
+              <Route path="/aethercore-browser" element={<AetherCoreBrowser />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
+        </BrowserRouter>
+      </QuantumDomainProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
