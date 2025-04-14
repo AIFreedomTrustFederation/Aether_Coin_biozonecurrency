@@ -6,19 +6,19 @@ import { secureCompare } from '../utils/security';
  * Provides authentication and authorization for API endpoints
  */
 
-// Interface for authenticated user
-export interface AuthenticatedUser {
+// Interface for API authenticated user that matches the existing user type
+export interface ApiAuthenticatedUser {
   id: number;
   email: string;
-  role: string;
+  role?: string;
   permissions: string[];
 }
 
-// Extend Express Request type to include user
+// We don't need to redeclare the Express namespace here since it's already defined in auth.ts
+// Just adding the apiKey property to the Request interface
 declare global {
   namespace Express {
     interface Request {
-      user?: AuthenticatedUser;
       apiKey?: {
         id: number;
         name: string;
@@ -58,9 +58,11 @@ export const validateApiKey = async (req: Request, res: Response, next: NextFunc
       if (user) {
         req.user = {
           id: user.id,
+          username: user.username || '',
           email: user.email,
+          name: user.name,
+          isTrustMember: user.isTrustMember || false,
           role: user.role,
-          permissions: user.permissions,
         };
       }
     }
@@ -106,9 +108,11 @@ export const validateJwtToken = async (req: Request, res: Response, next: NextFu
     // Set user info on request object
     req.user = {
       id: user.id,
+      username: user.username || '',
       email: user.email,
+      name: user.name,
+      isTrustMember: user.isTrustMember || false,
       role: user.role,
-      permissions: user.permissions,
     };
     
     next();
@@ -135,9 +139,11 @@ export const validateSession = async (req: Request, res: Response, next: NextFun
         // Set user info on request object
         req.user = {
           id: user.id,
+          username: user.username || '',
           email: user.email,
+          name: user.name,
+          isTrustMember: user.isTrustMember || false,
           role: user.role,
-          permissions: user.permissions,
         };
       }
     } catch (error) {
@@ -167,7 +173,8 @@ export const requireRole = (roles: string | string[]) => {
       return res.status(401).json({ error: 'Authentication required' });
     }
     
-    if (!allowedRoles.includes(req.user.role)) {
+    // Check if user has a role and if it's in the allowed roles
+    if (!req.user.role || !allowedRoles.includes(req.user.role)) {
       return res.status(403).json({ error: 'Insufficient permissions' });
     }
     
@@ -179,26 +186,34 @@ export const requireRole = (roles: string | string[]) => {
 export const requirePermission = (permissions: string | string[]) => {
   const requiredPermissions = Array.isArray(permissions) ? permissions : [permissions];
   
-  return (req: Request, res: Response, next: NextFunction) => {
+  return async (req: Request, res: Response, next: NextFunction) => {
     if (!req.user) {
       return res.status(401).json({ error: 'Authentication required' });
     }
     
     // Check if user has admin role (bypass permission check)
-    if (req.user.role === 'admin') {
+    if (req.user.role && req.user.role === 'admin') {
       return next();
     }
     
-    // Check if user has all required permissions
-    const hasAllPermissions = requiredPermissions.every(permission => 
-      req.user.permissions.includes(permission)
-    );
-    
-    if (!hasAllPermissions) {
-      return res.status(403).json({ error: 'Insufficient permissions' });
+    try {
+      // Get user permissions from database
+      const userPermissions = await getUserPermissions(req.user.id);
+      
+      // Check if user has all required permissions
+      const hasAllPermissions = requiredPermissions.every(permission => 
+        userPermissions.includes(permission)
+      );
+      
+      if (!hasAllPermissions) {
+        return res.status(403).json({ error: 'Insufficient permissions' });
+      }
+      
+      next();
+    } catch (error) {
+      console.error('Permission check error:', error);
+      res.status(500).json({ error: 'Internal server error during permission check' });
     }
-    
-    next();
   };
 };
 
@@ -213,7 +228,7 @@ export const requireApiKeyPermission = (permissions: string | string[]) => {
     
     // Check if API key has all required permissions
     const hasAllPermissions = requiredPermissions.every(permission => 
-      req.apiKey.permissions.includes(permission)
+      req.apiKey!.permissions.includes(permission)
     );
     
     if (!hasAllPermissions) {
@@ -284,23 +299,50 @@ export const userRateLimit = (limit: number, windowMs: number) => {
   };
 };
 
+// Define interfaces for the return types
+interface ApiKey {
+  id: number;
+  name: string;
+  permissions: string[];
+  userId?: number;
+}
+
+interface DecodedToken {
+  userId: number;
+}
+
+interface User {
+  id: number;
+  username?: string;
+  email: string;
+  name?: string;
+  isTrustMember?: boolean;
+  role?: string;
+}
+
 // Placeholder functions - implement these with actual database queries
-async function getApiKeyFromDatabase(apiKey: string) {
+async function getApiKeyFromDatabase(apiKey: string): Promise<ApiKey | null> {
   // This is a placeholder - implement actual database query
   // Return null if API key not found or is invalid
   return null;
 }
 
-async function verifyJwtToken(token: string) {
+async function verifyJwtToken(token: string): Promise<DecodedToken | null> {
   // This is a placeholder - implement actual JWT verification
   // Return null if token is invalid or expired
   return null;
 }
 
-async function getUserById(userId: number) {
+async function getUserById(userId: number): Promise<User | null> {
   // This is a placeholder - implement actual database query
   // Return null if user not found
   return null;
+}
+
+async function getUserPermissions(userId: number): Promise<string[]> {
+  // This is a placeholder - implement actual database query to get user permissions
+  // Return an empty array if no permissions found
+  return [];
 }
 
 // Combined authentication middleware that tries all methods

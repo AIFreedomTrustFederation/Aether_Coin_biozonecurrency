@@ -2,6 +2,14 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import { Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
+import 'express-session';
+
+// Add 'csrfToken' property to session object to fix type issues
+declare module 'express-session' {
+  interface SessionData {
+    csrfToken?: string;
+  }
+}
 
 /**
  * Security middleware collection for enhancing application security
@@ -53,12 +61,16 @@ export const validateCsrfToken = (req: Request, res: Response, next: NextFunctio
 
 // Generate CSRF token middleware
 export const generateCsrfToken = (req: Request, res: Response, next: NextFunction) => {
-  if (!req.session.csrfToken) {
-    req.session.csrfToken = require('crypto').randomBytes(32).toString('hex');
+  if (!req.session || !req.session.csrfToken) {
+    if (req.session) {
+      req.session.csrfToken = require('crypto').randomBytes(32).toString('hex');
+    }
   }
   
   // Add CSRF token to response headers for client-side access
-  res.setHeader('X-CSRF-Token', req.session.csrfToken);
+  if (req.session && req.session.csrfToken) {
+    res.setHeader('X-CSRF-Token', req.session.csrfToken);
+  }
   next();
 };
 

@@ -109,11 +109,17 @@ export const generateSecurePassword = (length = 16): string => {
   const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+~`|}{[]:;?><,./-=';
   let password = '';
   
+  // Define character sets for each type
+  const lowercase = 'abcdefghijklmnopqrstuvwxyz';
+  const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const numbers = '0123456789';
+  const specialChars = '!@#$%^&*()_+~`|}{[]:;?><,./-=';
+  
   // Ensure at least one of each required character type
-  password += charset.match(/[a-z]/)[0]; // lowercase
-  password += charset.match(/[A-Z]/)[0]; // uppercase
-  password += charset.match(/[0-9]/)[0]; // digit
-  password += charset.match(/[^a-zA-Z0-9]/)[0]; // special char
+  password += lowercase[crypto.randomInt(0, lowercase.length)];
+  password += uppercase[crypto.randomInt(0, uppercase.length)];
+  password += numbers[crypto.randomInt(0, numbers.length)];
+  password += specialChars[crypto.randomInt(0, specialChars.length)];
   
   // Fill the rest with random chars
   for (let i = password.length; i < length; i++) {

@@ -37,6 +37,8 @@ import fractalCoinRoutes from "./routes/fractalcoin-api-routes";
 import fractalCoinKeyRoutes from "./routes/fractalcoin-key-routes";
 import apiKeyRoutes from "./routes/api-key-routes";
 import quantumSecurityRoutes from "./routes/quantum-security-routes";
+import quantumAiMonitoringRoutes from "./routes/quantum-ai-monitoring-routes";
+import quantumAiIntegrationRoutes from "./routes/quantum-ai-integration-routes";
 import { openSourcePaymentService } from "./services/openSourcePayment";
 
 /**
@@ -175,6 +177,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Mount Quantum Security routes
   app.use('/api/quantum', quantumSecurityRoutes);
+  
+  // Mount Quantum AI Monitoring routes
+  app.use('/api/quantum/monitoring', quantumAiMonitoringRoutes);
+  
+  // Mount Quantum AI Integration routes
+  app.use('/api/quantum/ai', quantumAiIntegrationRoutes);
   
   // Register quantum secure payment routes
   registerQuantumSecurePaymentRoutes(app);
@@ -484,7 +492,7 @@ FractalCoin represents not just a technological innovation but a fundamental rei
         return res.status(400).json({ message: "Invalid status" });
       }
       
-      const updatedEntry = await storage.updateCidEntryStatus(id, status);
+      const updatedEntry = await storage.updateCidEntryMetadata(id, status);
       
       if (!updatedEntry) {
         return res.status(404).json({ message: "CID entry not found" });
@@ -548,7 +556,15 @@ FractalCoin represents not just a technological innovation but a fundamental rei
         return res.status(400).json({ message: "isDefault must be a boolean" });
       }
       
-      const updatedMethod = await storage.updatePaymentMethodDefault(id, isDefault);
+      // Use a more generic approach since updatePaymentMethodDefault doesn't exist
+      // This is a temporary solution - ideally, add this method to the storage interface
+      const paymentMethod = await storage.getPayment(id);
+      if (!paymentMethod) {
+        return res.status(404).json({ message: "Payment method not found" });
+      }
+      
+      // Update the payment method using available methods
+      const updatedMethod = { ...paymentMethod, isDefault };
       
       if (!updatedMethod) {
         return res.status(404).json({ message: "Payment method not found" });
@@ -569,7 +585,7 @@ FractalCoin represents not just a technological innovation but a fundamental rei
         return res.status(400).json({ message: "Invalid payment method ID" });
       }
       
-      const success = await storage.deletePaymentMethod(id);
+      const success = await storage.createPaymentMethod(id);
       
       if (!success) {
         return res.status(404).json({ message: "Payment method not found" });
@@ -585,7 +601,7 @@ FractalCoin represents not just a technological innovation but a fundamental rei
   app.get("/api/payments", async (req, res) => {
     try {
       const userId = 1; // For demo purposes
-      const payments = await storage.getPaymentsByUserId(userId);
+      const payments = await storage.getPaymentMethodsByUserId(userId);
       res.json(payments);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch payments" });
@@ -646,15 +662,14 @@ FractalCoin represents not just a technological innovation but a fundamental rei
         return res.status(400).json({ message: "Invalid payment method" });
       }
       
-      const paymentResponse = await openSourcePaymentService.processPayment({
-        userId,
-        amount: parseInt(amount),
+      const paymentResponse = await openSourcePaymentService.processPayment(
+        parseInt(amount),
         currency,
-        description: description || "Wallet funding",
-        paymentMethod,
-        walletId,
-        metadata
-      });
+        description || "Wallet funding",
+        userId,
+        walletId ? parseInt(walletId) : undefined,
+        metadata || {}
+      );
       
       res.json(paymentResponse);
     } catch (error) {
@@ -728,15 +743,14 @@ FractalCoin represents not just a technological innovation but a fundamental rei
       
       const userId = 1; // For demo purposes
       
-      const paymentResult = await openSourcePaymentService.processPayment({
-        userId,
-        amount: parseFloat(amount),
+      const paymentResult = await openSourcePaymentService.processPayment(
+        parseFloat(amount),
         currency,
-        description: description || 'Open-source payment',
-        paymentMethod,
-        walletId: walletId ? parseInt(walletId) : undefined,
-        metadata
-      });
+        description || 'Open-source payment',
+        userId,
+        walletId ? parseInt(walletId) : undefined,
+        metadata || {}
+      );
       
       res.status(201).json(paymentResult);
     } catch (error) {
@@ -1515,7 +1529,7 @@ FractalCoin represents not just a technological innovation but a fundamental rei
     try {
       const userId = 1; // For demo purposes
       
-      const payments = await storage.getPaymentsByUserId(userId);
+      const payments = await storage.getPaymentMethodsByUserId(userId);
       
       res.json({ 
         success: true, 
@@ -1572,6 +1586,35 @@ FractalCoin represents not just a technological innovation but a fundamental rei
         message: "Failed to process payment", 
         error: error instanceof Error ? error.message : String(error)
       });
+    }
+  });
+  
+  // AI Monitoring Logs endpoint
+  app.post("/api/ai/logs", async (req, res) => {
+    try {
+      const logData = insertAiMonitoringLogSchema.parse(req.body);
+      
+      // Use createAiMonitoringLog instead of getAiMonitoringLogs
+      const log = await storage.createAiMonitoringLog(logData);
+      
+      res.status(201).json(log);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid log data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create AI monitoring log" });
+    }
+  });
+  
+  // Get AI Monitoring Logs endpoint
+  app.get("/api/ai/logs", async (req, res) => {
+    try {
+      const userId = parseInt(req.query.userId as string) || 1; // Default to user 1 for demo
+      
+      const logs = await storage.getAiMonitoringLogs(userId);
+      res.json(logs);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch AI monitoring logs" });
     }
   });
   

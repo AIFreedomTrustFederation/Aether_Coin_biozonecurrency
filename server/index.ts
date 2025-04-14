@@ -142,7 +142,7 @@ app.use((req, res, next) => {
       capturedJsonResponse = { ...bodyJson };
       // Redact sensitive fields
       ['password', 'token', 'secret', 'key', 'privateKey', 'seedPhrase'].forEach(field => {
-        if (capturedJsonResponse[field]) {
+        if (capturedJsonResponse && capturedJsonResponse[field]) {
           capturedJsonResponse[field] = 'REDACTED';
         }
       });

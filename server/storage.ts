@@ -62,7 +62,10 @@ export interface IStorage {
   // AI Monitoring methods
   logAiActivity(userId: number, action: string, details: any): Promise<void>;
   getAiActivityLogsByUserId(userId: number, limit?: number): Promise<any[]>;
+  getAiMonitoringLogs(userId: number, limit?: number): Promise<any[]>;
   getAiActivitySummary(userId: number): Promise<{ totalInteractions: number, lastInteractionDate: Date | null }>;
+  createAiMonitoringLog(logData: any): Promise<any>;
+  getAiMonitoringLogById(logId: number): Promise<any | undefined>;
   
   // Smart Contract methods
   getSmartContractsByUserId(userId: number): Promise<any[]>;
@@ -78,6 +81,40 @@ export interface IStorage {
   getPaymentMethodsByUserId(userId: number): Promise<any[]>;
   createPaymentMethod(data: any): Promise<any>;
   getPaymentHistory(userId: number, limit?: number): Promise<any[]>;
+  createPayment(data: any): Promise<any>;
+  getPayment(id: number): Promise<any | undefined>;
+  getPaymentByExternalId(externalId: string): Promise<any[]>;
+  updatePaymentStatus(id: number, status: string, processedAt?: Date): Promise<any | undefined>;
+  
+  // Wallet methods
+  getWalletsByUserId(userId: number): Promise<any[]>;
+  getWallet(walletId: number): Promise<any | undefined>;
+  
+  // Transaction methods
+  getRecentTransactions(userId: number, limit?: number): Promise<any[]>;
+  getTransactionsByWalletId(walletId: number): Promise<any[]>;
+  createTransaction(transactionData: any): Promise<any>;
+  updateTransactionDescription(id: number, description: string): Promise<any | undefined>;
+  updateTransactionLayer2Info(id: number, isLayer2: boolean, layer2Type?: string, layer2Data?: any): Promise<any | undefined>;
+  getLayer2Transactions(userId: number, layer2Type?: string): Promise<any[]>;
+  
+  // Quantum Security Event methods
+  createQuantumSecurityEvent(event: any): Promise<any>;
+  getQuantumSecurityEvents(limit?: number, offset?: number): Promise<any[]>;
+  getQuantumSecurityEventsByUserId(userId: number, limit?: number): Promise<any[]>;
+  getQuantumSecurityEventById(eventId: string): Promise<any | undefined>;
+  
+  // Quantum Security Recommendation methods
+  createQuantumSecurityRecommendation(recommendation: any): Promise<any>;
+  getQuantumSecurityRecommendations(limit?: number, offset?: number): Promise<any[]>;
+  getQuantumSecurityRecommendationsByEventId(eventId: string): Promise<any[]>;
+  applyQuantumSecurityRecommendation(recommendationId: string): Promise<any | undefined>;
+  updateQuantumSecurityRecommendation(recommendationId: string, data: any): Promise<any | undefined>;
+  
+  // Quantum Security Learning methods
+  createQuantumSecurityLearning(learning: any): Promise<any>;
+  getQuantumSecurityLearnings(limit?: number, offset?: number): Promise<any[]>;
+  getQuantumSecurityLearningsByType(learningType: string): Promise<any[]>;
 }
 
 // Re-export types for convenience

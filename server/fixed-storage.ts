@@ -67,13 +67,14 @@ class StorageWrapper implements IStorage {
     console.log(`Creating LLM prompt - Not yet implemented in DatabaseStorage`);
     return {
       id: 1,
-      title: prompt.title,
-      content: prompt.content,
+      name: prompt.name,
+      promptTemplate: prompt.promptTemplate,
+      description: prompt.description || null,
       category: prompt.category || null,
       tags: prompt.tags || [],
       createdAt: new Date(),
       updatedAt: new Date(),
-      isPublic: prompt.isPublic || false
+      createdById: prompt.createdById || null
     };
   }
   
@@ -134,13 +135,13 @@ class StorageWrapper implements IStorage {
     return {
       id: 1,
       conversationId: message.conversationId,
-      userId: message.userId,
-      role: message.role,
+      userId: message.userId !== undefined ? message.userId : null,
+      role: message.role || 'user', // Provide a default value to ensure it's always a string
       content: message.content,
       timestamp: new Date(),
-      promptTokens: message.promptTokens || null,
-      completionTokens: message.completionTokens || null,
-      totalTokens: message.totalTokens || null,
+      promptTokens: message.promptTokens !== undefined ? message.promptTokens : null,
+      completionTokens: message.completionTokens !== undefined ? message.completionTokens : null,
+      totalTokens: message.totalTokens !== undefined ? message.totalTokens : null,
       metadata: message.metadata || {}
     };
   }
@@ -176,7 +177,7 @@ class StorageWrapper implements IStorage {
       completedAt: null,
       trainingFileUrl: job.trainingFileUrl || null,
       validationFileUrl: job.validationFileUrl || null,
-      epochCount: job.epochCount || null,
+      epochs: job.epochs || null,
       batchSize: job.batchSize || null,
       learningRate: job.learningRate || null,
       parameters: job.parameters || {},
@@ -242,11 +243,72 @@ class StorageWrapper implements IStorage {
     return [];
   }
   
+  async getAiMonitoringLogs(userId: number, limit?: number): Promise<any[]> {
+    console.log(`Getting AI monitoring logs for user ${userId} with limit ${limit} - Not yet implemented in DatabaseStorage`);
+    // Return sample data for demo purposes
+    return [
+      {
+        id: 1,
+        userId: userId,
+        action: 'threat_detected',
+        description: 'Suspicious smart contract interaction with your wallet',
+        severity: 'critical',
+        timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 mins ago
+        relatedEntityId: 3,
+        relatedEntityType: 'transaction'
+      },
+      {
+        id: 2,
+        userId: userId,
+        action: 'transaction_verified',
+        description: 'Routine swap on Uniswap verified as legitimate',
+        severity: 'info',
+        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 3), // 3 hours ago
+        relatedEntityId: 2,
+        relatedEntityType: 'transaction'
+      },
+      {
+        id: 3,
+        userId: userId,
+        action: 'gas_optimization',
+        description: 'You could save approximately $24.50 on gas fees with better timing',
+        severity: 'warning',
+        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 5), // 5 hours ago
+        relatedEntityId: null,
+        relatedEntityType: null
+      }
+    ];
+  }
+  
   async getAiActivitySummary(userId: number): Promise<{ totalInteractions: number, lastInteractionDate: Date | null }> {
     console.log(`Getting AI activity summary for user ${userId} - Not yet implemented in DatabaseStorage`);
     return {
-      totalInteractions: 0,
-      lastInteractionDate: null
+      totalInteractions: 42,
+      lastInteractionDate: new Date(Date.now() - 1000 * 60 * 60 * 2) // 2 hours ago
+    };
+  }
+  
+  async createAiMonitoringLog(logData: any): Promise<any> {
+    console.log(`Creating AI monitoring log - Not yet implemented in DatabaseStorage`);
+    return { 
+      id: Math.floor(Math.random() * 1000) + 1,
+      ...logData,
+      timestamp: new Date()
+    };
+  }
+  
+  async getAiMonitoringLogById(logId: number): Promise<any | undefined> {
+    console.log(`Getting AI monitoring log by ID ${logId} - Not yet implemented in DatabaseStorage`);
+    // Return sample data for demo purposes
+    return {
+      id: logId,
+      userId: 1,
+      action: 'threat_detected',
+      description: 'Suspicious smart contract interaction with your wallet',
+      severity: 'critical',
+      timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 mins ago
+      relatedEntityId: 3,
+      relatedEntityType: 'transaction'
     };
   }
   
@@ -306,6 +368,157 @@ class StorageWrapper implements IStorage {
     console.log(`Getting payment history for user ${userId} - Not yet implemented in DatabaseStorage`);
     return [];
   }
+  
+  async createPayment(data: any): Promise<any> {
+    console.log(`Creating payment - Not yet implemented in DatabaseStorage`);
+    return { id: 1, ...data };
+  }
+  
+  async getPayment(id: number): Promise<any | undefined> {
+    console.log(`Getting payment ${id} - Not yet implemented in DatabaseStorage`);
+    return undefined;
+  }
+  
+  async getPaymentByExternalId(externalId: string): Promise<any[]> {
+    console.log(`Getting payment by external ID ${externalId} - Not yet implemented in DatabaseStorage`);
+    return [];
+  }
+  
+  async updatePaymentStatus(id: number, status: string, processedAt?: Date): Promise<any | undefined> {
+    console.log(`Updating payment status for payment ${id} to ${status} - Not yet implemented in DatabaseStorage`);
+    // Return a mock updated payment for demo purposes
+    return { 
+      id, 
+      status, 
+      processedAt: processedAt || new Date() 
+    };
+  }
+  
+  /**
+   * Wallet methods
+   */
+  
+  async getWalletsByUserId(userId: number): Promise<any[]> {
+    console.log(`Getting wallets for user ${userId} - Not yet implemented in DatabaseStorage`);
+    return [];
+  }
+  
+  async getWallet(walletId: number): Promise<any | undefined> {
+    console.log(`Getting wallet ${walletId} - Not yet implemented in DatabaseStorage`);
+    return undefined;
+  }
+  
+  /**
+   * Transaction methods
+   */
+  
+  async getRecentTransactions(userId: number, limit: number = 5): Promise<any[]> {
+    console.log(`Getting recent transactions for user ${userId} with limit ${limit} - Not yet implemented in DatabaseStorage`);
+    return [];
+  }
+  
+  async getTransactionsByWalletId(walletId: number): Promise<any[]> {
+    console.log(`Getting transactions for wallet ${walletId} - Not yet implemented in DatabaseStorage`);
+    return [];
+  }
+  
+  async createTransaction(transactionData: any): Promise<any> {
+    console.log(`Creating transaction - Not yet implemented in DatabaseStorage`);
+    return { id: 1, ...transactionData };
+  }
+  
+  async updateTransactionDescription(id: number, description: string): Promise<any | undefined> {
+    console.log(`Updating transaction ${id} description - Not yet implemented in DatabaseStorage`);
+    return { id, description };
+  }
+  
+  async updateTransactionLayer2Info(id: number, isLayer2: boolean, layer2Type?: string, layer2Data?: any): Promise<any | undefined> {
+    console.log(`Updating transaction ${id} Layer 2 info - Not yet implemented in DatabaseStorage`);
+    return { id, isLayer2, layer2Type, layer2Data };
+  }
+  
+  async getLayer2Transactions(userId: number, layer2Type?: string): Promise<any[]> {
+    console.log(`Getting Layer 2 transactions for user ${userId} with type ${layer2Type || 'any'} - Not yet implemented in DatabaseStorage`);
+    return [];
+  }
+
+  /**
+   * Quantum Security Event methods
+   */
+  
+  async createQuantumSecurityEvent(event: any): Promise<any> {
+    console.log(`Creating quantum security event - Not yet implemented in DatabaseStorage`);
+    return { id: 1, ...event };
+  }
+  
+  async getQuantumSecurityEvents(limit: number = 100, offset: number = 0): Promise<any[]> {
+    console.log(`Getting quantum security events - Not yet implemented in DatabaseStorage`);
+    return [];
+  }
+  
+  async getQuantumSecurityEventsByUserId(userId: number, limit: number = 100): Promise<any[]> {
+    console.log(`Getting quantum security events for user ${userId} - Not yet implemented in DatabaseStorage`);
+    return [];
+  }
+  
+  async getQuantumSecurityEventById(eventId: string): Promise<any | undefined> {
+    console.log(`Getting quantum security event ${eventId} - Not yet implemented in DatabaseStorage`);
+    return undefined;
+  }
+  
+  /**
+   * Quantum Security Recommendation methods
+   */
+  
+  async createQuantumSecurityRecommendation(recommendation: any): Promise<any> {
+    console.log(`Creating quantum security recommendation - Not yet implemented in DatabaseStorage`);
+    return { id: 1, ...recommendation };
+  }
+  
+  async getQuantumSecurityRecommendations(limit: number = 100, offset: number = 0): Promise<any[]> {
+    console.log(`Getting quantum security recommendations - Not yet implemented in DatabaseStorage`);
+    return [];
+  }
+  
+  async getQuantumSecurityRecommendationsByEventId(eventId: string): Promise<any[]> {
+    console.log(`Getting quantum security recommendations for event ${eventId} - Not yet implemented in DatabaseStorage`);
+    return [];
+  }
+  
+  async applyQuantumSecurityRecommendation(recommendationId: string): Promise<any | undefined> {
+    console.log(`Applying quantum security recommendation ${recommendationId} - Not yet implemented in DatabaseStorage`);
+    return { recommendationId, appliedAt: Date.now() };
+  }
+  
+  async updateQuantumSecurityRecommendation(recommendationId: string, data: any): Promise<any | undefined> {
+    console.log(`Updating quantum security recommendation ${recommendationId} - Not yet implemented in DatabaseStorage`);
+    return { recommendationId, ...data, updatedAt: Date.now() };
+  }
+  
+  /**
+   * Quantum Security Learning methods
+   */
+  
+  async createQuantumSecurityLearning(learning: any): Promise<any> {
+    console.log(`Creating quantum security learning - Not yet implemented in DatabaseStorage`);
+    return { id: 1, ...learning };
+  }
+  
+  async getQuantumSecurityLearnings(limit: number = 100, offset: number = 0): Promise<any[]> {
+    console.log(`Getting quantum security learnings - Not yet implemented in DatabaseStorage`);
+    return [];
+  }
+  
+  async getQuantumSecurityLearningsByType(learningType: string): Promise<any[]> {
+    console.log(`Getting quantum security learnings by type ${learningType} - Not yet implemented in DatabaseStorage`);
+    return [];
+  }
+
+  /**
+   * AI Monitoring Logs methods
+   */
+  
+  // Note: AI Monitoring methods are already defined above
 }
 
 // Create and export the storage wrapper instance
