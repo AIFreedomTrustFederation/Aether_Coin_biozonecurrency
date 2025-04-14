@@ -582,7 +582,7 @@ export class FinancialWellnessService {
         'low': 'A small improvement to your transaction habits.'
       },
       'gasOptimization': {
-        'critical': 'You're losing significant funds to excessive gas fees.',
+        'critical': 'You\'re losing significant funds to excessive gas fees.',
         'high': 'Optimizing gas usage could save you substantial amounts.',
         'medium': 'Moderate gas savings possible with these changes.',
         'low': 'Minor gas optimizations available.'
