@@ -14,6 +14,7 @@ import GitHubSection from "@/components/GitHubSection";
 import WalletSection from "@/components/WalletSection";
 import QuantumLoaderShowcase from "@/components/QuantumLoaderShowcase";
 import QuantumLoadingDemo from "@/components/QuantumLoadingDemo";
+import AetherSphereSection from "@/components/AetherSphereSection";
 import Footer from "@/components/Footer";
 
 const Index = () => {
@@ -31,6 +32,7 @@ const Index = () => {
         <DashboardSection />
         <QuantumLoaderShowcase />
         <QuantumLoadingDemo />
+        <AetherSphereSection />
         <WalletSection />
         <GitHubSection />
         <PresaleSection />
