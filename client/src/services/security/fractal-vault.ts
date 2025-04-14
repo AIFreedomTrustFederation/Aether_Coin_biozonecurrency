@@ -7,7 +7,7 @@
  */
 
 import { toast } from "sonner";
-import { generateSecureRandom } from "./crypto-utils";
+import { generateSecureRandom } from "@/services/security/crypto-utils";
 
 // Interfaces for secure operations
 export interface Transaction {

@@ -6,7 +6,7 @@
  * occurs through encrypted, authenticated channels with continuous verification.
  */
 
-import { generateSecureId, sha256 } from "./crypto-utils";
+import { generateSecureId, sha256 } from "@/services/security/crypto-utils";
 
 // Types for peer connections and credentials
 export interface ZeroTrustCredentials {

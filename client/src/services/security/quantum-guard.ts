@@ -7,7 +7,7 @@
  */
 
 import { toast } from "sonner";
-import { generateSecureId, generateTOTP, sha256 } from "./crypto-utils";
+import { generateSecureId, generateTOTP, sha256 } from "@/services/security/crypto-utils";
 
 // Types for authentication and verification
 export interface AuthFactor {

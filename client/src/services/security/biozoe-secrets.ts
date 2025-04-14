@@ -7,7 +7,7 @@
  * decentralized architecture.
  */
 
-import { bytesToHex, hexToBytes, generateSecureRandom, stringToBytes, bytesToString } from "./crypto-utils";
+import { bytesToHex, hexToBytes, generateSecureRandom, stringToBytes, bytesToString } from "@/services/security/crypto-utils";
 
 // Types for secret sharing and management
 export interface SecretShare {
