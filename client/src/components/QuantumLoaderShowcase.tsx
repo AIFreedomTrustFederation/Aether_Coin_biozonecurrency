@@ -10,14 +10,14 @@ const QuantumLoaderShowcase = () => {
   const [activeLoader, setActiveLoader] = useState<string>("transactional");
   
   return (
-    <section className="py-16 md:py-24 bg-gradient-to-b from-background to-muted">
-      <div className="container">
-        <div className="text-center max-w-3xl mx-auto mb-16">
+    <section className="py-12 md:py-20 bg-gradient-to-b from-background to-muted">
+      <div className="container px-4 sm:px-6">
+        <div className="text-center max-w-3xl mx-auto mb-10 md:mb-16">
           <motion.h2 
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="text-3xl md:text-4xl font-display font-bold mb-4"
+            className="text-2xl sm:text-3xl md:text-4xl font-display font-bold mb-3 md:mb-4"
           >
             <span className="gradient-text">Quantum</span> Processing
           </motion.h2>
@@ -25,27 +25,27 @@ const QuantumLoaderShowcase = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="text-muted-foreground"
+            className="text-sm md:text-base text-muted-foreground px-4"
           >
             Experience our quantum-inspired animation sequences, reflecting the fundamental principles
             of quantum mechanics that underpin our panentheistic economic model.
           </motion.p>
         </div>
         
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-5xl mx-auto">
-          {/* Loader Display Card */}
-          <Card className="bg-black/50 border-gray-800 overflow-hidden">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 max-w-5xl mx-auto">
+          {/* Loader Display Card - Now more responsive for mobile */}
+          <Card className="bg-black/50 border-gray-800 overflow-hidden order-2 lg:order-1">
             <CardContent className="p-0">
-              <div className="h-[400px] flex items-center justify-center bg-gradient-to-br from-black via-gray-900 to-black quantum-showcase-bg">
+              <div className="h-[300px] sm:h-[350px] md:h-[400px] flex items-center justify-center bg-gradient-to-br from-black via-gray-900 to-black quantum-showcase-bg">
                 {activeLoader === "transactional" && (
-                  <div className="text-center">
+                  <div className="text-center px-4">
                     <QuantumLoader 
                       size="lg" 
                       variant="dual" 
                       showLabel 
                       labelText="Processing Transaction" 
                     />
-                    <p className="text-xs text-gray-400 mt-6 max-w-xs mx-auto">
+                    <p className="text-xs md:text-sm text-gray-400 mt-4 md:mt-6 max-w-xs mx-auto">
                       Our transaction processing algorithm mirrors quantum superposition,
                       enabling parallel validation of multiple states simultaneously.
                     </p>
@@ -53,14 +53,14 @@ const QuantumLoaderShowcase = () => {
                 )}
                 
                 {activeLoader === "consensus" && (
-                  <div className="text-center">
+                  <div className="text-center px-4">
                     <QuantumLoader 
                       size="lg" 
                       variant="forest" 
                       showLabel 
                       labelText="Fractalchain Consensus" 
                     />
-                    <p className="text-xs text-gray-400 mt-6 max-w-xs mx-auto">
+                    <p className="text-xs md:text-sm text-gray-400 mt-4 md:mt-6 max-w-xs mx-auto">
                       Our βίος (bios) principle manifested through distributed consensus -
                       reaching agreement across multiple validation nodes without central authority.
                     </p>
@@ -68,14 +68,14 @@ const QuantumLoaderShowcase = () => {
                 )}
                 
                 {activeLoader === "verification" && (
-                  <div className="text-center">
+                  <div className="text-center px-4">
                     <QuantumLoader 
                       size="lg" 
                       variant="water" 
                       showLabel 
                       labelText="Quantum Verification" 
                     />
-                    <p className="text-xs text-gray-400 mt-6 max-w-xs mx-auto">
+                    <p className="text-xs md:text-sm text-gray-400 mt-4 md:mt-6 max-w-xs mx-auto">
                       Our ζωή (zoē) principle expressed through multi-dimensional verification,
                       ensuring immutable security through quantum-resistant signatures.
                     </p>
@@ -83,14 +83,14 @@ const QuantumLoaderShowcase = () => {
                 )}
                 
                 {activeLoader === "integration" && (
-                  <div className="text-center">
+                  <div className="text-center px-4">
                     <QuantumLoader 
                       size="lg" 
                       variant="cosmos" 
                       showLabel 
                       labelText="Multiplanetary Integration" 
                     />
-                    <p className="text-xs text-gray-400 mt-6 max-w-xs mx-auto">
+                    <p className="text-xs md:text-sm text-gray-400 mt-4 md:mt-6 max-w-xs mx-auto">
                       Our πᾶς ἐν πᾶσιν (all in all) principle realized through cross-planetary
                       network integration, breaking light-speed limitations through quantum entanglement.
                     </p>
@@ -100,29 +100,37 @@ const QuantumLoaderShowcase = () => {
             </CardContent>
           </Card>
           
-          {/* Control Panel Card */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Quantum Processing Visualization</CardTitle>
-              <CardDescription>
+          {/* Control Panel Card - Now more responsive for mobile */}
+          <Card className="order-1 lg:order-2">
+            <CardHeader className="px-4 md:px-6 py-4 md:py-6">
+              <CardTitle className="text-lg md:text-xl">Quantum Processing Visualization</CardTitle>
+              <CardDescription className="text-sm md:text-base">
                 Explore our quantum-inspired loading sequences that represent core operations
                 within our pioneering FractalChain architecture
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-4 md:px-6">
               <Tabs defaultValue="transactional" onValueChange={setActiveLoader} className="w-full">
-                <TabsList className="grid grid-cols-2 sm:grid-cols-4 mb-6">
-                  <TabsTrigger value="transactional">
-                    <Database className="h-4 w-4 mr-1" /> Transaction
+                <TabsList className="grid grid-cols-2 md:grid-cols-4 mb-4 md:mb-6 w-full">
+                  <TabsTrigger value="transactional" className="text-xs md:text-sm">
+                    <Database className="h-3 w-3 md:h-4 md:w-4 mr-1" /> 
+                    <span className="hidden sm:inline">Transaction</span>
+                    <span className="sm:hidden">Trans</span>
                   </TabsTrigger>
-                  <TabsTrigger value="consensus">
-                    <RotateCw className="h-4 w-4 mr-1" /> Consensus
+                  <TabsTrigger value="consensus" className="text-xs md:text-sm">
+                    <RotateCw className="h-3 w-3 md:h-4 md:w-4 mr-1" /> 
+                    <span className="hidden sm:inline">Consensus</span>
+                    <span className="sm:hidden">Cons</span>
                   </TabsTrigger>
-                  <TabsTrigger value="verification">
-                    <Zap className="h-4 w-4 mr-1" /> Verification
+                  <TabsTrigger value="verification" className="text-xs md:text-sm">
+                    <Zap className="h-3 w-3 md:h-4 md:w-4 mr-1" /> 
+                    <span className="hidden sm:inline">Verification</span>
+                    <span className="sm:hidden">Verify</span>
                   </TabsTrigger>
-                  <TabsTrigger value="integration">
-                    <Atom className="h-4 w-4 mr-1" /> Integration
+                  <TabsTrigger value="integration" className="text-xs md:text-sm">
+                    <Atom className="h-3 w-3 md:h-4 md:w-4 mr-1" /> 
+                    <span className="hidden sm:inline">Integration</span>
+                    <span className="sm:hidden">Integ</span>
                   </TabsTrigger>
                 </TabsList>
                 

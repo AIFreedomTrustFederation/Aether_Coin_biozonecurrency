@@ -97,21 +97,24 @@ const QuantumLoadingDemo: React.FC = () => {
           </p>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+        {/* Enhanced mobile-responsive grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8 md:mb-10">
           {apiOperations.map((operation) => (
-            <Card key={operation.key} className="relative overflow-hidden">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
+            <Card key={operation.key} className="relative overflow-hidden flex flex-col h-full">
+              <CardHeader className="pb-2 md:pb-4">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 rounded-md bg-muted flex items-center justify-center">
                     {operation.icon}
-                    <CardTitle className="text-base">{operation.name}</CardTitle>
                   </div>
+                  <CardTitle className="text-base md:text-lg">{operation.name}</CardTitle>
                 </div>
-                <CardDescription>{operation.description}</CardDescription>
+                <CardDescription className="mt-2 text-sm md:text-base">
+                  {operation.description}
+                </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-0 mt-auto">
                 {inlineLoading === operation.key ? (
-                  <div className="flex justify-center py-2">
+                  <div className="flex justify-center py-3">
                     <QuantumLoader 
                       size="sm" 
                       variant={operation.loaderVariant} 
@@ -122,7 +125,8 @@ const QuantumLoadingDemo: React.FC = () => {
                   <Button 
                     onClick={() => simulateApiCall(operation)}
                     variant="outline" 
-                    className="w-full"
+                    className="w-full h-10 md:h-11 rounded-md"
+                    size="lg"
                   >
                     Simulate Operation
                   </Button>
@@ -136,9 +140,10 @@ const QuantumLoadingDemo: React.FC = () => {
           <Button 
             onClick={simulateFullscreenLoading} 
             disabled={showFullscreenLoader}
-            className="bg-gradient-to-r from-forest-600 to-water-600 hover:from-forest-700 hover:to-water-700"
+            className="bg-gradient-to-r from-forest-600 to-water-600 hover:from-forest-700 hover:to-water-700 px-5 py-6 h-auto text-base"
+            size="lg"
           >
-            <CloudUpload className="mr-2 h-4 w-4" />
+            <CloudUpload className="mr-2 h-5 w-5" />
             Simulate Fullscreen Loading
           </Button>
         </div>

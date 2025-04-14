@@ -1,189 +1,252 @@
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger } from "@/components/ui/navigation-menu";
-import { Leaf, Wallet, ExternalLink, Globe, Shield, Award } from "lucide-react";
+import { Leaf, Wallet, ExternalLink, Globe, Shield, Award, Menu, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
+import { Sheet, SheetClose, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+
+// Define our navigation items to avoid repetition
+const navItems = [
+  { href: "/", label: "Home", icon: null },
+  { href: "/tokenomics", label: "Tokenomics", icon: null },
+  { href: "/aicon", label: "AICoin", icon: null },
+  { href: "/wallet", label: "Wallet", icon: <Wallet className="mr-2 h-5 w-5" /> },
+  { href: "/dapp", label: "DApp", icon: <ExternalLink className="mr-2 h-5 w-5" /> },
+  { href: "/domains", label: "Domains", icon: <Globe className="mr-2 h-5 w-5" /> },
+  { href: "/achievements", label: "Achievements", icon: <Award className="mr-2 h-5 w-5 text-amber-600" /> },
+  { href: "/aethercore-trust", label: "AetherCore.trust", icon: <Globe className="mr-2 h-5 w-5 text-primary" /> },
+  { href: "/aethercore-browser", label: "HTTQS Browser", icon: <Shield className="mr-2 h-5 w-5 text-blue-600" /> },
+  { href: "/api", label: "API", icon: null },
+];
+
+// Legal items
+const legalItems = [
+  { href: "/terms-of-service", label: "Terms of Service" },
+  { href: "/privacy-policy", label: "Privacy Policy" },
+];
+
+// Ecosystem items
+const ecosystemItems = [
+  { 
+    href: "/tokenomics", 
+    label: "Aether Coin (FTC)",
+    description: "Rewards for providing storage resources to our decentralized network"
+  },
+  { 
+    href: "/aicon", 
+    label: "AICoin (ICON)",
+    description: "Rewards for contributing processing power to train our AI models"
+  },
+];
 
 const Navbar = () => {
+  // State for the mobile menu
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center">
-        <div className="flex items-center gap-2 mr-8">
+        <div className="flex items-center gap-2 mr-4 md:mr-8">
           <Link to="/" className="flex items-center gap-2">
             <Leaf className="h-6 w-6 text-forest-600" />
-            <span className="text-xl font-display font-semibold text-forest-800">Aether Coin</span>
+            <span className="text-lg md:text-xl font-display font-semibold text-forest-800">Aether Coin</span>
           </Link>
         </div>
         
+        {/* Desktop Navigation */}
         <NavigationMenu className="hidden md:flex">
           <NavigationMenuList>
-            <NavigationMenuItem>
-              <NavigationMenuLink asChild>
-                <Button variant="link" asChild>
-                  <Link to="/">Home</Link>
-                </Button>
-              </NavigationMenuLink>
-            </NavigationMenuItem>
+            {navItems.slice(0, 3).map((item, index) => (
+              <NavigationMenuItem key={index}>
+                <NavigationMenuLink asChild>
+                  <Button variant="link" asChild>
+                    <Link to={item.href} className="flex items-center">
+                      {item.icon}
+                      {item.label}
+                    </Link>
+                  </Button>
+                </NavigationMenuLink>
+              </NavigationMenuItem>
+            ))}
+
             <NavigationMenuItem>
               <NavigationMenuTrigger>Ecosystem</NavigationMenuTrigger>
               <NavigationMenuContent>
                 <div className="grid gap-3 p-4 md:w-[400px] lg:w-[500px] lg:grid-cols-2">
-                  <NavigationMenuLink asChild>
-                    <Link to="/tokenomics" className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground">
-                      <div className="text-sm font-medium leading-none">Aether Coin (FTC)</div>
-                      <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                        Rewards for providing storage resources to our decentralized network
-                      </p>
+                  {ecosystemItems.map((item, index) => (
+                    <NavigationMenuLink key={index} asChild>
+                      <Link to={item.href} className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground">
+                        <div className="text-sm font-medium leading-none">{item.label}</div>
+                        <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                          {item.description}
+                        </p>
+                      </Link>
+                    </NavigationMenuLink>
+                  ))}
+                </div>
+              </NavigationMenuContent>
+            </NavigationMenuItem>
+
+            {navItems.slice(3, 7).map((item, index) => (
+              <NavigationMenuItem key={index + 3}>
+                <NavigationMenuLink asChild>
+                  <Button variant="link" asChild>
+                    <Link to={item.href} className="flex items-center">
+                      {item.icon}
+                      {item.label}
                     </Link>
-                  </NavigationMenuLink>
+                  </Button>
+                </NavigationMenuLink>
+              </NavigationMenuItem>
+            ))}
+            
+            <NavigationMenuItem>
+              <NavigationMenuTrigger>More</NavigationMenuTrigger>
+              <NavigationMenuContent>
+                <div className="grid gap-3 p-4 md:w-[400px] lg:w-[500px] lg:grid-cols-2">
+                  {navItems.slice(7).map((item, index) => (
+                    <NavigationMenuLink key={index + 7} asChild>
+                      <Link to={item.href} className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground">
+                        <div className="flex items-center text-sm font-medium leading-none">
+                          {item.icon}
+                          {item.label}
+                        </div>
+                      </Link>
+                    </NavigationMenuLink>
+                  ))}
                   <NavigationMenuLink asChild>
-                    <Link to="/aicon" className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground">
-                      <div className="text-sm font-medium leading-none">AICoin (ICON)</div>
-                      <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                        Rewards for contributing processing power to train our AI models
-                      </p>
-                    </Link>
+                    <Button 
+                      variant="link"
+                      onClick={() => {
+                        toast.info("About page coming soon");
+                      }}
+                      className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                    >
+                      <div className="text-sm font-medium leading-none">About</div>
+                    </Button>
                   </NavigationMenuLink>
                 </div>
               </NavigationMenuContent>
             </NavigationMenuItem>
-            <NavigationMenuItem>
-              <NavigationMenuLink asChild>
-                <Button variant="link" asChild>
-                  <Link to="/tokenomics">Tokenomics</Link>
-                </Button>
-              </NavigationMenuLink>
-            </NavigationMenuItem>
-            <NavigationMenuItem>
-              <NavigationMenuLink asChild>
-                <Button variant="link" asChild>
-                  <Link to="/aicon">AICoin</Link>
-                </Button>
-              </NavigationMenuLink>
-            </NavigationMenuItem>
-            <NavigationMenuItem>
-              <NavigationMenuLink asChild>
-                <Button variant="link" asChild>
-                  <Link to="/wallet">
-                    <Wallet className="mr-2 h-4 w-4" />
-                    Wallet
-                  </Link>
-                </Button>
-              </NavigationMenuLink>
-            </NavigationMenuItem>
-            <NavigationMenuItem>
-              <NavigationMenuLink asChild>
-                <Button variant="link" asChild>
-                  <Link to="/dapp" className="flex items-center">
-                    <ExternalLink className="mr-2 h-4 w-4" />
-                    DApp
-                  </Link>
-                </Button>
-              </NavigationMenuLink>
-            </NavigationMenuItem>
-            <NavigationMenuItem>
-              <NavigationMenuLink asChild>
-                <Button variant="link" asChild>
-                  <Link to="/domains" className="flex items-center">
-                    <Globe className="mr-2 h-4 w-4" />
-                    Domains
-                  </Link>
-                </Button>
-              </NavigationMenuLink>
-            </NavigationMenuItem>
-            <NavigationMenuItem>
-              <NavigationMenuLink asChild>
-                <Button variant="link" asChild>
-                  <Link to="/achievements" className="flex items-center">
-                    <Award className="mr-2 h-4 w-4 text-amber-600" />
-                    Achievements
-                  </Link>
-                </Button>
-              </NavigationMenuLink>
-            </NavigationMenuItem>
-            <NavigationMenuItem>
-              <NavigationMenuLink asChild>
-                <Button variant="link" asChild>
-                  <Link to="/aethercore-trust" className="flex items-center">
-                    <Globe className="mr-2 h-4 w-4 text-primary" />
-                    AetherCore.trust
-                  </Link>
-                </Button>
-              </NavigationMenuLink>
-            </NavigationMenuItem>
-            <NavigationMenuItem>
-              <NavigationMenuLink asChild>
-                <Button variant="link" asChild>
-                  <Link to="/aethercore-browser" className="flex items-center">
-                    <Shield className="mr-2 h-4 w-4 text-blue-600" />
-                    HTTQS Browser
-                  </Link>
-                </Button>
-              </NavigationMenuLink>
-            </NavigationMenuItem>
-            <NavigationMenuItem>
-              <NavigationMenuLink asChild>
-                <Button variant="link" asChild>
-                  <a href="/atc-aifreedomtrust" className="flex items-center">
-                    <ExternalLink className="mr-2 h-4 w-4 text-blue-600" />
-                    ATC.aifreedomtrust.com
-                  </a>
-                </Button>
-              </NavigationMenuLink>
-            </NavigationMenuItem>
-            <NavigationMenuItem>
-              <NavigationMenuLink asChild>
-                <Button variant="link" asChild>
-                  <Link to="/api">API</Link>
-                </Button>
-              </NavigationMenuLink>
-            </NavigationMenuItem>
-            <NavigationMenuItem>
-              <NavigationMenuLink asChild>
-                <Button 
-                  variant="link"
-                  onClick={() => {
-                    toast.info("About page coming soon");
-                  }}
-                >
-                  About
-                </Button>
-              </NavigationMenuLink>
-            </NavigationMenuItem>
+
             <NavigationMenuItem>
               <NavigationMenuTrigger>Legal</NavigationMenuTrigger>
               <NavigationMenuContent>
                 <div className="grid gap-3 p-4 w-[200px]">
-                  <NavigationMenuLink asChild>
-                    <Link to="/terms-of-service" className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground">
-                      <div className="text-sm font-medium leading-none">Terms of Service</div>
-                    </Link>
-                  </NavigationMenuLink>
-                  <NavigationMenuLink asChild>
-                    <Link to="/privacy-policy" className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground">
-                      <div className="text-sm font-medium leading-none">Privacy Policy</div>
-                    </Link>
-                  </NavigationMenuLink>
+                  {legalItems.map((item, index) => (
+                    <NavigationMenuLink key={index} asChild>
+                      <Link to={item.href} className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground">
+                        <div className="text-sm font-medium leading-none">{item.label}</div>
+                      </Link>
+                    </NavigationMenuLink>
+                  ))}
                 </div>
               </NavigationMenuContent>
             </NavigationMenuItem>
           </NavigationMenuList>
         </NavigationMenu>
         
+        {/* Mobile Navigation Button */}
+        <Sheet>
+          <SheetTrigger asChild className="md:hidden">
+            <Button variant="ghost" size="icon" className="mr-2">
+              <Menu className="h-5 w-5" />
+              <span className="sr-only">Toggle menu</span>
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="w-[85%] sm:w-[350px] pr-0">
+            <div className="flex flex-col h-full">
+              <div className="px-2 pt-4 pb-8 border-b">
+                <Link to="/" className="flex items-center gap-2 mb-6" onClick={() => setMobileMenuOpen(false)}>
+                  <Leaf className="h-6 w-6 text-forest-600" />
+                  <span className="text-xl font-display font-semibold text-forest-800">Aether Coin</span>
+                </Link>
+                
+                <div className="grid grid-cols-2 gap-2">
+                  <SheetClose asChild>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        toast.info("Sign in functionality coming soon");
+                      }}
+                    >
+                      Sign In
+                    </Button>
+                  </SheetClose>
+                  <SheetClose asChild>
+                    <Button 
+                      size="sm" 
+                      className="bg-forest-600 hover:bg-forest-700"
+                      onClick={() => {
+                        toast.info("Wallet connection coming soon");
+                      }}
+                    >
+                      Connect Wallet
+                    </Button>
+                  </SheetClose>
+                </div>
+              </div>
+              
+              <div className="py-4 flex-1 overflow-y-auto">
+                <div className="flex flex-col space-y-1">
+                  {navItems.map((item, index) => (
+                    <SheetClose key={index} asChild>
+                      <Link 
+                        to={item.href}
+                        className="flex items-center py-2 px-4 hover:bg-accent rounded-md"
+                      >
+                        {item.icon}
+                        <span className="text-base">{item.label}</span>
+                      </Link>
+                    </SheetClose>
+                  ))}
+                  
+                  <Button 
+                    variant="ghost" 
+                    className="justify-start py-2 px-4 hover:bg-accent rounded-md"
+                    onClick={() => {
+                      toast.info("About page coming soon");
+                    }}
+                  >
+                    <span className="text-base">About</span>
+                  </Button>
+                </div>
+                
+                <div className="mt-4 pt-4 border-t">
+                  <p className="px-4 mb-2 text-sm font-medium text-muted-foreground">Legal</p>
+                  {legalItems.map((item, index) => (
+                    <SheetClose key={index} asChild>
+                      <Link 
+                        to={item.href}
+                        className="flex items-center py-2 px-4 hover:bg-accent rounded-md"
+                      >
+                        <span className="text-base">{item.label}</span>
+                      </Link>
+                    </SheetClose>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </SheetContent>
+        </Sheet>
+        
         <div className="ml-auto flex items-center gap-2">
-          <Button 
-            variant="ghost" 
-            size="sm"
-            onClick={() => {
-              toast.info("Sign in functionality coming soon");
-            }}
-          >
-            Sign In
-          </Button>
+          <div className="hidden md:flex items-center gap-2">
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => {
+                toast.info("Sign in functionality coming soon");
+              }}
+            >
+              Sign In
+            </Button>
+          </div>
           <Button 
             size="sm" 
-            className="bg-forest-600 hover:bg-forest-700"
+            className="bg-forest-600 hover:bg-forest-700 hidden md:flex"
             onClick={() => {
               toast.info("Wallet connection coming soon");
             }}

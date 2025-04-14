@@ -4,7 +4,7 @@ import { Zap, Globe, Orbit, Infinity, Scale } from "lucide-react";
 
 const TaglineSection = () => {
   return (
-    <section className="py-20 bg-gradient-to-r from-black via-forest-950 to-black overflow-hidden relative">
+    <section className="py-10 sm:py-16 md:py-20 bg-gradient-to-r from-black via-forest-950 to-black overflow-hidden relative">
       {/* Subtle animated background pattern */}
       <div className="absolute inset-0 tagline-pattern opacity-10"></div>
       
@@ -14,19 +14,19 @@ const TaglineSection = () => {
         <div className="absolute top-1/2 left-0 w-full h-px bg-gradient-to-r from-blue-500/0 via-forest-400/20 to-red-500/0 transform -translate-y-1/2 light-beam-animation-reverse"></div>
       </div>
       
-      <div className="container relative z-10">
+      <div className="container relative z-10 px-4 sm:px-6">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 1.5 }}
-          className="text-center mb-12"
+          className="text-center mb-8 md:mb-12"
         >
-          <p className="text-lg md:text-xl lg:text-2xl text-transparent bg-clip-text bg-gradient-to-r from-red-300 via-forest-300 to-blue-300 font-medium leading-relaxed">
+          <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-transparent bg-clip-text bg-gradient-to-r from-red-300 via-forest-300 to-blue-300 font-medium leading-relaxed">
             Welcome to <span className="font-bold text-white">AetherCore Technologies</span> by AI Freedom Trust, 
             where ancient wisdom and future innovation converge in the <span className="italic text-forest-300">Eternal Now</span>
           </p>
           
-          <p className="mt-2 text-sm md:text-base text-gray-400 max-w-4xl mx-auto">
+          <p className="mt-2 text-xs sm:text-sm md:text-base text-gray-400 max-w-4xl mx-auto">
             Introducing <span className="text-forest-400 font-medium">biozoecurrency</span> — a revolutionary Fractalchain system that transcends traditional Blockchain limitations. 
             Our pioneering economic framework unites infinite potential with sustainable principles, 
             balancing technological advancement with timeless wisdom to create a harmonious financial ecosystem 
@@ -34,22 +34,22 @@ const TaglineSection = () => {
           </p>
         </motion.div>
 
-        {/* Staggered Image Grid with Cosmic Principles */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-10">
+        {/* Mobile-optimized Staggered Grid with Cosmic Principles */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8 mt-6 sm:mt-10">
           {/* First Row - Staggered Layout */}
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="flex flex-col items-center md:mt-20"
+            className="flex flex-col items-center sm:items-start md:items-center md:mt-20 p-4 sm:p-0"
           >
-            <div className="h-20 w-20 rounded-full bg-gradient-to-br from-forest-900 to-forest-700 p-0.5 shadow-glow-sm">
+            <div className="h-16 w-16 md:h-20 md:w-20 rounded-full bg-gradient-to-br from-forest-900 to-forest-700 p-0.5 shadow-glow-sm">
               <div className="h-full w-full rounded-full bg-gradient-to-br from-forest-800 to-forest-900 flex items-center justify-center">
-                <Zap className="h-8 w-8 text-forest-400" />
+                <Zap className="h-6 w-6 md:h-8 md:w-8 text-forest-400" />
               </div>
             </div>
-            <h3 className="text-forest-400 font-medium mt-3 mb-1">Fractalchain Technology</h3>
-            <p className="text-gray-400 text-sm text-center">
+            <h3 className="text-forest-400 font-medium mt-3 mb-1 text-center sm:text-left md:text-center">Fractalchain Technology</h3>
+            <p className="text-gray-400 text-xs md:text-sm text-center sm:text-left md:text-center">
               Beyond blockchain - a self-replicating economic structure that mirrors cosmic patterns of growth
             </p>
           </motion.div>
@@ -58,11 +58,11 @@ const TaglineSection = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
-            className="flex flex-col items-center md:mb-16"
+            className="flex flex-col items-center sm:col-span-2 md:col-span-1 md:mb-16"
           >
-            <div className="relative">
+            <div className="relative w-full max-w-xs mx-auto sm:max-w-none">
               <div className="absolute inset-0 bg-gradient-to-br from-forest-500/20 to-water-500/20 rounded-2xl blur-xl"></div>
-              <div className="h-60 w-full bg-gradient-to-br from-forest-900 to-forest-950 rounded-2xl relative overflow-hidden border border-forest-700/30">
+              <div className="h-48 sm:h-52 md:h-60 w-full bg-gradient-to-br from-forest-900 to-forest-950 rounded-2xl relative overflow-hidden border border-forest-700/30">
                 <div className="absolute inset-0 opacity-30 bg-[url('/src/assets/earth-pattern.png')] bg-cover"></div>
                 <div className="absolute inset-0 bg-gradient-to-t from-forest-950 via-transparent to-transparent"></div>
                 <div className="absolute bottom-0 left-0 w-full p-4 text-center">
@@ -77,15 +77,15 @@ const TaglineSection = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
-            className="flex flex-col items-center md:mt-12"
+            className="flex flex-col items-center sm:items-end md:items-center md:mt-12 p-4 sm:p-0"
           >
-            <div className="h-20 w-20 rounded-full bg-gradient-to-br from-water-900 to-water-700 p-0.5 shadow-glow-sm">
+            <div className="h-16 w-16 md:h-20 md:w-20 rounded-full bg-gradient-to-br from-water-900 to-water-700 p-0.5 shadow-glow-sm">
               <div className="h-full w-full rounded-full bg-gradient-to-br from-water-800 to-water-900 flex items-center justify-center">
-                <Globe className="h-8 w-8 text-water-400" />
+                <Globe className="h-6 w-6 md:h-8 md:w-8 text-water-400" />
               </div>
             </div>
-            <h3 className="text-water-400 font-medium mt-3 mb-1">Biospheric Integration</h3>
-            <p className="text-gray-400 text-sm text-center">
+            <h3 className="text-water-400 font-medium mt-3 mb-1 text-center sm:text-right md:text-center">Biospheric Integration</h3>
+            <p className="text-gray-400 text-xs md:text-sm text-center sm:text-right md:text-center">
               Economic systems that respect and enhance planetary life systems across multiple worlds
             </p>
           </motion.div>
@@ -95,11 +95,11 @@ const TaglineSection = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.5 }}
-            className="flex flex-col items-center md:mb-16"
+            className="flex flex-col items-center sm:items-start md:items-center sm:col-span-2 md:col-span-1 md:mb-16 order-2 md:order-1"
           >
-            <div className="relative">
+            <div className="relative w-full max-w-xs mx-auto sm:max-w-none">
               <div className="absolute inset-0 bg-gradient-to-br from-water-500/20 to-blue-500/20 rounded-2xl blur-xl"></div>
-              <div className="h-60 w-full bg-gradient-to-br from-water-900 to-water-950 rounded-2xl relative overflow-hidden border border-water-700/30">
+              <div className="h-48 sm:h-52 md:h-60 w-full bg-gradient-to-br from-water-900 to-water-950 rounded-2xl relative overflow-hidden border border-water-700/30">
                 <div className="absolute inset-0 opacity-20 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-water-500/20 via-transparent to-transparent"></div>
                 <div className="absolute inset-0 bg-gradient-to-t from-water-950 via-transparent to-transparent"></div>
                 <div className="absolute bottom-0 left-0 w-full p-4 text-center">
@@ -114,15 +114,15 @@ const TaglineSection = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.7 }}
-            className="flex flex-col items-center md:mt-24"
+            className="flex flex-col items-center p-4 sm:p-0 order-1 md:order-2 md:mt-24"
           >
-            <div className="h-20 w-20 rounded-full bg-gradient-to-br from-blue-900 to-blue-700 p-0.5 shadow-glow-sm">
+            <div className="h-16 w-16 md:h-20 md:w-20 rounded-full bg-gradient-to-br from-blue-900 to-blue-700 p-0.5 shadow-glow-sm">
               <div className="h-full w-full rounded-full bg-gradient-to-br from-blue-800 to-blue-900 flex items-center justify-center">
-                <Infinity className="h-8 w-8 text-blue-400" />
+                <Infinity className="h-6 w-6 md:h-8 md:w-8 text-blue-400" />
               </div>
             </div>
-            <h3 className="text-blue-400 font-medium mt-3 mb-1">Infinite Expansion</h3>
-            <p className="text-gray-400 text-sm text-center">
+            <h3 className="text-blue-400 font-medium mt-3 mb-1 text-center">Infinite Expansion</h3>
+            <p className="text-gray-400 text-xs md:text-sm text-center">
               Backed by Bitcoin's scarcity while enabling unlimited growth for multiplanetary civilization
             </p>
           </motion.div>
@@ -131,11 +131,11 @@ const TaglineSection = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.6 }}
-            className="flex flex-col items-center md:mb-8"
+            className="flex flex-col items-center sm:items-end md:items-center md:mb-8 order-3"
           >
-            <div className="relative">
+            <div className="relative w-full max-w-xs mx-auto sm:max-w-none">
               <div className="absolute inset-0 bg-gradient-to-br from-red-500/20 to-forest-500/20 rounded-2xl blur-xl"></div>
-              <div className="h-60 w-full bg-gradient-to-br from-red-900 to-red-950 rounded-2xl relative overflow-hidden border border-red-700/30">
+              <div className="h-48 sm:h-52 md:h-60 w-full bg-gradient-to-br from-red-900 to-red-950 rounded-2xl relative overflow-hidden border border-red-700/30">
                 <div className="absolute inset-0 opacity-20 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-red-500/20 via-transparent to-transparent"></div>
                 <div className="absolute inset-0 bg-gradient-to-t from-red-950 via-transparent to-transparent"></div>
                 <div className="absolute bottom-0 left-0 w-full p-4 text-center">
