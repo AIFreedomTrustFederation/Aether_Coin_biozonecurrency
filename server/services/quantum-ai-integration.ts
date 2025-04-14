@@ -10,6 +10,7 @@ import {
   QuantumSecurityLevel, 
   PostQuantumAlgorithm 
 } from '../crypto/quantum';
+import { TrainingFeedbackType } from './mysterion-training'; // Ensure this is the correct path
 import { quantumAiMonitoring } from './quantum-ai-monitoring';
 import { processAIGuidanceRequest, AIGuidanceResponse } from './aiGuidance';
 import { submitTrainingFeedback } from './mysterion-training';
@@ -237,12 +238,12 @@ async function logSecurityGuidanceInteraction(
   try {
     // Log the interaction for AI training
     await submitTrainingFeedback(
-      request.userId || undefined,
+      request.userId ?? 0,
       null,
       {
         userQuery: request.query,
         aiResponse: response.content,
-        feedbackType: 'HELPFUL', // Default to helpful
+        feedbackType: TrainingFeedbackType.HELPFUL, // Default to helpful
         context: {
           securityLevel: request.securityContext?.securityLevel,
           securityActions: actions,

@@ -615,7 +615,7 @@ FractalCoin represents not just a technological innovation but a fundamental rei
       const { amount, currency, description, walletId, metadata } = req.body;
       const userId = 1; // For demo purposes, ideally this would come from auth
       
-      if (!amount || isNaN(parseInt(amount))) {
+      if (!amount || isNaN(parseInt(amount.toString()))) {
         return res.status(400).json({ message: "Invalid amount" });
       }
       
@@ -625,11 +625,11 @@ FractalCoin represents not just a technological innovation but a fundamental rei
       
       const paymentIntent = await stripeService.createPaymentIntent(
         userId,
-        parseInt(amount), 
+        parseInt(amount.toString()), 
         currency,
         description || "Wallet funding",
         metadata || {},
-        walletId ? parseInt(walletId) : undefined
+        walletId ? parseInt(amount.toString()) : undefined
       );
       
       res.json({
@@ -650,7 +650,7 @@ FractalCoin represents not just a technological innovation but a fundamental rei
       const { amount, currency, description, paymentMethod, walletId, metadata } = req.body;
       const userId = 1; // For demo purposes, ideally this would come from auth
       
-      if (!amount || isNaN(parseInt(amount))) {
+      if (!amount || isNaN(parseInt(amount.toString()))) {
         return res.status(400).json({ message: "Invalid amount" });
       }
       
@@ -663,11 +663,11 @@ FractalCoin represents not just a technological innovation but a fundamental rei
       }
       
       const paymentResponse = await openSourcePaymentService.processPayment(
-        parseInt(amount),
+        amount,
         currency,
         description || "Wallet funding",
         userId,
-        walletId ? parseInt(walletId) : undefined,
+        walletId ? parseInt(amount.toString()) : undefined,
         metadata || {}
       );
       
@@ -686,11 +686,11 @@ FractalCoin represents not just a technological innovation but a fundamental rei
       const { paymentMethodId, amount, currency, description, walletId } = req.body;
       const userId = 1; // For demo purposes
       
-      if (!paymentMethodId || isNaN(parseInt(paymentMethodId))) {
+      if (!paymentMethodId || isNaN(parseInt(amount.toString()))) {
         return res.status(400).json({ message: "Invalid payment method ID" });
       }
       
-      if (!amount || isNaN(parseInt(amount))) {
+      if (!amount || isNaN(parseInt(amount.toString()))) {
         return res.status(400).json({ message: "Invalid amount" });
       }
       
@@ -705,11 +705,11 @@ FractalCoin represents not just a technological innovation but a fundamental rei
       // Create payment intent with Stripe as the default
       const paymentIntent = await stripeService.createPaymentIntent(
         userId,
-        parseInt(amount),
+        parseInt(amount.toString()),
         currency,
         description,
         { paymentMethodId },
-        walletId ? parseInt(walletId) : undefined
+        walletId ? parseInt(amount.toString()) : undefined
       );
       
       res.status(201).json({
@@ -748,7 +748,7 @@ FractalCoin represents not just a technological innovation but a fundamental rei
         currency,
         description || 'Open-source payment',
         userId,
-        walletId ? parseInt(walletId) : undefined,
+        walletId ? parseInt(amount.toString()) : undefined,
         metadata || {}
       );
       
@@ -828,7 +828,7 @@ FractalCoin represents not just a technological innovation but a fundamental rei
         process.env.STRIPE_WEBHOOK_SECRET || ''
       );
       
-      await stripeService.handleWebhookEvent(event);
+      await stripeService.handleWebhookEvent(payload, signature);
       res.json({ received: true });
     } catch (error) {
       res.status(400).json({ 
