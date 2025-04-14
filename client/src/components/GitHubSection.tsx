@@ -9,8 +9,8 @@ import { Loader2, Star, GitFork, AlertCircle, Users } from "lucide-react";
 
 const GitHubSection = () => {
   const [repoDetails, setRepoDetails] = useState({
-    owner: "fractalcoin", // Default value, change as needed
-    repo: "aether-coin"   // Default value, change as needed
+    owner: "facebook", // Default value, using a popular public repo
+    repo: "react"      // Default value, using a popular public repo
   });
   const [inputValues, setInputValues] = useState(repoDetails);
   
@@ -46,7 +46,7 @@ const GitHubSection = () => {
             <span className="gradient-text">GitHub</span> Integration
           </h2>
           <p className="text-muted-foreground">
-            Track development progress and contribute to the Aether Coin ecosystem.
+            Explore GitHub repositories and track development progress with our integrated GitHub viewer.
           </p>
         </div>
         
@@ -129,7 +129,7 @@ const GitHubSection = () => {
                 <Card className="border-forest-100">
                   <CardHeader>
                     <CardTitle>Contributors</CardTitle>
-                    <CardDescription>The people behind Aether Coin</CardDescription>
+                    <CardDescription>Top project contributors</CardDescription>
                   </CardHeader>
                   <CardContent>
                     {contribLoading ? (
