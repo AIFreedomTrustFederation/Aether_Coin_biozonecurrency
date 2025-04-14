@@ -1,0 +1,57 @@
+Hypori is a proprietary zero-trust security solution that provides a virtual workspace environment for secure access to corporate data while isolating personal data. As of now, there does not appear to be an open-source version of Hypori or an equivalent open-source solution offering its exact features. However, several open-source projects and frameworks implement the zero-trust security model, although they may lack Hypori's specific capabilities like virtual devices or its compliance certifications.
+
+Open-Source Zero-Trust Alternatives
+
+Here are a few open-source solutions that align with aspects of the zero-trust security model:
+
+1. OpenZiti
+
+OpenZiti is an open-source platform for creating zero-trust networks. It enables secure application access without exposing services to the public internet.
+
+It focuses on application-layer security and can be integrated into existing systems.
+
+Website: openziti.io
+
+
+
+2. Istio
+
+Istio is a service mesh that implements zero-trust principles for securing microservices communication. It supports mutual TLS (mTLS), authentication, and fine-grained access controls.
+
+Primarily suited for containerized and Kubernetes environments.
+
+Website: istio.io
+
+
+
+3. ZeroTier
+
+ZeroTier is a virtual networking solution that can implement zero-trust network principles. While not a complete zero-trust platform, it allows secure, encrypted communication between devices over virtual networks.
+
+Website: zerotier.com
+
+
+
+4. Vault by HashiCorp
+
+Vault focuses on securing access to secrets, credentials, and encryption keys. It enables dynamic secrets and granular access controls, fitting within a zero-trust architecture.
+
+Website: vaultproject.io
+
+
+
+5. Teleport
+
+Teleport is an open-source solution for securing infrastructure access via zero-trust principles. It provides secure access to SSH, Kubernetes, databases, and applications.
+
+Website: goteleport.com
+
+
+
+
+How They Compare to Hypori
+
+These tools implement aspects of the zero-trust security model but do not replicate Hypori's virtual workspace or data isolation features. Hypori's unique selling point is its virtual Android OS environment hosted in the cloud, combined with strong compliance and certification credentials (e.g., FedRAMP, HIPAA). To build a similar system, you would likely need to combine multiple tools and frameworks.
+
+If your organization is committed to open source, consider integrating some of these tools to emulate Hypori's functionality where feasible. For example, combining OpenZiti (secure network access) with a virtual desktop infrastructure (VDI) solution could be a starting point.
+
