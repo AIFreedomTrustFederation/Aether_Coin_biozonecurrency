@@ -1,224 +1,235 @@
-import React, { useState, useEffect } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import React, { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { GitBranch, CheckCircle2, AlertCircle, Clock } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import { ArrowRight, Server, Cpu, HardDrive, Wifi } from "lucide-react";
+import DeploymentModal from "./DeploymentModal";
 
 interface NodeServiceProcessorProps {
-  deploymentId?: string;
-  deploymentName?: string;
-  deploymentType?: string;
-  resourceLevel?: number;
-  onCompleted?: () => void;
-  onError?: (error: string) => void;
+  initialServiceType?: string;
 }
 
 /**
  * NodeServiceProcessor Component
  * 
- * This component handles the verification and processing of node service deployments.
- * It uses Merkle Tree verification to ensure proper resource allocation and security.
+ * Handles the process of deploying SaaS applications and services
+ * on the FractalCoin node network.
  */
 const NodeServiceProcessor: React.FC<NodeServiceProcessorProps> = ({
-  deploymentId = "auto-" + Math.random().toString(36).substring(2, 10),
-  deploymentName = "Unnamed Deployment",
-  deploymentType = "webapp",
-  resourceLevel = 2,
-  onCompleted,
-  onError
+  initialServiceType = "webapp"
 }) => {
-  const [processingStep, setProcessingStep] = useState(1);
-  const [progress, setProgress] = useState(0);
-  const [status, setStatus] = useState<"processing" | "completed" | "error">("processing");
-  const [statusMessage, setStatusMessage] = useState("Initializing deployment process...");
-  const [logs, setLogs] = useState<string[]>([]);
+  // State for deployment configuration
+  const [serviceName, setServiceName] = useState("");
+  const [serviceType, setServiceType] = useState(initialServiceType);
+  const [resourceTier, setResourceTier] = useState("standard");
+  const [estimatedPrice, setEstimatedPrice] = useState(45);
+  const [modalOpen, setModalOpen] = useState(false);
   
-  // Define the steps in the deployment process
-  const steps = [
-    { id: 1, name: "Resource Verification", time: 3 },
-    { id: 2, name: "Merkle Tree Construction", time: 5 },
-    { id: 3, name: "Node Allocation", time: 4 },
-    { id: 4, name: "Deployment Preparation", time: 6 },
-    { id: 5, name: "Configuration", time: 3 },
-    { id: 6, name: "Service Launch", time: 4 }
-  ];
+  // Toast notification
+  const { toast } = useToast();
   
-  // Total steps for progress calculation
-  const totalSteps = steps.length;
-  
-  // Total time for the whole process (in seconds)
-  const totalTime = steps.reduce((acc, step) => acc + step.time, 0);
-
-  // Add a log entry with timestamp
-  const addLog = (message: string) => {
-    const timestamp = new Date().toLocaleTimeString();
-    setLogs(prevLogs => [...prevLogs, `[${timestamp}] ${message}`]);
+  // Resource tier price mapping
+  const resourceTierPrices = {
+    basic: 25,
+    standard: 45,
+    premium: 85,
+    enterprise: 160,
+    quantum: 300
   };
-
-  // Simulate the deployment process
-  useEffect(() => {
-    if (status !== "processing") return;
+  
+  // Resource tier mapping to level (1-5)
+  const resourceTierLevels = {
+    basic: 1,
+    standard: 2,
+    premium: 3,
+    enterprise: 4,
+    quantum: 5
+  };
+  
+  // Handle resource tier selection
+  const handleTierChange = (value: string) => {
+    setResourceTier(value);
+    setEstimatedPrice(resourceTierPrices[value as keyof typeof resourceTierPrices] || 45);
+  };
+  
+  // Handle deployment submission
+  const handleDeploy = () => {
+    if (!serviceName.trim()) {
+      toast({
+        title: "Service name required",
+        description: "Please provide a name for your service",
+        variant: "destructive"
+      });
+      return;
+    }
     
-    // Start the deployment process
-    let currentStep = 1;
-    let currentProgress = 0;
+    // Open deployment modal
+    setModalOpen(true);
+  };
+  
+  // Handle deployment completion
+  const handleDeploymentComplete = () => {
+    // Reset form
+    setServiceName("");
+    setResourceTier("standard");
+    setEstimatedPrice(45);
     
-    // Add initial log
-    addLog(`Starting deployment of "${deploymentName}" (ID: ${deploymentId})`);
-    addLog(`Deployment type: ${deploymentType}, Resource level: ${resourceLevel}`);
-    
-    // Create interval to update progress and steps
-    const interval = setInterval(() => {
-      // Get current step details
-      const step = steps.find(s => s.id === currentStep);
-      
-      if (!step) {
-        // Process completed
-        clearInterval(interval);
-        setProgress(100);
-        setStatus("completed");
-        setStatusMessage("Deployment completed successfully!");
-        addLog("✅ Deployment completed successfully!");
-        
-        if (onCompleted) {
-          onCompleted();
-        }
-        return;
-      }
-      
-      // Calculate progress increment for this step
-      const stepProgressIncrement = (1 / totalTime) * 100;
-      
-      // Update progress
-      currentProgress += stepProgressIncrement;
-      setProgress(Math.min(Math.round(currentProgress), 99)); // Cap at 99% until complete
-      
-      // Step-specific logs
-      if (currentProgress % 5 < 1) {
-        switch (step.id) {
-          case 1: // Resource Verification
-            addLog(`Verifying available resources across the FractalCoin network...`);
-            break;
-          case 2: // Merkle Tree Construction
-            addLog(`Constructing Merkle Tree for deployment verification...`);
-            break;
-          case 3: // Node Allocation
-            addLog(`Allocating nodes based on resource requirements (Level ${resourceLevel})...`);
-            break;
-          case 4: // Deployment Preparation
-            addLog(`Preparing deployment environment for ${deploymentType}...`);
-            break;
-          case 5: // Configuration
-            addLog(`Configuring service with quantum-resistant security...`);
-            break;
-          case 6: // Service Launch
-            addLog(`Launching service across distributed nodes...`);
-            break;
-          default:
-            break;
-        }
-      }
-      
-      // Increment step counter after step time has passed
-      if (Math.round(currentProgress / 100 * totalTime) >= 
-          steps.slice(0, currentStep).reduce((acc, s) => acc + s.time, 0)) {
-        if (currentStep < totalSteps) {
-          currentStep += 1;
-          setProcessingStep(currentStep);
-          addLog(`Step ${currentStep}: ${steps[currentStep-1].name}`);
-          
-          // Update status message
-          setStatusMessage(`Processing: ${steps[currentStep-1].name}`);
-        }
-      }
-      
-      // Simulate occasional issues (with recovery)
-      if (Math.random() < 0.05 && currentStep < totalSteps) {
-        addLog(`⚠️ Minor issue detected. Applying correction...`);
-        setTimeout(() => {
-          addLog(`✓ Issue resolved automatically. Continuing deployment.`);
-        }, 1500);
-      }
-      
-    }, 1000); // Update every second
-    
-    // Cleanup interval on unmount
-    return () => clearInterval(interval);
-  }, [deploymentId, deploymentName, deploymentType, resourceLevel, status, totalSteps, totalTime, onCompleted, onError]);
-
+    // Show success message
+    toast({
+      title: "Deployment complete",
+      description: "Your service is now running on the FractalCoin network",
+      variant: "default"
+    });
+  };
+  
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-lg font-medium">{deploymentName}</h3>
-          <p className="text-sm text-muted-foreground">Deployment ID: {deploymentId}</p>
-        </div>
-        <div className="flex items-center">
-          {status === "processing" && (
-            <Clock className="h-5 w-5 text-amber-500 mr-2 animate-pulse" />
-          )}
-          {status === "completed" && (
-            <CheckCircle2 className="h-5 w-5 text-green-500 mr-2" />
-          )}
-          {status === "error" && (
-            <AlertCircle className="h-5 w-5 text-red-500 mr-2" />
-          )}
-          <span className="text-sm font-medium">
-            {status === "processing" ? "Processing" : status === "completed" ? "Completed" : "Error"}
-          </span>
-        </div>
-      </div>
-      
-      <div className="space-y-1">
-        <div className="flex justify-between text-sm">
-          <span>{statusMessage}</span>
-          <span>{Math.min(progress, 100)}%</span>
-        </div>
-        <Progress value={progress} className="h-2" />
-      </div>
-      
-      <div className="grid grid-cols-3 gap-2 my-4">
-        {steps.map(step => (
-          <div 
-            key={step.id}
-            className={`
-              border rounded p-2 text-center text-sm
-              ${processingStep === step.id ? 'bg-forest-50 dark:bg-forest-900/20 border-forest-200 dark:border-forest-800' : ''}
-              ${processingStep > step.id ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : ''}
-            `}
+    <>
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle className="text-xl">Deploy a Service</CardTitle>
+          <CardDescription>
+            Deploy your application on the FractalCoin decentralized node network
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Service Configuration */}
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="service-name">Service Name</Label>
+              <Input
+                id="service-name"
+                placeholder="My Application"
+                value={serviceName}
+                onChange={(e) => setServiceName(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                A unique name for your service that will be displayed in your dashboard
+              </p>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="service-type">Service Type</Label>
+              <Select
+                value={serviceType}
+                onValueChange={setServiceType}
+              >
+                <SelectTrigger id="service-type">
+                  <SelectValue placeholder="Select service type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="webapp">
+                    <div className="flex items-center">
+                      <Server className="h-4 w-4 mr-2" />
+                      <span>Web Application</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="api">
+                    <div className="flex items-center">
+                      <Wifi className="h-4 w-4 mr-2" />
+                      <span>API Service</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="ml">
+                    <div className="flex items-center">
+                      <Cpu className="h-4 w-4 mr-2" />
+                      <span>ML/AI Model</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="storage">
+                    <div className="flex items-center">
+                      <HardDrive className="h-4 w-4 mr-2" />
+                      <span>Storage Solution</span>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                The type of service you want to deploy on the network
+              </p>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="resource-tier">Resource Tier</Label>
+              <Select
+                value={resourceTier}
+                onValueChange={handleTierChange}
+              >
+                <SelectTrigger id="resource-tier">
+                  <SelectValue placeholder="Select resource tier" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="basic">Basic (2 vCPUs, 4GB RAM)</SelectItem>
+                  <SelectItem value="standard">Standard (4 vCPUs, 8GB RAM)</SelectItem>
+                  <SelectItem value="premium">Premium (8 vCPUs, 16GB RAM)</SelectItem>
+                  <SelectItem value="enterprise">Enterprise (16 vCPUs, 32GB RAM)</SelectItem>
+                  <SelectItem value="quantum">Quantum (32 vCPUs, 64GB RAM)</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Choose the resources your service needs
+              </p>
+            </div>
+          </div>
+          
+          {/* Pricing Summary */}
+          <div className="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-lg">
+            <div className="flex justify-between items-center mb-4">
+              <div>
+                <h4 className="font-medium">Estimated Price</h4>
+                <p className="text-xs text-muted-foreground">Monthly subscription</p>
+              </div>
+              <div className="text-2xl font-bold">${estimatedPrice}</div>
+            </div>
+            
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span>Base price</span>
+                <span>${estimatedPrice * 0.8}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span>Network fee</span>
+                <span>${estimatedPrice * 0.15}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span>Security premium</span>
+                <span>${estimatedPrice * 0.05}</span>
+              </div>
+              <div className="pt-2 border-t mt-2 flex justify-between font-medium">
+                <span>Total</span>
+                <span>${estimatedPrice}</span>
+              </div>
+            </div>
+          </div>
+          
+          {/* Deployment Action */}
+          <Button 
+            onClick={handleDeploy} 
+            className="w-full bg-forest-600 hover:bg-forest-700"
           >
-            {step.name}
-            {processingStep > step.id && (
-              <CheckCircle2 className="h-3 w-3 text-green-500 inline ml-1" />
-            )}
-          </div>
-        ))}
-      </div>
-      
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex items-center mb-2">
-            <GitBranch className="h-4 w-4 mr-2 text-forest-600" />
-            <h4 className="text-sm font-medium">Deployment Logs</h4>
-          </div>
-          <div className="bg-black text-green-400 font-mono text-xs p-3 rounded-lg h-48 overflow-y-auto">
-            {logs.map((log, index) => (
-              <div key={index} className="mb-1">{log}</div>
-            ))}
-          </div>
+            Deploy Now
+            <ArrowRight className="h-4 w-4 ml-2" />
+          </Button>
+          
+          <p className="text-xs text-center text-muted-foreground">
+            By deploying, you agree to our terms of service and acceptable use policy
+          </p>
         </CardContent>
       </Card>
       
-      <div className="flex justify-end">
-        <Button 
-          variant="outline" 
-          disabled={status === "processing"}
-          onClick={() => window.location.reload()}
-        >
-          {status === "completed" ? "View Dashboard" : "Cancel"}
-        </Button>
-      </div>
-    </div>
+      {/* Deployment Modal */}
+      <DeploymentModal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        deploymentName={serviceName}
+        deploymentType={serviceType}
+        resourceLevel={resourceTierLevels[resourceTier as keyof typeof resourceTierLevels] || 2}
+        price={estimatedPrice}
+        onDeploymentComplete={handleDeploymentComplete}
+      />
+    </>
   );
 };
 
