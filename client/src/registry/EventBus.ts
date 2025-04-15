@@ -1,106 +1,92 @@
 /**
- * EventBus for Micro-App Communication
+ * Event Bus for inter-app communication
  * 
- * This service enables communication between different micro-apps
- * without them needing to directly reference each other.
+ * This module provides a pub/sub mechanism that allows different
+ * micro-apps to communicate without direct dependencies.
  */
 
-type EventCallback = (data: any) => void;
+type EventHandler = (data: any) => void;
 
-/**
- * Event Bus class for pub/sub pattern between micro-apps
- */
+interface EventSubscription {
+  id: string;
+  handler: EventHandler;
+}
+
 class EventBus {
-  private listeners: Record<string, EventCallback[]> = {};
+  private events: Record<string, EventSubscription[]> = {};
   
   /**
    * Subscribe to an event
-   * 
-   * @param event Event name to subscribe to
-   * @param callback Callback function to execute when event is published
-   * @returns Unsubscribe function
+   * @param eventName Event to subscribe to
+   * @param handler Handler function to be called when event is published
+   * @returns Subscription ID that can be used to unsubscribe
    */
-  subscribe(event: string, callback: EventCallback): () => void {
-    if (!this.listeners[event]) {
-      this.listeners[event] = [];
+  subscribe(eventName: string, handler: EventHandler): string {
+    if (!this.events[eventName]) {
+      this.events[eventName] = [];
     }
     
-    this.listeners[event].push(callback);
+    const id = `${eventName}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    this.events[eventName].push({ id, handler });
     
-    // Return unsubscribe function
-    return () => {
-      this.listeners[event] = this.listeners[event].filter(cb => cb !== callback);
-      
-      // Clean up empty event arrays
-      if (this.listeners[event].length === 0) {
-        delete this.listeners[event];
-      }
-    };
+    return id;
   }
   
   /**
-   * Publish an event with data
-   * 
-   * @param event Event name to publish
-   * @param data Data to pass to subscribers
+   * Unsubscribe from an event
+   * @param subscriptionId Subscription ID returned from subscribe()
    */
-  publish(event: string, data: any = null): void {
-    if (!this.listeners[event]) return;
-    
-    // Execute all callbacks registered for this event
-    this.listeners[event].forEach(callback => {
-      try {
-        callback(data);
-      } catch (error) {
-        console.error(`Error in event listener for "${event}":`, error);
+  unsubscribe(subscriptionId: string): void {
+    Object.keys(this.events).forEach(eventName => {
+      this.events[eventName] = this.events[eventName].filter(
+        subscription => subscription.id !== subscriptionId
+      );
+      
+      if (this.events[eventName].length === 0) {
+        delete this.events[eventName];
       }
     });
   }
   
   /**
-   * Get all registered events
-   * 
-   * @returns Array of event names
+   * Publish an event
+   * @param eventName Event to publish
+   * @param data Data to pass to event handlers
    */
-  getRegisteredEvents(): string[] {
-    return Object.keys(this.listeners);
+  publish(eventName: string, data: any): void {
+    if (!this.events[eventName]) {
+      return;
+    }
+    
+    this.events[eventName].forEach(subscription => {
+      try {
+        subscription.handler(data);
+      } catch (error) {
+        console.error(`Error in event handler for ${eventName}:`, error);
+      }
+    });
   }
   
   /**
-   * Check if an event has subscribers
-   * 
-   * @param event Event name to check
-   * @returns Boolean indicating if event has subscribers
+   * Clear all event subscriptions
    */
-  hasSubscribers(event: string): boolean {
-    return !!this.listeners[event] && this.listeners[event].length > 0;
-  }
-  
-  /**
-   * Count subscribers for an event
-   * 
-   * @param event Event name to count subscribers for
-   * @returns Number of subscribers
-   */
-  subscriberCount(event: string): number {
-    return this.listeners[event]?.length || 0;
-  }
-  
-  /**
-   * Clear all subscribers for a specific event
-   * 
-   * @param event Event name to clear
-   */
-  clearEvent(event: string): void {
-    delete this.listeners[event];
-  }
-  
-  /**
-   * Clear all subscribers for all events
-   */
-  clearAllEvents(): void {
-    this.listeners = {};
+  clear(): void {
+    this.events = {};
   }
 }
 
+// Singleton instance
 export const eventBus = new EventBus();
+
+// React hook for using the event bus
+import { useEffect } from 'react';
+
+export function useEventBus(eventName: string, handler: EventHandler) {
+  useEffect(() => {
+    const subscriptionId = eventBus.subscribe(eventName, handler);
+    
+    return () => {
+      eventBus.unsubscribe(subscriptionId);
+    };
+  }, [eventName, handler]);
+}

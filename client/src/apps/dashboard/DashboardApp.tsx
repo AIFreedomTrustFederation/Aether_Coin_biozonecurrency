@@ -1,19 +1,18 @@
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { useApiHook } from "./hooks/useApiHook";
-import { Badge } from "@/components/ui/badge";
-import { CircleCheck, CircleDashed, LayoutDashboard, Wallet, LineChart, ArrowRight } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Wallet, Server, Shield, Cpu, TrendingUp, BarChart3, AlertTriangle } from "lucide-react";
+import { useApiHook } from "./hooks/useApiHook";
 
 /**
  * Dashboard Micro-App
  * 
- * The main dashboard view that displays an overview of the user's
- * Aetherion ecosystem status, wallet balances, and key metrics.
+ * The main dashboard that provides an overview of the user's assets,
+ * network status, and quick access to key features.
  */
 const DashboardApp: React.FC = () => {
-  const { dashboardData, isLoading } = useApiHook();
+  const { dashboardData, isLoading, error } = useApiHook();
   
   return (
     <div className="container mx-auto py-6 px-4">
@@ -22,158 +21,209 @@ const DashboardApp: React.FC = () => {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <h1 className="text-2xl font-bold">Dashboard</h1>
-            <p className="text-muted-foreground">Welcome to your Aetherion Dashboard</p>
+            <p className="text-muted-foreground">Welcome to the Aetherion ecosystem</p>
           </div>
+        </div>
+        
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* Wallet Card */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-md flex items-center gap-2">
+                <Wallet className="h-4 w-4 text-forest-600" />
+                Wallet Balance
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">248.56 ATC</div>
+              <div className="text-muted-foreground text-sm mt-1">
+                $2,485.60
+              </div>
+              <div className="flex items-center gap-1 text-emerald-600 text-sm mt-1">
+                <TrendingUp className="h-3 w-3" />
+                <span>+12.5% (30d)</span>
+              </div>
+            </CardContent>
+          </Card>
           
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="bg-forest-50 text-forest-700 dark:bg-forest-950/30 dark:text-forest-400">
-              <CircleCheck className="h-3 w-3 mr-1 text-forest-600" />
-              All Systems Online
-            </Badge>
-            
-            <Badge variant="outline" className="bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400">
-              <CircleDashed className="h-3 w-3 mr-1 text-amber-600 animate-spin" />
-              Syncing...
-            </Badge>
-          </div>
+          {/* Nodes Card */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-md flex items-center gap-2">
+                <Server className="h-4 w-4 text-forest-600" />
+                Active Nodes
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">37</div>
+              <div className="text-muted-foreground text-sm mt-1">
+                Network Status: Good
+              </div>
+              <div className="flex items-center gap-1 text-emerald-600 text-sm mt-1">
+                <TrendingUp className="h-3 w-3" />
+                <span>~58.2 ATC/day rewards</span>
+              </div>
+            </CardContent>
+          </Card>
+          
+          {/* Security Status Card */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-md flex items-center gap-2">
+                <Shield className="h-4 w-4 text-forest-600" />
+                Security Status
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">High</div>
+              <div className="text-muted-foreground text-sm mt-1">
+                Last verification: 5m ago
+              </div>
+              <div className="text-sm mt-1">
+                128-bit quantum resistance
+              </div>
+            </CardContent>
+          </Card>
+          
+          {/* AI Network Card */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-md flex items-center gap-2">
+                <Cpu className="h-4 w-4 text-forest-600" />
+                AI Network
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">72%</div>
+              <div className="text-muted-foreground text-sm mt-1">
+                Network Utilization
+              </div>
+              <Progress value={72} className="h-2 mt-2" />
+            </CardContent>
+          </Card>
         </div>
         
         {/* Main Content */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Wallet Overview */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Wallet className="h-5 w-5 text-forest-600" />
-                Wallet Overview
-              </CardTitle>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Recent Activity */}
+          <Card className="lg:col-span-2">
+            <CardHeader>
+              <CardTitle>Recent Activity</CardTitle>
               <CardDescription>
-                Your asset performance
+                Your latest transactions and updates
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground text-sm">ATC Balance</span>
-                    <span className="font-semibold">248.56 ATC</span>
+                <div className="flex items-start gap-3">
+                  <div className="mt-0.5 bg-green-100 dark:bg-green-900/30 p-1.5 rounded-full text-green-600">
+                    <TrendingUp className="h-4 w-4" />
                   </div>
-                  <div className="flex justify-between items-center mt-1">
-                    <span className="text-muted-foreground text-sm">USD Value</span>
-                    <span className="text-forest-600">$2,485.60</span>
+                  <div className="flex-1">
+                    <div className="flex justify-between">
+                      <p className="font-medium">Reward Received</p>
+                      <p className="text-sm text-muted-foreground">2 hours ago</p>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Received 3.2 ATC from node operations
+                    </p>
                   </div>
                 </div>
                 
-                <div className="pt-2">
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="text-muted-foreground text-sm">Monthly Growth</span>
-                    <span className="text-emerald-600 font-medium">+12.5%</span>
+                <div className="flex items-start gap-3">
+                  <div className="mt-0.5 bg-blue-100 dark:bg-blue-900/30 p-1.5 rounded-full text-blue-600">
+                    <Server className="h-4 w-4" />
                   </div>
-                  <Progress value={62} className="h-2 bg-muted" />
+                  <div className="flex-1">
+                    <div className="flex justify-between">
+                      <p className="font-medium">Node Status Update</p>
+                      <p className="text-sm text-muted-foreground">5 hours ago</p>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Node #12 performance optimized, +8% efficiency
+                    </p>
+                  </div>
                 </div>
                 
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="w-full mt-2"
-                >
-                  Manage Wallet
-                  <ArrowRight className="h-3 w-3 ml-1" />
-                </Button>
+                <div className="flex items-start gap-3">
+                  <div className="mt-0.5 bg-amber-100 dark:bg-amber-900/30 p-1.5 rounded-full text-amber-600">
+                    <AlertTriangle className="h-4 w-4" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex justify-between">
+                      <p className="font-medium">Security Alert</p>
+                      <p className="text-sm text-muted-foreground">8 hours ago</p>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Quantum resistance audit completed successfully
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start gap-3">
+                  <div className="mt-0.5 bg-purple-100 dark:bg-purple-900/30 p-1.5 rounded-full text-purple-600">
+                    <BarChart3 className="h-4 w-4" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex justify-between">
+                      <p className="font-medium">Market Update</p>
+                      <p className="text-sm text-muted-foreground">12 hours ago</p>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      ATC price increased by 3.2% in the last 24 hours
+                    </p>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
           
-          {/* Node Network */}
+          {/* Quick Actions */}
           <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <LineChart className="h-5 w-5 text-forest-600" />
-                Node Network
-              </CardTitle>
+            <CardHeader>
+              <CardTitle>Quick Actions</CardTitle>
               <CardDescription>
-                Network Performance
+                Common tasks and navigation
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground text-sm">Active Nodes</span>
-                    <span className="font-semibold">37</span>
-                  </div>
-                  <div className="flex justify-between items-center mt-1">
-                    <span className="text-muted-foreground text-sm">Network Health</span>
-                    <span className="text-forest-600">Good</span>
-                  </div>
-                </div>
-                
-                <div className="pt-2">
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="text-muted-foreground text-sm">Node Rewards</span>
-                    <span className="text-emerald-600 font-medium">58.2 ATC (Last 7d)</span>
-                  </div>
-                  <Progress value={78} className="h-2 bg-muted" />
-                </div>
-                
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="w-full mt-2"
-                >
-                  View Network
-                  <ArrowRight className="h-3 w-3 ml-1" />
+              <div className="space-y-2">
+                <Button variant="outline" className="w-full justify-start" asChild>
+                  <a href="/wallet">
+                    <Wallet className="mr-2 h-4 w-4" />
+                    View Wallet
+                  </a>
                 </Button>
-              </div>
-            </CardContent>
-          </Card>
-          
-          {/* Quantum Security */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <LayoutDashboard className="h-5 w-5 text-forest-600" />
-                Security Status
-              </CardTitle>
-              <CardDescription>
-                AetherSphere Protection
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground text-sm">Protection Level</span>
-                    <span className="font-semibold">High</span>
-                  </div>
-                  <div className="flex justify-between items-center mt-1">
-                    <span className="text-muted-foreground text-sm">Last Verification</span>
-                    <span className="text-forest-600">5m ago</span>
-                  </div>
-                </div>
                 
-                <div className="pt-2">
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="text-muted-foreground text-sm">Quantum Resistance</span>
-                    <span className="text-emerald-600 font-medium">128-bit</span>
-                  </div>
-                  <Progress value={92} className="h-2 bg-muted" />
-                </div>
+                <Button variant="outline" className="w-full justify-start" asChild>
+                  <a href="/node-marketplace">
+                    <Server className="mr-2 h-4 w-4" />
+                    Manage Nodes
+                  </a>
+                </Button>
                 
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="w-full mt-2"
-                >
-                  Security Details
-                  <ArrowRight className="h-3 w-3 ml-1" />
+                <Button variant="outline" className="w-full justify-start" asChild>
+                  <a href="/aicoin">
+                    <Cpu className="mr-2 h-4 w-4" />
+                    AI Resources
+                  </a>
+                </Button>
+                
+                <Button variant="outline" className="w-full justify-start" asChild>
+                  <a href="/tokenomics">
+                    <BarChart3 className="mr-2 h-4 w-4" />
+                    View Tokenomics
+                  </a>
+                </Button>
+                
+                <Button variant="default" className="w-full mt-4">
+                  Deploy New Service
                 </Button>
               </div>
             </CardContent>
           </Card>
         </div>
-        
-        {/* Additional Content goes here */}
       </div>
     </div>
   );
