@@ -1,393 +1,306 @@
 import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
+import { 
+  Cpu, 
+  HardDrive, 
+  Wifi, 
+  MemoryStick, 
+  Clock,
+  BarChart
+} from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
-import { Cpu, Memory, HardDrive, Wifi, CreditCard } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+
+interface NodeRewardCalculatorProps {
+  initialNodeCount?: number;
+  initialUptime?: number;
+}
 
 /**
  * NodeRewardCalculator Component
  * 
- * This component allows users to calculate potential rewards for contributing
- * their computing resources to the FractalCoin node network.
+ * Calculates estimated rewards for contributing computing resources to the
+ * FractalCoin network based on various parameters.
  */
-const NodeRewardCalculator: React.FC = () => {
-  // Resource contribution values
-  const [cpuCores, setCpuCores] = useState(4);
-  const [ramGB, setRamGB] = useState(8);
-  const [storageGB, setStorageGB] = useState(200);
-  const [bandwidthGB, setBandwidthGB] = useState(1000);
-  const [uptimePercent, setUptimePercent] = useState(95);
+const NodeRewardCalculator: React.FC<NodeRewardCalculatorProps> = ({
+  initialNodeCount = 1,
+  initialUptime = 98
+}) => {
+  // State for calculator inputs
+  const [nodeCount, setNodeCount] = useState(initialNodeCount);
+  const [resourceLevel, setResourceLevel] = useState(2);
+  const [uptime, setUptime] = useState(initialUptime);
+  const [networkShare, setNetworkShare] = useState(0.05); // 0.05% of network
+  const [duration, setDuration] = useState(30); // days
   
-  // Network growth rate (0-10 scale)
-  const [networkGrowthRate, setNetworkGrowthRate] = useState(5);
+  // Resource tiers based on node capabilities
+  const resourceTiers = [
+    { level: 1, cpu: 2, memory: 4, storage: 50, bandwidth: 500, multiplier: 1 },
+    { level: 2, cpu: 4, memory: 8, storage: 100, bandwidth: 1000, multiplier: 2.2 },
+    { level: 3, cpu: 8, memory: 16, storage: 250, bandwidth: 2000, multiplier: 4.5 },
+    { level: 4, cpu: 16, memory: 32, storage: 500, bandwidth: 5000, multiplier: 8 },
+    { level: 5, cpu: 32, memory: 64, storage: 1000, bandwidth: 10000, multiplier: 15 }
+  ];
   
-  // Market prices for the tokens (USD)
-  const [fractalcoinPrice, setFractalcoinPrice] = useState(0.10);
-  const [filecoinPrice, setFilecoinPrice] = useState(40.00);
-  const [aicoinPrice, setAicoinPrice] = useState(0.03);
+  // Duration options in days
+  const durationOptions = [7, 30, 90, 180, 365];
   
-  // Calculated rewards
-  const [monthlyRewards, setMonthlyRewards] = useState({
-    fractalcoin: 0,
-    filecoin: 0,
-    aicoin: 0,
-    usdValue: 0
-  });
+  // Calculate estimated rewards based on inputs
+  const calculateRewards = () => {
+    const selectedTier = resourceTiers.find(tier => tier.level === resourceLevel) || resourceTiers[0];
+    const baseReward = {
+      fractalcoin: 25 * selectedTier.multiplier,
+      filecoin: 0.25 * selectedTier.multiplier,
+      aicoin: 50 * selectedTier.multiplier
+    };
+    
+    // Apply modifiers
+    const uptimeModifier = uptime / 100; // 98% uptime = 0.98 modifier
+    const durationModifier = duration / 30; // 30 days = 1x modifier
+    const networkShareModifier = networkShare * 10; // 0.05% = 0.5 modifier
+    const nodeCountModifier = 1 + (Math.log10(nodeCount) * 0.5); // Logarithmic scaling
+    
+    // Calculate final rewards
+    const rewards = {
+      fractalcoin: Math.round(baseReward.fractalcoin * uptimeModifier * durationModifier * nodeCountModifier),
+      filecoin: parseFloat((baseReward.filecoin * uptimeModifier * durationModifier * networkShareModifier * nodeCountModifier).toFixed(2)),
+      aicoin: Math.round(baseReward.aicoin * uptimeModifier * durationModifier * nodeCountModifier)
+    };
+    
+    return rewards;
+  };
   
-  // Annual projections (showing compounding growth)
-  const [annualProjections, setAnnualProjections] = useState<{
-    month: number;
-    fractalcoin: number;
-    filecoin: number;
-    aicoin: number;
-    usdValue: number;
-  }[]>([]);
+  // Get the current resource tier details
+  const currentResourceTier = resourceTiers.find(tier => tier.level === resourceLevel) || resourceTiers[0];
   
-  // Calculate rewards based on resource contribution and network growth
-  useEffect(() => {
-    // Base reward calculation (monthly)
-    // These are arbitrary formulas for demonstration purposes
-    const cpuRewardFactor = 7.5; // FractalCoin per core per month
-    const ramRewardFactor = 2.5; // FractalCoin per GB RAM per month
-    const storageRewardFactor = 0.15; // FractalCoin per GB storage per month
-    const bandwidthRewardFactor = 0.05; // FractalCoin per GB bandwidth per month
-    
-    // Apply uptime factor (95% uptime = 95% of rewards)
-    const uptimeFactor = uptimePercent / 100;
-    
-    // Calculate base FractalCoin rewards
-    const baseFractalcoinReward = (
-      (cpuCores * cpuRewardFactor) +
-      (ramGB * ramRewardFactor) +
-      (storageGB * storageRewardFactor) +
-      (bandwidthGB * bandwidthRewardFactor)
-    ) * uptimeFactor;
-    
-    // Apply network growth multiplier (higher growth = higher rewards)
-    const networkGrowthMultiplier = 1 + (networkGrowthRate / 10);
-    
-    // Calculate final monthly rewards
-    const fractalcoinReward = baseFractalcoinReward * networkGrowthMultiplier;
-    
-    // Filecoin rewards (typically less in quantity but higher in value)
-    const filecoinReward = fractalcoinReward * 0.01; // 1% of FractalCoin amount
-    
-    // AICoin rewards (typically more in quantity but lower in value)
-    const aicoinReward = fractalcoinReward * 5; // 500% of FractalCoin amount
-    
-    // Calculate USD value
-    const usdValue = (
-      (fractalcoinReward * fractalcoinPrice) +
-      (filecoinReward * filecoinPrice) +
-      (aicoinReward * aicoinPrice)
-    );
-    
-    // Update monthly rewards
-    setMonthlyRewards({
-      fractalcoin: Math.round(fractalcoinReward),
-      filecoin: filecoinReward.toFixed(2),
-      aicoin: Math.round(aicoinReward),
-      usdValue: Math.round(usdValue)
-    });
-    
-    // Calculate annual projections with compound growth
-    const projections = [];
-    let cumulativeFractalcoin = 0;
-    let cumulativeFilecoin = 0;
-    let cumulativeAICoin = 0;
-    let monthlyGrowthFactor = 1;
-    
-    for (let month = 1; month <= 12; month++) {
-      // Each month the network grows a bit more (compounding effect)
-      monthlyGrowthFactor = 1 + (networkGrowthRate / 10) * (1 + month / 24);
-      
-      const monthlyFractalcoin = baseFractalcoinReward * monthlyGrowthFactor;
-      const monthlyFilecoin = monthlyFractalcoin * 0.01;
-      const monthlyAICoin = monthlyFractalcoin * 5;
-      
-      cumulativeFractalcoin += monthlyFractalcoin;
-      cumulativeFilecoin += monthlyFilecoin;
-      cumulativeAICoin += monthlyAICoin;
-      
-      const monthlyUsdValue = (
-        (monthlyFractalcoin * fractalcoinPrice) +
-        (monthlyFilecoin * filecoinPrice) +
-        (monthlyAICoin * aicoinPrice)
-      );
-      
-      projections.push({
-        month,
-        fractalcoin: Math.round(cumulativeFractalcoin),
-        filecoin: parseFloat(cumulativeFilecoin.toFixed(2)),
-        aicoin: Math.round(cumulativeAICoin),
-        usdValue: Math.round(
-          (cumulativeFractalcoin * fractalcoinPrice) +
-          (cumulativeFilecoin * filecoinPrice) +
-          (cumulativeAICoin * aicoinPrice)
-        )
-      });
-    }
-    
-    setAnnualProjections(projections);
-    
-  }, [cpuCores, ramGB, storageGB, bandwidthGB, uptimePercent, networkGrowthRate, fractalcoinPrice, filecoinPrice, aicoinPrice]);
-
+  // Calculate rewards
+  const rewards = calculateRewards();
+  
+  // Effective contribution score (0-100)
+  const calculateContributionScore = () => {
+    const uptimeScore = uptime * 0.4; // 40% of score
+    const resourceScore = (resourceLevel / 5) * 30; // 30% of score
+    const nodeScore = Math.min(nodeCount, 10) * 3; // 30% of score, max 10 nodes
+    return Math.round(uptimeScore + resourceScore + nodeScore);
+  };
+  
+  const contributionScore = calculateContributionScore();
+  
   return (
-    <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-medium mb-1">Node Reward Calculator</h3>
-        <p className="text-sm text-muted-foreground">
-          Estimate your potential earnings by contributing resources to the FractalCoin node network.
-        </p>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Resource contribution inputs */}
+    <Card className="w-full">
+      <CardHeader className="pb-4">
+        <CardTitle className="text-xl">Node Rewards Calculator</CardTitle>
+        <CardDescription>
+          Estimate your earnings by contributing resources to the FractalCoin network
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {/* Resource Contribution Parameters */}
         <div className="space-y-4">
-          <h4 className="text-sm font-medium">Your Resource Contribution</h4>
-          
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Node Count */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="cpu-cores" className="flex items-center">
-                  <Cpu className="h-4 w-4 mr-2 text-blue-500" />
-                  CPU Cores
-                </Label>
-                <span className="text-sm">{cpuCores} vCPUs</span>
+                <Label htmlFor="node-count">Number of Nodes</Label>
+                <Badge variant="outline">{nodeCount}</Badge>
               </div>
-              <Slider
-                id="cpu-cores"
-                value={[cpuCores]}
-                min={1}
-                max={32}
-                step={1}
-                onValueChange={(values) => setCpuCores(values[0])}
-              />
+              <div className="flex items-center space-x-2">
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  onClick={() => setNodeCount(Math.max(1, nodeCount - 1))}
+                  disabled={nodeCount <= 1}
+                >
+                  -
+                </Button>
+                <Input
+                  id="node-count"
+                  type="number"
+                  min="1"
+                  value={nodeCount}
+                  onChange={(e) => setNodeCount(parseInt(e.target.value) || 1)}
+                  className="text-center"
+                />
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  onClick={() => setNodeCount(nodeCount + 1)}
+                >
+                  +
+                </Button>
+              </div>
             </div>
             
+            {/* Uptime */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="ram-gb" className="flex items-center">
-                  <Memory className="h-4 w-4 mr-2 text-purple-500" />
-                  Memory (RAM)
-                </Label>
-                <span className="text-sm">{ramGB} GB</span>
+                <Label>Uptime</Label>
+                <Badge variant="outline">{uptime}%</Badge>
               </div>
               <Slider
-                id="ram-gb"
-                value={[ramGB]}
-                min={2}
-                max={64}
-                step={2}
-                onValueChange={(values) => setRamGB(values[0])}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="storage-gb" className="flex items-center">
-                  <HardDrive className="h-4 w-4 mr-2 text-green-500" />
-                  Storage
-                </Label>
-                <span className="text-sm">{storageGB} GB</span>
-              </div>
-              <Slider
-                id="storage-gb"
-                value={[storageGB]}
-                min={50}
-                max={2000}
-                step={50}
-                onValueChange={(values) => setStorageGB(values[0])}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="bandwidth-gb" className="flex items-center">
-                  <Wifi className="h-4 w-4 mr-2 text-yellow-500" />
-                  Bandwidth
-                </Label>
-                <span className="text-sm">{bandwidthGB} GB/month</span>
-              </div>
-              <Slider
-                id="bandwidth-gb"
-                value={[bandwidthGB]}
-                min={100}
-                max={10000}
-                step={100}
-                onValueChange={(values) => setBandwidthGB(values[0])}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="uptime">Uptime</Label>
-                <span className="text-sm">{uptimePercent}%</span>
-              </div>
-              <Slider
-                id="uptime"
-                value={[uptimePercent]}
+                value={[uptime]}
                 min={50}
                 max={100}
                 step={1}
-                onValueChange={(values) => setUptimePercent(values[0])}
+                onValueChange={(values) => setUptime(values[0])}
               />
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>50%</span>
+                <span>75%</span>
+                <span>100%</span>
+              </div>
             </div>
           </div>
           
+          {/* Resource Level */}
           <div className="space-y-2">
-            <Label htmlFor="network-growth" className="flex items-center">
-              <CreditCard className="h-4 w-4 mr-2 text-forest-500" />
-              Network Growth Rate
-            </Label>
-            <div className="space-y-2">
-              <Slider
-                id="network-growth"
-                value={[networkGrowthRate]}
-                min={1}
-                max={10}
-                step={1}
-                onValueChange={(values) => setNetworkGrowthRate(values[0])}
-              />
-              <div className="flex justify-between text-xs text-muted-foreground">
-                <span>Slow</span>
-                <span>Moderate</span>
-                <span>Fast</span>
-              </div>
+            <div className="flex items-center justify-between">
+              <Label>Resource Level</Label>
+              <Badge variant="outline">Tier {resourceLevel}</Badge>
             </div>
-            <div className="text-xs text-muted-foreground">
-              The network growth rate affects your earnings. Higher growth means more deployments and higher rewards.
+            <Slider
+              value={[resourceLevel]}
+              min={1}
+              max={5}
+              step={1}
+              onValueChange={(values) => setResourceLevel(values[0])}
+            />
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span>Basic</span>
+              <span>Standard</span>
+              <span>Premium</span>
             </div>
+          </div>
+          
+          {/* Resource Specifications */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+            <div className="bg-gray-50 dark:bg-gray-900/50 p-2 rounded-lg flex flex-col items-center text-center">
+              <Cpu className="h-4 w-4 mb-1 text-blue-500" />
+              <span className="text-xs text-muted-foreground">CPU</span>
+              <span className="text-sm font-medium">{currentResourceTier.cpu} vCPUs</span>
+            </div>
+            <div className="bg-gray-50 dark:bg-gray-900/50 p-2 rounded-lg flex flex-col items-center text-center">
+              <MemoryStick className="h-4 w-4 mb-1 text-purple-500" />
+              <span className="text-xs text-muted-foreground">Memory</span>
+              <span className="text-sm font-medium">{currentResourceTier.memory} GB</span>
+            </div>
+            <div className="bg-gray-50 dark:bg-gray-900/50 p-2 rounded-lg flex flex-col items-center text-center">
+              <HardDrive className="h-4 w-4 mb-1 text-green-500" />
+              <span className="text-xs text-muted-foreground">Storage</span>
+              <span className="text-sm font-medium">{currentResourceTier.storage} GB</span>
+            </div>
+            <div className="bg-gray-50 dark:bg-gray-900/50 p-2 rounded-lg flex flex-col items-center text-center">
+              <Wifi className="h-4 w-4 mb-1 text-yellow-500" />
+              <span className="text-xs text-muted-foreground">Bandwidth</span>
+              <span className="text-sm font-medium">{currentResourceTier.bandwidth} GB/mo</span>
+            </div>
+          </div>
+          
+          {/* Duration */}
+          <div className="space-y-2">
+            <Label>Contribution Duration</Label>
+            <div className="flex flex-wrap gap-2">
+              {durationOptions.map((days) => (
+                <Button
+                  key={days}
+                  variant={duration === days ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setDuration(days)}
+                >
+                  {days === 365 ? '1 Year' : `${days} Days`}
+                </Button>
+              ))}
+            </div>
+          </div>
+          
+          {/* Network Share */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label>Network Share</Label>
+              <Badge variant="outline">{(networkShare * 100).toFixed(2)}%</Badge>
+            </div>
+            <Slider
+              value={[networkShare * 100]}
+              min={0.01}
+              max={1}
+              step={0.01}
+              onValueChange={(values) => setNetworkShare(values[0] / 100)}
+            />
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span>0.01%</span>
+              <span>0.5%</span>
+              <span>1%</span>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Your estimated share of the total network based on contributed resources
+            </p>
           </div>
         </div>
         
-        {/* Reward projections */}
+        {/* Results */}
         <div className="space-y-4">
-          <h4 className="text-sm font-medium">Reward Projections</h4>
-          
-          <Card>
-            <CardHeader className="p-4 pb-2">
-              <CardTitle className="text-base">Monthly Earnings</CardTitle>
-            </CardHeader>
-            <CardContent className="p-4 pt-0">
-              <div className="grid grid-cols-3 gap-3">
-                <div className="bg-forest-50 dark:bg-forest-900/20 p-3 rounded-lg text-center">
-                  <div className="text-xl font-bold text-forest-600 dark:text-forest-400">
-                    {monthlyRewards.fractalcoin}
-                  </div>
-                  <div className="text-xs text-forest-600 dark:text-forest-400">FractalCoin</div>
-                  <div className="text-xs text-muted-foreground">
-                    ${(monthlyRewards.fractalcoin * fractalcoinPrice).toFixed(2)}
-                  </div>
-                </div>
-                <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg text-center">
-                  <div className="text-xl font-bold text-blue-600 dark:text-blue-400">
-                    {monthlyRewards.filecoin}
-                  </div>
-                  <div className="text-xs text-blue-600 dark:text-blue-400">Filecoin</div>
-                  <div className="text-xs text-muted-foreground">
-                    ${(parseFloat(monthlyRewards.filecoin) * filecoinPrice).toFixed(2)}
-                  </div>
-                </div>
-                <div className="bg-purple-50 dark:bg-purple-900/20 p-3 rounded-lg text-center">
-                  <div className="text-xl font-bold text-purple-600 dark:text-purple-400">
-                    {monthlyRewards.aicoin}
-                  </div>
-                  <div className="text-xs text-purple-600 dark:text-purple-400">AICoin</div>
-                  <div className="text-xs text-muted-foreground">
-                    ${(monthlyRewards.aicoin * aicoinPrice).toFixed(2)}
-                  </div>
-                </div>
-              </div>
-              
-              <div className="mt-4 flex justify-between items-center">
-                <span className="text-sm font-medium">Total Monthly Value</span>
-                <span className="text-2xl font-bold">${monthlyRewards.usdValue}</span>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <div className="space-y-3">
-            <h4 className="text-sm font-medium">12-Month Projection</h4>
-            <div className="border rounded-lg overflow-hidden">
-              <div className="grid grid-cols-5 bg-gray-50 dark:bg-gray-900/50 p-2 border-b text-xs font-medium">
-                <div>Month</div>
-                <div>FractalCoin</div>
-                <div>Filecoin</div>
-                <div>AICoin</div>
-                <div>USD Value</div>
-              </div>
-              
-              <div className="divide-y max-h-[300px] overflow-y-auto">
-                {annualProjections.map((projection) => (
-                  <div 
-                    key={projection.month}
-                    className={`
-                      grid grid-cols-5 p-2 text-xs
-                      ${projection.month % 3 === 0 ? 'bg-gray-50 dark:bg-gray-900/20' : ''}
-                    `}
-                  >
-                    <div>Month {projection.month}</div>
-                    <div>{projection.fractalcoin}</div>
-                    <div>{projection.filecoin}</div>
-                    <div>{projection.aicoin}</div>
-                    <div className="font-medium">${projection.usdValue}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-            
-            <div className="text-xs text-muted-foreground">
-              Note: Projections assume the current token prices and network growth rates.
-              Actual earnings may vary based on market conditions and network adoption.
+          <div className="flex items-center justify-between">
+            <span className="font-medium">Contribution Score</span>
+            <div className="flex items-center space-x-2">
+              <Progress value={contributionScore} className="w-32" />
+              <span className="font-bold">{contributionScore}/100</span>
             </div>
           </div>
           
-          <div className="space-y-3">
-            <h4 className="text-sm font-medium">Token Prices (USD)</h4>
-            <div className="grid grid-cols-3 gap-3">
-              <div className="space-y-1">
-                <Label htmlFor="fractalcoin-price" className="text-xs">FractalCoin</Label>
-                <Input
-                  id="fractalcoin-price"
-                  type="number"
-                  min="0.01"
-                  step="0.01"
-                  value={fractalcoinPrice}
-                  onChange={(e) => setFractalcoinPrice(parseFloat(e.target.value) || 0.1)}
-                  className="text-sm"
-                />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="filecoin-price" className="text-xs">Filecoin</Label>
-                <Input
-                  id="filecoin-price"
-                  type="number"
-                  min="1"
-                  step="1"
-                  value={filecoinPrice}
-                  onChange={(e) => setFilecoinPrice(parseFloat(e.target.value) || 40)}
-                  className="text-sm"
-                />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="aicoin-price" className="text-xs">AICoin</Label>
-                <Input
-                  id="aicoin-price"
-                  type="number"
-                  min="0.01"
-                  step="0.01"
-                  value={aicoinPrice}
-                  onChange={(e) => setAicoinPrice(parseFloat(e.target.value) || 0.03)}
-                  className="text-sm"
-                />
-              </div>
+          <div className="border-t pt-4">
+            <div className="text-lg font-medium mb-3">Estimated Rewards</div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <Card>
+                <CardContent className="p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-medium">FractalCoin</span>
+                    <Badge className="bg-forest-500">{rewards.fractalcoin}</Badge>
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Native token of the FractalCoin ecosystem
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardContent className="p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-medium">Filecoin</span>
+                    <Badge className="bg-blue-500">{rewards.filecoin}</Badge>
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    For distributed storage contributions
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardContent className="p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-medium">AICoin</span>
+                    <Badge className="bg-purple-500">{rewards.aicoin}</Badge>
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    For AI computation resources
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+            
+            <div className="mt-4 text-sm text-muted-foreground">
+              <p>
+                These reward estimates are based on current network parameters and may vary.
+                Higher uptime, resource levels, and duration generally result in better rewards.
+              </p>
             </div>
           </div>
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 

@@ -7,7 +7,7 @@ import {
   HardDrive, 
   CreditCard,
   Cpu,
-  Memory,
+  MemoryStick,
   Wifi,
   Lock,
   Award
@@ -264,7 +264,7 @@ const NodeMarketplace: React.FC = () => {
                           <span className="text-sm font-medium">{currentResourceTier.cpu} vCPUs</span>
                         </div>
                         <div className="bg-gray-50 dark:bg-gray-900/50 p-3 rounded-lg flex flex-col items-center text-center">
-                          <Memory className="h-5 w-5 mb-1 text-purple-500" />
+                          <MemoryStick className="h-5 w-5 mb-1 text-purple-500" />
                           <span className="text-xs text-muted-foreground">Memory</span>
                           <span className="text-sm font-medium">{currentResourceTier.memory} GB</span>
                         </div>
@@ -334,7 +334,7 @@ const NodeMarketplace: React.FC = () => {
                                   {resourceTiers[plan.resourceLevel - 1].cpu} vCPUs
                                 </div>
                                 <div className="flex items-center text-sm">
-                                  <Memory className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+                                  <MemoryStick className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
                                   {resourceTiers[plan.resourceLevel - 1].memory} GB RAM
                                 </div>
                                 <div className="flex items-center text-sm">

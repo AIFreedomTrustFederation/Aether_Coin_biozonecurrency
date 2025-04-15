@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger } from "@/components/ui/navigation-menu";
-import { Leaf, Wallet, ExternalLink, Globe, Shield, Award, Menu, X } from "lucide-react";
+import { Leaf, Wallet, ExternalLink, Globe, Shield, Award, Menu, X, Server } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { Sheet, SheetClose, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -14,6 +14,7 @@ const navItems = [
   { href: "/wallet", label: "Wallet", icon: <Wallet className="mr-2 h-5 w-5" /> },
   { href: "/dapp", label: "DApp", icon: <ExternalLink className="mr-2 h-5 w-5" /> },
   { href: "/domains", label: "Domains", icon: <Globe className="mr-2 h-5 w-5" /> },
+  { href: "/node-marketplace", label: "Node Marketplace", icon: <Server className="mr-2 h-5 w-5 text-forest-600" /> },
   { href: "/achievements", label: "Achievements", icon: <Award className="mr-2 h-5 w-5 text-amber-600" /> },
   { href: "/aethercore-trust", label: "AetherCore.trust", icon: <Globe className="mr-2 h-5 w-5 text-primary" /> },
   { href: "/aethercore-browser", label: "HTTQS Browser", icon: <Shield className="mr-2 h-5 w-5 text-blue-600" /> },
