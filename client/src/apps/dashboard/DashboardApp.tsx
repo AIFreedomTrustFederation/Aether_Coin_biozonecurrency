@@ -1,9 +1,20 @@
-import React from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useEffect, useState } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Wallet, Server, Shield, Cpu, TrendingUp, BarChart3, AlertTriangle } from "lucide-react";
+import { Wallet, Server, Shield, Cpu, TrendingUp, BarChart3, AlertTriangle, NetworkIcon, Activity } from "lucide-react";
 import { useApiHook } from "./hooks/useApiHook";
+import { useEventBus } from "../../registry/EventBus";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+
+// Define types for network stats
+interface NetworkStats {
+  activeNodes: number;
+  averageLatency: number;
+  throughputPerSecond: number;
+  lastUpdated: Date;
+}
 
 /**
  * Dashboard Micro-App
@@ -13,15 +24,63 @@ import { useApiHook } from "./hooks/useApiHook";
  */
 const DashboardApp: React.FC = () => {
   const { dashboardData, isLoading, error } = useApiHook();
+  const [networkStats, setNetworkStats] = useState<NetworkStats | null>(null);
+  const [services, setServices] = useState<string[]>([]);
+  
+  // Subscribe to network stats and service updates from the event bus
+  useEventBus('network:stats', (data) => {
+    setNetworkStats(data);
+  });
+  
+  useEventBus('service:started', (data) => {
+    setServices(prev => [...prev.filter(s => s !== data.name), data.name]);
+  });
+  
+  useEventBus('service:stopped', (data) => {
+    setServices(prev => prev.filter(s => s !== data.name));
+  });
+  
+  // Request network stats when the component mounts
+  useEffect(() => {
+    // Trigger the 'system:ready' event to start services
+    const eventBus = require('../../registry/EventBus').eventBus;
+    eventBus.publish('system:ready', {});
+    
+    // Request network stats
+    setTimeout(() => {
+      eventBus.publish('network:requestStats', {});
+    }, 500);
+    
+    // Set up polling for network stats
+    const interval = setInterval(() => {
+      eventBus.publish('network:requestStats', {});
+    }, 10000);
+    
+    return () => clearInterval(interval);
+  }, []);
   
   return (
-    <div className="container mx-auto py-6 px-4">
+    <div className="container mx-auto py-6 px-4 bg-background min-h-screen">
       <div className="flex flex-col gap-6">
         {/* Header Section */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold">Dashboard</h1>
-            <p className="text-muted-foreground">Welcome to the Aetherion ecosystem</p>
+            <h1 className="text-2xl font-bold">Enumerator Dashboard</h1>
+            <p className="text-muted-foreground">Welcome to the modular Aetherion ecosystem</p>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="px-3 py-1">
+              {services.length} Active Services
+            </Badge>
+            
+            <Button size="sm" variant="outline" onClick={() => {
+              const eventBus = require('../../registry/EventBus').eventBus;
+              eventBus.publish('network:requestStats', {});
+            }}>
+              <Activity className="mr-2 h-4 w-4" />
+              Refresh Data
+            </Button>
           </div>
         </div>
         
@@ -56,7 +115,9 @@ const DashboardApp: React.FC = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">37</div>
+              <div className="text-2xl font-bold">
+                {networkStats ? networkStats.activeNodes : 37}
+              </div>
               <div className="text-muted-foreground text-sm mt-1">
                 Network Status: Good
               </div>
@@ -103,6 +164,63 @@ const DashboardApp: React.FC = () => {
             </CardContent>
           </Card>
         </div>
+        
+        {/* Network Stats Card (only visible when there are stats) */}
+        {networkStats && (
+          <Card className="border-blue-200 dark:border-blue-900">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-md flex items-center gap-2">
+                <NetworkIcon className="h-4 w-4 text-blue-600" />
+                Network Stats from FractalNetworkService
+              </CardTitle>
+              <CardDescription>
+                Real-time data provided by the background service
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="space-y-1">
+                  <div className="text-sm text-muted-foreground">Active Nodes</div>
+                  <div className="text-xl font-medium">{networkStats.activeNodes}</div>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-sm text-muted-foreground">Average Latency</div>
+                  <div className="text-xl font-medium">{networkStats.averageLatency} ms</div>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-sm text-muted-foreground">Throughput</div>
+                  <div className="text-xl font-medium">{networkStats.throughputPerSecond.toLocaleString()} tx/s</div>
+                </div>
+              </div>
+            </CardContent>
+            <CardFooter className="text-xs text-muted-foreground border-t pt-3">
+              Last updated: {new Date(networkStats.lastUpdated).toLocaleTimeString()}
+            </CardFooter>
+          </Card>
+        )}
+        
+        {/* Active Services */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Active Services</CardTitle>
+            <CardDescription>Background services in the Enumerator architecture</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {services.length === 0 ? (
+              <div className="text-muted-foreground py-3 text-center">No services are currently running</div>
+            ) : (
+              <div className="space-y-2">
+                {services.map((service, index) => (
+                  <div key={index} className="flex items-center gap-3">
+                    <div className="h-2 w-2 rounded-full bg-green-500"></div>
+                    <div className="font-medium">{service}</div>
+                    <Badge variant="outline" className="ml-auto">Active</Badge>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
         
         {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

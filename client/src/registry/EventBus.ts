@@ -5,14 +5,16 @@
  * micro-apps to communicate without direct dependencies.
  */
 
-type EventHandler = (data: any) => void;
+import { useEffect } from 'react';
 
-interface EventSubscription {
+export type EventHandler = (data: any) => void;
+
+export interface EventSubscription {
   id: string;
   handler: EventHandler;
 }
 
-class EventBus {
+export class EventBus {
   private events: Record<string, EventSubscription[]> = {};
   
   /**
@@ -79,8 +81,6 @@ class EventBus {
 export const eventBus = new EventBus();
 
 // React hook for using the event bus
-import { useEffect } from 'react';
-
 export function useEventBus(eventName: string, handler: EventHandler) {
   useEffect(() => {
     const subscriptionId = eventBus.subscribe(eventName, handler);
