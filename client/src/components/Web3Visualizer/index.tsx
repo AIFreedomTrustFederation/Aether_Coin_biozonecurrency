@@ -8,12 +8,14 @@ import {
   Lock, 
   Box, 
   Dna, 
-  Atom
+  Atom,
+  GitBranch
 } from "lucide-react";
 import BlockchainVisualizer from "./BlockchainVisualizer";
 import SmartContractVisualizer from "./SmartContractVisualizer";
 import ZeroKnowledgeVisualizer from "./ZeroKnowledgeVisualizer";
 import ConsensusVisualizer from "./ConsensusVisualizer";
+import MerkleTreeVisualizer from "./MerkleTreeVisualizer";
 
 /**
  * Web3Visualizer - An interactive tool for visualizing Web3 concepts
@@ -53,6 +55,13 @@ const Web3Visualizer = () => {
       description: "Understand how nodes reach agreement in a decentralized network",
       icon: <Network className="h-5 w-5" />,
       component: <ConsensusVisualizer />
+    },
+    {
+      id: "merkle-tree",
+      title: "FractalCoin Node Network",
+      description: "See how Merkle Trees enable decentralized VPS & SaaS services",
+      icon: <GitBranch className="h-5 w-5" />,
+      component: <MerkleTreeVisualizer />
     }
   ];
   
@@ -88,7 +97,7 @@ const Web3Visualizer = () => {
             
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               <div className="px-6 pt-6">
-                <TabsList className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                <TabsList className="grid grid-cols-3 md:grid-cols-5 gap-2">
                   {visualizations.map(vis => (
                     <TabsTrigger 
                       key={vis.id}
