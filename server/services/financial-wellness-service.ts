@@ -146,7 +146,7 @@ export class FinancialWellnessService {
   async generateFinancialReport(userId: number): Promise<FinancialReport> {
     try {
       // Get user information. Use our storageInstance to guarantee correct type.
-      const ;
+      const user = await storageInstance.getUser(userId);
       if (!user) {
         throw new Error(`User with ID ${userId} not found`);
       }
@@ -543,10 +543,12 @@ export class StorageWrapper {
       blockNumber: tx.blockNumber ?? 0,
       aiVerified: tx.aiVerified ?? false,
       plainDescription: tx.plainDescription ?? '',
+      isLayer2: tx.isLayer2 ?? false,
+      layer2Type: tx.layer2Type ?? '',
       layer2Data: tx.layer2Data ?? null
     }));
   }
-  
+}
 
 // =============================================================================
 // Export a Singleton Instance of StorageWrapper
