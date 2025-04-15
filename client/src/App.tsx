@@ -42,10 +42,10 @@ const QuantumPageLoader = () => (
   </div>
 );
 
-// Import the DashboardApp directly
-const DashboardApp = lazy(() => import("./apps/dashboard/DashboardApp"));
+// Import our Enumerator page
+const EnumeratorPage = lazy(() => import("./pages/Enumerator"));
 
-// Original App structure with direct access to the Dashboard micro-app
+// Original App structure with updated Enumerator page
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -70,8 +70,8 @@ const App = () => (
                 <Route path="/aethercore-browser" element={<AetherCoreBrowser />} />
                 <Route path="/node-marketplace" element={<NodeMarketplace />} />
                 
-                {/* Route to our Dashboard app directly */}
-                <Route path="/enumerator" element={<DashboardApp />} />
+                {/* Route to simplified Enumerator page */}
+                <Route path="/enumerator" element={<EnumeratorPage />} />
                 
                 {/* Catch-all route for 404 */}
                 <Route path="*" element={<NotFound />} />
