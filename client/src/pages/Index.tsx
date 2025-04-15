@@ -15,6 +15,7 @@ import WalletSection from "@/components/WalletSection";
 import QuantumLoaderShowcase from "@/components/QuantumLoaderShowcase";
 import QuantumLoadingDemo from "@/components/QuantumLoadingDemo";
 import AetherSphereSection from "@/components/AetherSphereSection";
+import Web3Visualizer from "@/components/Web3Visualizer";
 import Footer from "@/components/Footer";
 
 const Index = () => {
@@ -33,6 +34,7 @@ const Index = () => {
         <QuantumLoaderShowcase />
         <QuantumLoadingDemo />
         <AetherSphereSection />
+        <Web3Visualizer />
         <WalletSection />
         <GitHubSection />
         <PresaleSection />
