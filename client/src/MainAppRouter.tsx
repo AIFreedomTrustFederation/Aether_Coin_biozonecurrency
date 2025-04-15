@@ -1,6 +1,7 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AppShell } from "./components/app-shell";
+import { SecurityProvider } from "./components/app-shell/SecurityProvider";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -27,22 +28,24 @@ const queryClient = new QueryClient({
 const MainAppRouter: React.FC = () => {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
+      <ThemeProvider defaultTheme="dark" enableSystem>
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          <BrowserRouter>
-            <Routes>
-              {/* Redirect root to the default app */}
-              <Route path="/" element={<Navigate to="/dashboard" replace />} />
-              
-              {/* App Shell handles all registered apps */}
-              <Route path="/:appId/*" element={<AppShell />} />
-              
-              {/* Catch-all route for 404 */}
-              <Route path="*" element={<Navigate to="/dashboard" replace />} />
-            </Routes>
-          </BrowserRouter>
+          <SecurityProvider>
+            <BrowserRouter>
+              <Routes>
+                {/* Redirect root to the default app */}
+                <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                
+                {/* App Shell handles all registered apps */}
+                <Route path="/:appId/*" element={<AppShell />} />
+                
+                {/* Catch-all route for 404 */}
+                <Route path="*" element={<Navigate to="/dashboard" replace />} />
+              </Routes>
+            </BrowserRouter>
+          </SecurityProvider>
         </TooltipProvider>
       </ThemeProvider>
     </QueryClientProvider>
