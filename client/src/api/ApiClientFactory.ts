@@ -1,95 +1,86 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from "axios";
-import { AppRegistry } from "../registry/AppRegistry";
+import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
 
-/**
- * API Client Factory
- * 
- * Creates and manages API clients for different micro-apps
- * to ensure proper namespacing and consistent configuration.
- */
-class ApiClientFactory {
-  private baseClient: AxiosInstance;
-  private clientMap: Record<string, AxiosInstance> = {};
+// Interface for API Clients
+export interface ApiClient {
+  get<T = any>(url: string, config?: AxiosRequestConfig): Promise<T>;
+  post<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T>;
+  put<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T>;
+  delete<T = any>(url: string, config?: AxiosRequestConfig): Promise<T>;
+  patch<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T>;
+}
+
+// Base API Client implementation
+class BaseApiClient implements ApiClient {
+  protected client: AxiosInstance;
+  protected baseUrl: string;
   
-  constructor() {
-    // Create base client for general API requests
-    this.baseClient = axios.create({
-      baseURL: "/api",
+  constructor(baseUrl: string = '/api', config: AxiosRequestConfig = {}) {
+    this.baseUrl = baseUrl;
+    this.client = axios.create({
+      baseURL: baseUrl,
+      ...config,
       headers: {
-        "Content-Type": "application/json"
-      },
-      timeout: 30000 // 30 second default timeout
+        'Content-Type': 'application/json',
+        ...config.headers
+      }
     });
     
-    // Add global interceptors for authentication, etc.
-    this.setupInterceptors(this.baseClient);
-    
-    // Create specialized clients for each app
-    AppRegistry.getAvailableApps().forEach(app => {
-      const client = axios.create({
-        baseURL: `/api/${app.apiNamespace}`,
-        headers: {
-          "Content-Type": "application/json"
-        },
-        timeout: 30000
-      });
-      
-      // Add app-specific interceptors if needed
-      this.setupInterceptors(client);
-      
-      this.clientMap[app.id] = client;
-    });
+    this.setupInterceptors();
   }
   
-  /**
-   * Setup request/response interceptors for an Axios instance
-   */
-  private setupInterceptors(client: AxiosInstance): void {
+  protected setupInterceptors(): void {
     // Request interceptor
-    client.interceptors.request.use(
+    this.client.interceptors.request.use(
       (config) => {
-        // Get authentication token from localStorage if available
-        const token = localStorage.getItem("auth_token");
+        // Add authentication token if available
+        const token = localStorage.getItem('auth_token');
         if (token) {
-          config.headers.Authorization = `Bearer ${token}`;
+          config.headers = {
+            ...config.headers,
+            Authorization: `Bearer ${token}`
+          };
         }
-        
-        // Add quantum security headers
-        config.headers["X-Quantum-Request-ID"] = this.generateRequestId();
-        
         return config;
       },
-      (error) => {
-        return Promise.reject(error);
-      }
+      (error) => Promise.reject(error)
     );
     
     // Response interceptor
-    client.interceptors.response.use(
-      (response: AxiosResponse) => {
-        return response;
+    this.client.interceptors.response.use(
+      (response) => {
+        // Directly return data from response
+        return response.data;
       },
-      (error: AxiosError) => {
+      (error) => {
+        // Handle common errors
         if (error.response) {
-          // Handle specific error codes
           switch (error.response.status) {
             case 401:
-              // Unauthorized - could trigger auth refresh or logout
-              console.warn("API authentication error:", error.response.data);
+              // Handle unauthorized
+              console.error('Unauthorized access');
+              // Redirect to login or refresh token
               break;
             case 403:
-              console.warn("API authorization error:", error.response.data);
+              // Handle forbidden
+              console.error('Forbidden resource');
               break;
-            case 429:
-              console.warn("API rate limit exceeded:", error.response.data);
+            case 404:
+              // Handle not found
+              console.error('Resource not found');
               break;
+            case 500:
+              // Handle server error
+              console.error('Server error');
+              break;
+            default:
+              console.error(`Error ${error.response.status}`, error.response.data);
           }
         } else if (error.request) {
-          // No response received
-          console.error("No response received from API:", error.request);
+          // Handle network errors
+          console.error('Network error', error.request);
         } else {
-          // Error setting up request
-          console.error("Error setting up API request:", error.message);
+          // Handle other errors
+          console.error('Error', error.message);
         }
         
         return Promise.reject(error);
@@ -97,57 +88,157 @@ class ApiClientFactory {
     );
   }
   
-  /**
-   * Generate a unique request ID for quantum security tracking
-   */
-  private generateRequestId(): string {
-    return `qr-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`;
+  get<T = any>(url: string, config?: AxiosRequestConfig): Promise<T> {
+    return this.client.get(url, config);
   }
   
-  /**
-   * Get the API client for a specific app
-   */
-  getClient(appId: string): AxiosInstance {
-    return this.clientMap[appId] || this.baseClient;
+  post<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+    return this.client.post(url, data, config);
   }
   
-  /**
-   * Get the base API client for general endpoints
-   */
-  getBaseClient(): AxiosInstance {
-    return this.baseClient;
+  put<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+    return this.client.put(url, data, config);
   }
   
-  /**
-   * Set authentication token for all clients
-   */
-  setAuthToken(token: string): void {
-    // Set token in localStorage for persistence
-    localStorage.setItem("auth_token", token);
-    
-    // Update all client instances
-    this.baseClient.defaults.headers.common.Authorization = `Bearer ${token}`;
-    
-    Object.values(this.clientMap).forEach(client => {
-      client.defaults.headers.common.Authorization = `Bearer ${token}`;
-    });
+  delete<T = any>(url: string, config?: AxiosRequestConfig): Promise<T> {
+    return this.client.delete(url, config);
   }
   
-  /**
-   * Clear authentication token from all clients
-   */
-  clearAuthToken(): void {
-    // Remove token from localStorage
-    localStorage.removeItem("auth_token");
-    
-    // Remove from all client instances
-    delete this.baseClient.defaults.headers.common.Authorization;
-    
-    Object.values(this.clientMap).forEach(client => {
-      delete client.defaults.headers.common.Authorization;
-    });
+  patch<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+    return this.client.patch(url, data, config);
   }
 }
 
-// Export a singleton instance
+// Specialized API clients for each micro-app
+class DashboardApiClient extends BaseApiClient {
+  constructor() {
+    super('/api/dashboard');
+  }
+  
+  // Dashboard-specific methods
+  getDashboardStats(): Promise<any> {
+    return this.get('/stats');
+  }
+  
+  getRecentActivity(): Promise<any> {
+    return this.get('/activity');
+  }
+}
+
+class WalletApiClient extends BaseApiClient {
+  constructor() {
+    super('/api/wallet');
+  }
+  
+  // Wallet-specific methods
+  getBalances(): Promise<any> {
+    return this.get('/balances');
+  }
+  
+  getTransactions(): Promise<any> {
+    return this.get('/transactions');
+  }
+  
+  transfer(data: { to: string; amount: number; asset: string }): Promise<any> {
+    return this.post('/transfer', data);
+  }
+}
+
+class NodeMarketplaceApiClient extends BaseApiClient {
+  constructor() {
+    super('/api/node-marketplace');
+  }
+  
+  // Node Marketplace-specific methods
+  getAvailableServices(): Promise<any> {
+    return this.get('/services');
+  }
+  
+  getUserServices(): Promise<any> {
+    return this.get('/user/services');
+  }
+  
+  getUserRewards(): Promise<any> {
+    return this.get('/user/rewards');
+  }
+  
+  deployService(data: any): Promise<any> {
+    return this.post('/deploy', data);
+  }
+}
+
+class TokenomicsApiClient extends BaseApiClient {
+  constructor() {
+    super('/api/tokenomics');
+  }
+  
+  // Tokenomics-specific methods
+  getMarketData(): Promise<any> {
+    return this.get('/market');
+  }
+  
+  getSupplyInfo(): Promise<any> {
+    return this.get('/supply');
+  }
+}
+
+class AICoinApiClient extends BaseApiClient {
+  constructor() {
+    super('/api/aicoin');
+  }
+  
+  // AICoin-specific methods
+  getNetworkStats(): Promise<any> {
+    return this.get('/network/stats');
+  }
+  
+  getUserResources(): Promise<any> {
+    return this.get('/user/resources');
+  }
+  
+  allocateResources(data: any): Promise<any> {
+    return this.post('/allocate', data);
+  }
+}
+
+// API Client Factory
+class ApiClientFactory {
+  private clients: Record<string, ApiClient> = {};
+  
+  constructor() {
+    // Initialize default clients
+    this.clients = {
+      dashboard: new DashboardApiClient(),
+      wallet: new WalletApiClient(),
+      nodeMarketplace: new NodeMarketplaceApiClient(),
+      tokenomics: new TokenomicsApiClient(),
+      aicoin: new AICoinApiClient()
+    };
+  }
+  
+  /**
+   * Get an API client for a specific app
+   * @param appId App identifier
+   * @returns API client for the specified app
+   */
+  getClient(appId: string): ApiClient {
+    if (!this.clients[appId]) {
+      console.warn(`No specific API client found for app "${appId}". Using base client.`);
+      this.clients[appId] = new BaseApiClient(`/api/${appId}`);
+    }
+    
+    return this.clients[appId];
+  }
+  
+  /**
+   * Register a new API client
+   * @param appId App identifier
+   * @param client API client instance
+   */
+  registerClient(appId: string, client: ApiClient): void {
+    this.clients[appId] = client;
+  }
+}
+
+// Export singleton instance
 export const apiClientFactory = new ApiClientFactory();

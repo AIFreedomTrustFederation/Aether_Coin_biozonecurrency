@@ -1,108 +1,104 @@
-import React, { Suspense, useState, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import { AppRegistry, AppDefinition } from "../../registry/AppRegistry";
-import { Loader2 } from "lucide-react";
-import AppSelector from "./AppSelector";
-import AppNavbar from "./AppNavbar";
-import AppSidebar from "./AppSidebar";
-import { useMediaQuery } from "../../hooks/useMediaQuery";
-import { ZeroTrustProvider } from "../../contexts/ZeroTrustContext";
-import { eventBus } from "../../registry/EventBus";
+import React, { useState, useEffect, Suspense } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { AppRegistry, AppConfig } from '../../registry/AppRegistry';
+import { Sidebar } from './Sidebar';
+import { Topbar } from './Topbar';
+import { LayoutGrid, Settings, Loader2 } from 'lucide-react';
+import { cn } from "@/lib/utils";
 
 /**
- * App Shell Component
+ * App Shell
  * 
- * The main container that manages and displays micro-apps in the Enumerator environment.
- * It handles app selection, navigation, shared state, and security context.
+ * Main container component that hosts micro-apps and provides
+ * navigation, settings, and shared UI elements.
  */
-const AppShell: React.FC = () => {
-  // Routing
-  const location = useLocation();
+export const AppShell: React.FC = () => {
+  const { appId } = useParams<{ appId: string }>();
   const navigate = useNavigate();
+  const [currentApp, setCurrentApp] = useState<AppConfig | undefined>();
+  const [isSidebarOpen, setSidebarOpen] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   
-  // Responsive layout
-  const isMobile = useMediaQuery('(max-width: 768px)');
-  const isTablet = useMediaQuery('(min-width: 769px) and (max-width: 1024px)');
+  // Get all available apps
+  const apps = AppRegistry.getAllApps();
   
-  // State
-  const [currentAppId, setCurrentAppId] = useState<string>("dashboard");
-  const [showAppSelector, setShowAppSelector] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(isMobile || isTablet);
-  
-  // Parse app ID from URL
+  // Effect to update current app when appId changes
   useEffect(() => {
-    const path = location.pathname.slice(1); // Remove leading slash
-    const appId = path || "dashboard"; // Default to dashboard if path is empty
-    
-    if (AppRegistry.hasApp(appId)) {
-      setCurrentAppId(appId);
+    if (appId) {
+      const app = AppRegistry.getApp(appId);
+      if (app) {
+        setCurrentApp(app);
+        document.title = `Aetherion | ${app.name}`;
+      } else {
+        // Redirect to dashboard if app not found
+        navigate('/dashboard');
+      }
     }
-  }, [location]);
+  }, [appId, navigate]);
   
-  // Handle app changes
-  const handleAppChange = (appId: string) => {
-    if (AppRegistry.hasApp(appId)) {
-      setCurrentAppId(appId);
-      navigate(`/${appId}`);
-      setShowAppSelector(false);
-      
-      // Publish app change event for other components to react
-      eventBus.publish("app:changed", appId);
+  // Handle app navigation
+  const navigateToApp = (targetAppId: string) => {
+    if (targetAppId !== appId) {
+      setIsLoading(true);
+      // Small delay to show loading state
+      setTimeout(() => {
+        navigate(`/${targetAppId}`);
+        setIsLoading(false);
+      }, 300);
     }
   };
   
-  // Get current app
-  const currentApp = AppRegistry.getApp(currentAppId) || AppRegistry.getApp("dashboard")!;
-  
-  // Render different layouts based on screen size
-  const renderContent = () => {
-    const AppComponent = currentApp.component;
-    
-    return (
-      <div className="app-content flex-1 overflow-auto">
-        <Suspense fallback={
-          <div className="flex items-center justify-center h-full">
-            <Loader2 className="h-8 w-8 animate-spin text-forest-600" />
-          </div>
-        }>
-          <AppComponent />
-        </Suspense>
-      </div>
-    );
+  // Toggle sidebar
+  const toggleSidebar = () => {
+    setSidebarOpen(!isSidebarOpen);
   };
   
   return (
-    <ZeroTrustProvider>
-      <div className="app-shell flex flex-col h-screen">
-        <AppNavbar 
-          currentApp={currentApp}
-          onToggleAppSelector={() => setShowAppSelector(!showAppSelector)}
-          onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)}
+    <div className="flex h-screen bg-background">
+      {/* Sidebar */}
+      <Sidebar 
+        apps={apps} 
+        currentAppId={appId || ''} 
+        onAppSelect={navigateToApp} 
+        isOpen={isSidebarOpen}
+      />
+      
+      {/* Main Content */}
+      <div className={cn(
+        "flex flex-col flex-1 transition-all duration-300 ease-in-out",
+        isSidebarOpen ? "md:ml-64" : "ml-0"
+      )}>
+        {/* Top Navigation */}
+        <Topbar 
+          appName={currentApp?.name || 'Aetherion'} 
+          onMenuClick={toggleSidebar} 
         />
         
-        <div className="app-body flex flex-1 overflow-hidden">
-          {!isMobile && (
-            <AppSidebar 
-              currentAppId={currentAppId}
-              collapsed={sidebarCollapsed}
-              onAppSelect={handleAppChange}
-            />
+        {/* App Container */}
+        <main className="flex-1 overflow-y-auto bg-muted/20 relative">
+          {isLoading ? (
+            <div className="flex items-center justify-center h-full">
+              <Loader2 className="h-8 w-8 animate-spin text-forest-600" />
+            </div>
+          ) : currentApp ? (
+            <Suspense fallback={
+              <div className="flex items-center justify-center h-full">
+                <Loader2 className="h-8 w-8 animate-spin text-forest-600" />
+              </div>
+            }>
+              <div className="h-full">
+                <currentApp.component />
+              </div>
+            </Suspense>
+          ) : (
+            <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
+              <LayoutGrid className="h-16 w-16 mb-4" />
+              <h2 className="text-2xl font-bold mb-2">App Not Found</h2>
+              <p>The requested application could not be found.</p>
+            </div>
           )}
-          
-          {renderContent()}
-        </div>
-        
-        {showAppSelector && (
-          <AppSelector 
-            apps={AppRegistry.getAvailableApps()}
-            currentAppId={currentAppId}
-            onAppSelect={handleAppChange}
-            onClose={() => setShowAppSelector(false)}
-          />
-        )}
+        </main>
       </div>
-    </ZeroTrustProvider>
+    </div>
   );
 };
-
-export default AppShell;

@@ -1,184 +1,136 @@
-import { lazy, LazyExoticComponent } from "react";
-import { IconType } from "../types/common";
+import { lazy } from 'react';
+import { eventBus } from './EventBus';
 
-// Import icons needed for app tiles
-import { 
-  LayoutDashboard, 
-  Wallet, 
-  Server, 
-  BarChart3, 
-  Cpu, 
-  Globe, 
-  Shield, 
-  Cog, 
-  Terminal,
-  Layers
-} from "lucide-react";
-
-// Lazy load micro-apps
-const DashboardApp = lazy(() => import("../apps/dashboard/DashboardApp"));
-const WalletApp = lazy(() => import("../apps/wallet/WalletApp"));
-const NodeMarketplaceApp = lazy(() => import("../apps/node-marketplace/NodeMarketplaceApp"));
-const TokenomicsApp = lazy(() => import("../apps/tokenomics/TokenomicsApp"));
-const AICoinApp = lazy(() => import("../apps/aicoin/AICoinApp"));
-const DAppApp = lazy(() => import("../apps/dapp/DAppApp"));
-const SecurityApp = lazy(() => import("../apps/security/SecurityApp"));
-const SettingsApp = lazy(() => import("../apps/settings/SettingsApp"));
-
-/**
- * App Definition interface for registry
- */
-export interface AppDefinition {
+// Define app configuration type
+export interface AppConfig {
   id: string;
   name: string;
   description: string;
-  icon: IconType;
-  component: LazyExoticComponent<any>;
-  apiNamespace: string;
-  category: 'main' | 'tools' | 'system';
-  navPriority: number;
+  icon: string;
+  component: React.LazyExoticComponent<React.ComponentType<any>>;
+  routes?: string[];
+  visible?: boolean;
 }
 
 /**
- * Application Registry Service
+ * App Registry for managing micro-apps
  * 
- * Manages all available micro-apps in the ecosystem and handles
- * rendering them through the app shell.
+ * This class handles the registration and access of micro-apps
+ * in the Aetherion ecosystem, enabling the Enumerator-like architecture.
  */
-class AppRegistryService {
-  private apps: Record<string, AppDefinition> = {
-    dashboard: {
-      id: "dashboard",
-      name: "Dashboard",
-      description: "Overview of your Aetherion ecosystem",
-      icon: LayoutDashboard,
-      component: DashboardApp,
-      apiNamespace: "dashboard",
-      category: 'main',
-      navPriority: 1
-    },
-    wallet: {
-      id: "wallet",
-      name: "Wallet",
-      description: "Manage your digital assets and transactions",
-      icon: Wallet,
-      component: WalletApp,
-      apiNamespace: "wallet",
-      category: 'main',
-      navPriority: 2
-    },
-    nodeMarketplace: {
-      id: "node-marketplace",
-      name: "Node Marketplace",
-      description: "Deploy and earn from the FractalCoin network",
-      icon: Server,
-      component: NodeMarketplaceApp,
-      apiNamespace: "node",
-      category: 'main',
-      navPriority: 3
-    },
-    tokenomics: {
-      id: "tokenomics",
-      name: "Tokenomics",
-      description: "Explore FractalCoin economic mechanisms",
-      icon: BarChart3,
-      component: TokenomicsApp,
-      apiNamespace: "tokenomics",
-      category: 'main',
-      navPriority: 4
-    },
-    aicoin: {
-      id: "aicoin",
-      name: "AICoin",
-      description: "AI resource allocation network",
-      icon: Cpu,
-      component: AICoinApp,
-      apiNamespace: "aicoin",
-      category: 'main',
-      navPriority: 5
-    },
-    dapp: {
-      id: "dapp",
-      name: "DApp Browser",
-      description: "Access the decentralized app ecosystem",
-      icon: Globe,
-      component: DAppApp,
-      apiNamespace: "dapp",
-      category: 'tools',
-      navPriority: 1
-    },
-    security: {
-      id: "security",
-      name: "Security Center",
-      description: "Manage quantum security settings",
-      icon: Shield,
-      component: SecurityApp,
-      apiNamespace: "security",
-      category: 'system',
-      navPriority: 1
-    },
-    settings: {
-      id: "settings",
-      name: "Settings",
-      description: "Configure your Aetherion experience",
-      icon: Cog,
-      component: SettingsApp,
-      apiNamespace: "settings",
-      category: 'system',
-      navPriority: 2
-    }
-  };
+class AppRegistryClass {
+  private apps: Record<string, AppConfig> = {};
   
-  /**
-   * Get all available apps
-   */
-  getAvailableApps(): AppDefinition[] {
-    return Object.values(this.apps);
+  constructor() {
+    // Register default apps
+    this.registerDefaultApps();
   }
   
   /**
-   * Get apps by category
+   * Register a new app
+   * @param appConfig App configuration
    */
-  getAppsByCategory(category: 'main' | 'tools' | 'system'): AppDefinition[] {
-    return Object.values(this.apps)
-      .filter(app => app.category === category)
-      .sort((a, b) => a.navPriority - b.navPriority);
+  registerApp(appConfig: AppConfig): void {
+    if (this.apps[appConfig.id]) {
+      console.warn(`App with ID ${appConfig.id} is already registered. Overwriting.`);
+    }
+    
+    this.apps[appConfig.id] = appConfig;
+    
+    // Notify that a new app has been registered
+    eventBus.publish('app:registered', appConfig);
   }
   
   /**
    * Get an app by ID
+   * @param id App ID
+   * @returns App configuration or undefined if not found
    */
-  getApp(id: string): AppDefinition | undefined {
+  getApp(id: string): AppConfig | undefined {
     return this.apps[id];
   }
   
   /**
-   * Check if app exists
+   * Get all registered apps
+   * @param includeHidden Include apps marked as not visible
+   * @returns Array of app configurations
    */
-  hasApp(id: string): boolean {
-    return !!this.apps[id];
+  getAllApps(includeHidden: boolean = false): AppConfig[] {
+    return Object.values(this.apps).filter(app => includeHidden || app.visible !== false);
   }
   
   /**
-   * Register a new app (used for runtime extensions)
+   * Unregister an app
+   * @param id App ID
    */
-  registerApp(app: AppDefinition): void {
-    if (this.apps[app.id]) {
-      console.warn(`App with ID ${app.id} already exists. Overwriting.`);
+  unregisterApp(id: string): void {
+    if (!this.apps[id]) {
+      console.warn(`App with ID ${id} not found.`);
+      return;
     }
-    this.apps[app.id] = app;
+    
+    const app = this.apps[id];
+    delete this.apps[id];
+    
+    // Notify that an app has been unregistered
+    eventBus.publish('app:unregistered', app);
   }
   
   /**
-   * Unregister an app by ID
+   * Register default apps
    */
-  unregisterApp(id: string): boolean {
-    if (this.apps[id]) {
-      delete this.apps[id];
-      return true;
-    }
-    return false;
+  private registerDefaultApps(): void {
+    // Dashboard App
+    this.registerApp({
+      id: 'dashboard',
+      name: 'Dashboard',
+      description: 'Overview of your assets and network status',
+      icon: 'layout-dashboard',
+      component: lazy(() => import('../apps/dashboard/DashboardApp')),
+      visible: true
+    });
+    
+    // Wallet App
+    this.registerApp({
+      id: 'wallet',
+      name: 'Wallet',
+      description: 'Manage your digital assets',
+      icon: 'wallet',
+      component: lazy(() => import('../apps/wallet/WalletApp')),
+      visible: true
+    });
+    
+    // Node Marketplace App
+    this.registerApp({
+      id: 'node-marketplace',
+      name: 'Node Marketplace',
+      description: 'Deploy services on the FractalCoin network',
+      icon: 'server',
+      component: lazy(() => import('../apps/node-marketplace/NodeMarketplaceApp')),
+      visible: true
+    });
+    
+    // Tokenomics App
+    this.registerApp({
+      id: 'tokenomics',
+      name: 'Tokenomics',
+      description: 'Explore FractalCoin economic mechanisms',
+      icon: 'bar-chart-3',
+      component: lazy(() => import('../apps/tokenomics/TokenomicsApp')),
+      visible: true
+    });
+    
+    // AICoin App
+    this.registerApp({
+      id: 'aicoin',
+      name: 'AICoin',
+      description: 'AI resource allocation network',
+      icon: 'cpu',
+      component: lazy(() => import('../apps/aicoin/AICoinApp')),
+      visible: true
+    });
   }
 }
 
-export const AppRegistry = new AppRegistryService();
+// Export singleton instance
+export const AppRegistry = new AppRegistryClass();
