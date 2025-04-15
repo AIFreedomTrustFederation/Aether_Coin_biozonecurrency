@@ -22,6 +22,7 @@ const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const Api = lazy(() => import("./pages/Api"));
 const AetherCoreTrust = lazy(() => import("./pages/hosting/AetherCoreTrust"));
 const AetherCoreBrowser = lazy(() => import("./pages/AetherCoreBrowser"));
+const NodeMarketplace = lazy(() => import("./pages/NodeMarketplace"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -63,6 +64,7 @@ const App = () => (
                 <Route path="/api" element={<Api />} />
                 <Route path="/aethercore-trust" element={<AetherCoreTrust />} />
                 <Route path="/aethercore-browser" element={<AetherCoreBrowser />} />
+                <Route path="/node-marketplace" element={<NodeMarketplace />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
