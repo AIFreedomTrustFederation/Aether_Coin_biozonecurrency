@@ -1,0 +1,218 @@
+name: Hybrid Deployment (GitHub Pages + CPanel)
+
+on:
+  push:
+    branches: [ main, production ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+        - production
+        - staging
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "hybrid-deploy-${{ github.ref }}"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build project
+        run: npm run build
+      
+      - name: Copy CNAME file to build directory
+        run: cp CNAME dist/
+      
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-artifact
+          path: dist/
+  
+  deploy-to-github-pages:
+    needs: build
+    if: github.ref == 'refs/heads/main' || github.event.inputs.environment == 'production'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Download build artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: build-artifact
+          path: dist/
+      
+      - name: Setup Pages
+        uses: actions/configure-pages@v3
+      
+      - name: Upload GitHub Pages artifact
+        uses: actions/upload-pages-artifact@v1
+        with:
+          path: 'dist'
+      
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2
+      
+      - name: Post-Deployment Verification
+        run: |
+          echo "Deployed to GitHub Pages at ${{ steps.deployment.outputs.page_url }}"
+          echo "Deployment Timestamp: $(date)"
+          echo "Waiting for DNS propagation (10 seconds)..."
+          sleep 10
+  
+  deploy-to-cpanel:
+    needs: build
+    if: github.ref == 'refs/heads/production' || github.event.inputs.environment == 'production'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository for server files
+        uses: actions/checkout@v3
+      
+      - name: Download build artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: build-artifact
+          path: dist/
+
+      - name: Set up environment variables for API
+        run: |
+          mkdir -p dist/server
+          cat > dist/server/.env.production << EOF
+          # Database Configuration
+          DB_HOST=localhost
+          DB_USER=${{ secrets.CPANEL_DB_USER }}
+          DB_PASS=${{ secrets.CPANEL_DB_PASS }}
+          DB_NAME=${{ secrets.CPANEL_DB_NAME }}
+          DB_PREFIX=atc_
+          
+          # Security
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          SESSION_SECRET=${{ secrets.SESSION_SECRET }}
+          
+          # Application Settings
+          APP_ENV=production
+          APP_NAME=Aetherion Harmony
+          APP_VERSION=1.0.0
+          APP_URL=https://atc.aifreedomtrust.com/api
+          API_BASE_URL=/api
+          EOF
+      
+      - name: Create .htaccess file
+        run: |
+          cat > dist/.htaccess << EOF
+          <IfModule mod_rewrite.c>
+            RewriteEngine On
+            RewriteBase /
+            
+            # Handle Front Controller Pattern (SPA routing)
+            RewriteCond %{REQUEST_FILENAME} !-f
+            RewriteCond %{REQUEST_FILENAME} !-d
+            RewriteRule ^(.*)$ index.html [QSA,L]
+            
+            # Force HTTPS
+            RewriteCond %{HTTPS} off
+            RewriteRule (.*) https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+          </IfModule>
+          
+          # Set cache control for static assets
+          <IfModule mod_expires.c>
+            ExpiresActive On
+            # Set default expiry to 1 month
+            ExpiresDefault "access plus 1 month"
+            # CSS and JS files - 1 week
+            ExpiresByType text/css "access plus 1 week"
+            ExpiresByType application/javascript "access plus 1 week"
+            # Images - 3 months
+            ExpiresByType image/jpg "access plus 3 months"
+            ExpiresByType image/jpeg "access plus 3 months"
+            ExpiresByType image/gif "access plus 3 months"
+            ExpiresByType image/png "access plus 3 months"
+            ExpiresByType image/svg+xml "access plus 3 months"
+          </IfModule>
+          
+          # Disable directory browsing
+          Options -Indexes
+          EOF
+      
+      - name: Prepare server files
+        run: |
+          mkdir -p dist/api
+          cp -r server/api/* dist/api/
+      
+      - name: Deploy to CPanel
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ${{ secrets.CPANEL_FTP_SERVER }}
+          username: ${{ secrets.CPANEL_FTP_USERNAME }}
+          password: ${{ secrets.CPANEL_FTP_PASSWORD }}
+          local-dir: ./dist/api/
+          server-dir: ./public_html/api/
+          dangerous-clean-slate: true
+      
+      - name: Notify deployment status
+        if: always()
+        run: |
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "API deployment to CPanel completed successfully!"
+          else
+            echo "API deployment to CPanel failed!"
+          fi
+
+  post-deployment:
+    needs: [deploy-to-github-pages, deploy-to-cpanel]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check deployment status
+        run: |
+          if [ "${{ needs.deploy-to-github-pages.result }}" == "success" ] && [ "${{ needs.deploy-to-cpanel.result }}" == "success" ]; then
+            echo "✅ All deployments completed successfully!"
+          elif [ "${{ needs.deploy-to-github-pages.result }}" == "success" ]; then
+            echo "⚠️ GitHub Pages deployment succeeded, but CPanel deployment failed or was skipped."
+          elif [ "${{ needs.deploy-to-cpanel.result }}" == "success" ]; then
+            echo "⚠️ CPanel deployment succeeded, but GitHub Pages deployment failed or was skipped."
+          else
+            echo "❌ All deployments failed or were skipped."
+            exit 1
+          fi
+      
+      - name: Generate deployment report
+        run: |
+          echo "# Deployment Report" > deployment-report.md
+          echo "## Timestamp: $(date)" >> deployment-report.md
+          echo "## GitHub Pages Deployment" >> deployment-report.md
+          echo "Status: ${{ needs.deploy-to-github-pages.result }}" >> deployment-report.md
+          if [ "${{ needs.deploy-to-github-pages.result }}" == "success" ]; then
+            echo "URL: https://atc.aifreedomtrust.com" >> deployment-report.md
+          fi
+          echo "## CPanel API Deployment" >> deployment-report.md
+          echo "Status: ${{ needs.deploy-to-cpanel.result }}" >> deployment-report.md
+          if [ "${{ needs.deploy-to-cpanel.result }}" == "success" ]; then
+            echo "URL: https://atc.aifreedomtrust.com/api" >> deployment-report.md
+          fi
+          
+          cat deployment-report.md
