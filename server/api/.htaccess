@@ -1,0 +1,53 @@
+# CPanel API .htaccess configuration for Aetherion Wallet
+
+# Enable rewrite engine
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Set the base for rewrites
+    RewriteBase /api/
+
+    # Wallet API routes
+    RewriteRule ^wallet/?$ wallet.php [QSA,L]
+    RewriteRule ^wallet/(.*)$ wallet.php [QSA,L]
+    
+    # Node Marketplace API routes
+    RewriteRule ^node-marketplace/?$ node-marketplace.php [QSA,L]
+    RewriteRule ^node-marketplace/(.*)$ node-marketplace.php [QSA,L]
+    
+    # For all other API routes, use index.php router
+    RewriteRule ^(.*)$ index.php [QSA,L]
+</IfModule>
+
+# Set security headers
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-XSS-Protection "1; mode=block"
+    Header set X-Frame-Options "DENY"
+    Header set Content-Security-Policy "default-src 'self'"
+    
+    # CORS headers - adjust as needed for your domain
+    Header set Access-Control-Allow-Origin "*"
+    Header set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+    Header set Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With"
+</IfModule>
+
+# Prevent directory listing
+Options -Indexes
+
+# Prevent access to .env files
+<FilesMatch "^\.env">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# PHP settings
+<IfModule mod_php7.c>
+    php_flag display_errors Off
+    php_flag log_errors On
+    php_value error_log /path/to/your/error.log
+    php_value max_execution_time 30
+    php_value memory_limit 128M
+    php_value post_max_size 8M
+    php_value upload_max_filesize 2M
+</IfModule>
