@@ -1,53 +1,103 @@
-# CPanel API .htaccess configuration for Aetherion Wallet
+# Aetherion Wallet API .htaccess
+# This file configures Apache for the Aetherion Wallet API
+
+# Disable directory browsing
+Options -Indexes
 
 # Enable rewrite engine
 <IfModule mod_rewrite.c>
     RewriteEngine On
-
-    # Set the base for rewrites
     RewriteBase /api/
+    
+    # Handle front controller pattern
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ index.php?path=$1 [QSA,L]
+</IfModule>
 
-    # Wallet API routes
-    RewriteRule ^wallet/?$ wallet.php [QSA,L]
-    RewriteRule ^wallet/(.*)$ wallet.php [QSA,L]
-    
-    # Node Marketplace API routes
-    RewriteRule ^node-marketplace/?$ node-marketplace.php [QSA,L]
-    RewriteRule ^node-marketplace/(.*)$ node-marketplace.php [QSA,L]
-    
-    # For all other API routes, use index.php router
-    RewriteRule ^(.*)$ index.php [QSA,L]
+# Force HTTPS
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{HTTPS} off
+    RewriteRule (.*) https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
 </IfModule>
 
 # Set security headers
 <IfModule mod_headers.c>
     Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
     Header set X-XSS-Protection "1; mode=block"
-    Header set X-Frame-Options "DENY"
-    Header set Content-Security-Policy "default-src 'self'"
+    Header set Strict-Transport-Security "max-age=31536000; includeSubDomains"
     
-    # CORS headers - adjust as needed for your domain
+    # Set CORS headers
     Header set Access-Control-Allow-Origin "*"
     Header set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
     Header set Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With"
+    
+    # Handle preflight OPTIONS requests
+    RewriteEngine On
+    RewriteCond %{REQUEST_METHOD} OPTIONS
+    RewriteRule ^(.*)$ $1 [R=200,L]
 </IfModule>
 
-# Prevent directory listing
-Options -Indexes
+# PHP configuration
+<IfModule mod_php7.c>
+    # Hide PHP version
+    php_flag expose_php Off
+    
+    # Set maximum execution time
+    php_value max_execution_time 30
+    
+    # Set maximum memory limit
+    php_value memory_limit 128M
+    
+    # Set upload limit
+    php_value upload_max_filesize 10M
+    php_value post_max_size 10M
+    
+    # Error handling
+    php_flag display_errors Off
+    php_flag log_errors On
+    php_value error_log /path/to/error.log
+</IfModule>
 
-# Prevent access to .env files
-<FilesMatch "^\.env">
-    Order allow,deny
+# Prevent access to sensitive files
+<FilesMatch "^(\.htaccess|\.htpasswd|config\.php)$">
+    Order deny,allow
     Deny from all
 </FilesMatch>
 
-# PHP settings
-<IfModule mod_php7.c>
-    php_flag display_errors Off
-    php_flag log_errors On
-    php_value error_log /path/to/your/error.log
-    php_value max_execution_time 30
-    php_value memory_limit 128M
-    php_value post_max_size 8M
-    php_value upload_max_filesize 2M
+# Prevent PHP execution in uploads directory
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{REQUEST_URI} ^/api/uploads/.*\.php$
+    RewriteRule .* - [F,L]
+</IfModule>
+
+# Enable gzip compression
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/plain
+    AddOutputFilterByType DEFLATE text/html
+    AddOutputFilterByType DEFLATE text/xml
+    AddOutputFilterByType DEFLATE application/xml
+    AddOutputFilterByType DEFLATE application/json
+    AddOutputFilterByType DEFLATE application/javascript
+    AddOutputFilterByType DEFLATE text/css
+</IfModule>
+
+# Set cache control for different file types
+<IfModule mod_expires.c>
+    ExpiresActive On
+    
+    # JSON responses should not be cached by default
+    <FilesMatch "\.(json)$">
+        ExpiresDefault "access plus 0 seconds"
+        Header set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
+    </FilesMatch>
+    
+    # Cache images for 1 month
+    <FilesMatch "\.(jpg|jpeg|png|gif|ico|svg)$">
+        ExpiresDefault "access plus 1 month"
+        Header append Cache-Control "public"
+    </FilesMatch>
 </IfModule>
