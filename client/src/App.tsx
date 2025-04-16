@@ -45,6 +45,9 @@ const QuantumPageLoader = () => (
 // Import our Enumerator page
 const EnumeratorPage = lazy(() => import("./pages/Enumerator"));
 
+// Import Bot Simulation page
+const BotSimulationPage = lazy(() => import("./pages/BotSimulation"));
+
 // Original App structure with updated Enumerator page
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -72,6 +75,9 @@ const App = () => (
                 
                 {/* Route to simplified Enumerator page */}
                 <Route path="/enumerator" element={<EnumeratorPage />} />
+                
+                {/* Route to Bot Simulation Dashboard */}
+                <Route path="/bot-simulation" element={<BotSimulationPage />} />
                 
                 {/* Catch-all route for 404 */}
                 <Route path="*" element={<NotFound />} />
