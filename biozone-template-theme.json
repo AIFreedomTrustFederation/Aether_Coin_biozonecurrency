@@ -1,11 +1,6 @@
 {
-  "primary": "#3390ff",
+  "primary": "hsl(350, 80%, 60%)",
   "variant": "vibrant",
   "appearance": "dark",
-  "radius": 0.5,
-  "custom": {
-    "redshift": "#ff5500",
-    "blueshift": "#3b00ff",
-    "greenshift": "#19c964"
-  }
+  "radius": 0.75
 }
