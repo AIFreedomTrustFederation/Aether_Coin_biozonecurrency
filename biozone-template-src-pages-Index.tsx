@@ -4,6 +4,9 @@ import HeroSection from "../components/HeroSection"
 import FeatureSection from "../components/FeatureSection"
 import AboutSection from "../components/AboutSection"
 import CosmicShiftSection from "../components/CosmicShiftSection"
+import SacredGeometrySection from "../components/SacredGeometrySection"
+import ConsciousnessPortal from "../components/ConsciousnessPortal"
+import QuantumLoaderShowcase from "../components/QuantumLoaderShowcase"
 import TechnologySection from "../components/TechnologySection"
 import Footer from "../components/Footer"
 
@@ -16,6 +19,9 @@ const Index = () => {
         <FeatureSection />
         <AboutSection />
         <CosmicShiftSection />
+        <SacredGeometrySection />
+        <ConsciousnessPortal />
+        <QuantumLoaderShowcase />
         <TechnologySection />
       </main>
       <Footer />

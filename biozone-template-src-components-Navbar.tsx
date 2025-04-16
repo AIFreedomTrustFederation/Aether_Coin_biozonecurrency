@@ -30,6 +30,7 @@ const Navbar = () => {
             <a href="#features" className="text-foreground hover:text-primary transition">Features</a>
             <a href="#about" className="text-foreground hover:text-primary transition">About</a>
             <a href="#cosmic-shift" className="convergence-text hover:opacity-80 transition">Cosmic Shift</a>
+            <a href="#sacred-geometry" className="text-foreground hover:text-primary transition">Sacred Geometry</a>
             <a href="#technology" className="text-foreground hover:text-primary transition">Technology</a>
             
             <button
@@ -104,6 +105,13 @@ const Navbar = () => {
               onClick={() => setIsMenuOpen(false)}
             >
               Cosmic Shift
+            </a>
+            <a 
+              href="#sacred-geometry" 
+              className="text-foreground hover:text-primary transition py-2"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Sacred Geometry
             </a>
             <a 
               href="#technology" 
