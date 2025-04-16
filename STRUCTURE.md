@@ -44,6 +44,12 @@ aetherion-wallet/
 │       ├── lib/              # Utility functions and client libraries
 │       │   └── queryClient.ts # API Gateway-aware query client
 │       ├── pages/            # Page components
+│       ├── simulation/       # Bot Simulation System
+│       │   ├── apiClient.ts  # Simulation API client infrastructure
+│       │   ├── botActions.ts # Bot behavior and action definitions
+│       │   ├── botSystem.ts  # Core bot framework and types
+│       │   ├── Dashboard.tsx # Bot monitoring interface
+│       │   └── utils.ts      # Simulation utilities
 │       └── types/            # TypeScript type definitions
 ├── server/                   # Backend server code
 │   ├── api/                  # API routes and controllers
@@ -87,6 +93,14 @@ aetherion-wallet/
 4. **server/services/twilio.ts**: Twilio integration for SMS notifications.
 5. **server/pg-storage.ts**: PostgreSQL database interface implementation.
 
+### Bot Simulation System
+
+1. **client/src/simulation/botSystem.ts**: Core framework for creating and managing bot instances.
+2. **client/src/simulation/apiClient.ts**: API client framework for bot interactions with endpoints.
+3. **client/src/simulation/botActions.ts**: Comprehensive set of actions bots can perform.
+4. **client/src/simulation/Dashboard.tsx**: Visual interface for monitoring and managing bots.
+5. **client/src/pages/BotSimulation.tsx**: Main entry point for the simulation system.
+
 ### Shared
 
 1. **shared/schema.ts**: Drizzle ORM schema definitions shared between frontend and backend.
@@ -119,6 +133,33 @@ The notification system supports multiple channels:
 1. **SMS Notifications**: Integrated with Twilio for delivering time-sensitive alerts.
 2. **In-App Notifications**: Real-time updates displayed within the application.
 3. **Email Notifications**: (Future implementation) For digest reports and security alerts.
+
+## Bot Simulation System
+
+The Bot Simulation System provides automated testing and performance validation through simulated user interactions:
+
+1. **Bot Framework**: Hierarchical system of bot types with customizable personalities and behaviors.
+2. **API Client Integration**: Custom API client framework for interacting with backend endpoints.
+3. **Action Engine**: Library of bot actions ranging from simple operations to complex multi-step workflows.
+4. **Monitoring Dashboard**: Real-time visualization of bot activities and system performance.
+5. **Orchestration System**: Controls for managing bot swarms and coordination of testing scenarios.
+
+Key bot types include:
+
+- **Trader Bots**: Focused on marketplace transactions and token exchanges
+- **Hodler Bots**: Simulate long-term holding patterns with occasional transactions
+- **Node Operator Bots**: Deploy, maintain, and optimize node infrastructure
+- **Developer Bots**: Test API integrations and smart contract deployments
+- **Explorer Bots**: Broadly interact with multiple areas of the ecosystem
+
+The simulation system provides valuable insights into:
+
+- Platform performance under various load conditions
+- Security vulnerabilities through automated testing
+- User experience optimization opportunities
+- Economic model validation through simulated market behaviors
+
+For comprehensive details, see [BOT-SIMULATION-SYSTEM.md](./BOT-SIMULATION-SYSTEM.md).
 
 ## Development Tools & Scripts
 
