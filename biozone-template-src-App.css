@@ -1,0 +1,44 @@
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Quantum effects */
+.quantum-glow {
+  box-shadow: 0 0 15px rgba(0, 128, 255, 0.5);
+  transition: box-shadow 0.3s ease;
+}
+
+.quantum-glow:hover {
+  box-shadow: 0 0 25px rgba(0, 128, 255, 0.8);
+}
+
+/* BioZoe elements */
+.biozoe-gradient {
+  background: linear-gradient(135deg, #19c964 0%, #42d484 100%);
+}
+
+/* Fractal patterns */
+.fractal-border {
+  position: relative;
+}
+
+.fractal-border::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  background: linear-gradient(45deg, #00b0ff, #7000ff, #f08c1a, #19c964);
+  z-index: -1;
+  filter: blur(5px);
+  animation: fractal-rotate 10s infinite linear;
+}
+
+@keyframes fractal-rotate {
+  0% {
+    filter: blur(5px) hue-rotate(0deg);
+  }
+  100% {
+    filter: blur(5px) hue-rotate(360deg);
+  }
+}
