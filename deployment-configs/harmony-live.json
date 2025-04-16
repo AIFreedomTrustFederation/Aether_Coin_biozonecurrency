@@ -1,0 +1,81 @@
+{
+  "deployment": {
+    "name": "harmony-live",
+    "domain": "atc.aifreedomtrust.com",
+    "environment": "production",
+    "version": "1.0.0",
+    "type": "cpanel"
+  },
+  "server": {
+    "type": "shared-hosting",
+    "provider": "cpanel",
+    "php_version": "7.4",
+    "path": "/public_html/wallet",
+    "ssl": true
+  },
+  "database": {
+    "type": "mysql",
+    "name": "aetherion_db",
+    "prefix": "atc_",
+    "create_tables": true
+  },
+  "features": {
+    "wallet": true,
+    "node_marketplace": true,
+    "fractal_network": true,
+    "quantum_security": true,
+    "biozoe_integration": true
+  },
+  "dns": {
+    "records": [
+      {
+        "type": "A",
+        "name": "atc",
+        "value": "YOUR_CPANEL_IP_ADDRESS",
+        "ttl": 3600,
+        "comment": "Main A record pointing to CPanel server"
+      },
+      {
+        "type": "CNAME",
+        "name": "www.atc",
+        "value": "atc.aifreedomtrust.com",
+        "ttl": 3600,
+        "comment": "WWW subdomain"
+      },
+      {
+        "type": "MX",
+        "name": "atc",
+        "value": "mail.atc.aifreedomtrust.com",
+        "priority": 10,
+        "ttl": 3600,
+        "comment": "Mail exchange record" 
+      },
+      {
+        "type": "TXT",
+        "name": "atc",
+        "value": "v=spf1 a mx include:_spf.yourhostingprovider.com ~all",
+        "ttl": 3600,
+        "comment": "SPF record for email validation"
+      }
+    ]
+  },
+  "github": {
+    "enabled": true,
+    "repository": "aifreedomtrust/aetherion-wallet",
+    "branch": "production",
+    "action": "deploy-to-cpanel"
+  },
+  "security": {
+    "force_https": true,
+    "secure_headers": true,
+    "rate_limiting": true,
+    "cors_enabled": true,
+    "allowed_origins": ["https://atc.aifreedomtrust.com"]
+  },
+  "backup": {
+    "enabled": true,
+    "frequency": "daily",
+    "retention_days": 7,
+    "include_database": true
+  }
+}

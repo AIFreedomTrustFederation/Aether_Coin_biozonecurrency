@@ -1,218 +1,97 @@
-# Aetherion Deployment to atc.aifreedomtrust.com
+# Aetherion Harmony - Domain Deployment Guide
 
-This document provides detailed instructions for deploying the Aetherion UI Wallet application to the domain atc.aifreedomtrust.com with both `/dapp` (primary) and `/wallet` (legacy) endpoints.
+This guide provides all the information needed to deploy the Aetherion Harmony project to your domain with CPanel hosting.
 
-## Prerequisites
+## 1. Domain & DNS Configuration
 
-- Server with SSH access and the following installed:
-  - Node.js 18+ and npm
-  - Nginx
-  - Let's Encrypt (certbot)
-  - sudo privileges
+### Required DNS Records
 
-## Environment Setup
+| Record Type | Name/Host | Value/Target | TTL | Priority |
+|-------------|-----------|--------------|-----|----------|
+| A           | atc       | [YOUR_CPANEL_IP_ADDRESS] | 3600 | - |
+| CNAME       | www.atc   | atc.aifreedomtrust.com | 3600 | - |
+| MX          | atc       | mail.atc.aifreedomtrust.com | 3600 | 10 |
+| TXT         | atc       | v=spf1 a mx include:_spf.yourhostingprovider.com ~all | 3600 | - |
 
-Create or update your `.env` file to include the necessary deployment variables:
+You need to get the correct IP address from your CPanel hosting provider to replace [YOUR_CPANEL_IP_ADDRESS].
 
-```
-# Deployment Variables
-DEPLOY_SSH_HOST=atc.aifreedomtrust.com
-DEPLOY_SSH_USER=your_username
-```
+## 2. Hosting Requirements
 
-## Deployment Process
+- **CPanel Hosting**: Your hosting account should provide CPanel access
+- **PHP Version**: 7.4 or higher
+- **MySQL/MariaDB**: 5.7+ or 10.3+ respectively
+- **SSL Certificate**: Let's Encrypt or another SSL provider
+- **Storage**: At least 1GB of space for the application
 
-### 1. Build the Application
+## 3. Deployment Options
 
-Build the application for production:
+### Option A: Manual Deployment (Recommended for First-Time Setup)
 
-```bash
-npm run build
-```
-
-### 2. Package Files for Deployment
-
-Create a tarball containing the necessary files:
-
-```bash
-tar -czf aetherion-deploy.tar.gz dist server-redirect.js package.json
-```
-
-### 3. Upload to Server
-
-Upload the deployment package to your server:
-
-```bash
-scp aetherion-deploy.tar.gz ${DEPLOY_SSH_USER}@${DEPLOY_SSH_HOST}:~/
-```
-
-### 4. Server Configuration
-
-SSH into your server and perform the following configuration steps:
-
-```bash
-ssh ${DEPLOY_SSH_USER}@${DEPLOY_SSH_HOST}
-```
-
-#### Extract and Install
-
-```bash
-# Extract files
-mkdir -p ~/aetherion
-tar -xzf aetherion-deploy.tar.gz -C ~/aetherion
-cd ~/aetherion
-
-# Install production dependencies
-npm install --production
-```
-
-#### Create Systemd Service
-
-Create a systemd service to run the application in the background:
-
-```bash
-sudo tee /etc/systemd/system/aetherion.service > /dev/null << 'EOF'
-[Unit]
-Description=Aetherion UI Wallet
-After=network.target
-
-[Service]
-Type=simple
-User=$USER
-WorkingDirectory=$HOME/aetherion
-ExecStart=/usr/bin/node $HOME/aetherion/server-redirect.js
-Restart=on-failure
-Environment=PORT=3000
-Environment=NODE_ENV=production
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-sudo systemctl daemon-reload
-sudo systemctl enable aetherion
-sudo systemctl start aetherion
-```
-
-#### Configure Nginx
-
-Create an Nginx configuration file for the application:
-
-```bash
-sudo tee /etc/nginx/sites-available/aetherion > /dev/null << 'EOF'
-server {
-    listen 80;
-    server_name atc.aifreedomtrust.com;
-
-    # Primary application path at /dapp
-    location /dapp {
-        proxy_pass http://localhost:3000/dapp;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_cache_bypass $http_upgrade;
-    }
-
-    # Secondary application path at /wallet (legacy support)
-    location /wallet {
-        proxy_pass http://localhost:3000/wallet;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_cache_bypass $http_upgrade;
-    }
-
-    # Redirect root to /dapp
-    location = / {
-        return 301 /dapp;
-    }
-
-    # For Let's Encrypt
-    location ~ /.well-known {
-        allow all;
-    }
-}
-EOF
-
-sudo ln -sf /etc/nginx/sites-available/aetherion /etc/nginx/sites-enabled/
-sudo nginx -t
-sudo systemctl restart nginx
-```
-
-#### Set Up SSL Certificate
-
-```bash
-sudo certbot --nginx -d atc.aifreedomtrust.com --non-interactive --agree-tos
-```
-
-## Verifying Deployment
-
-After deployment, verify the application is running correctly:
-
-1. Check the systemd service status:
+1. Run the deployment script to create a deployment package:
    ```bash
-   sudo systemctl status aetherion
+   chmod +x deploy-harmony-to-cpanel.sh
+   ./deploy-harmony-to-cpanel.sh
    ```
 
-2. Check application logs:
-   ```bash
-   journalctl -u aetherion
-   ```
+2. Upload the generated `harmony-cpanel-deploy.zip` to your CPanel hosting
+3. Extract the files to the correct directory (usually `public_html/wallet`)
+4. Follow the included installation guide
 
-3. Visit the application in a browser:
-   - Primary URL: https://atc.aifreedomtrust.com/dapp
-   - Legacy URL: https://atc.aifreedomtrust.com/wallet
+### Option B: GitHub Actions Automated Deployment
 
-## Updating the Application
+For automated deployments from GitHub, you need to:
 
-To update the deployed application:
+1. Store your deployment credentials as GitHub Secrets:
+   - `CPANEL_FTP_SERVER`: Your CPanel FTP hostname
+   - `CPANEL_FTP_USERNAME`: Your CPanel FTP username
+   - `CPANEL_FTP_PASSWORD`: Your CPanel FTP password
+   - `CPANEL_DB_USER`: Your database username
+   - `CPANEL_DB_PASS`: Your database password
+   - `CPANEL_DB_NAME`: Your database name
+   - `JWT_SECRET`: A secure random string for JWT tokens
+   - `SESSION_SECRET`: Another secure random string for sessions
 
-1. Build the new version
-2. Create a new deployment package
-3. Upload and extract on the server
-4. Restart the systemd service:
-   ```bash
-   sudo systemctl restart aetherion
-   ```
+2. Push to the `production` branch to trigger automatic deployment, or manually trigger the workflow from GitHub Actions.
 
-## Troubleshooting
+## 4. Post-Deployment Steps
 
-### Application Not Starting
+1. **Database Setup**: After files are deployed, navigate to `https://atc.aifreedomtrust.com/wallet/db_setup.php` to set up the database
+2. **Delete Setup Script**: Immediately delete `db_setup.php` after successful setup
+3. **Test Installation**: Verify all features are working correctly
+4. **SSL Verification**: Ensure SSL is properly configured for secure HTTPS connections
 
-Check the application logs for errors:
-```bash
-journalctl -u aetherion -n 100
-```
+## 5. Troubleshooting
 
-### Nginx Configuration Issues
+### Common Issues:
 
-Check Nginx error logs:
-```bash
-sudo tail -f /var/log/nginx/error.log
-```
+- **Blank Page**: Check PHP error logs in CPanel
+- **Database Connection Error**: Verify database credentials
+- **404 Errors**: Ensure .htaccess is properly uploaded and Apache mod_rewrite is enabled
+- **API Not Working**: Check permissions on PHP files in the server directory
 
-### SSL Certificate Issues
+### Accessing Error Logs:
 
-Verify the SSL certificate:
-```bash
-sudo certbot certificates
-```
+1. Log in to CPanel
+2. Navigate to "Error Log" 
+3. Check for PHP errors related to the application
 
-Renew if needed:
-```bash
-sudo certbot renew
-```
+## 6. Security Recommendations
 
-## Environment Variables
+1. **File Permissions**:
+   - Directories: 755
+   - PHP files: 644
+   - Configuration files (.env): 600
 
-Ensure all necessary environment variables are set for the production environment by updating the systemd service file if needed.
+2. **Regular Updates**:
+   - Keep PHP updated to the latest version
+   - Regularly update the application
 
-## Security Considerations
+3. **Backups**:
+   - Set up daily database backups
+   - Create regular full-site backups
 
-- Keep the server updated with security patches
-- Configure a firewall to restrict access to necessary ports
-- Set up rate limiting for API endpoints
-- Implement regular backups of application data
-- Monitor server logs for unusual activity
+## 7. Support & Resources
+
+- For technical assistance, contact support@aifreedomtrust.com
+- Documentation: https://atc.aifreedomtrust.com/docs
+- GitHub repository: https://github.com/aifreedomtrust/aetherion-wallet
