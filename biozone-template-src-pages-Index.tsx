@@ -3,6 +3,7 @@ import Navbar from "../components/Navbar"
 import HeroSection from "../components/HeroSection"
 import FeatureSection from "../components/FeatureSection"
 import AboutSection from "../components/AboutSection"
+import CosmicShiftSection from "../components/CosmicShiftSection"
 import TechnologySection from "../components/TechnologySection"
 import Footer from "../components/Footer"
 
@@ -14,6 +15,7 @@ const Index = () => {
         <HeroSection />
         <FeatureSection />
         <AboutSection />
+        <CosmicShiftSection />
         <TechnologySection />
       </main>
       <Footer />

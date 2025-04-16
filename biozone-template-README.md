@@ -1,78 +1,72 @@
-# Biozone Harmony Boost Frontend
+# AetherCore Landing Page
 
-This repository contains the frontend implementation for the Biozone Harmony Boost project, integrated with the Aetherion ecosystem. This is a replacement for the previous template with enhanced features and no references to the original template system.
+This is a modern, responsive landing page for the AetherCore ecosystem, built with React, TypeScript, Framer Motion, and Tailwind CSS.
+
+## Features
+
+- Quantum-inspired design elements and animations
+- Responsive layout for all device sizes
+- Interactive technology showcases
+- Dark mode support
 
 ## Technology Stack
 
-- React with TypeScript
-- TailwindCSS for styling
-- Framer Motion for animations
-- Vite for building and development
+- **React** - UI library
+- **TypeScript** - Type safety
+- **Tailwind CSS** - Utility-first styling
+- **Framer Motion** - Animation library
+- **ShadcnUI** - Component library
+- **Vite** - Build tool
 
-## Core Features
+## Project Structure
 
-- Quantum-resistant cryptography for enhanced security
-- FractalChain architecture with infinite scaling
-- BioZoe currency with spiritual and mathematical principles
-- AetherCore zero-trust security framework
-- Autonomous Economic Bot Framework
+```
+src/
+  ├── assets/             # Static assets
+  ├── components/         # UI components
+  │   ├── ui/             # Shadcn UI components
+  │   └── ...             # Page-specific components
+  ├── lib/                # Utility functions
+  ├── pages/              # Page components
+  └── App.tsx             # Main app component
+```
 
-## Setup & Development
+## Development
 
-1. Clone this repository
-2. Install dependencies:
+First, install the dependencies:
+
 ```bash
 npm install
 ```
-3. Start development server:
+
+Then, run the development server:
+
 ```bash
 npm run dev
 ```
-4. Build for production:
+
+Open [http://localhost:5173](http://localhost:5173) to view the site in your browser.
+
+## Customization
+
+### Theme
+
+The site uses Tailwind CSS with a custom color palette defined in `theme.json`. You can modify the colors and appearance by editing this file.
+
+### Components
+
+All components are built with reusability in mind. You can customize them by modifying their props or editing the component files directly.
+
+## Deployment
+
+Build the production version:
+
 ```bash
 npm run build
 ```
 
-## Component Structure
-
-The template is structured with the following components:
-
-- `src/pages/Index.tsx` - Main landing page
-- `src/components/` - Component modules including:
-  - Navbar with mobile responsiveness
-  - Various sections (Hero, Features, etc.)
-  - Footer
-  - Web3 visualizations
-  - UI components
-
-## Deployment
-
-To deploy this frontend separately from the backend:
-
-1. Build the frontend: `npm run build`
-2. Deploy the `dist` directory to:
-   - GitHub Pages
-   - Netlify
-   - Vercel
-   - Any static hosting service
-
-## Integration with Backend
-
-To integrate with the Aetherion backend:
-
-1. Update API endpoints in `src/services/api/apiClient.ts`
-2. Configure CORS settings on the backend
-3. Set up authentication if required
-
-## Contributing
-
-Contributions are welcome! Please follow these steps:
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
+The build output will be in the `dist` directory, which can be deployed to any static hosting service.
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+[MIT](LICENSE)

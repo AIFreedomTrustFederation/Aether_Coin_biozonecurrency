@@ -1,0 +1,11 @@
+{
+  "primary": "#3390ff",
+  "variant": "vibrant",
+  "appearance": "dark",
+  "radius": 0.5,
+  "custom": {
+    "redshift": "#ff5500",
+    "blueshift": "#3b00ff",
+    "greenshift": "#19c964"
+  }
+}

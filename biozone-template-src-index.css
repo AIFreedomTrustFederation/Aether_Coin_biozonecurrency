@@ -13,6 +13,18 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
     
+    /* Redshift color - warmer, red-orange hues */
+    --redshift: 12 90% 55%;
+    --redshift-foreground: 0 0% 100%;
+    
+    /* Blueshift color - cooler, blue-violet hues */
+    --blueshift: 240 90% 55%;
+    --blueshift-foreground: 0 0% 100%;
+    
+    /* Greenshift color - central convergence point */
+    --greenshift: 142 70% 45%;
+    --greenshift-foreground: 0 0% 100%;
+    
     --primary: 210 100% 50%;
     --primary-foreground: 210 40% 98%;
     
@@ -44,6 +56,18 @@
     
     --popover: 222 47% 11%;
     --popover-foreground: 210 40% 98%;
+    
+    /* Redshift color - warmer, red-orange hues */
+    --redshift: 12 90% 55%;
+    --redshift-foreground: 0 0% 100%;
+    
+    /* Blueshift color - cooler, blue-violet hues */
+    --blueshift: 240 90% 55%;
+    --blueshift-foreground: 0 0% 100%;
+    
+    /* Greenshift color - central convergence point */
+    --greenshift: 142 70% 45%;
+    --greenshift-foreground: 0 0% 100%;
     
     --primary: 210 100% 50%;
     --primary-foreground: 222 47% 11%;
