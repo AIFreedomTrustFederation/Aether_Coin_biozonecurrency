@@ -34,11 +34,12 @@ A cutting-edge blockchain wallet platform that delivers a secure and engaging cr
   - Conditional release based on custom rules
   - Transaction reversal within holding period
 - Bot Simulation System:
-  - Autonomous testing framework with multiple bot types
-  - API integration with sandboxed execution
-  - Real-time monitoring dashboard
-  - Customizable bot behaviors and personalities
-  - Performance and security validation through simulated user interactions
+  - Autonomous economic agents with self-determination capabilities
+  - Sophisticated decision-making models for value generation
+  - Multi-level autonomy framework from supervised to self-governing
+  - Configurable value distribution between bots and owners
+  - Bot-to-bot economic cooperation and service provision
+  - Ethical boundaries and governance frameworks
 
 
 
@@ -70,12 +71,13 @@ A cutting-edge blockchain wallet platform that delivers a secure and engaging cr
   - IPFS/Filecoin via Web3.Storage
   - ENS domain integration
   - FractalCoin sharded storage network
-- **Bot Simulation Framework**:
-  - TypeScript autonomous agent framework
-  - Customizable bot personalities and behaviors
-  - Sandboxed API execution environment
-  - Real-time monitoring and visualization
-  - Performance and security testing capabilities
+- **Autonomous Bot Framework**:
+  - Self-determining economic agent architecture
+  - Multi-level autonomy implementation (L0-L4)
+  - Economic decision-making models and strategies
+  - Value generation and distribution mechanisms
+  - Bot-to-bot communication and service protocols
+  - Ethical boundary enforcement systems
 
 ## Getting Started
 
