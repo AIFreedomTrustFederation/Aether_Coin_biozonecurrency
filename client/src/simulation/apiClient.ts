@@ -332,8 +332,32 @@ export class NodeMarketplaceApiClient extends BaseApiClient {
   }
 
   // List available nodes
-  async listNodes(page: number = 1, limit: number = 10): Promise<ApiResponse<any>> {
-    return this.get<any>('/node-marketplace/list', { page, limit });
+  async listNodes(page: number = 1, limit: number = 10): Promise<ApiResponse<{
+    nodes: Array<{
+      nodeId: string;
+      price: number;
+      type: string;
+      owner: string;
+      description: string;
+      status: string;
+    }>;
+    total: number;
+    page: number;
+    limit: number;
+  }>> {
+    return this.get<{
+      nodes: Array<{
+        nodeId: string;
+        price: number;
+        type: string;
+        owner: string;
+        description: string;
+        status: string;
+      }>;
+      total: number;
+      page: number;
+      limit: number;
+    }>('/node-marketplace/list', { page, limit });
   }
 
   // Get node details

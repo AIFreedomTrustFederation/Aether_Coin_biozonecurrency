@@ -10,6 +10,31 @@ import { simulationApiFactory } from './apiClient';
 import { BotAction, BotProfile } from './botSystem';
 import { getRandomInt, getRandomElement, sleep, generateTransactionHash } from './utils';
 
+// Define node interface to fix type issues
+interface NodeItem {
+  nodeId: string;
+  price: number;
+  type: string;
+  owner: string;
+  description: string;
+  status: string;
+}
+
+// Define nodes response interface
+interface NodesResponse {
+  nodes: NodeItem[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+// Type guard to check if an object is a NodeItem
+function isNodeItem(obj: any): obj is NodeItem {
+  return obj && 
+    typeof obj.nodeId === 'string' &&
+    typeof obj.price === 'number';
+}
+
 // Enhanced Bot Actions that interact with the actual API
 
 // Wallet Actions
