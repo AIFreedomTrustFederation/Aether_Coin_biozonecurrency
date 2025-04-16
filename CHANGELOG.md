@@ -1,5 +1,18 @@
 # Changelog
 
+## [v1.0.3] - 2025-04-16
+### Added
+- Bot Simulation System for automated platform testing
+- Comprehensive bot framework with multiple bot types and personalities
+- API client integration with sandboxed execution environment
+- Real-time monitoring dashboard for bot activities
+- Visual interface for bot management and configuration
+- Comprehensive documentation in BOT-SIMULATION-SYSTEM.md
+
+### Fixed
+- Type issues in TypeScript interfaces for API clients
+- Error handling in botActions.ts to improve simulation reliability
+
 ## [v1.0.2] - 2025-04-10
 ### Added
 - GitHub Actions workflow for automated deployment to atc.aifreedomtrust.com/dapp

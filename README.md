@@ -33,6 +33,12 @@ A cutting-edge blockchain wallet platform that delivers a secure and engaging cr
   - Dispute resolution mechanism
   - Conditional release based on custom rules
   - Transaction reversal within holding period
+- Bot Simulation System:
+  - Autonomous testing framework with multiple bot types
+  - API integration with sandboxed execution
+  - Real-time monitoring dashboard
+  - Customizable bot behaviors and personalities
+  - Performance and security validation through simulated user interactions
 
 
 
@@ -64,6 +70,12 @@ A cutting-edge blockchain wallet platform that delivers a secure and engaging cr
   - IPFS/Filecoin via Web3.Storage
   - ENS domain integration
   - FractalCoin sharded storage network
+- **Bot Simulation Framework**:
+  - TypeScript autonomous agent framework
+  - Customizable bot personalities and behaviors
+  - Sandboxed API execution environment
+  - Real-time monitoring and visualization
+  - Performance and security testing capabilities
 
 ## Getting Started
 
@@ -397,6 +409,13 @@ Comprehensive documentation is available to help you understand and use Aetherio
   - Package creation process
   - Release automation
   - Troubleshooting GitHub sync issues
+  
+- **Bot Simulation System**: [BOT-SIMULATION-SYSTEM.md](./BOT-SIMULATION-SYSTEM.md)
+  - Autonomous bot framework architecture
+  - Bot types and personalities
+  - API client integration
+  - Dashboard management interface
+  - Testing and security validation capabilities
 
 ### Whitepaper
 
