@@ -5,7 +5,8 @@
  * with automated response capabilities including code refactoring
  */
 
-import { MysterionImprovement } from '../../../shared/schema';
+// Fix import path for the schema
+import type { MysterionImprovement } from '@shared/schema';
 import { knowledgeSystem } from './knowledge-system';
 import { mysterionClient } from './mysterion-client';
 import { webSocketClient } from './websocket-client';

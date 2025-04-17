@@ -9,6 +9,11 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
 import { exec } from 'child_process';
+import http from 'http';
+import { WebSocketServer, WebSocket } from 'ws';
+// Temporarily commenting out these imports to simplify our approach
+// import { createRouter, setupServer } from './server/routes.ts';
+// import { storage } from './server/storage.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -163,6 +168,11 @@ app.get('/debug-info', (req, res) => {
 });
 
 // Serve static files from client/public directory directly
+// Temporarily commenting out the router creation until we properly set up the imports
+// const apiRouter = createRouter(storage);
+// app.use(apiRouter);
+
+// Serve static files from client/public directory directly
 app.use(express.static(path.join(CLIENT_DIR, 'public')));
 
 // Setup proxy options with better debugging
@@ -298,7 +308,11 @@ app.use('/api/*', (req, res, next) => {
   const isExplicitApiRoute = 
     fullPath === '/api/test' || 
     fullPath === '/api/laos' || 
-    fullPath === '/api/insurance/risk-pools';
+    fullPath === '/api/insurance/risk-pools' ||
+    fullPath.startsWith('/api/mysterion/') ||
+    fullPath.startsWith('/api/agents/') ||
+    fullPath.startsWith('/api/rewards/') ||
+    fullPath.startsWith('/api/training-data/');
   
   if (isExplicitApiRoute) {
     return next();
@@ -517,12 +531,70 @@ async function startServer() {
     // First start Vite
     await startViteServer();
     
-    // Then start our Express server
-    app.listen(PORT, '0.0.0.0', () => {
+    // Create an HTTP server from our Express app
+    const httpServer = http.createServer(app);
+    
+    // Setup the WebSocket server on a separate path to avoid conflicts with Vite's HMR
+    const wss = new WebSocketServer({ 
+      server: httpServer, 
+      path: '/ws' 
+    });
+    
+    // Handle WebSocket connections
+    wss.on('connection', (ws, req) => {
+      const clientIp = req.socket.remoteAddress;
+      console.log(`WebSocket client connected from ${clientIp}`);
+      
+      // Send a welcome message
+      ws.send(JSON.stringify({
+        type: 'system',
+        message: 'Connected to Aetherion WebSocket Server',
+        timestamp: new Date().toISOString()
+      }));
+      
+      // Handle incoming messages
+      ws.on('message', (data) => {
+        try {
+          const parsedData = JSON.parse(data.toString());
+          console.log(`Received websocket message: ${JSON.stringify(parsedData)}`);
+          
+          // Handle log events
+          if (parsedData.type === 'log') {
+            // Process log event
+            console.log(`Log event: ${parsedData.level} - ${parsedData.message}`);
+            
+            // Echo back to client for confirmation
+            if (ws.readyState === WebSocket.OPEN) {
+              ws.send(JSON.stringify({
+                type: 'log_received',
+                timestamp: new Date().toISOString(),
+                originalMessage: parsedData
+              }));
+            }
+          }
+        } catch (error) {
+          console.error('Error processing WebSocket message:', error);
+        }
+      });
+      
+      // Handle connection close
+      ws.on('close', () => {
+        console.log(`WebSocket client disconnected`);
+      });
+      
+      // Handle errors
+      ws.on('error', (error) => {
+        console.error(`WebSocket error:`, error);
+      });
+    });
+    
+    // Start the HTTP server (which includes both Express and WebSocket)
+    httpServer.listen(PORT, '0.0.0.0', () => {
       console.log(`Proxy server running on port ${PORT}`);
       console.log(`All requests will be proxied to ${TARGET_URL}`);
       console.log(`Static assets served from ${path.join(CLIENT_DIR, 'public')}`);
       console.log(`SPA routes configured: ${CLIENT_ROUTES.join(', ')}`);
+      console.log(`WebSocket server running on ws://0.0.0.0:${PORT}/ws`);
     });
   } catch (error) {
     console.error(`Failed to start server: ${error.message}`);

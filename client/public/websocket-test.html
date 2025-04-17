@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebSocket Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    .header {
+      background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+      padding: 20px;
+      color: white;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .connection-status {
+      display: flex;
+      align-items: center;
+      margin-bottom: 20px;
+      padding: 10px;
+      border-radius: 5px;
+    }
+    .connection-status.connected {
+      background-color: #d1fae5;
+      border: 1px solid #10b981;
+    }
+    .connection-status.disconnected {
+      background-color: #fee2e2;
+      border: 1px solid #ef4444;
+    }
+    .connection-status.connecting {
+      background-color: #fef3c7;
+      border: 1px solid #f59e0b;
+    }
+    .status-indicator {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      margin-right: 10px;
+    }
+    .connected .status-indicator {
+      background-color: #10b981;
+    }
+    .disconnected .status-indicator {
+      background-color: #ef4444;
+    }
+    .connecting .status-indicator {
+      background-color: #f59e0b;
+    }
+    .control-panel {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    button {
+      background-color: #3b82f6;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    button:hover {
+      background-color: #2563eb;
+    }
+    button:disabled {
+      background-color: #9ca3af;
+      cursor: not-allowed;
+    }
+    .log-container {
+      background-color: #f3f4f6;
+      border: 1px solid #d1d5db;
+      border-radius: 5px;
+      padding: 10px;
+      height: 400px;
+      overflow-y: auto;
+    }
+    .log-entry {
+      margin-bottom: 5px;
+      padding: 5px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .log-entry.system {
+      color: #1e40af;
+    }
+    .log-entry.error {
+      color: #b91c1c;
+    }
+    .log-entry.sent {
+      color: #047857;
+    }
+    .log-entry.received {
+      color: #4338ca;
+    }
+    .message-input {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .message-input select, .message-input input, .message-input textarea {
+      padding: 8px;
+      border: 1px solid #d1d5db;
+      border-radius: 4px;
+    }
+    .message-input select {
+      width: 150px;
+    }
+    .message-input input, .message-input textarea {
+      flex-grow: 1;
+    }
+    .footer {
+      margin-top: 40px;
+      font-size: 0.8rem;
+      color: #6b7280;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Aetherion WebSocket Test</h1>
+    <p>Test the WebSocket connection for real-time monitoring and communication</p>
+  </div>
+
+  <div id="connectionStatus" class="connection-status disconnected">
+    <div class="status-indicator"></div>
+    <div id="statusText">Disconnected</div>
+  </div>
+
+  <div class="control-panel">
+    <button id="connectBtn">Connect</button>
+    <button id="disconnectBtn" disabled>Disconnect</button>
+    <button id="clearLogsBtn">Clear Logs</button>
+  </div>
+
+  <div class="log-container" id="logContainer"></div>
+
+  <div class="message-input">
+    <select id="messageType">
+      <option value="log">Log Event</option>
+      <option value="query">Query</option>
+      <option value="command">Command</option>
+    </select>
+    <input type="text" id="messageInput" placeholder="Enter message or log event">
+    <button id="sendBtn" disabled>Send</button>
+  </div>
+
+  <div id="logLevelContainer" class="message-input" style="display: none;">
+    <select id="logLevel">
+      <option value="info">Info</option>
+      <option value="debug">Debug</option>
+      <option value="warn">Warning</option>
+      <option value="error">Error</option>
+      <option value="critical">Critical</option>
+    </select>
+    <input type="text" id="logSource" placeholder="Source (e.g., client, server, database)">
+  </div>
+
+  <div class="footer">
+    <p>Aetherion WebSocket Test v1.0.0 | Quantum-Resistant Communication Interface</p>
+    <p><a href="/">Return to Home</a></p>
+  </div>
+
+  <script>
+    // WebSocket connection
+    let socket = null;
+
+    // DOM Elements
+    const connectBtn = document.getElementById('connectBtn');
+    const disconnectBtn = document.getElementById('disconnectBtn');
+    const clearLogsBtn = document.getElementById('clearLogsBtn');
+    const sendBtn = document.getElementById('sendBtn');
+    const connectionStatus = document.getElementById('connectionStatus');
+    const statusText = document.getElementById('statusText');
+    const logContainer = document.getElementById('logContainer');
+    const messageType = document.getElementById('messageType');
+    const messageInput = document.getElementById('messageInput');
+    const logLevelContainer = document.getElementById('logLevelContainer');
+    const logLevel = document.getElementById('logLevel');
+    const logSource = document.getElementById('logSource');
+
+    // Event Listeners
+    connectBtn.addEventListener('click', connect);
+    disconnectBtn.addEventListener('click', disconnect);
+    clearLogsBtn.addEventListener('click', clearLogs);
+    sendBtn.addEventListener('click', sendMessage);
+    messageType.addEventListener('change', toggleLogLevelVisibility);
+
+    // Toggle log level visibility based on message type
+    function toggleLogLevelVisibility() {
+      if (messageType.value === 'log') {
+        logLevelContainer.style.display = 'flex';
+      } else {
+        logLevelContainer.style.display = 'none';
+      }
+    }
+
+    // Connect to WebSocket
+    function connect() {
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        return; // Already connected
+      }
+
+      updateConnectionStatus('connecting', 'Connecting...');
+
+      // Determine the correct protocol based on the current page protocol
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${protocol}//${window.location.host}/ws`;
+
+      addLogEntry('system', `Connecting to ${wsUrl}`);
+
+      try {
+        socket = new WebSocket(wsUrl);
+
+        socket.onopen = () => {
+          updateConnectionStatus('connected', 'Connected');
+          addLogEntry('system', 'Connection established');
+          connectBtn.disabled = true;
+          disconnectBtn.disabled = false;
+          sendBtn.disabled = false;
+        };
+
+        socket.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            addLogEntry('received', `Received: ${JSON.stringify(data, null, 2)}`);
+          } catch (error) {
+            addLogEntry('error', `Error parsing message: ${error.message}`);
+            addLogEntry('received', `Raw message: ${event.data}`);
+          }
+        };
+
+        socket.onclose = (event) => {
+          updateConnectionStatus('disconnected', `Disconnected (Code: ${event.code})`);
+          addLogEntry('system', `Connection closed: Code ${event.code}, Reason: ${event.reason || 'None'}`);
+          connectBtn.disabled = false;
+          disconnectBtn.disabled = true;
+          sendBtn.disabled = true;
+          socket = null;
+        };
+
+        socket.onerror = (error) => {
+          updateConnectionStatus('disconnected', 'Connection Error');
+          addLogEntry('error', `WebSocket error: ${error.message || 'Unknown error'}`);
+        };
+      } catch (error) {
+        updateConnectionStatus('disconnected', 'Connection Failed');
+        addLogEntry('error', `Failed to create WebSocket connection: ${error.message}`);
+      }
+    }
+
+    // Disconnect from WebSocket
+    function disconnect() {
+      if (socket) {
+        socket.close(1000, 'User initiated disconnect');
+        addLogEntry('system', 'Closing connection...');
+      }
+    }
+
+    // Update connection status UI
+    function updateConnectionStatus(status, text) {
+      connectionStatus.className = `connection-status ${status}`;
+      statusText.textContent = text;
+    }
+
+    // Add log entry to the log container
+    function addLogEntry(type, message) {
+      const logEntry = document.createElement('div');
+      logEntry.className = `log-entry ${type}`;
+      
+      const timestamp = new Date().toISOString();
+      logEntry.innerHTML = `<strong>[${timestamp}] ${type.toUpperCase()}:</strong> ${message}`;
+      
+      logContainer.appendChild(logEntry);
+      logContainer.scrollTop = logContainer.scrollHeight;
+    }
+
+    // Clear log entries
+    function clearLogs() {
+      logContainer.innerHTML = '';
+      addLogEntry('system', 'Logs cleared');
+    }
+
+    // Send a message to the server
+    function sendMessage() {
+      if (!socket || socket.readyState !== WebSocket.OPEN) {
+        addLogEntry('error', 'Not connected to server');
+        return;
+      }
+
+      const message = messageInput.value.trim();
+      if (!message) {
+        addLogEntry('error', 'Message cannot be empty');
+        return;
+      }
+
+      try {
+        let payload;
+        
+        if (messageType.value === 'log') {
+          // Create a log event
+          payload = {
+            type: 'log',
+            level: logLevel.value,
+            source: logSource.value || 'client',
+            message: message,
+            timestamp: Date.now(),
+            metadata: {
+              clientInfo: {
+                userAgent: navigator.userAgent,
+                url: window.location.href
+              }
+            }
+          };
+        } else if (messageType.value === 'query') {
+          // Create a query
+          payload = {
+            type: 'query',
+            queryType: 'status',
+            message: message,
+            timestamp: Date.now()
+          };
+        } else {
+          // Create a command
+          payload = {
+            type: 'command',
+            command: message,
+            timestamp: Date.now()
+          };
+        }
+
+        socket.send(JSON.stringify(payload));
+        addLogEntry('sent', `Sent: ${JSON.stringify(payload, null, 2)}`);
+        messageInput.value = '';
+      } catch (error) {
+        addLogEntry('error', `Error sending message: ${error.message}`);
+      }
+    }
+
+    // Initial setup
+    function init() {
+      addLogEntry('system', 'WebSocket Test Interface initialized');
+      addLogEntry('system', 'Click "Connect" to establish a WebSocket connection');
+      toggleLogLevelVisibility();
+      
+      // Allow pressing Enter to send message
+      messageInput.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' && !event.shiftKey) {
+          event.preventDefault();
+          sendMessage();
+        }
+      });
+    }
+
+    // Initialize the application
+    init();
+  </script>
+</body>
+</html>
