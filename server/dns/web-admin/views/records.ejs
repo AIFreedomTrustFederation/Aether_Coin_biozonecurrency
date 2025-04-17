@@ -1,0 +1,638 @@
+<%- include('partials/header', { title, path: '/zones' }) %>
+
+<div class="container mx-auto px-4 py-8">
+  <div class="flex items-center mb-6">
+    <a href="/zones" class="text-blue-400 hover:text-blue-300 flex items-center mr-4">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+      </svg>
+      Back to TLD Zones
+    </a>
+    <h1 class="text-2xl font-bold text-gray-200">.<%- tld %> DNS Records</h1>
+  </div>
+  
+  <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+    <!-- Zone Info Card -->
+    <div class="bg-gray-800 rounded-lg shadow-lg p-6">
+      <h2 class="text-xl font-semibold text-gray-200 mb-4">Zone Information</h2>
+      <div class="space-y-3">
+        <div class="flex justify-between">
+          <span class="text-gray-400">Zone Name:</span>
+          <span class="text-white font-medium">.<%- tld %></span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-gray-400">Created:</span>
+          <span class="text-white"><%= new Date(zone.meta.created).toLocaleString() %></span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-gray-400">Last Updated:</span>
+          <span class="text-white"><%= new Date(zone.meta.updated).toLocaleString() %></span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-gray-400">Record Count:</span>
+          <span class="text-white"><%= records.length %></span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-gray-400">Quantum Secure:</span>
+          <span class="text-green-400"><%= zone.meta.quantumSecure ? 'Enabled' : 'Disabled' %></span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-gray-400">Shard Count:</span>
+          <span class="text-white"><%= zone.meta.shardCount || 'N/A' %></span>
+        </div>
+      </div>
+      
+      <div class="mt-6 pt-4 border-t border-gray-700">
+        <h3 class="text-lg font-medium text-gray-300 mb-2">Available Record Types</h3>
+        <div class="flex flex-wrap gap-2">
+          <span class="px-2 py-1 bg-blue-900/50 text-blue-300 rounded text-xs">A</span>
+          <span class="px-2 py-1 bg-green-900/50 text-green-300 rounded text-xs">AAAA</span>
+          <span class="px-2 py-1 bg-purple-900/50 text-purple-300 rounded text-xs">CNAME</span>
+          <span class="px-2 py-1 bg-yellow-900/50 text-yellow-300 rounded text-xs">MX</span>
+          <span class="px-2 py-1 bg-red-900/50 text-red-300 rounded text-xs">TXT</span>
+          <span class="px-2 py-1 bg-indigo-900/50 text-indigo-300 rounded text-xs">NS</span>
+        </div>
+      </div>
+      
+      <div class="mt-6">
+        <button id="add-record-btn" class="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors">
+          Add New Record
+        </button>
+      </div>
+    </div>
+    
+    <!-- Records Table -->
+    <div class="xl:col-span-2 bg-gray-800 rounded-lg shadow-lg p-6">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-semibold text-gray-200">DNS Records</h2>
+        <div class="relative">
+          <input
+            type="text"
+            id="search-records"
+            placeholder="Search records..."
+            class="pl-8 pr-4 py-2 rounded bg-gray-700 border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm w-64"
+          >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400 absolute left-2.5 top-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>
+      </div>
+      
+      <div class="overflow-x-auto">
+        <% if (records.length > 0) { %>
+          <table class="min-w-full divide-y divide-gray-700">
+            <thead>
+              <tr>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Domain</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Type</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Value</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">TTL</th>
+                <th class="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-700" id="records-table-body">
+              <% records.forEach(record => { %>
+                <tr class="hover:bg-gray-700 transition-colors">
+                  <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-white"><%- record.domain %></td>
+                  <td class="px-4 py-3 whitespace-nowrap text-sm">
+                    <% 
+                      let badgeClass = 'bg-gray-900/50 text-gray-300';
+                      switch(record.type) {
+                        case 'A': badgeClass = 'bg-blue-900/50 text-blue-300'; break;
+                        case 'AAAA': badgeClass = 'bg-green-900/50 text-green-300'; break;
+                        case 'CNAME': badgeClass = 'bg-purple-900/50 text-purple-300'; break;
+                        case 'MX': badgeClass = 'bg-yellow-900/50 text-yellow-300'; break;
+                        case 'TXT': badgeClass = 'bg-red-900/50 text-red-300'; break;
+                        case 'NS': badgeClass = 'bg-indigo-900/50 text-indigo-300'; break;
+                      }
+                    %>
+                    <span class="px-2 py-1 <%= badgeClass %> rounded text-xs">
+                      <%= record.type %>
+                    </span>
+                    <% if (record.priority) { %>
+                      <span class="ml-1 text-xs text-gray-400">Priority: <%= record.priority %></span>
+                    <% } %>
+                  </td>
+                  <td class="px-4 py-3 text-sm text-gray-300 max-w-xs truncate"><%- record.value %></td>
+                  <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-300"><%- record.ttl %></td>
+                  <td class="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
+                    <button class="text-blue-400 hover:text-blue-300 mr-3 edit-record" 
+                            data-domain="<%- record.domain %>" 
+                            data-type="<%- record.type %>"
+                            data-value="<%- record.value %>"
+                            data-ttl="<%- record.ttl %>"
+                            <% if (record.priority) { %>data-priority="<%- record.priority %>"<% } %>>
+                      Edit
+                    </button>
+                    <button class="text-red-400 hover:text-red-300 delete-record" 
+                            data-domain="<%- record.domain %>" 
+                            data-type="<%- record.type %>">
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        <% } else { %>
+          <div class="text-center py-8">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-gray-500 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+            </svg>
+            <p class="text-gray-400">No records have been added to this zone yet.</p>
+            <button id="add-first-record-btn" class="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors">
+              Add Your First Record
+            </button>
+          </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+  
+  <div class="mt-8 bg-gray-800 rounded-lg shadow-lg p-6">
+    <h2 class="text-xl font-semibold text-gray-200 mb-4">Quantum-Secure Resolution</h2>
+    <div class="space-y-4 text-gray-300 text-sm">
+      <p>
+        Records in the <strong>.<%- tld %></strong> zone are protected by AetherCore's quantum-resistant
+        cryptography and fractal sharding technology. This ensures that DNS records remain secure even
+        against quantum computer attacks.
+      </p>
+      <div class="bg-gray-700 p-4 rounded-md">
+        <h3 class="text-lg font-medium text-blue-400 mb-2">Resolution Process</h3>
+        <p class="mb-2">FractalDNS resolves records through a secure multi-step process:</p>
+        <ol class="list-decimal list-inside space-y-1 pl-4">
+          <li>Quantum-secured authentication of the requesting client</li>
+          <li>Fractal sharding retrieval from distributed network nodes</li>
+          <li>Multi-signature verification of record integrity</li>
+          <li>Assembly of record fragments using threshold cryptography</li>
+          <li>Secure delivery with perfect forward secrecy</li>
+        </ol>
+      </div>
+      <p>
+        All operations within FractalDNS use post-quantum cryptographic algorithms to ensure long-term security
+        against both classical and quantum computer attacks.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Record Modal -->
+<div id="record-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+  <div class="bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-lg">
+    <div class="flex justify-between items-center mb-4">
+      <h3 id="record-modal-title" class="text-xl font-semibold text-gray-200">Add New DNS Record</h3>
+      <button id="close-record-modal" class="text-gray-400 hover:text-gray-300">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+    <form id="record-form">
+      <input type="hidden" id="form-action" value="add">
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div>
+          <label for="domain" class="block text-gray-300 mb-2">Domain Name</label>
+          <input
+            type="text"
+            id="domain"
+            name="domain"
+            class="w-full px-4 py-2 rounded bg-gray-700 border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="example"
+            required
+          >
+          <p class="text-gray-400 text-xs mt-1">
+            Without the TLD (e.g. "example" for example.<%- tld %>)
+          </p>
+        </div>
+        <div>
+          <label for="type" class="block text-gray-300 mb-2">Record Type</label>
+          <select
+            id="type"
+            name="type"
+            class="w-full px-4 py-2 rounded bg-gray-700 border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          >
+            <option value="A">A - IPv4 Address</option>
+            <option value="AAAA">AAAA - IPv6 Address</option>
+            <option value="CNAME">CNAME - Canonical Name</option>
+            <option value="MX">MX - Mail Exchange</option>
+            <option value="TXT">TXT - Text Record</option>
+            <option value="NS">NS - Name Server</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="mb-4">
+        <label for="value" class="block text-gray-300 mb-2">Record Value</label>
+        <input
+          type="text"
+          id="value"
+          name="value"
+          class="w-full px-4 py-2 rounded bg-gray-700 border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Record value"
+          required
+        >
+        <p id="value-help" class="text-gray-400 text-xs mt-1">
+          For A records, enter an IPv4 address (e.g. 192.168.1.1)
+        </p>
+      </div>
+      
+      <div id="priority-container" class="mb-4 hidden">
+        <label for="priority" class="block text-gray-300 mb-2">Priority (MX only)</label>
+        <input
+          type="number"
+          id="priority"
+          name="priority"
+          class="w-full px-4 py-2 rounded bg-gray-700 border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="10"
+          min="0"
+          max="65535"
+        >
+        <p class="text-gray-400 text-xs mt-1">
+          Lower values indicate higher priority
+        </p>
+      </div>
+      
+      <div class="mb-4">
+        <label for="ttl" class="block text-gray-300 mb-2">TTL (Time To Live)</label>
+        <input
+          type="number"
+          id="ttl"
+          name="ttl"
+          class="w-full px-4 py-2 rounded bg-gray-700 border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="3600"
+          min="60"
+          value="3600"
+        >
+        <p class="text-gray-400 text-xs mt-1">
+          Time in seconds that resolvers should cache this record
+        </p>
+      </div>
+      
+      <div class="flex justify-between mt-6">
+        <button type="button" id="cancel-record" class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded transition-colors">Cancel</button>
+        <button type="submit" id="submit-record" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors">
+          Add Record
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Delete Record Confirmation Modal -->
+<div id="delete-record-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+  <div class="bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-xl font-semibold text-gray-200">Confirm Deletion</h3>
+      <button id="close-delete-modal" class="text-gray-400 hover:text-gray-300">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+    <div class="mb-6">
+      <p class="text-gray-300">Are you sure you want to delete this record?</p>
+      <div class="mt-4 p-3 bg-gray-700 rounded-md">
+        <div class="flex justify-between">
+          <span class="text-gray-400">Domain:</span>
+          <span id="delete-domain" class="text-white font-medium"></span>
+        </div>
+        <div class="flex justify-between mt-1">
+          <span class="text-gray-400">Type:</span>
+          <span id="delete-type" class="text-white font-medium"></span>
+        </div>
+      </div>
+      <p class="text-gray-400 text-sm mt-3">This action cannot be undone.</p>
+    </div>
+    <div class="flex justify-between">
+      <button id="cancel-delete" class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded transition-colors">Cancel</button>
+      <button id="confirm-delete" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded transition-colors">Delete Record</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Add Record Modal
+  const addRecordBtn = document.getElementById('add-record-btn');
+  const addFirstRecordBtn = document.getElementById('add-first-record-btn');
+  const recordModal = document.getElementById('record-modal');
+  const closeRecordModalBtn = document.getElementById('close-record-modal');
+  const cancelRecordBtn = document.getElementById('cancel-record');
+  const recordForm = document.getElementById('record-form');
+  const recordModalTitle = document.getElementById('record-modal-title');
+  const submitRecordBtn = document.getElementById('submit-record');
+  const formAction = document.getElementById('form-action');
+  
+  // Record type and help text
+  const recordType = document.getElementById('type');
+  const valueHelp = document.getElementById('value-help');
+  const priorityContainer = document.getElementById('priority-container');
+  
+  function updateValueHelp() {
+    const type = recordType.value;
+    
+    switch(type) {
+      case 'A':
+        valueHelp.textContent = 'For A records, enter an IPv4 address (e.g. 192.168.1.1)';
+        priorityContainer.classList.add('hidden');
+        break;
+      case 'AAAA':
+        valueHelp.textContent = 'For AAAA records, enter an IPv6 address (e.g. 2001:db8::1)';
+        priorityContainer.classList.add('hidden');
+        break;
+      case 'CNAME':
+        valueHelp.textContent = 'For CNAME records, enter a domain name (e.g. example.com)';
+        priorityContainer.classList.add('hidden');
+        break;
+      case 'MX':
+        valueHelp.textContent = 'For MX records, enter a mail server domain name (e.g. mail.example.com)';
+        priorityContainer.classList.remove('hidden');
+        break;
+      case 'TXT':
+        valueHelp.textContent = 'For TXT records, enter text value (e.g. v=spf1 include:_spf.example.com -all)';
+        priorityContainer.classList.add('hidden');
+        break;
+      case 'NS':
+        valueHelp.textContent = 'For NS records, enter a name server domain name (e.g. ns1.example.com)';
+        priorityContainer.classList.add('hidden');
+        break;
+    }
+  }
+  
+  if (recordType) {
+    recordType.addEventListener('change', updateValueHelp);
+  }
+  
+  function showAddRecordModal() {
+    // Reset form
+    if (recordForm) recordForm.reset();
+    
+    // Set defaults
+    if (document.getElementById('ttl')) {
+      document.getElementById('ttl').value = '3600';
+    }
+    
+    // Set title and button text
+    if (recordModalTitle) recordModalTitle.textContent = 'Add New DNS Record';
+    if (submitRecordBtn) submitRecordBtn.textContent = 'Add Record';
+    if (formAction) formAction.value = 'add';
+    
+    // Update help text
+    updateValueHelp();
+    
+    // Show modal
+    recordModal.classList.remove('hidden');
+  }
+  
+  function showEditRecordModal(domain, type, value, ttl, priority) {
+    // Fill form with existing values
+    if (document.getElementById('domain')) {
+      document.getElementById('domain').value = domain;
+    }
+    
+    if (recordType) {
+      recordType.value = type;
+      updateValueHelp();
+    }
+    
+    if (document.getElementById('value')) {
+      document.getElementById('value').value = value;
+    }
+    
+    if (document.getElementById('ttl')) {
+      document.getElementById('ttl').value = ttl;
+    }
+    
+    if (document.getElementById('priority') && priority) {
+      document.getElementById('priority').value = priority;
+      priorityContainer.classList.remove('hidden');
+    }
+    
+    // Set title and button text
+    if (recordModalTitle) recordModalTitle.textContent = 'Edit DNS Record';
+    if (submitRecordBtn) submitRecordBtn.textContent = 'Update Record';
+    if (formAction) formAction.value = 'edit';
+    
+    // Show modal
+    recordModal.classList.remove('hidden');
+  }
+  
+  function hideRecordModal() {
+    recordModal.classList.add('hidden');
+  }
+  
+  // Add record button click
+  if (addRecordBtn) {
+    addRecordBtn.addEventListener('click', showAddRecordModal);
+  }
+  
+  // Add first record button click
+  if (addFirstRecordBtn) {
+    addFirstRecordBtn.addEventListener('click', showAddRecordModal);
+  }
+  
+  // Close modal button click
+  if (closeRecordModalBtn) {
+    closeRecordModalBtn.addEventListener('click', hideRecordModal);
+  }
+  
+  // Cancel button click
+  if (cancelRecordBtn) {
+    cancelRecordBtn.addEventListener('click', hideRecordModal);
+  }
+  
+  // Close modal when clicking outside
+  if (recordModal) {
+    recordModal.addEventListener('click', (e) => {
+      if (e.target === recordModal) hideRecordModal();
+    });
+  }
+  
+  // Record form submission
+  if (recordForm) {
+    recordForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const action = formAction.value;
+      const domain = document.getElementById('domain').value.trim();
+      const type = recordType.value;
+      const value = document.getElementById('value').value.trim();
+      const ttl = document.getElementById('ttl').value;
+      
+      // Get priority for MX records
+      let priority = null;
+      if (type === 'MX' && document.getElementById('priority')) {
+        priority = document.getElementById('priority').value;
+      }
+      
+      const recordData = {
+        domain,
+        type,
+        value,
+        ttl
+      };
+      
+      if (priority) {
+        recordData.priority = priority;
+      }
+      
+      try {
+        let response;
+        
+        if (action === 'add') {
+          response = await fetch(`/api/zones/<%= tld %>/records`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(recordData)
+          });
+        } else {
+          // For edit, we actually just do the same thing since we're replacing the record
+          response = await fetch(`/api/zones/<%= tld %>/records`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(recordData)
+          });
+        }
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+          // Success, reload the page
+          window.location.reload();
+        } else {
+          alert(`Error: ${data.error}`);
+        }
+      } catch (error) {
+        console.error('Error saving record:', error);
+        alert('Failed to save record. See console for details.');
+      }
+    });
+  }
+  
+  // Edit record buttons
+  const editButtons = document.querySelectorAll('.edit-record');
+  
+  editButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      const domain = button.getAttribute('data-domain');
+      const type = button.getAttribute('data-type');
+      const value = button.getAttribute('data-value');
+      const ttl = button.getAttribute('data-ttl');
+      const priority = button.getAttribute('data-priority');
+      
+      showEditRecordModal(domain, type, value, ttl, priority);
+    });
+  });
+  
+  // Delete Record Modal
+  const deleteButtons = document.querySelectorAll('.delete-record');
+  const deleteRecordModal = document.getElementById('delete-record-modal');
+  const closeDeleteModalBtn = document.getElementById('close-delete-modal');
+  const cancelDeleteBtn = document.getElementById('cancel-delete');
+  const confirmDeleteBtn = document.getElementById('confirm-delete');
+  const deleteDomainElement = document.getElementById('delete-domain');
+  const deleteTypeElement = document.getElementById('delete-type');
+  
+  let deleteDomain = '';
+  let deleteType = '';
+  
+  function showDeleteRecordModal(domain, type) {
+    deleteDomain = domain;
+    deleteType = type;
+    
+    deleteDomainElement.textContent = `${domain}.<%= tld %>`;
+    deleteTypeElement.textContent = type;
+    
+    deleteRecordModal.classList.remove('hidden');
+  }
+  
+  function hideDeleteRecordModal() {
+    deleteRecordModal.classList.add('hidden');
+    deleteDomain = '';
+    deleteType = '';
+  }
+  
+  deleteButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      const domain = button.getAttribute('data-domain');
+      const type = button.getAttribute('data-type');
+      
+      showDeleteRecordModal(domain, type);
+    });
+  });
+  
+  if (closeDeleteModalBtn) {
+    closeDeleteModalBtn.addEventListener('click', hideDeleteRecordModal);
+  }
+  
+  if (cancelDeleteBtn) {
+    cancelDeleteBtn.addEventListener('click', hideDeleteRecordModal);
+  }
+  
+  // Close modal when clicking outside
+  if (deleteRecordModal) {
+    deleteRecordModal.addEventListener('click', (e) => {
+      if (e.target === deleteRecordModal) hideDeleteRecordModal();
+    });
+  }
+  
+  // Delete Record Confirmation
+  if (confirmDeleteBtn) {
+    confirmDeleteBtn.addEventListener('click', async () => {
+      if (!deleteDomain || !deleteType) return;
+      
+      try {
+        const response = await fetch(`/api/zones/<%= tld %>/records`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            domain: deleteDomain,
+            type: deleteType
+          })
+        });
+        
+        if (response.ok) {
+          window.location.reload();
+        } else {
+          const data = await response.json();
+          alert(`Error: ${data.error}`);
+        }
+      } catch (error) {
+        console.error('Error deleting record:', error);
+        alert('Failed to delete record. See console for details.');
+      }
+    });
+  }
+  
+  // Search functionality
+  const searchInput = document.getElementById('search-records');
+  const recordsTableBody = document.getElementById('records-table-body');
+  
+  if (searchInput && recordsTableBody) {
+    searchInput.addEventListener('input', () => {
+      const searchTerm = searchInput.value.toLowerCase();
+      const rows = recordsTableBody.querySelectorAll('tr');
+      
+      rows.forEach(row => {
+        const domain = row.querySelector('td:first-child').textContent.toLowerCase();
+        const type = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+        const value = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
+        
+        if (domain.includes(searchTerm) || type.includes(searchTerm) || value.includes(searchTerm)) {
+          row.style.display = '';
+        } else {
+          row.style.display = 'none';
+        }
+      });
+    });
+  }
+</script>
+
+<%- include('partials/footer') %>

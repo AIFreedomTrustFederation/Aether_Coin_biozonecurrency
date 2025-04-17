@@ -1,136 +1,194 @@
 /**
- * Logger utilities for FractalDNS
+ * Logger utility for FractalDNS
+ * Provides consistent logging across components
  */
 
 const fs = require('fs');
 const path = require('path');
-
-// Ensure logs directory exists
-const logsDir = path.join(__dirname, '../logs');
-if (!fs.existsSync(logsDir)) {
-  fs.mkdirSync(logsDir, { recursive: true });
-}
+const config = require('../config');
 
 // Log levels
 const LOG_LEVELS = {
-  DEBUG: 0,
-  INFO: 1,
-  WARN: 2,
-  ERROR: 3
+  ERROR: 0,
+  WARN: 1,
+  INFO: 2,
+  DEBUG: 3,
+  TRACE: 4
 };
 
-// Current log level (can be changed at runtime)
-let currentLogLevel = LOG_LEVELS.INFO;
-
-// Color codes for console output
-const COLORS = {
-  RESET: '\x1b[0m',
-  RED: '\x1b[31m',
-  GREEN: '\x1b[32m',
-  YELLOW: '\x1b[33m',
-  BLUE: '\x1b[34m',
-  MAGENTA: '\x1b[35m',
-  CYAN: '\x1b[36m',
-  GRAY: '\x1b[90m'
+// Map string levels to numeric values
+const LOG_LEVEL_MAP = {
+  error: LOG_LEVELS.ERROR,
+  warn: LOG_LEVELS.WARN,
+  info: LOG_LEVELS.INFO,
+  debug: LOG_LEVELS.DEBUG,
+  trace: LOG_LEVELS.TRACE
 };
+
+// Create log directory if needed
+const logDir = path.dirname(config.logging.file);
+if (!fs.existsSync(logDir)) {
+  try {
+    fs.mkdirSync(logDir, { recursive: true });
+  } catch (error) {
+    console.error('Failed to create log directory:', error);
+  }
+}
+
+// Current log level from config
+const currentLevel = LOG_LEVEL_MAP[config.logging.level.toLowerCase()] || LOG_LEVELS.INFO;
 
 /**
- * Create a logger instance
- * @param {string} module - Module name
- * @returns {object} - Logger object
+ * Logger class
  */
-function createLogger(module) {
-  const logFile = path.join(logsDir, `${module}.log`);
-  
-  const formatLogMessage = (level, message, meta = {}) => {
-    const timestamp = new Date().toISOString();
-    let formattedMeta = '';
+class Logger {
+  /**
+   * Create a new logger
+   * @param {string} moduleName - Name of the module (used as prefix in logs)
+   */
+  constructor(moduleName) {
+    this.moduleName = moduleName;
+  }
+
+  /**
+   * Format log message
+   * @param {string} level - Log level
+   * @param {string|Error} message - Message to log
+   * @param {Object} [data] - Additional data to log
+   * @returns {string} Formatted log message
+   */
+  formatMessage(level, message, data) {
+    // Format timestamp
+    const timestamp = config.logging.timestamps
+      ? new Date().toISOString()
+      : '';
     
-    if (Object.keys(meta).length > 0) {
-      try {
-        formattedMeta = ` ${JSON.stringify(meta)}`;
-      } catch (error) {
-        formattedMeta = ` [Error serializing metadata: ${error.message}]`;
-      }
-    }
-    
-    return `[${timestamp}] [${level}] [${module}] ${message}${formattedMeta}`;
-  };
-  
-  const writeToLogFile = (message) => {
-    fs.appendFileSync(logFile, message + '\n');
-  };
-  
-  // Create the logger object
-  const logger = {
-    debug: (message, meta) => {
-      if (currentLogLevel <= LOG_LEVELS.DEBUG) {
-        const logMessage = formatLogMessage('DEBUG', message, meta);
-        console.log(`${COLORS.GRAY}${logMessage}${COLORS.RESET}`);
-        writeToLogFile(logMessage);
-      }
-    },
-    
-    info: (message, meta) => {
-      if (currentLogLevel <= LOG_LEVELS.INFO) {
-        const logMessage = formatLogMessage('INFO', message, meta);
-        console.log(`${COLORS.GREEN}${logMessage}${COLORS.RESET}`);
-        writeToLogFile(logMessage);
-      }
-    },
-    
-    warn: (message, meta) => {
-      if (currentLogLevel <= LOG_LEVELS.WARN) {
-        const logMessage = formatLogMessage('WARN', message, meta);
-        console.log(`${COLORS.YELLOW}${logMessage}${COLORS.RESET}`);
-        writeToLogFile(logMessage);
-      }
-    },
-    
-    error: (message, meta) => {
-      if (currentLogLevel <= LOG_LEVELS.ERROR) {
-        let logMessage;
-        if (message instanceof Error) {
-          logMessage = formatLogMessage('ERROR', message.message, {
-            ...meta,
-            stack: message.stack,
-            name: message.name
-          });
-        } else {
-          logMessage = formatLogMessage('ERROR', message, meta);
-        }
-        
-        console.error(`${COLORS.RED}${logMessage}${COLORS.RESET}`);
-        writeToLogFile(logMessage);
-      }
-    },
-    
-    setLevel: (level) => {
-      if (LOG_LEVELS[level] !== undefined) {
-        currentLogLevel = LOG_LEVELS[level];
+    // Handle Error objects
+    if (message instanceof Error) {
+      const error = message;
+      message = error.message;
+      if (!data) {
+        data = {
+          stack: error.stack,
+          name: error.name
+        };
       } else {
-        console.error(`Invalid log level: ${level}`);
+        data.stack = error.stack;
+        data.name = error.name;
       }
     }
-  };
-  
-  return logger;
+    
+    // Format data if present
+    let dataStr = '';
+    if (data) {
+      try {
+        if (typeof data === 'object') {
+          dataStr = JSON.stringify(data);
+        } else {
+          dataStr = String(data);
+        }
+      } catch (err) {
+        dataStr = '[Unserializable data]';
+      }
+    }
+    
+    return `${timestamp ? timestamp + ' ' : ''}[${level.toUpperCase()}] [${this.moduleName}] ${message}${dataStr ? ' ' + dataStr : ''}`;
+  }
+
+  /**
+   * Write log to file
+   * @param {string} message - Formatted log message
+   */
+  writeToFile(message) {
+    if (!config.logging.file) return;
+    
+    fs.appendFile(config.logging.file, message + '\n', (err) => {
+      if (err) {
+        console.error('Failed to write to log file:', err);
+      }
+    });
+  }
+
+  /**
+   * Log a message at the specified level
+   * @param {number} level - Numeric log level
+   * @param {string} levelName - Log level name
+   * @param {string|Error} message - Message to log
+   * @param {Object} [data] - Additional data to log
+   */
+  log(level, levelName, message, data) {
+    if (level > currentLevel) return;
+    
+    const formattedMessage = this.formatMessage(levelName, message, data);
+    
+    // Write to console if enabled
+    if (config.logging.console) {
+      const consoleMethod = level === LOG_LEVELS.ERROR ? 'error'
+        : level === LOG_LEVELS.WARN ? 'warn'
+        : 'log';
+      console[consoleMethod](formattedMessage);
+    }
+    
+    // Write to file if enabled
+    this.writeToFile(formattedMessage);
+  }
+
+  /**
+   * Log error message
+   * @param {string|Error} message - Message or Error to log
+   * @param {Object} [data] - Additional data
+   */
+  error(message, data) {
+    this.log(LOG_LEVELS.ERROR, 'error', message, data);
+  }
+
+  /**
+   * Log warning message
+   * @param {string|Error} message - Message or Error to log
+   * @param {Object} [data] - Additional data
+   */
+  warn(message, data) {
+    this.log(LOG_LEVELS.WARN, 'warn', message, data);
+  }
+
+  /**
+   * Log info message
+   * @param {string} message - Message to log
+   * @param {Object} [data] - Additional data
+   */
+  info(message, data) {
+    this.log(LOG_LEVELS.INFO, 'info', message, data);
+  }
+
+  /**
+   * Log debug message
+   * @param {string} message - Message to log
+   * @param {Object} [data] - Additional data
+   */
+  debug(message, data) {
+    this.log(LOG_LEVELS.DEBUG, 'debug', message, data);
+  }
+
+  /**
+   * Log trace message
+   * @param {string} message - Message to log
+   * @param {Object} [data] - Additional data
+   */
+  trace(message, data) {
+    this.log(LOG_LEVELS.TRACE, 'trace', message, data);
+  }
 }
 
 /**
- * Set the global log level
- * @param {string} level - Log level (DEBUG, INFO, WARN, ERROR)
+ * Create a new logger for the specified module
+ * @param {string} moduleName - Module name
+ * @returns {Logger} Logger instance
  */
-function setGlobalLogLevel(level) {
-  if (LOG_LEVELS[level] !== undefined) {
-    currentLogLevel = LOG_LEVELS[level];
-  } else {
-    console.error(`Invalid log level: ${level}`);
-  }
+function createLogger(moduleName) {
+  return new Logger(moduleName || 'app');
 }
 
 module.exports = {
   createLogger,
-  setGlobalLogLevel,
   LOG_LEVELS
 };
