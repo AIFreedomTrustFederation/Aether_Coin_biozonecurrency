@@ -59,6 +59,57 @@ export const createRouter = (storage: IStorage) => {
       res.status(500).json({ error: 'Failed to create knowledge node' });
     }
   });
+  
+  // Logs endpoint - HTTP fallback when WebSockets aren't available
+  router.post('/api/mysterion/logs', (req, res) => {
+    try {
+      // Basic validation
+      if (!req.body || !req.body.event || !req.body.event.level || !req.body.event.message) {
+        return res.status(400).json({ error: 'Invalid log event format' });
+      }
+      
+      const event = req.body.event;
+      
+      // Add client IP and other metadata
+      if (!event.metadata) {
+        event.metadata = {};
+      }
+      
+      event.metadata.ip = req.ip;
+      event.metadata.userAgent = req.headers['user-agent'] || 'unknown';
+      event.metadata.via = 'http-fallback';
+      
+      // Log to console for debugging/monitoring
+      const logPrefix = `[${new Date(event.timestamp).toISOString()}] [${event.level.toUpperCase()}] [${event.source}]`;
+      
+      switch (event.level) {
+        case 'debug':
+          console.debug(`${logPrefix} ${event.message}`);
+          break;
+        case 'info':
+          console.info(`${logPrefix} ${event.message}`);
+          break;
+        case 'warn':
+          console.warn(`${logPrefix} ${event.message}`);
+          break;
+        case 'error':
+        case 'critical':
+          console.error(`${logPrefix} ${event.message}`);
+          if (event.stackTrace) {
+            console.error(event.stackTrace);
+          }
+          break;
+      }
+      
+      // In a real implementation, we would store these logs
+      // and potentially trigger alerts for critical errors
+      
+      res.status(200).json({ success: true });
+    } catch (error) {
+      console.error('Error processing log via HTTP:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
 
   // Get a specific knowledge node
   router.get('/api/mysterion/knowledge/nodes/:id', async (req, res) => {

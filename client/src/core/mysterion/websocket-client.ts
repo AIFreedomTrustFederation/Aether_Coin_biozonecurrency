@@ -77,11 +77,20 @@ export class WebSocketClient implements IWebSocketClient {
         // Ensure we're using the secure protocol if needed
         const socketUrl = this.ensureSecureUrl(this.url);
         
-        this.socket = new WebSocket(socketUrl);
+        console.log(`Attempting to connect to WebSocket at: ${socketUrl}`);
+        
+        // Use HTTP connection in development for easier testing
+        // In production environment, this should always use WSS
+        if (process.env.NODE_ENV === 'development') {
+          // For development, try to connect even if there's a protocol mismatch
+          this.socket = new WebSocket(socketUrl.replace('wss:', 'ws:'));
+        } else {
+          this.socket = new WebSocket(socketUrl);
+        }
         
         // Setup event handlers
         this.socket.onopen = () => {
-          console.log('WebSocket connected');
+          console.log('WebSocket connected successfully');
           this.reconnectAttempts = 0;
           this.startHeartbeat();
           resolve();
@@ -108,7 +117,27 @@ export class WebSocketClient implements IWebSocketClient {
         
         this.socket.onerror = (error) => {
           console.error('WebSocket error:', error);
-          reject(error);
+          
+          // Special handling for common security errors 
+          // (when trying to connect ws:// from https:// or vice versa)
+          const errorString = String(error);
+          if (errorString.includes('SecurityError') || 
+              errorString.includes('Mixed Content') || 
+              errorString.includes('blocked by CORS policy')) {
+            console.warn('WebSocket security error detected. Will try to use alternative connection method.');
+            
+            // Close the errored socket
+            if (this.socket) {
+              this.socket.close();
+              this.socket = null;
+            }
+            
+            // Use REST fallback for now
+            console.log('Using REST fallback for log transmission');
+            resolve(); // Resolve anyway so the application can continue
+          } else {
+            reject(error);
+          }
         };
       } catch (error) {
         console.error('Failed to connect WebSocket:', error);
@@ -193,13 +222,49 @@ export class WebSocketClient implements IWebSocketClient {
     metadata?: Record<string, any>;
     stackTrace?: string;
   }): void {
-    this.sendMessage({
-      type: 'log',
-      event: {
-        timestamp: Date.now(),
-        ...event
-      }
+    const logEvent = {
+      timestamp: Date.now(),
+      ...event
+    };
+    
+    // Try to use WebSocket if connected
+    if (this.isConnected()) {
+      this.sendMessage({
+        type: 'log',
+        event: logEvent
+      });
+      return;
+    }
+    
+    // Fallback to HTTP endpoint if WebSocket is not available
+    this.sendLogViaHttp(logEvent).catch(error => {
+      console.error('Failed to send log via HTTP fallback:', error);
     });
+  }
+  
+  /**
+   * Fallback method to send logs via HTTP when WebSocket isn't available
+   */
+  private async sendLogViaHttp(event: any): Promise<void> {
+    try {
+      const response = await fetch('/api/mysterion/logs', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          type: 'log',
+          event
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error ${response.status}: ${response.statusText}`);
+      }
+    } catch (error) {
+      // Just log and continue - we don't want to interrupt the application
+      console.error('Failed to send log via HTTP:', error);
+    }
   }
   
   /**

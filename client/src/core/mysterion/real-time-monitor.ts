@@ -521,19 +521,12 @@ export class RealTimeMonitor implements IRealTimeMonitor {
       const improvement: MysterionImprovement = await knowledgeSystem.createImprovement({
         title: `Fix for ${errorPattern.description}`,
         description: `Automatic improvement proposal for error: ${event.message}`,
-        codeChanges: {
-          suggestedFix: errorPattern.suggestedAction || 'Review the error logs and implement appropriate error handling',
-          context: {
-            errorMessage: event.message,
-            stackTrace: event.stackTrace,
-            metadata: event.metadata
-          }
-        },
+        proposedChanges: errorPattern.suggestedAction || 'Review the error logs and implement appropriate error handling',
         status: 'proposed',
-        impact: errorPattern.severity as any,
-        confidence: 0.7,
-        targetRepository: 'ai-freedom-trust/framework',
-        targetFiles: []
+        codeReference: {
+          file: event.metadata?.file,
+          context: event.stackTrace
+        }
       });
       
       this.stats.improvementsProposed++;
