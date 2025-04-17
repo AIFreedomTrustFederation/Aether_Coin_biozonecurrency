@@ -5,13 +5,13 @@
 import express from 'express';
 import { WebSocketServer } from 'ws';
 import http from 'http';
-import { Storage } from './storage';
+import { IStorage } from './storage';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import LogWebSocketServer from './websocket/log-socket';
 
-export const createRouter = (storage: Storage) => {
+export const createRouter = (storage: IStorage) => {
   const router = express.Router();
 
   // Apply middleware
@@ -345,7 +345,7 @@ export const setupServer = (app: express.Express) => {
         console.log('Received message:', data);
         
         // Echo back to confirm receipt
-        if (socket.readyState === WebSocket.OPEN) {
+        if (socket.readyState === 1) { // 1 corresponds to WebSocket.OPEN
           socket.send(JSON.stringify({
             type: 'echo',
             data,

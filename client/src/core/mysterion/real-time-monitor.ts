@@ -8,6 +8,7 @@
 import { MysterionImprovement } from '../../../shared/schema';
 import { knowledgeSystem } from './knowledge-system';
 import { mysterionClient } from './mysterion-client';
+import { webSocketClient } from './websocket-client';
 
 export interface LogEvent {
   timestamp: number;
@@ -557,7 +558,7 @@ export class RealTimeMonitor implements IRealTimeMonitor {
    * Set up event listeners for monitoring system
    */
   private setupEventListeners(): void {
-    // Register handlers for specific events
+    // Register handlers for specific errors
     this.on('error:database', async (event) => {
       // Special handling for database errors
       console.log(`Database error detected: ${event.message}`);
@@ -569,6 +570,98 @@ export class RealTimeMonitor implements IRealTimeMonitor {
       console.log(`Memory error detected: ${event.message}`);
       // Additional memory-specific handling could go here
     });
+
+    // Setup WebSocket communication
+    this.setupWebSocketIntegration();
+  }
+  
+  /**
+   * Set up WebSocket integration for real-time log capture
+   */
+  private setupWebSocketIntegration(): void {
+    // Connect to WebSocket server
+    webSocketClient.connect().catch(error => {
+      console.error('Failed to connect to WebSocket server:', error);
+    });
+    
+    // Listen for log events from the server
+    webSocketClient.onMessage('log', (message) => {
+      if (message.event) {
+        this.processLogEvent(message.event as LogEvent).catch(error => {
+          console.error('Error processing WebSocket log event:', error);
+        });
+      }
+    });
+    
+    // Forward client-side errors to the server
+    window.addEventListener('error', (event) => {
+      if (webSocketClient.isConnected() && this.isActive) {
+        webSocketClient.sendLogEvent({
+          level: 'error',
+          source: 'client',
+          message: event.message || 'Client-side error',
+          metadata: {
+            fileName: event.filename,
+            lineNumber: event.lineno,
+            columnNumber: event.colno
+          },
+          stackTrace: event.error?.stack
+        });
+      }
+    });
+    
+    // Forward unhandled promise rejections
+    window.addEventListener('unhandledrejection', (event) => {
+      if (webSocketClient.isConnected() && this.isActive) {
+        webSocketClient.sendLogEvent({
+          level: 'error',
+          source: 'client',
+          message: `Unhandled Promise Rejection: ${event.reason?.message || 'Unknown error'}`,
+          metadata: {
+            type: 'unhandledrejection'
+          },
+          stackTrace: event.reason?.stack
+        });
+      }
+    });
+    
+    // Handle WebSocket reconnection
+    window.addEventListener('online', () => {
+      if (!webSocketClient.isConnected() && this.isActive) {
+        webSocketClient.connect().catch(error => {
+          console.error('Failed to reconnect to WebSocket server:', error);
+        });
+      }
+    });
+    
+    // Forward console errors
+    const originalConsoleError = console.error;
+    console.error = (...args) => {
+      // Call original function
+      originalConsoleError.apply(console, args);
+      
+      // Forward to WebSocket if connected
+      if (webSocketClient.isConnected() && this.isActive) {
+        webSocketClient.sendLogEvent({
+          level: 'error',
+          source: 'console',
+          message: args.map(arg => {
+            if (arg instanceof Error) {
+              return arg.toString();
+            } else if (typeof arg === 'object') {
+              try {
+                return JSON.stringify(arg);
+              } catch (e) {
+                return String(arg);
+              }
+            } else {
+              return String(arg);
+            }
+          }).join(' '),
+          stackTrace: (args[0] instanceof Error) ? args[0].stack : undefined
+        });
+      }
+    };
   }
 
   /**

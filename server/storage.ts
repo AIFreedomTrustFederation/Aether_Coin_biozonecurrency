@@ -1,488 +1,718 @@
 /**
- * AI Freedom Trust Framework - Storage Interface
- * Provides database access for all components of the framework
+ * Storage interface for AI Freedom Trust Framework
  */
 
 import { Pool } from 'pg';
 import { drizzle } from 'drizzle-orm/node-postgres';
-import { eq, and, desc, sql } from 'drizzle-orm';
-import * as schema from '../shared/schema';
-
-// Initialize database connection
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL
-});
-
-export const db = drizzle(pool, { schema });
+import {
+  mysterionKnowledgeNode,
+  mysterionKnowledgeEdge,
+  mysterionImprovement,
+  agentType,
+  agentInstance,
+  agentTask,
+  computationContribution,
+  rewardDistribution,
+  trainingDataset,
+  trainingDataFragment,
+  MysterionKnowledgeNode,
+  MysterionKnowledgeEdge,
+  MysterionImprovement,
+  AgentType,
+  AgentInstance,
+  AgentTask,
+  ComputationContribution,
+  RewardDistribution,
+  TrainingDataset,
+  TrainingDataFragment,
+  MysterionKnowledgeNodeInsert,
+  MysterionKnowledgeEdgeInsert,
+  MysterionImprovementInsert,
+  AgentTypeInsert,
+  AgentInstanceInsert,
+  AgentTaskInsert,
+  ComputationContributionInsert,
+  RewardDistributionInsert,
+  TrainingDatasetInsert,
+  TrainingDataFragmentInsert
+} from '../shared/schema';
+import { eq } from 'drizzle-orm';
 
 /**
- * Storage interface for the AI Freedom Trust Framework
- * Handles all database operations
+ * Storage interface
  */
 export interface IStorage {
   // Mysterion Knowledge System
-  createKnowledgeNode: (data: schema.InsertMysterionKnowledgeNode) => Promise<schema.MysterionKnowledgeNode>;
-  getKnowledgeNode: (id: number) => Promise<schema.MysterionKnowledgeNode | null>;
-  updateKnowledgeNode: (id: number, data: Partial<schema.InsertMysterionKnowledgeNode>) => Promise<schema.MysterionKnowledgeNode | null>;
-  deleteKnowledgeNode: (id: number) => Promise<boolean>;
-  listKnowledgeNodes: (nodeType?: string, limit?: number) => Promise<schema.MysterionKnowledgeNode[]>;
+  getAllKnowledgeNodes(): Promise<MysterionKnowledgeNode[]>;
+  getKnowledgeNode(id: number): Promise<MysterionKnowledgeNode | null>;
+  createKnowledgeNode(node: MysterionKnowledgeNodeInsert): Promise<MysterionKnowledgeNode>;
+  updateKnowledgeNode(id: number, updates: Partial<MysterionKnowledgeNode>): Promise<MysterionKnowledgeNode | null>;
+  deleteKnowledgeNode(id: number): Promise<boolean>;
   
-  createKnowledgeEdge: (data: schema.InsertMysterionKnowledgeEdge) => Promise<schema.MysterionKnowledgeEdge>;
-  getKnowledgeEdge: (id: number) => Promise<schema.MysterionKnowledgeEdge | null>;
-  deleteKnowledgeEdge: (id: number) => Promise<boolean>;
-  getNodeConnections: (nodeId: number) => Promise<{ incoming: schema.MysterionKnowledgeEdge[], outgoing: schema.MysterionKnowledgeEdge[] }>;
+  // Knowledge Edges
+  getAllKnowledgeEdges(): Promise<MysterionKnowledgeEdge[]>;
+  getKnowledgeEdge(id: number): Promise<MysterionKnowledgeEdge | null>;
+  createKnowledgeEdge(edge: MysterionKnowledgeEdgeInsert): Promise<MysterionKnowledgeEdge>;
+  updateKnowledgeEdge(id: number, updates: Partial<MysterionKnowledgeEdge>): Promise<MysterionKnowledgeEdge | null>;
+  deleteKnowledgeEdge(id: number): Promise<boolean>;
   
-  createImprovement: (data: schema.InsertMysterionImprovement) => Promise<schema.MysterionImprovement>;
-  getImprovement: (id: number) => Promise<schema.MysterionImprovement | null>;
-  updateImprovementStatus: (id: number, status: string, implementedAt?: Date) => Promise<schema.MysterionImprovement | null>;
-  listImprovements: (status?: string, limit?: number) => Promise<schema.MysterionImprovement[]>;
+  // Improvements
+  getAllImprovements(): Promise<MysterionImprovement[]>;
+  getImprovement(id: number): Promise<MysterionImprovement | null>;
+  createImprovement(improvement: MysterionImprovementInsert): Promise<MysterionImprovement>;
+  updateImprovementStatus(id: number, status: string): Promise<MysterionImprovement | null>;
   
-  // Autonomous Agent System
-  createAgentType: (data: schema.InsertAgentType) => Promise<schema.AgentType>;
-  getAgentType: (id: number) => Promise<schema.AgentType | null>;
-  listAgentTypes: (category?: string) => Promise<schema.AgentType[]>;
+  // Agent System
+  getAllAgentTypes(): Promise<AgentType[]>;
+  getAgentType(id: number): Promise<AgentType | null>;
+  createAgentType(type: AgentTypeInsert): Promise<AgentType>;
   
-  createAgentInstance: (data: schema.InsertAgentInstance) => Promise<schema.AgentInstance>;
-  getAgentInstance: (id: number) => Promise<schema.AgentInstance | null>;
-  updateAgentInstance: (id: number, data: Partial<schema.InsertAgentInstance>) => Promise<schema.AgentInstance | null>;
-  listAgentInstances: (status?: string, owner?: string) => Promise<schema.AgentInstance[]>;
+  getAllAgents(): Promise<AgentInstance[]>;
+  getAgent(id: number): Promise<AgentInstance | null>;
+  createAgent(agent: AgentInstanceInsert): Promise<AgentInstance>;
+  updateAgentConfig(id: number, config: any): Promise<AgentInstance | null>;
   
-  createAgentTask: (data: schema.InsertAgentTask) => Promise<schema.AgentTask>;
-  getAgentTask: (id: number) => Promise<schema.AgentTask | null>;
-  updateAgentTaskStatus: (id: number, status: string, result?: any) => Promise<schema.AgentTask | null>;
-  listAgentTasks: (agentInstanceId: number, status?: string) => Promise<schema.AgentTask[]>;
+  getAgentTasks(agentId: number): Promise<AgentTask[]>;
+  getTask(id: number): Promise<AgentTask | null>;
+  createAgentTask(agentId: number, task: AgentTaskInsert): Promise<AgentTask>;
+  updateTaskStatus(id: number, status: string, result?: any): Promise<AgentTask | null>;
   
-  // Computational Rewards System
-  createComputationContribution: (data: schema.InsertComputationContribution) => Promise<schema.ComputationContribution>;
-  getComputationContribution: (id: number) => Promise<schema.ComputationContribution | null>;
-  updateComputationContribution: (id: number, endTime: Date, resourceAmount: number, quality: number) => Promise<schema.ComputationContribution | null>;
-  verifyComputationContribution: (id: number, verified: boolean, method: string) => Promise<schema.ComputationContribution | null>;
-  listComputationContributions: (userId?: string, nodeId?: string) => Promise<schema.ComputationContribution[]>;
+  // Rewards System
+  getAllContributions(): Promise<ComputationContribution[]>;
+  getContribution(id: number): Promise<ComputationContribution | null>;
+  createContribution(contribution: ComputationContributionInsert): Promise<ComputationContribution>;
+  updateContribution(id: number, updates: Partial<ComputationContribution>): Promise<ComputationContribution | null>;
   
-  createRewardDistribution: (data: schema.InsertRewardDistribution) => Promise<schema.RewardDistribution>;
-  getRewardDistribution: (id: number) => Promise<schema.RewardDistribution | null>;
-  updateRewardDistributionStatus: (id: number, status: string, transactionHash?: string) => Promise<schema.RewardDistribution | null>;
-  listRewardDistributions: (contributionId?: number) => Promise<schema.RewardDistribution[]>;
+  getAllDistributions(): Promise<RewardDistribution[]>;
+  getDistribution(id: number): Promise<RewardDistribution | null>;
+  createDistribution(distribution: RewardDistributionInsert): Promise<RewardDistribution>;
+  updateDistributionStatus(id: number, status: string, txHash?: string): Promise<RewardDistribution | null>;
   
-  // Training Data Bridge System
-  createTrainingDataset: (data: schema.InsertTrainingDataset) => Promise<schema.TrainingDataset>;
-  getTrainingDataset: (id: number) => Promise<schema.TrainingDataset | null>;
-  updateTrainingDataset: (id: number, data: Partial<schema.InsertTrainingDataset>) => Promise<schema.TrainingDataset | null>;
-  setFilecoinCid: (id: number, filecoinCid: string) => Promise<schema.TrainingDataset | null>;
-  listTrainingDatasets: (dataType?: string, status?: string) => Promise<schema.TrainingDataset[]>;
+  // Training Data
+  getAllDatasets(): Promise<TrainingDataset[]>;
+  getDataset(id: number): Promise<TrainingDataset | null>;
+  createDataset(dataset: TrainingDatasetInsert): Promise<TrainingDataset>;
+  updateDataset(id: number, updates: Partial<TrainingDataset>): Promise<TrainingDataset | null>;
   
-  createTrainingDataFragment: (data: schema.InsertTrainingDataFragment) => Promise<schema.TrainingDataFragment>;
-  getTrainingDataFragment: (id: number) => Promise<schema.TrainingDataFragment | null>;
-  updateFragmentStorage: (id: number, filecoinCid: string, fractalShardIds: string[]) => Promise<schema.TrainingDataFragment | null>;
-  listTrainingDataFragments: (datasetId: number) => Promise<schema.TrainingDataFragment[]>;
+  getAllDatasetFragments(datasetId: number): Promise<TrainingDataFragment[]>;
+  getFragment(id: number): Promise<TrainingDataFragment | null>;
+  createFragment(fragment: TrainingDataFragmentInsert): Promise<TrainingDataFragment>;
+  updateFragment(id: number, updates: Partial<TrainingDataFragment>): Promise<TrainingDataFragment | null>;
 }
 
 /**
- * Implementation of the Storage interface using PostgreSQL and Drizzle ORM
+ * PostgreSQL storage implementation
  */
-export class PostgresStorage implements IStorage {
-  // Mysterion Knowledge System
-  async createKnowledgeNode(data: schema.InsertMysterionKnowledgeNode): Promise<schema.MysterionKnowledgeNode> {
-    const result = await db.insert(schema.mysterionKnowledgeNode).values(data).returning();
-    return result[0];
-  }
+export class PgStorage implements IStorage {
+  private db: ReturnType<typeof drizzle>;
   
-  async getKnowledgeNode(id: number): Promise<schema.MysterionKnowledgeNode | null> {
-    const result = await db.select().from(schema.mysterionKnowledgeNode).where(eq(schema.mysterionKnowledgeNode.id, id));
-    return result.length ? result[0] : null;
-  }
-  
-  async updateKnowledgeNode(id: number, data: Partial<schema.InsertMysterionKnowledgeNode>): Promise<schema.MysterionKnowledgeNode | null> {
-    const updatedData = {
-      ...data,
-      updatedAt: new Date()
-    };
+  constructor() {
+    const pool = new Pool({
+      connectionString: process.env.DATABASE_URL
+    });
     
-    const result = await db.update(schema.mysterionKnowledgeNode)
-      .set(updatedData)
-      .where(eq(schema.mysterionKnowledgeNode.id, id))
-      .returning();
+    this.db = drizzle(pool);
+  }
+  
+  // Mysterion Knowledge System
+  
+  async getAllKnowledgeNodes(): Promise<MysterionKnowledgeNode[]> {
+    try {
+      return await this.db.select().from(mysterionKnowledgeNode);
+    } catch (error) {
+      console.error('Database operation failed:', error);
+      throw error;
+    }
+  }
+  
+  async getKnowledgeNode(id: number): Promise<MysterionKnowledgeNode | null> {
+    try {
+      const nodes = await this.db.select()
+        .from(mysterionKnowledgeNode)
+        .where(eq(mysterionKnowledgeNode.id, id));
       
-    return result.length ? result[0] : null;
+      return nodes.length ? nodes[0] : null;
+    } catch (error) {
+      console.error('Database operation failed:', error);
+      throw error;
+    }
+  }
+  
+  async createKnowledgeNode(node: MysterionKnowledgeNodeInsert): Promise<MysterionKnowledgeNode> {
+    try {
+      const result = await this.db.insert(mysterionKnowledgeNode)
+        .values(node)
+        .returning();
+      
+      return result[0];
+    } catch (error) {
+      console.error('Database operation failed:', error);
+      throw error;
+    }
+  }
+  
+  async updateKnowledgeNode(id: number, updates: Partial<MysterionKnowledgeNode>): Promise<MysterionKnowledgeNode | null> {
+    try {
+      // Ensure id is not modified
+      const { id: _, ...updateValues } = updates;
+      
+      const result = await this.db.update(mysterionKnowledgeNode)
+        .set({
+          ...updateValues,
+          updatedAt: new Date()
+        })
+        .where(eq(mysterionKnowledgeNode.id, id))
+        .returning();
+      
+      return result.length ? result[0] : null;
+    } catch (error) {
+      console.error('Database operation failed:', error);
+      throw error;
+    }
   }
   
   async deleteKnowledgeNode(id: number): Promise<boolean> {
-    // First delete any edges connected to this node
-    await db.delete(schema.mysterionKnowledgeEdge)
-      .where(
-        sql`${schema.mysterionKnowledgeEdge.sourceId} = ${id} OR ${schema.mysterionKnowledgeEdge.targetId} = ${id}`
-      );
-    
-    const result = await db.delete(schema.mysterionKnowledgeNode)
-      .where(eq(schema.mysterionKnowledgeNode.id, id))
-      .returning();
+    try {
+      const result = await this.db.delete(mysterionKnowledgeNode)
+        .where(eq(mysterionKnowledgeNode.id, id))
+        .returning({ id: mysterionKnowledgeNode.id });
       
-    return result.length > 0;
-  }
-  
-  async listKnowledgeNodes(nodeType?: string, limit = 100): Promise<schema.MysterionKnowledgeNode[]> {
-    let query = db.select().from(schema.mysterionKnowledgeNode);
-    
-    if (nodeType) {
-      query = query.where(eq(schema.mysterionKnowledgeNode.nodeType, nodeType));
+      return result.length > 0;
+    } catch (error) {
+      console.error('Database operation failed:', error);
+      throw error;
     }
-    
-    return await query.limit(limit).orderBy(desc(schema.mysterionKnowledgeNode.updatedAt));
   }
   
-  async createKnowledgeEdge(data: schema.InsertMysterionKnowledgeEdge): Promise<schema.MysterionKnowledgeEdge> {
-    const result = await db.insert(schema.mysterionKnowledgeEdge).values(data).returning();
-    return result[0];
+  // Knowledge Edges
+  
+  async getAllKnowledgeEdges(): Promise<MysterionKnowledgeEdge[]> {
+    try {
+      return await this.db.select().from(mysterionKnowledgeEdge);
+    } catch (error) {
+      console.error('Database operation failed:', error);
+      throw error;
+    }
   }
   
-  async getKnowledgeEdge(id: number): Promise<schema.MysterionKnowledgeEdge | null> {
-    const result = await db.select().from(schema.mysterionKnowledgeEdge).where(eq(schema.mysterionKnowledgeEdge.id, id));
-    return result.length ? result[0] : null;
+  async getKnowledgeEdge(id: number): Promise<MysterionKnowledgeEdge | null> {
+    try {
+      const edges = await this.db.select()
+        .from(mysterionKnowledgeEdge)
+        .where(eq(mysterionKnowledgeEdge.id, id));
+      
+      return edges.length ? edges[0] : null;
+    } catch (error) {
+      console.error('Database operation failed:', error);
+      throw error;
+    }
+  }
+  
+  async createKnowledgeEdge(edge: MysterionKnowledgeEdgeInsert): Promise<MysterionKnowledgeEdge> {
+    try {
+      const result = await this.db.insert(mysterionKnowledgeEdge)
+        .values(edge)
+        .returning();
+      
+      return result[0];
+    } catch (error) {
+      console.error('Database operation failed:', error);
+      throw error;
+    }
+  }
+  
+  async updateKnowledgeEdge(id: number, updates: Partial<MysterionKnowledgeEdge>): Promise<MysterionKnowledgeEdge | null> {
+    try {
+      // Ensure id is not modified
+      const { id: _, ...updateValues } = updates;
+      
+      const result = await this.db.update(mysterionKnowledgeEdge)
+        .set({
+          ...updateValues,
+          updatedAt: new Date()
+        })
+        .where(eq(mysterionKnowledgeEdge.id, id))
+        .returning();
+      
+      return result.length ? result[0] : null;
+    } catch (error) {
+      console.error('Database operation failed:', error);
+      throw error;
+    }
   }
   
   async deleteKnowledgeEdge(id: number): Promise<boolean> {
-    const result = await db.delete(schema.mysterionKnowledgeEdge)
-      .where(eq(schema.mysterionKnowledgeEdge.id, id))
-      .returning();
+    try {
+      const result = await this.db.delete(mysterionKnowledgeEdge)
+        .where(eq(mysterionKnowledgeEdge.id, id))
+        .returning({ id: mysterionKnowledgeEdge.id });
       
-    return result.length > 0;
-  }
-  
-  async getNodeConnections(nodeId: number): Promise<{ incoming: schema.MysterionKnowledgeEdge[], outgoing: schema.MysterionKnowledgeEdge[] }> {
-    const incoming = await db.select().from(schema.mysterionKnowledgeEdge).where(eq(schema.mysterionKnowledgeEdge.targetId, nodeId));
-    const outgoing = await db.select().from(schema.mysterionKnowledgeEdge).where(eq(schema.mysterionKnowledgeEdge.sourceId, nodeId));
-    
-    return { incoming, outgoing };
-  }
-  
-  async createImprovement(data: schema.InsertMysterionImprovement): Promise<schema.MysterionImprovement> {
-    const result = await db.insert(schema.mysterionImprovement).values(data).returning();
-    return result[0];
-  }
-  
-  async getImprovement(id: number): Promise<schema.MysterionImprovement | null> {
-    const result = await db.select().from(schema.mysterionImprovement).where(eq(schema.mysterionImprovement.id, id));
-    return result.length ? result[0] : null;
-  }
-  
-  async updateImprovementStatus(id: number, status: string, implementedAt?: Date): Promise<schema.MysterionImprovement | null> {
-    const updateData: any = { status };
-    
-    if (status === 'implemented' && implementedAt) {
-      updateData.implementedAt = implementedAt;
+      return result.length > 0;
+    } catch (error) {
+      console.error('Database operation failed:', error);
+      throw error;
     }
-    
-    const result = await db.update(schema.mysterionImprovement)
-      .set(updateData)
-      .where(eq(schema.mysterionImprovement.id, id))
-      .returning();
+  }
+  
+  // Improvements
+  
+  async getAllImprovements(): Promise<MysterionImprovement[]> {
+    try {
+      return await this.db.select().from(mysterionImprovement);
+    } catch (error) {
+      console.error('Database operation failed:', error);
+      throw error;
+    }
+  }
+  
+  async getImprovement(id: number): Promise<MysterionImprovement | null> {
+    try {
+      const improvements = await this.db.select()
+        .from(mysterionImprovement)
+        .where(eq(mysterionImprovement.id, id));
       
-    return result.length ? result[0] : null;
-  }
-  
-  async listImprovements(status?: string, limit = 100): Promise<schema.MysterionImprovement[]> {
-    let query = db.select().from(schema.mysterionImprovement);
-    
-    if (status) {
-      query = query.where(eq(schema.mysterionImprovement.status, status));
+      return improvements.length ? improvements[0] : null;
+    } catch (error) {
+      console.error('Database operation failed:', error);
+      throw error;
     }
-    
-    return await query.limit(limit).orderBy(desc(schema.mysterionImprovement.createdAt));
   }
   
-  // Autonomous Agent System
-  async createAgentType(data: schema.InsertAgentType): Promise<schema.AgentType> {
-    const result = await db.insert(schema.agentType).values(data).returning();
-    return result[0];
-  }
-  
-  async getAgentType(id: number): Promise<schema.AgentType | null> {
-    const result = await db.select().from(schema.agentType).where(eq(schema.agentType.id, id));
-    return result.length ? result[0] : null;
-  }
-  
-  async listAgentTypes(category?: string): Promise<schema.AgentType[]> {
-    let query = db.select().from(schema.agentType);
-    
-    if (category) {
-      query = query.where(eq(schema.agentType.category, category));
-    }
-    
-    return await query;
-  }
-  
-  async createAgentInstance(data: schema.InsertAgentInstance): Promise<schema.AgentInstance> {
-    const result = await db.insert(schema.agentInstance).values(data).returning();
-    return result[0];
-  }
-  
-  async getAgentInstance(id: number): Promise<schema.AgentInstance | null> {
-    const result = await db.select().from(schema.agentInstance).where(eq(schema.agentInstance.id, id));
-    return result.length ? result[0] : null;
-  }
-  
-  async updateAgentInstance(id: number, data: Partial<schema.InsertAgentInstance>): Promise<schema.AgentInstance | null> {
-    const result = await db.update(schema.agentInstance)
-      .set({
-        ...data,
-        lastActive: new Date()
-      })
-      .where(eq(schema.agentInstance.id, id))
-      .returning();
+  async createImprovement(improvement: MysterionImprovementInsert): Promise<MysterionImprovement> {
+    try {
+      const result = await this.db.insert(mysterionImprovement)
+        .values(improvement)
+        .returning();
       
-    return result.length ? result[0] : null;
-  }
-  
-  async listAgentInstances(status?: string, owner?: string): Promise<schema.AgentInstance[]> {
-    let query = db.select().from(schema.agentInstance);
-    
-    if (status && owner) {
-      query = query.where(
-        and(
-          eq(schema.agentInstance.status, status),
-          eq(schema.agentInstance.owner, owner)
-        )
-      );
-    } else if (status) {
-      query = query.where(eq(schema.agentInstance.status, status));
-    } else if (owner) {
-      query = query.where(eq(schema.agentInstance.owner, owner));
+      return result[0];
+    } catch (error) {
+      console.error('Database operation failed:', error);
+      throw error;
     }
-    
-    return await query.orderBy(desc(schema.agentInstance.lastActive));
   }
   
-  async createAgentTask(data: schema.InsertAgentTask): Promise<schema.AgentTask> {
-    const result = await db.insert(schema.agentTask).values(data).returning();
-    return result[0];
-  }
-  
-  async getAgentTask(id: number): Promise<schema.AgentTask | null> {
-    const result = await db.select().from(schema.agentTask).where(eq(schema.agentTask.id, id));
-    return result.length ? result[0] : null;
-  }
-  
-  async updateAgentTaskStatus(id: number, status: string, result?: any): Promise<schema.AgentTask | null> {
-    const updateData: any = { status };
-    
-    if (status === 'in_progress' && !await this.getAgentTask(id)?.startedAt) {
-      updateData.startedAt = new Date();
-    }
-    
-    if (status === 'completed' || status === 'failed') {
-      updateData.completedAt = new Date();
-      if (result) {
-        updateData.result = result;
+  async updateImprovementStatus(id: number, status: string): Promise<MysterionImprovement | null> {
+    try {
+      const updates: any = {
+        status,
+        updatedAt: new Date()
+      };
+      
+      // If status is 'implemented', set implementedAt
+      if (status === 'implemented') {
+        updates.implementedAt = new Date();
       }
-    }
-    
-    const updated = await db.update(schema.agentTask)
-      .set(updateData)
-      .where(eq(schema.agentTask.id, id))
-      .returning();
       
-    return updated.length ? updated[0] : null;
-  }
-  
-  async listAgentTasks(agentInstanceId: number, status?: string): Promise<schema.AgentTask[]> {
-    let query = db.select().from(schema.agentTask)
-      .where(eq(schema.agentTask.agentInstanceId, agentInstanceId));
-    
-    if (status) {
-      query = query.where(eq(schema.agentTask.status, status));
-    }
-    
-    return await query.orderBy(desc(schema.agentTask.createdAt));
-  }
-  
-  // Computational Rewards System
-  async createComputationContribution(data: schema.InsertComputationContribution): Promise<schema.ComputationContribution> {
-    const result = await db.insert(schema.computationContribution).values(data).returning();
-    return result[0];
-  }
-  
-  async getComputationContribution(id: number): Promise<schema.ComputationContribution | null> {
-    const result = await db.select().from(schema.computationContribution).where(eq(schema.computationContribution.id, id));
-    return result.length ? result[0] : null;
-  }
-  
-  async updateComputationContribution(
-    id: number, 
-    endTime: Date, 
-    resourceAmount: number, 
-    quality: number
-  ): Promise<schema.ComputationContribution | null> {
-    const result = await db.update(schema.computationContribution)
-      .set({ endTime, resourceAmount, quality })
-      .where(eq(schema.computationContribution.id, id))
-      .returning();
+      const result = await this.db.update(mysterionImprovement)
+        .set(updates)
+        .where(eq(mysterionImprovement.id, id))
+        .returning();
       
-    return result.length ? result[0] : null;
+      return result.length ? result[0] : null;
+    } catch (error) {
+      console.error('Database operation failed:', error);
+      throw error;
+    }
   }
   
-  async verifyComputationContribution(
-    id: number, 
-    verified: boolean, 
-    method: string
-  ): Promise<schema.ComputationContribution | null> {
-    const result = await db.update(schema.computationContribution)
-      .set({ verified, verificationMethod: method })
-      .where(eq(schema.computationContribution.id, id))
-      .returning();
+  // Agent System
+  
+  async getAllAgentTypes(): Promise<AgentType[]> {
+    try {
+      return await this.db.select().from(agentType);
+    } catch (error) {
+      console.error('Database operation failed:', error);
+      throw error;
+    }
+  }
+  
+  async getAgentType(id: number): Promise<AgentType | null> {
+    try {
+      const types = await this.db.select()
+        .from(agentType)
+        .where(eq(agentType.id, id));
       
-    return result.length ? result[0] : null;
-  }
-  
-  async listComputationContributions(userId?: string, nodeId?: string): Promise<schema.ComputationContribution[]> {
-    let query = db.select().from(schema.computationContribution);
-    
-    if (userId && nodeId) {
-      query = query.where(
-        and(
-          eq(schema.computationContribution.userId, userId),
-          eq(schema.computationContribution.nodeId, nodeId)
-        )
-      );
-    } else if (userId) {
-      query = query.where(eq(schema.computationContribution.userId, userId));
-    } else if (nodeId) {
-      query = query.where(eq(schema.computationContribution.nodeId, nodeId));
+      return types.length ? types[0] : null;
+    } catch (error) {
+      console.error('Database operation failed:', error);
+      throw error;
     }
-    
-    return await query.orderBy(desc(schema.computationContribution.startTime));
   }
   
-  async createRewardDistribution(data: schema.InsertRewardDistribution): Promise<schema.RewardDistribution> {
-    const result = await db.insert(schema.rewardDistribution).values(data).returning();
-    return result[0];
-  }
-  
-  async getRewardDistribution(id: number): Promise<schema.RewardDistribution | null> {
-    const result = await db.select().from(schema.rewardDistribution).where(eq(schema.rewardDistribution.id, id));
-    return result.length ? result[0] : null;
-  }
-  
-  async updateRewardDistributionStatus(
-    id: number, 
-    status: string, 
-    transactionHash?: string
-  ): Promise<schema.RewardDistribution | null> {
-    const updateData: any = { status };
-    
-    if (transactionHash) {
-      updateData.transactionHash = transactionHash;
-    }
-    
-    const result = await db.update(schema.rewardDistribution)
-      .set(updateData)
-      .where(eq(schema.rewardDistribution.id, id))
-      .returning();
+  async createAgentType(type: AgentTypeInsert): Promise<AgentType> {
+    try {
+      const result = await this.db.insert(agentType)
+        .values(type)
+        .returning();
       
-    return result.length ? result[0] : null;
-  }
-  
-  async listRewardDistributions(contributionId?: number): Promise<schema.RewardDistribution[]> {
-    let query = db.select().from(schema.rewardDistribution);
-    
-    if (contributionId) {
-      query = query.where(eq(schema.rewardDistribution.contributionId, contributionId));
+      return result[0];
+    } catch (error) {
+      console.error('Database operation failed:', error);
+      throw error;
     }
-    
-    return await query.orderBy(desc(schema.rewardDistribution.distributionTime));
   }
   
-  // Training Data Bridge System
-  async createTrainingDataset(data: schema.InsertTrainingDataset): Promise<schema.TrainingDataset> {
-    const result = await db.insert(schema.trainingDataset).values(data).returning();
-    return result[0];
+  async getAllAgents(): Promise<AgentInstance[]> {
+    try {
+      return await this.db.select().from(agentInstance);
+    } catch (error) {
+      console.error('Database operation failed:', error);
+      throw error;
+    }
   }
   
-  async getTrainingDataset(id: number): Promise<schema.TrainingDataset | null> {
-    const result = await db.select().from(schema.trainingDataset).where(eq(schema.trainingDataset.id, id));
-    return result.length ? result[0] : null;
+  async getAgent(id: number): Promise<AgentInstance | null> {
+    try {
+      const agents = await this.db.select()
+        .from(agentInstance)
+        .where(eq(agentInstance.id, id));
+      
+      return agents.length ? agents[0] : null;
+    } catch (error) {
+      console.error('Database operation failed:', error);
+      throw error;
+    }
   }
   
-  async updateTrainingDataset(
-    id: number, 
-    data: Partial<schema.InsertTrainingDataset>
-  ): Promise<schema.TrainingDataset | null> {
-    const result = await db.update(schema.trainingDataset)
-      .set({
-        ...data,
+  async createAgent(agent: AgentInstanceInsert): Promise<AgentInstance> {
+    try {
+      const result = await this.db.insert(agentInstance)
+        .values(agent)
+        .returning();
+      
+      return result[0];
+    } catch (error) {
+      console.error('Database operation failed:', error);
+      throw error;
+    }
+  }
+  
+  async updateAgentConfig(id: number, config: any): Promise<AgentInstance | null> {
+    try {
+      const result = await this.db.update(agentInstance)
+        .set({
+          configuration: config,
+          updatedAt: new Date(),
+          lastActive: new Date()
+        })
+        .where(eq(agentInstance.id, id))
+        .returning();
+      
+      return result.length ? result[0] : null;
+    } catch (error) {
+      console.error('Database operation failed:', error);
+      throw error;
+    }
+  }
+  
+  async getAgentTasks(agentId: number): Promise<AgentTask[]> {
+    try {
+      return await this.db.select()
+        .from(agentTask)
+        .where(eq(agentTask.agentId, agentId));
+    } catch (error) {
+      console.error('Database operation failed:', error);
+      throw error;
+    }
+  }
+  
+  async getTask(id: number): Promise<AgentTask | null> {
+    try {
+      const tasks = await this.db.select()
+        .from(agentTask)
+        .where(eq(agentTask.id, id));
+      
+      return tasks.length ? tasks[0] : null;
+    } catch (error) {
+      console.error('Database operation failed:', error);
+      throw error;
+    }
+  }
+  
+  async createAgentTask(agentId: number, task: AgentTaskInsert): Promise<AgentTask> {
+    try {
+      const result = await this.db.insert(agentTask)
+        .values({
+          ...task,
+          agentId
+        })
+        .returning();
+      
+      return result[0];
+    } catch (error) {
+      console.error('Database operation failed:', error);
+      throw error;
+    }
+  }
+  
+  async updateTaskStatus(id: number, status: string, result?: any): Promise<AgentTask | null> {
+    try {
+      const updates: any = {
+        status,
         updatedAt: new Date()
-      })
-      .where(eq(schema.trainingDataset.id, id))
-      .returning();
+      };
       
-    return result.length ? result[0] : null;
-  }
-  
-  async setFilecoinCid(id: number, filecoinCid: string): Promise<schema.TrainingDataset | null> {
-    const result = await db.update(schema.trainingDataset)
-      .set({
-        filecoinCid,
-        updatedAt: new Date()
-      })
-      .where(eq(schema.trainingDataset.id, id))
-      .returning();
+      if (result) {
+        updates.result = result;
+      }
       
-    return result.length ? result[0] : null;
-  }
-  
-  async listTrainingDatasets(dataType?: string, status?: string): Promise<schema.TrainingDataset[]> {
-    let query = db.select().from(schema.trainingDataset);
-    
-    if (dataType && status) {
-      query = query.where(
-        and(
-          eq(schema.trainingDataset.dataType, dataType),
-          eq(schema.trainingDataset.status, status)
-        )
-      );
-    } else if (dataType) {
-      query = query.where(eq(schema.trainingDataset.dataType, dataType));
-    } else if (status) {
-      query = query.where(eq(schema.trainingDataset.status, status));
+      // If status is 'in_progress', set startedAt
+      if (status === 'in_progress' && !updates.startedAt) {
+        updates.startedAt = new Date();
+      }
+      
+      // If status is 'completed' or 'failed', set completedAt
+      if ((status === 'completed' || status === 'failed') && !updates.completedAt) {
+        updates.completedAt = new Date();
+      }
+      
+      const updated = await this.db.update(agentTask)
+        .set(updates)
+        .where(eq(agentTask.id, id))
+        .returning();
+      
+      return updated.length ? updated[0] : null;
+    } catch (error) {
+      console.error('Database operation failed:', error);
+      throw error;
     }
-    
-    return await query.orderBy(desc(schema.trainingDataset.updatedAt));
   }
   
-  async createTrainingDataFragment(data: schema.InsertTrainingDataFragment): Promise<schema.TrainingDataFragment> {
-    const result = await db.insert(schema.trainingDataFragment).values(data).returning();
-    return result[0];
+  // Rewards System
+  
+  async getAllContributions(): Promise<ComputationContribution[]> {
+    try {
+      return await this.db.select().from(computationContribution);
+    } catch (error) {
+      console.error('Database operation failed:', error);
+      throw error;
+    }
   }
   
-  async getTrainingDataFragment(id: number): Promise<schema.TrainingDataFragment | null> {
-    const result = await db.select().from(schema.trainingDataFragment).where(eq(schema.trainingDataFragment.id, id));
-    return result.length ? result[0] : null;
-  }
-  
-  async updateFragmentStorage(
-    id: number, 
-    filecoinCid: string, 
-    fractalShardIds: string[]
-  ): Promise<schema.TrainingDataFragment | null> {
-    const result = await db.update(schema.trainingDataFragment)
-      .set({
-        filecoinCid,
-        fractalShardIds
-      })
-      .where(eq(schema.trainingDataFragment.id, id))
-      .returning();
+  async getContribution(id: number): Promise<ComputationContribution | null> {
+    try {
+      const contributions = await this.db.select()
+        .from(computationContribution)
+        .where(eq(computationContribution.id, id));
       
-    return result.length ? result[0] : null;
+      return contributions.length ? contributions[0] : null;
+    } catch (error) {
+      console.error('Database operation failed:', error);
+      throw error;
+    }
   }
   
-  async listTrainingDataFragments(datasetId: number): Promise<schema.TrainingDataFragment[]> {
-    return await db.select()
-      .from(schema.trainingDataFragment)
-      .where(eq(schema.trainingDataFragment.datasetId, datasetId))
-      .orderBy(schema.trainingDataFragment.fragmentIndex);
+  async createContribution(contribution: ComputationContributionInsert): Promise<ComputationContribution> {
+    try {
+      const result = await this.db.insert(computationContribution)
+        .values(contribution)
+        .returning();
+      
+      return result[0];
+    } catch (error) {
+      console.error('Database operation failed:', error);
+      throw error;
+    }
+  }
+  
+  async updateContribution(id: number, updates: Partial<ComputationContribution>): Promise<ComputationContribution | null> {
+    try {
+      // Ensure id is not modified
+      const { id: _, ...updateValues } = updates;
+      
+      const result = await this.db.update(computationContribution)
+        .set({
+          ...updateValues,
+          updatedAt: new Date()
+        })
+        .where(eq(computationContribution.id, id))
+        .returning();
+      
+      return result.length ? result[0] : null;
+    } catch (error) {
+      console.error('Database operation failed:', error);
+      throw error;
+    }
+  }
+  
+  async getAllDistributions(): Promise<RewardDistribution[]> {
+    try {
+      return await this.db.select().from(rewardDistribution);
+    } catch (error) {
+      console.error('Database operation failed:', error);
+      throw error;
+    }
+  }
+  
+  async getDistribution(id: number): Promise<RewardDistribution | null> {
+    try {
+      const distributions = await this.db.select()
+        .from(rewardDistribution)
+        .where(eq(rewardDistribution.id, id));
+      
+      return distributions.length ? distributions[0] : null;
+    } catch (error) {
+      console.error('Database operation failed:', error);
+      throw error;
+    }
+  }
+  
+  async createDistribution(distribution: RewardDistributionInsert): Promise<RewardDistribution> {
+    try {
+      const result = await this.db.insert(rewardDistribution)
+        .values(distribution)
+        .returning();
+      
+      return result[0];
+    } catch (error) {
+      console.error('Database operation failed:', error);
+      throw error;
+    }
+  }
+  
+  async updateDistributionStatus(id: number, status: string, txHash?: string): Promise<RewardDistribution | null> {
+    try {
+      const updates: any = {
+        status,
+        updatedAt: new Date()
+      };
+      
+      if (txHash) {
+        updates.transactionHash = txHash;
+      }
+      
+      // If status is 'processed', set distributedAt
+      if (status === 'processed') {
+        updates.distributedAt = new Date();
+      }
+      
+      const result = await this.db.update(rewardDistribution)
+        .set(updates)
+        .where(eq(rewardDistribution.id, id))
+        .returning();
+      
+      return result.length ? result[0] : null;
+    } catch (error) {
+      console.error('Database operation failed:', error);
+      throw error;
+    }
+  }
+  
+  // Training Data
+  
+  async getAllDatasets(): Promise<TrainingDataset[]> {
+    try {
+      return await this.db.select().from(trainingDataset);
+    } catch (error) {
+      console.error('Database operation failed:', error);
+      throw error;
+    }
+  }
+  
+  async getDataset(id: number): Promise<TrainingDataset | null> {
+    try {
+      const datasets = await this.db.select()
+        .from(trainingDataset)
+        .where(eq(trainingDataset.id, id));
+      
+      return datasets.length ? datasets[0] : null;
+    } catch (error) {
+      console.error('Database operation failed:', error);
+      throw error;
+    }
+  }
+  
+  async createDataset(dataset: TrainingDatasetInsert): Promise<TrainingDataset> {
+    try {
+      const result = await this.db.insert(trainingDataset)
+        .values(dataset)
+        .returning();
+      
+      return result[0];
+    } catch (error) {
+      console.error('Database operation failed:', error);
+      throw error;
+    }
+  }
+  
+  async updateDataset(id: number, updates: Partial<TrainingDataset>): Promise<TrainingDataset | null> {
+    try {
+      // Ensure id is not modified
+      const { id: _, ...updateValues } = updates;
+      
+      const result = await this.db.update(trainingDataset)
+        .set({
+          ...updateValues,
+          updatedAt: new Date()
+        })
+        .where(eq(trainingDataset.id, id))
+        .returning();
+      
+      return result.length ? result[0] : null;
+    } catch (error) {
+      console.error('Database operation failed:', error);
+      throw error;
+    }
+  }
+  
+  async getAllDatasetFragments(datasetId: number): Promise<TrainingDataFragment[]> {
+    try {
+      return await this.db.select()
+        .from(trainingDataFragment)
+        .where(eq(trainingDataFragment.datasetId, datasetId));
+    } catch (error) {
+      console.error('Database operation failed:', error);
+      throw error;
+    }
+  }
+  
+  async getFragment(id: number): Promise<TrainingDataFragment | null> {
+    try {
+      const fragments = await this.db.select()
+        .from(trainingDataFragment)
+        .where(eq(trainingDataFragment.id, id));
+      
+      return fragments.length ? fragments[0] : null;
+    } catch (error) {
+      console.error('Database operation failed:', error);
+      throw error;
+    }
+  }
+  
+  async createFragment(fragment: TrainingDataFragmentInsert): Promise<TrainingDataFragment> {
+    try {
+      const result = await this.db.insert(trainingDataFragment)
+        .values(fragment)
+        .returning();
+      
+      return result[0];
+    } catch (error) {
+      console.error('Database operation failed:', error);
+      throw error;
+    }
+  }
+  
+  async updateFragment(id: number, updates: Partial<TrainingDataFragment>): Promise<TrainingDataFragment | null> {
+    try {
+      // Ensure id is not modified
+      const { id: _, ...updateValues } = updates;
+      
+      const result = await this.db.update(trainingDataFragment)
+        .set({
+          ...updateValues,
+          updatedAt: new Date()
+        })
+        .where(eq(trainingDataFragment.id, id))
+        .returning();
+      
+      return result.length ? result[0] : null;
+    } catch (error) {
+      console.error('Database operation failed:', error);
+      throw error;
+    }
   }
 }
 
-// Create and export a singleton instance of the storage
-export const storage: IStorage = new PostgresStorage();
-
+// Create and export storage instance
+export const storage = new PgStorage();
 export default storage;
