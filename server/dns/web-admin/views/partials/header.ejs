@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
+  <style>
+    body {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      min-height: 100vh;
+      color: #e2e2e2;
+    }
+    .quantum-pulse {
+      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+    .sidebar-link {
+      transition: all 0.3s;
+    }
+    .sidebar-link:hover {
+      background-color: rgba(59, 130, 246, 0.1);
+      transform: translateX(4px);
+    }
+    .sidebar-link.active {
+      background-color: rgba(59, 130, 246, 0.2);
+      border-left: 3px solid #3b82f6;
+    }
+  </style>
+</head>
+<body class="flex flex-col min-h-screen">
+  <!-- Top Navigation -->
+  <header class="bg-gray-900 text-white shadow-lg">
+    <div class="container mx-auto px-4">
+      <div class="flex items-center justify-between py-4">
+        <div class="flex items-center space-x-4">
+          <div class="text-xl font-bold">FractalDNS</div>
+          <div class="text-sm text-blue-400">Quantum-Secure DNS Management</div>
+        </div>
+        
+        <div class="flex items-center space-x-4">
+          <div class="text-sm">
+            Logged in as <span class="font-semibold"><%= user.username %></span>
+          </div>
+          <a href="/logout" class="text-sm text-red-400 hover:text-red-300 transition-colors">Log Out</a>
+        </div>
+      </div>
+    </div>
+  </header>
+  
+  <div class="flex flex-1">
+    <!-- Sidebar -->
+    <aside class="w-64 bg-gray-900 shadow-xl hidden md:block">
+      <nav class="flex flex-col p-4">
+        <div class="text-xs uppercase text-gray-500 font-bold mb-4">Main</div>
+        
+        <a href="/" class="sidebar-link flex items-center px-4 py-3 mb-2 rounded text-gray-300 <%= path === '/' ? 'active' : '' %>">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+          </svg>
+          <span>Dashboard</span>
+        </a>
+        
+        <a href="/zones" class="sidebar-link flex items-center px-4 py-3 mb-2 rounded text-gray-300 <%= path && path.startsWith('/zones') ? 'active' : '' %>">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+          </svg>
+          <span>TLD Zones</span>
+        </a>
+        
+        <div class="text-xs uppercase text-gray-500 font-bold mt-6 mb-4">Management</div>
+        
+        <a href="/settings" class="sidebar-link flex items-center px-4 py-3 mb-2 rounded text-gray-300 <%= path === '/settings' ? 'active' : '' %>">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+          <span>Settings</span>
+        </a>
+        
+        <a href="/logs" class="sidebar-link flex items-center px-4 py-3 mb-2 rounded text-gray-300 <%= path === '/logs' ? 'active' : '' %>">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <span>System Logs</span>
+        </a>
+        
+        <a href="/peers" class="sidebar-link flex items-center px-4 py-3 mb-2 rounded text-gray-300 <%= path === '/peers' ? 'active' : '' %>">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
+          <span>Peer Network</span>
+        </a>
+        
+        <div class="mt-auto pt-20 text-center text-xs text-gray-500 quantum-pulse">
+          <div>AetherCore Quantum Security</div>
+          <div class="mt-1">Fractal DNS v1.0</div>
+        </div>
+      </nav>
+    </aside>
+    
+    <!-- Main Content -->
+    <main class="flex-1 overflow-x-hidden overflow-y-auto">
+      <!-- Content goes here -->

@@ -1,0 +1,278 @@
+<%- include('partials/header', { title }) %>
+
+<div class="container mx-auto px-4 py-8">
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <!-- Server Status Card -->
+    <div class="bg-gray-800 rounded-lg shadow-lg p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-semibold text-gray-200">Server Status</h3>
+        <div class="relative">
+          <span class="absolute top-0 right-0 -mt-1 -mr-1 h-3 w-3 rounded-full <%= stats.running ? 'bg-green-500' : 'bg-red-500' %>"></span>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M12 5l7 7-7 7" />
+          </svg>
+        </div>
+      </div>
+      <div class="text-2xl font-bold text-<%= stats.running ? 'green' : 'red' %>-400"><%= stats.running ? 'Running' : 'Stopped' %></div>
+      <div class="text-sm text-gray-400 mt-2">
+        <% if (stats.running) { %>
+          Server has been running for <%= Math.floor(stats.uptime / 60 / 60) %> hours <%= Math.floor((stats.uptime / 60) % 60) %> minutes
+        <% } else { %>
+          Server is currently offline
+        <% } %>
+      </div>
+      <div class="mt-6">
+        <% if (stats.running) { %>
+          <button id="stop-server" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded transition-colors">Stop Server</button>
+        <% } else { %>
+          <button id="start-server" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded transition-colors">Start Server</button>
+        <% } %>
+      </div>
+    </div>
+    
+    <!-- Zone Stats Card -->
+    <div class="bg-gray-800 rounded-lg shadow-lg p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-semibold text-gray-200">TLD Zones</h3>
+        <a href="/zones" class="text-blue-400 hover:text-blue-300 transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+          </svg>
+        </a>
+      </div>
+      <div class="text-3xl font-bold text-blue-400"><%= stats.zones %></div>
+      <div class="text-sm text-gray-400 mt-2">Active top-level domains</div>
+      <div class="mt-6">
+        <a href="/zones" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors">Manage Zones</a>
+      </div>
+    </div>
+    
+    <!-- Records Stats Card -->
+    <div class="bg-gray-800 rounded-lg shadow-lg p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-semibold text-gray-200">DNS Records</h3>
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+        </svg>
+      </div>
+      <div class="text-3xl font-bold text-purple-400"><%= stats.records %></div>
+      <div class="text-sm text-gray-400 mt-2">DNS records across all zones</div>
+      <div class="mt-6 text-sm text-gray-400">
+        <div class="flex items-center">
+          <span class="inline-block w-3 h-3 bg-blue-500 rounded-full mr-2"></span>
+          <span>A Records: <%= stats.aRecords || 'N/A' %></span>
+        </div>
+        <div class="flex items-center mt-1">
+          <span class="inline-block w-3 h-3 bg-green-500 rounded-full mr-2"></span>
+          <span>CNAME Records: <%= stats.cnameRecords || 'N/A' %></span>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Network Stats Card -->
+    <div class="bg-gray-800 rounded-lg shadow-lg p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-semibold text-gray-200">Network</h3>
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+        </svg>
+      </div>
+      <div class="text-3xl font-bold text-teal-400"><%= stats.peers || 0 %></div>
+      <div class="text-sm text-gray-400 mt-2">Connected peer nodes</div>
+      <div class="mt-6 text-sm text-gray-400">
+        <div class="flex justify-between items-center">
+          <span>Quantum Security:</span>
+          <span class="text-green-400">Enabled</span>
+        </div>
+        <div class="flex justify-between items-center mt-1">
+          <span>Fractal Sharding:</span>
+          <span class="text-green-400">Active</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- TLD Zone List -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Quick Actions Card -->
+    <div class="bg-gray-800 rounded-lg shadow-lg p-6">
+      <h3 class="text-lg font-semibold text-gray-200 mb-4">Quick Actions</h3>
+      <div class="space-y-3">
+        <a href="/zones" class="block px-4 py-3 bg-gray-700 hover:bg-gray-600 rounded transition-colors">
+          <div class="flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+            </svg>
+            <span>Manage TLD Zones</span>
+          </div>
+        </a>
+        <button id="create-zone-btn" class="block w-full text-left px-4 py-3 bg-gray-700 hover:bg-gray-600 rounded transition-colors">
+          <div class="flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+            <span>Create New TLD Zone</span>
+          </div>
+        </button>
+        <button id="export-zones-btn" class="block w-full text-left px-4 py-3 bg-gray-700 hover:bg-gray-600 rounded transition-colors">
+          <div class="flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            <span>Export Zones to BIND Format</span>
+          </div>
+        </button>
+        <button id="sync-peers-btn" class="block w-full text-left px-4 py-3 bg-gray-700 hover:bg-gray-600 rounded transition-colors">
+          <div class="flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            <span>Sync with Peer Nodes</span>
+          </div>
+        </button>
+      </div>
+    </div>
+    
+    <!-- Latest Logs Card -->
+    <div class="lg:col-span-2 bg-gray-800 rounded-lg shadow-lg p-6">
+      <h3 class="text-lg font-semibold text-gray-200 mb-4">System Activity</h3>
+      <div class="bg-gray-900 rounded p-4 h-64 overflow-y-auto font-mono text-sm">
+        <div class="text-green-500">Server started successfully [<%- new Date().toISOString() %>]</div>
+        <div class="text-blue-400">Loaded 3 TLD zones with 24 records</div>
+        <div class="text-yellow-400">Established connection with 6 peer nodes</div>
+        <div class="text-purple-400">Quantum security layer initialized</div>
+        <div class="text-gray-400">DNS server listening on port 53</div>
+        <div class="text-blue-400">Added new A record for example.trust</div>
+        <div class="text-green-500">Zone synchronization complete</div>
+        <div class="text-gray-400">Web admin interface started on port 8053</div>
+      </div>
+      <div class="mt-4 flex justify-end">
+        <button class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded transition-colors">View Full Logs</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Create Zone Modal -->
+<div id="create-zone-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+  <div class="bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-xl font-semibold text-gray-200">Create New TLD Zone</h3>
+      <button id="close-modal" class="text-gray-400 hover:text-gray-300">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+    <form id="create-zone-form">
+      <div class="mb-4">
+        <label for="tld" class="block text-gray-300 mb-2">TLD Name (without dot)</label>
+        <input
+          type="text"
+          id="tld"
+          name="tld"
+          class="w-full px-4 py-2 rounded bg-gray-700 border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="e.g. example"
+          required
+        >
+      </div>
+      <div class="flex justify-between mt-6">
+        <button type="button" id="cancel-create-zone" class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded transition-colors">Cancel</button>
+        <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors">Create Zone</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  // Server control
+  const startServerBtn = document.getElementById('start-server');
+  const stopServerBtn = document.getElementById('stop-server');
+  
+  if (startServerBtn) {
+    startServerBtn.addEventListener('click', async () => {
+      try {
+        const response = await fetch('/api/start', { method: 'POST' });
+        const data = await response.json();
+        if (data.status === 'running') {
+          window.location.reload();
+        }
+      } catch (error) {
+        console.error('Error starting server:', error);
+        alert('Failed to start server. See console for details.');
+      }
+    });
+  }
+  
+  if (stopServerBtn) {
+    stopServerBtn.addEventListener('click', async () => {
+      try {
+        const response = await fetch('/api/stop', { method: 'POST' });
+        const data = await response.json();
+        if (data.status === 'stopped') {
+          window.location.reload();
+        }
+      } catch (error) {
+        console.error('Error stopping server:', error);
+        alert('Failed to stop server. See console for details.');
+      }
+    });
+  }
+  
+  // Create Zone Modal
+  const createZoneBtn = document.getElementById('create-zone-btn');
+  const createZoneModal = document.getElementById('create-zone-modal');
+  const closeModalBtn = document.getElementById('close-modal');
+  const cancelCreateZoneBtn = document.getElementById('cancel-create-zone');
+  const createZoneForm = document.getElementById('create-zone-form');
+  
+  if (createZoneBtn && createZoneModal) {
+    createZoneBtn.addEventListener('click', () => {
+      createZoneModal.classList.remove('hidden');
+    });
+    
+    const hideModal = () => {
+      createZoneModal.classList.add('hidden');
+    };
+    
+    if (closeModalBtn) closeModalBtn.addEventListener('click', hideModal);
+    if (cancelCreateZoneBtn) cancelCreateZoneBtn.addEventListener('click', hideModal);
+    
+    // Close modal when clicking outside
+    createZoneModal.addEventListener('click', (e) => {
+      if (e.target === createZoneModal) hideModal();
+    });
+    
+    if (createZoneForm) {
+      createZoneForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const tld = document.getElementById('tld').value;
+        
+        try {
+          const response = await fetch('/api/zones', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ tld })
+          });
+          
+          const data = await response.json();
+          
+          if (response.ok) {
+            alert(`Zone "${tld}" created successfully!`);
+            window.location.href = `/zones/${tld}`;
+          } else {
+            alert(`Error: ${data.error}`);
+          }
+        } catch (error) {
+          console.error('Error creating zone:', error);
+          alert('Failed to create zone. See console for details.');
+        }
+      });
+    }
+  }
+</script>
+
+<%- include('partials/footer') %>

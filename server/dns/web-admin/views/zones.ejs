@@ -1,0 +1,297 @@
+<%- include('partials/header', { title, path: '/zones' }) %>
+
+<div class="container mx-auto px-4 py-8">
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-bold text-gray-200">Managed TLD Zones</h1>
+    <button id="create-zone-btn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md flex items-center transition-colors">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+      </svg>
+      Create New Zone
+    </button>
+  </div>
+  
+  <div class="bg-gray-800 rounded-lg shadow-lg p-6">
+    <div class="overflow-x-auto">
+      <% if (zones.length > 0) { %>
+        <table class="min-w-full divide-y divide-gray-700">
+          <thead>
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">TLD Name</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Records</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Last Updated</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Status</th>
+              <th class="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-700">
+            <% zones.forEach(zone => { %>
+              <tr class="hover:bg-gray-700 transition-colors">
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">.<%- zone.name %></td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300"><%- zone.recordCount %></td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                  <%= new Date(zone.updated).toLocaleString() %>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                  <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                    Active
+                  </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <a href="/zones/<%- zone.name %>" class="text-blue-400 hover:text-blue-300 mr-4">
+                    Manage Records
+                  </a>
+                  <button class="text-red-400 hover:text-red-300 delete-zone" data-zone="<%- zone.name %>">
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      <% } else { %>
+        <div class="text-center py-8">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-gray-500 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+          </svg>
+          <p class="text-gray-400">No TLD zones have been created yet.</p>
+          <button id="create-first-zone-btn" class="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors">
+            Create Your First Zone
+          </button>
+        </div>
+      <% } %>
+    </div>
+  </div>
+  
+  <div class="mt-8 bg-gray-800 rounded-lg shadow-lg p-6">
+    <h2 class="text-xl font-semibold text-gray-200 mb-4">Domain Registration Guide</h2>
+    <div class="space-y-4 text-gray-300 text-sm">
+      <p>
+        FractalDNS allows you to create and manage custom top-level domains (TLDs) using quantum-resistant cryptography.
+        These custom TLDs are accessible through the decentralized network established by FractalCoin nodes.
+      </p>
+      <div class="bg-gray-700 p-4 rounded-md">
+        <h3 class="text-lg font-medium text-blue-400 mb-2">How to Use Your Custom TLD</h3>
+        <p class="mb-2">To make your custom TLD resolvable in traditional web browsers, you need to:</p>
+        <ol class="list-decimal list-inside space-y-1 pl-4">
+          <li>Configure clients to use FractalDNS as their DNS resolver (Port 53)</li>
+          <li>Install the FractalCoin browser extension for seamless integration</li>
+          <li>For mobile devices, install the AetherCore mobile app with DNS proxy support</li>
+        </ol>
+      </div>
+      <p>
+        When using the FractalCoin browser or mobile app, you'll have automatic access to all custom TLDs within the
+        FractalCoin network without any additional configuration.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- Create Zone Modal -->
+<div id="create-zone-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+  <div class="bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-xl font-semibold text-gray-200">Create New TLD Zone</h3>
+      <button id="close-modal" class="text-gray-400 hover:text-gray-300">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+    <form id="create-zone-form">
+      <div class="mb-4">
+        <label for="tld" class="block text-gray-300 mb-2">TLD Name (without dot)</label>
+        <input
+          type="text"
+          id="tld"
+          name="tld"
+          class="w-full px-4 py-2 rounded bg-gray-700 border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="e.g. example"
+          required
+        >
+        <p class="text-gray-400 text-xs mt-2">
+          Only lowercase letters, numbers, and hyphens are allowed. No spaces.
+        </p>
+      </div>
+      <div class="mb-4">
+        <label class="flex items-center text-gray-300">
+          <input type="checkbox" class="form-checkbox rounded bg-gray-700 border-gray-600 text-blue-500 mr-2">
+          <span>Enable quantum security for this zone</span>
+        </label>
+      </div>
+      <div class="flex justify-between mt-6">
+        <button type="button" id="cancel-create-zone" class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded transition-colors">Cancel</button>
+        <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors">Create Zone</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Delete Zone Confirmation Modal -->
+<div id="delete-zone-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+  <div class="bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-xl font-semibold text-gray-200">Confirm Deletion</h3>
+      <button id="close-delete-modal" class="text-gray-400 hover:text-gray-300">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+    <div class="mb-6">
+      <p class="text-gray-300">Are you sure you want to delete the zone <span id="zone-to-delete" class="font-semibold text-red-400"></span>?</p>
+      <p class="text-gray-400 text-sm mt-2">This action cannot be undone and will delete all records associated with this zone.</p>
+    </div>
+    <div class="flex justify-between">
+      <button id="cancel-delete" class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded transition-colors">Cancel</button>
+      <button id="confirm-delete" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded transition-colors">Delete Zone</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Create Zone Modal
+  const createZoneBtn = document.getElementById('create-zone-btn');
+  const createFirstZoneBtn = document.getElementById('create-first-zone-btn');
+  const createZoneModal = document.getElementById('create-zone-modal');
+  const closeModalBtn = document.getElementById('close-modal');
+  const cancelCreateZoneBtn = document.getElementById('cancel-create-zone');
+  const createZoneForm = document.getElementById('create-zone-form');
+  
+  function showCreateZoneModal() {
+    createZoneModal.classList.remove('hidden');
+  }
+  
+  function hideCreateZoneModal() {
+    createZoneModal.classList.add('hidden');
+  }
+  
+  if (createZoneBtn) {
+    createZoneBtn.addEventListener('click', showCreateZoneModal);
+  }
+  
+  if (createFirstZoneBtn) {
+    createFirstZoneBtn.addEventListener('click', showCreateZoneModal);
+  }
+  
+  if (closeModalBtn) {
+    closeModalBtn.addEventListener('click', hideCreateZoneModal);
+  }
+  
+  if (cancelCreateZoneBtn) {
+    cancelCreateZoneBtn.addEventListener('click', hideCreateZoneModal);
+  }
+  
+  // Close modal when clicking outside
+  if (createZoneModal) {
+    createZoneModal.addEventListener('click', (e) => {
+      if (e.target === createZoneModal) hideCreateZoneModal();
+    });
+  }
+  
+  // Create Zone Form Submission
+  if (createZoneForm) {
+    createZoneForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const tld = document.getElementById('tld').value.trim().toLowerCase();
+      
+      // Simple validation
+      if (!/^[a-z0-9-]+$/.test(tld)) {
+        alert('TLD can only contain lowercase letters, numbers, and hyphens.');
+        return;
+      }
+      
+      try {
+        const response = await fetch('/api/zones', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ tld })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+          window.location.href = `/zones/${tld}`;
+        } else {
+          alert(`Error: ${data.error}`);
+        }
+      } catch (error) {
+        console.error('Error creating zone:', error);
+        alert('Failed to create zone. See console for details.');
+      }
+    });
+  }
+  
+  // Delete Zone Modal
+  const deleteButtons = document.querySelectorAll('.delete-zone');
+  const deleteZoneModal = document.getElementById('delete-zone-modal');
+  const closeDeleteModalBtn = document.getElementById('close-delete-modal');
+  const cancelDeleteBtn = document.getElementById('cancel-delete');
+  const confirmDeleteBtn = document.getElementById('confirm-delete');
+  const zoneToDeleteSpan = document.getElementById('zone-to-delete');
+  
+  let zoneToDelete = '';
+  
+  function showDeleteZoneModal(zone) {
+    zoneToDelete = zone;
+    if (zoneToDeleteSpan) {
+      zoneToDeleteSpan.textContent = `.${zone}`;
+    }
+    deleteZoneModal.classList.remove('hidden');
+  }
+  
+  function hideDeleteZoneModal() {
+    deleteZoneModal.classList.add('hidden');
+    zoneToDelete = '';
+  }
+  
+  deleteButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      const zone = button.getAttribute('data-zone');
+      showDeleteZoneModal(zone);
+    });
+  });
+  
+  if (closeDeleteModalBtn) {
+    closeDeleteModalBtn.addEventListener('click', hideDeleteZoneModal);
+  }
+  
+  if (cancelDeleteBtn) {
+    cancelDeleteBtn.addEventListener('click', hideDeleteZoneModal);
+  }
+  
+  // Close modal when clicking outside
+  if (deleteZoneModal) {
+    deleteZoneModal.addEventListener('click', (e) => {
+      if (e.target === deleteZoneModal) hideDeleteZoneModal();
+    });
+  }
+  
+  // Delete Zone Confirmation
+  if (confirmDeleteBtn) {
+    confirmDeleteBtn.addEventListener('click', async () => {
+      if (!zoneToDelete) return;
+      
+      try {
+        const response = await fetch(`/api/zones/${zoneToDelete}`, {
+          method: 'DELETE'
+        });
+        
+        if (response.ok) {
+          window.location.reload();
+        } else {
+          const data = await response.json();
+          alert(`Error: ${data.error}`);
+        }
+      } catch (error) {
+        console.error('Error deleting zone:', error);
+        alert('Failed to delete zone. See console for details.');
+      }
+    });
+  }
+</script>
+
+<%- include('partials/footer') %>
