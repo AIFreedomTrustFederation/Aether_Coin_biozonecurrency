@@ -50,7 +50,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import QuantumLoader from './QuantumLoaderShowcase';
+import { QuantumLoader } from '@/components/ui/quantum-loader';
 
 /**
  * FractalDNS Manager component
@@ -332,7 +332,7 @@ const FractalDnsManager: React.FC = () => {
   if (loading && zones.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center p-12">
-        <QuantumLoader type="orbital" size="large" loaderText="Loading FractalDNS Manager..." />
+        <QuantumLoader variant="cosmos" size="lg" showLabel labelText="Loading FractalDNS Manager..." />
       </div>
     );
   }

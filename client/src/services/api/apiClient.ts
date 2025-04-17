@@ -36,4 +36,37 @@ class ApiClient {
   }
 }
 
+// Create a default API client instance
+const defaultClient = new ApiClient('/api');
+
+// Generic API request function
+export const apiRequest = async <T = any>({
+  url,
+  method = 'GET',
+  data = undefined,
+  params = undefined,
+  headers = {}
+}: {
+  url: string;
+  method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
+  data?: any;
+  params?: any;
+  headers?: Record<string, string>;
+}): Promise<T> => {
+  try {
+    const response = await defaultClient.client.request<T>({
+      url,
+      method,
+      data,
+      params,
+      headers
+    });
+    
+    return response.data;
+  } catch (error) {
+    console.error(`API ${method} request to ${url} failed:`, error);
+    throw error;
+  }
+};
+
 export default ApiClient;
