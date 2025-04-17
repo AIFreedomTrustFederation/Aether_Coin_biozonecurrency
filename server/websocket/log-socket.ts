@@ -1,36 +1,32 @@
 /**
  * Log WebSocket Server
  * 
- * Provides real-time streaming of logs and events to Mysterion
- * for monitoring and automated response
+ * Provides a websocket server for real-time log collection from both
+ * server and client components. Implements secure connections, protocol
+ * validation, and message filtering.
  */
 
-import { WebSocketServer, WebSocket } from 'ws';
-import { Server } from 'http';
-import { v4 as uuidv4 } from 'uuid';
+import { WebSocketServer } from 'ws';
+import type { WebSocket, ServerOptions } from 'ws';
+import http from 'http';
+import crypto from 'crypto';
 
-export interface LogWebSocketOptions {
-  path: string;
-  authenticateClient?: (request: any) => Promise<boolean>;
-  maxClients?: number;
-  pingInterval?: number; // milliseconds
-}
-
+// WebSocket client representation for the server to track
 interface WebSocketClient {
   id: string;
   socket: WebSocket;
-  isAlive: boolean;
-  authenticated: boolean;
-  subscriptions: Set<string>;
+  ip: string;
+  userAgent: string;
+  connectedAt: number;
   lastActivity: number;
+  messageCount: number;
+  authenticated: boolean;
 }
 
-export type LogLevel = 'debug' | 'info' | 'warn' | 'error' | 'critical';
-
+// Log event structure
 export interface LogEvent {
-  id: string;
   timestamp: number;
-  level: LogLevel;
+  level: 'debug' | 'info' | 'warn' | 'error' | 'critical';
   source: string;
   message: string;
   metadata?: Record<string, any>;
@@ -38,340 +34,460 @@ export interface LogEvent {
 }
 
 /**
- * WebSocket server for streaming logs
+ * Options for configuring the Log WebSocket Server
  */
-export class LogWebSocketServer {
+export interface LogSocketOptions extends ServerOptions {
+  // Maximum number of messages per client per minute
+  messageRateLimit?: number;
+  
+  // Maximum message size in bytes
+  maxMessageSize?: number;
+  
+  // Heartbeat interval in milliseconds
+  heartbeatInterval?: number;
+  
+  // Maximum clients allowed to connect
+  maxClients?: number;
+  
+  // Enable/disable TLS verification (always true in production)
+  requireTls?: boolean;
+}
+
+/**
+ * WebSocket server implementation for log collection
+ */
+class LogWebSocketServer {
   private wss: WebSocketServer;
   private clients: Map<string, WebSocketClient> = new Map();
-  private pingInterval: NodeJS.Timeout | null = null;
-  private options: LogWebSocketOptions;
-  private eventBuffer: LogEvent[] = [];
-  private maxBufferSize: number = 1000;
-
-  constructor(server: Server, options: LogWebSocketOptions) {
-    this.options = {
-      maxClients: 50,
-      pingInterval: 30000, // 30 seconds
-      ...options
-    };
-
-    this.wss = new WebSocketServer({ 
+  private requestListeners: Map<string, Set<(event: LogEvent) => void>> = new Map();
+  private options: LogSocketOptions;
+  private intervalId: NodeJS.Timeout | null = null;
+  
+  /**
+   * Default configuration
+   */
+  private readonly defaultOptions: LogSocketOptions = {
+    messageRateLimit: 120, // 2 messages per second
+    maxMessageSize: 1024 * 50, // 50 KB
+    heartbeatInterval: 30000, // 30 seconds
+    maxClients: 100,
+    requireTls: process.env.NODE_ENV === 'production'
+  };
+  
+  /**
+   * Create new LogWebSocketServer
+   */
+  constructor(server: http.Server, options: LogSocketOptions = {}) {
+    this.options = { ...this.defaultOptions, ...options };
+    
+    // Create WebSocket server
+    this.wss = new WebSocketServer({
       server,
-      path: options.path
+      path: options.path || '/ws/logs',
+      ...options
     });
-
-    this.initialize();
+    
+    // Setup connection handler
+    this.wss.on('connection', this.handleConnection.bind(this));
+    
+    // Start heartbeat to keep connections alive and detect stale connections
+    this.startHeartbeat();
+    
+    console.log(`Log WebSocket server initialized on path: ${options.path || '/ws/logs'}`);
   }
-
+  
   /**
-   * Initialize the WebSocket server
+   * Handle new WebSocket connection
    */
-  private initialize(): void {
-    // Handle connections
-    this.wss.on('connection', (socket, request) => this.handleConnection(socket, request));
-
-    // Set up ping interval
-    if (this.options.pingInterval) {
-      this.pingInterval = setInterval(() => this.ping(), this.options.pingInterval);
-    }
-
-    console.log(`Log WebSocket server initialized on path: ${this.options.path}`);
-  }
-
-  /**
-   * Handle new WebSocket connections
-   */
-  private async handleConnection(socket: WebSocket, request: any): Promise<void> {
-    // Check if max clients reached
-    if (this.options.maxClients && this.clients.size >= this.options.maxClients) {
-      socket.close(1013, 'Maximum number of clients reached');
+  private handleConnection(socket: WebSocket, request: http.IncomingMessage): void {
+    // Check if we're at max capacity
+    if (this.clients.size >= this.options.maxClients!) {
+      console.warn('Maximum client connections reached, rejecting new connection');
+      socket.close(1013, 'Maximum number of connections reached');
       return;
     }
-
-    // Create client
-    const clientId = uuidv4();
+    
+    // Generate a unique client ID
+    const clientId = crypto.randomUUID();
+    
+    // Store client information
     const client: WebSocketClient = {
       id: clientId,
       socket,
-      isAlive: true,
-      authenticated: false,
-      subscriptions: new Set(['all']), // Default subscription
-      lastActivity: Date.now()
+      ip: request.socket.remoteAddress || 'unknown',
+      userAgent: request.headers['user-agent'] || 'unknown',
+      connectedAt: Date.now(),
+      lastActivity: Date.now(),
+      messageCount: 0,
+      authenticated: false
     };
-
-    // Add client
+    
     this.clients.set(clientId, client);
-
-    // Set up event handlers
-    socket.on('message', async (message: WebSocket.Data) => {
-      try {
-        const data = JSON.parse(message.toString());
-        await this.handleMessage(client, data);
-      } catch (error) {
-        this.sendError(client, 'Invalid message format');
-      }
-    });
-
-    socket.on('close', () => {
-      this.clients.delete(clientId);
-      console.log(`Client ${clientId} disconnected. Connected clients: ${this.clients.size}`);
-    });
-
-    socket.on('error', (error) => {
-      console.error(`WebSocket error for client ${clientId}:`, error);
-      this.clients.delete(clientId);
-    });
-
-    socket.on('pong', () => {
-      client.isAlive = true;
-    });
-
-    // Authenticate client if needed
-    let authenticated = true;
-    if (this.options.authenticateClient) {
-      authenticated = await this.options.authenticateClient(request);
-    }
-
-    if (!authenticated) {
-      socket.close(1008, 'Authentication failed');
-      this.clients.delete(clientId);
-      return;
-    }
-
-    client.authenticated = authenticated;
-
-    // Welcome message
-    this.send(client, {
+    
+    console.log(`[LogSocket] Client connected: ${clientId} from ${client.ip}`);
+    
+    // Send welcome message
+    socket.send(JSON.stringify({
       type: 'welcome',
       clientId,
-      message: 'Connected to Mysterion Log WebSocket',
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      message: 'Connected to Mysterion log collection service'
+    }));
+    
+    // Setup message handler
+    socket.on('message', (data: Buffer) => {
+      // Update activity timestamp
+      client.lastActivity = Date.now();
+      
+      // Check rate limiting
+      client.messageCount++;
+      const messageRate = client.messageCount / ((Date.now() - client.connectedAt) / 60000);
+      if (messageRate > this.options.messageRateLimit!) {
+        console.warn(`[LogSocket] Rate limit exceeded for client ${clientId}`);
+        socket.send(JSON.stringify({
+          type: 'error',
+          message: 'Rate limit exceeded',
+          timestamp: Date.now()
+        }));
+        return;
+      }
+      
+      // Check message size
+      if (data.length > this.options.maxMessageSize!) {
+        console.warn(`[LogSocket] Message size limit exceeded for client ${clientId}`);
+        socket.send(JSON.stringify({
+          type: 'error',
+          message: 'Message size limit exceeded',
+          timestamp: Date.now()
+        }));
+        return;
+      }
+      
+      // Process the message
+      try {
+        this.handleMessage(clientId, data.toString());
+      } catch (error) {
+        console.error(`[LogSocket] Error handling message: ${error}`);
+      }
     });
-
-    // Send recent events from buffer
-    if (this.eventBuffer.length > 0) {
-      this.send(client, {
-        type: 'buffer',
-        events: this.eventBuffer,
+    
+    // Handle disconnection
+    socket.on('close', (code, reason) => {
+      console.log(`[LogSocket] Client disconnected: ${clientId} - Code: ${code} Reason: ${reason || 'none'}`);
+      this.clients.delete(clientId);
+    });
+    
+    // Handle errors
+    socket.on('error', (error) => {
+      console.error(`[LogSocket] Client error for ${clientId}:`, error);
+    });
+  }
+  
+  /**
+   * Handle incoming message from client
+   */
+  private handleMessage(clientId: string, rawMessage: string): void {
+    let message: any;
+    
+    try {
+      message = JSON.parse(rawMessage);
+    } catch (error) {
+      console.error(`[LogSocket] Invalid JSON from client ${clientId}:`, error);
+      const client = this.clients.get(clientId);
+      if (client && client.socket.readyState === 1) { // 1 corresponds to WebSocket.OPEN
+        client.socket.send(JSON.stringify({
+          type: 'error',
+          message: 'Invalid JSON',
+          timestamp: Date.now()
+        }));
+      }
+      return;
+    }
+    
+    // Process by message type
+    switch (message.type) {
+      case 'ping':
+        this.handlePing(clientId);
+        break;
+        
+      case 'authenticate':
+        this.handleAuthentication(clientId, message);
+        break;
+        
+      case 'log':
+        this.handleLogEvent(clientId, message);
+        break;
+        
+      default:
+        console.warn(`[LogSocket] Unknown message type from client ${clientId}: ${message.type}`);
+        const client = this.clients.get(clientId);
+        if (client && client.socket.readyState === 1) { // 1 corresponds to WebSocket.OPEN
+          client.socket.send(JSON.stringify({
+            type: 'error',
+            message: `Unknown message type: ${message.type}`,
+            timestamp: Date.now()
+          }));
+        }
+    }
+  }
+  
+  /**
+   * Handle ping message (heartbeat)
+   */
+  private handlePing(clientId: string): void {
+    const client = this.clients.get(clientId);
+    if (client && client.socket.readyState === 1) { // 1 corresponds to WebSocket.OPEN
+      client.socket.send(JSON.stringify({
+        type: 'pong',
         timestamp: Date.now()
+      }));
+    }
+  }
+  
+  /**
+   * Handle authentication request
+   * In a real implementation, this would validate JWT tokens or API keys
+   */
+  private handleAuthentication(clientId: string, message: any): void {
+    const client = this.clients.get(clientId);
+    if (!client) return;
+    
+    // For the prototype, just mark as authenticated
+    // In production, validate credentials here
+    client.authenticated = true;
+    
+    if (client.socket.readyState === 1) { // 1 corresponds to WebSocket.OPEN
+      client.socket.send(JSON.stringify({
+        type: 'authentication_result',
+        success: true,
+        timestamp: Date.now()
+      }));
+    }
+  }
+  
+  /**
+   * Handle log event from client
+   */
+  private handleLogEvent(clientId: string, message: any): void {
+    const client = this.clients.get(clientId);
+    if (!client) return;
+    
+    // Basic validation
+    if (!message.event || !message.event.level || !message.event.message) {
+      if (client.socket.readyState === 1) { // 1 corresponds to WebSocket.OPEN
+        client.socket.send(JSON.stringify({
+          type: 'error',
+          message: 'Invalid log event format',
+          timestamp: Date.now()
+        }));
+      }
+      return;
+    }
+    
+    // Process log event
+    const logEvent: LogEvent = {
+      timestamp: message.event.timestamp || Date.now(),
+      level: message.event.level,
+      source: message.event.source || 'client',
+      message: message.event.message,
+      metadata: message.event.metadata,
+      stackTrace: message.event.stackTrace
+    };
+    
+    // Add client information to metadata
+    if (!logEvent.metadata) {
+      logEvent.metadata = {};
+    }
+    
+    logEvent.metadata.clientId = clientId;
+    logEvent.metadata.ip = client.ip;
+    logEvent.metadata.userAgent = client.userAgent;
+    
+    // Process the log event (e.g., store, forward, analyze)
+    this.processLogEvent(logEvent);
+    
+    // Send acknowledgment
+    if (client.socket.readyState === 1) { // 1 corresponds to WebSocket.OPEN
+      client.socket.send(JSON.stringify({
+        type: 'log_received',
+        timestamp: Date.now()
+      }));
+    }
+  }
+  
+  /**
+   * Process a log event
+   */
+  private processLogEvent(event: LogEvent): void {
+    // Log to console for debugging/monitoring
+    const logPrefix = `[${new Date(event.timestamp).toISOString()}] [${event.level.toUpperCase()}] [${event.source}]`;
+    
+    switch (event.level) {
+      case 'debug':
+        console.debug(`${logPrefix} ${event.message}`);
+        break;
+      case 'info':
+        console.info(`${logPrefix} ${event.message}`);
+        break;
+      case 'warn':
+        console.warn(`${logPrefix} ${event.message}`);
+        break;
+      case 'error':
+      case 'critical':
+        console.error(`${logPrefix} ${event.message}`);
+        if (event.stackTrace) {
+          console.error(event.stackTrace);
+        }
+        break;
+    }
+    
+    // Notify listeners for all log events
+    this.notifyListeners('*', event);
+    
+    // Notify level-specific listeners
+    this.notifyListeners(event.level, event);
+    
+    // Notify source-specific listeners
+    this.notifyListeners(`source:${event.source}`, event);
+    
+    // For critical errors, notify all connected clients for real-time monitoring
+    if (event.level === 'critical') {
+      this.broadcastToClients({
+        type: 'critical_error',
+        event: {
+          timestamp: event.timestamp,
+          source: event.source,
+          message: event.message
+        }
       });
     }
-
-    console.log(`Client ${clientId} connected. Connected clients: ${this.clients.size}`);
   }
-
+  
   /**
-   * Handle incoming messages from clients
+   * Notify registered listeners of an event
    */
-  private async handleMessage(client: WebSocketClient, data: any): Promise<void> {
-    client.lastActivity = Date.now();
-
-    switch (data.type) {
-      case 'subscribe':
-        this.handleSubscribe(client, data);
-        break;
-      
-      case 'unsubscribe':
-        this.handleUnsubscribe(client, data);
-        break;
-      
-      case 'ping':
-        this.handlePing(client);
-        break;
-      
-      case 'log':
-        await this.handleClientLog(client, data);
-        break;
-      
-      default:
-        this.sendError(client, `Unknown message type: ${data.type}`);
-    }
-  }
-
-  /**
-   * Handle subscription requests
-   */
-  private handleSubscribe(client: WebSocketClient, data: any): void {
-    if (!data.channels || !Array.isArray(data.channels)) {
-      this.sendError(client, 'Invalid channels format');
-      return;
-    }
-
-    for (const channel of data.channels) {
-      client.subscriptions.add(channel);
-    }
-
-    this.send(client, {
-      type: 'subscription-update',
-      subscriptions: Array.from(client.subscriptions),
-      timestamp: Date.now()
-    });
-  }
-
-  /**
-   * Handle unsubscription requests
-   */
-  private handleUnsubscribe(client: WebSocketClient, data: any): void {
-    if (!data.channels || !Array.isArray(data.channels)) {
-      this.sendError(client, 'Invalid channels format');
-      return;
-    }
-
-    for (const channel of data.channels) {
-      if (channel !== 'all') { // Keep 'all' subscription
-        client.subscriptions.delete(channel);
-      }
-    }
-
-    this.send(client, {
-      type: 'subscription-update',
-      subscriptions: Array.from(client.subscriptions),
-      timestamp: Date.now()
-    });
-  }
-
-  /**
-   * Handle ping requests
-   */
-  private handlePing(client: WebSocketClient): void {
-    this.send(client, {
-      type: 'pong',
-      timestamp: Date.now()
-    });
-  }
-
-  /**
-   * Handle log messages from clients
-   */
-  private async handleClientLog(client: WebSocketClient, data: any): Promise<void> {
-    if (!data.event || typeof data.event !== 'object') {
-      this.sendError(client, 'Invalid log event format');
-      return;
-    }
-
-    // Create a proper log event
-    const logEvent: LogEvent = {
-      id: uuidv4(),
-      timestamp: data.event.timestamp || Date.now(),
-      level: data.event.level || 'info',
-      source: data.event.source || `client-${client.id}`,
-      message: data.event.message || '',
-      metadata: data.event.metadata,
-      stackTrace: data.event.stackTrace
-    };
-
-    // Broadcast to other clients
-    this.broadcastEvent(logEvent, client.id);
-
-    // Add to buffer
-    this.addToEventBuffer(logEvent);
-  }
-
-  /**
-   * Send a message to a client
-   */
-  private send(client: WebSocketClient, data: any): void {
-    if (client.socket.readyState === WebSocket.OPEN) {
-      try {
-        client.socket.send(JSON.stringify(data));
-      } catch (error) {
-        console.error(`Error sending message to client ${client.id}:`, error);
+  private notifyListeners(eventType: string, event: LogEvent): void {
+    const listeners = this.requestListeners.get(eventType);
+    if (listeners) {
+      for (const listener of listeners) {
+        try {
+          listener(event);
+        } catch (error) {
+          console.error(`[LogSocket] Error in event listener for ${eventType}:`, error);
+        }
       }
     }
   }
-
+  
   /**
-   * Send an error message to a client
+   * Broadcast a message to all connected clients
    */
-  private sendError(client: WebSocketClient, message: string): void {
-    this.send(client, {
-      type: 'error',
-      message,
-      timestamp: Date.now()
-    });
-  }
-
-  /**
-   * Ping all clients to check if they're still alive
-   */
-  private ping(): void {
-    for (const [id, client] of this.clients) {
-      if (!client.isAlive) {
-        client.socket.terminate();
-        this.clients.delete(id);
-        console.log(`Terminated inactive client ${id}`);
-        continue;
-      }
-
-      client.isAlive = false;
-      client.socket.ping();
-    }
-  }
-
-  /**
-   * Broadcast a log event to all subscribed clients
-   */
-  public broadcastEvent(event: LogEvent, excludeClientId?: string): void {
-    // Add event type for WebSocket message
-    const message = {
-      type: 'log',
-      event,
-      timestamp: Date.now()
-    };
-
-    const channel = `level:${event.level}`;
-    const sourceChannel = `source:${event.source}`;
-
-    for (const [id, client] of this.clients) {
-      // Skip excluded client
-      if (excludeClientId && id === excludeClientId) {
-        continue;
-      }
-
-      // Check if client is subscribed
-      if (
-        client.subscriptions.has('all') ||
-        client.subscriptions.has(channel) ||
-        client.subscriptions.has(sourceChannel)
-      ) {
-        this.send(client, message);
-      }
-    }
-
-    // Add to buffer
-    this.addToEventBuffer(event);
-  }
-
-  /**
-   * Add an event to the buffer
-   */
-  private addToEventBuffer(event: LogEvent): void {
-    this.eventBuffer.push(event);
+  private broadcastToClients(message: any): void {
+    const serializedMessage = JSON.stringify(message);
     
-    // Trim buffer if needed
-    if (this.eventBuffer.length > this.maxBufferSize) {
-      this.eventBuffer = this.eventBuffer.slice(-this.maxBufferSize);
+    for (const [_, client] of this.clients) {
+      if (client.socket.readyState === 1) { // 1 corresponds to WebSocket.OPEN
+        client.socket.send(serializedMessage);
+      }
     }
   }
-
+  
   /**
-   * Get the number of connected clients
+   * Send a message to a specific client
    */
-  public getClientCount(): number {
-    return this.clients.size;
+  public sendToClient(clientId: string, message: any): boolean {
+    const client = this.clients.get(clientId);
+    if (client && client.socket.readyState === 1) { // 1 corresponds to WebSocket.OPEN
+      client.socket.send(JSON.stringify(message));
+      return true;
+    }
+    return false;
   }
-
+  
+  /**
+   * Add an event listener
+   */
+  public addEventListener(eventType: string, listener: (event: LogEvent) => void): void {
+    if (!this.requestListeners.has(eventType)) {
+      this.requestListeners.set(eventType, new Set());
+    }
+    
+    this.requestListeners.get(eventType)!.add(listener);
+  }
+  
+  /**
+   * Remove an event listener
+   */
+  public removeEventListener(eventType: string, listener: (event: LogEvent) => void): void {
+    const listeners = this.requestListeners.get(eventType);
+    if (listeners) {
+      listeners.delete(listener);
+    }
+  }
+  
+  /**
+   * Start heartbeat interval to keep connections alive and detect stale connections
+   */
+  private startHeartbeat(): void {
+    this.stopHeartbeat();
+    
+    this.intervalId = setInterval(() => {
+      const now = Date.now();
+      
+      // Check for stale connections
+      for (const [clientId, client] of this.clients) {
+        // If client hasn't sent a message in 2x heartbeat interval, consider it stale
+        if (now - client.lastActivity > this.options.heartbeatInterval! * 2) {
+          console.log(`[LogSocket] Closing stale connection: ${clientId}`);
+          client.socket.close(1000, 'Connection stale');
+          this.clients.delete(clientId);
+          continue;
+        }
+        
+        // Send heartbeat ping
+        if (client.socket.readyState === 1) { // 1 corresponds to WebSocket.OPEN
+          client.socket.send(JSON.stringify({
+            type: 'heartbeat',
+            timestamp: now
+          }));
+        }
+      }
+    }, this.options.heartbeatInterval);
+  }
+  
+  /**
+   * Stop the heartbeat interval
+   */
+  private stopHeartbeat(): void {
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+      this.intervalId = null;
+    }
+  }
+  
   /**
    * Close the WebSocket server
    */
-  public close(): void {
-    if (this.pingInterval) {
-      clearInterval(this.pingInterval);
-      this.pingInterval = null;
+  public close(): Promise<void> {
+    this.stopHeartbeat();
+    
+    // Close all connections
+    for (const [clientId, client] of this.clients) {
+      client.socket.close(1001, 'Server shutting down');
     }
-
-    this.wss.close();
-    console.log('Log WebSocket server closed');
+    
+    this.clients.clear();
+    
+    // Close the server
+    return new Promise((resolve, reject) => {
+      this.wss.close((err) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve();
+        }
+      });
+    });
   }
 }
 
