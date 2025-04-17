@@ -4,6 +4,7 @@
 
 import { Pool } from 'pg';
 import { drizzle } from 'drizzle-orm/node-postgres';
+import dotenv from 'dotenv';
 import {
   mysterionKnowledgeNode,
   mysterionKnowledgeEdge,
@@ -98,6 +99,488 @@ export interface IStorage {
   getFragment(id: number): Promise<TrainingDataFragment | null>;
   createFragment(fragment: TrainingDataFragmentInsert): Promise<TrainingDataFragment>;
   updateFragment(id: number, updates: Partial<TrainingDataFragment>): Promise<TrainingDataFragment | null>;
+}
+
+/**
+ * PostgreSQL storage implementation
+ */
+/**
+ * In-memory storage implementation for development/testing
+ */
+export class MemStorage implements IStorage {
+  private knowledgeNodes: Map<number, MysterionKnowledgeNode> = new Map();
+  private knowledgeEdges: Map<number, MysterionKnowledgeEdge> = new Map();
+  private improvements: Map<number, MysterionImprovement> = new Map();
+  private agentTypes: Map<number, AgentType> = new Map();
+  private agents: Map<number, AgentInstance> = new Map();
+  private tasks: Map<number, AgentTask> = new Map();
+  private contributions: Map<number, ComputationContribution> = new Map();
+  private distributions: Map<number, RewardDistribution> = new Map();
+  private datasets: Map<number, TrainingDataset> = new Map();
+  private fragments: Map<number, TrainingDataFragment> = new Map();
+  
+  private nextId: Record<string, number> = {
+    knowledgeNode: 1,
+    knowledgeEdge: 1,
+    improvement: 1,
+    agentType: 1,
+    agent: 1,
+    task: 1,
+    contribution: 1,
+    distribution: 1,
+    dataset: 1,
+    fragment: 1
+  };
+  
+  constructor() {
+    console.log('Using in-memory storage for development/testing');
+  }
+  
+  // Knowledge System
+  
+  async getAllKnowledgeNodes(): Promise<MysterionKnowledgeNode[]> {
+    return Array.from(this.knowledgeNodes.values());
+  }
+  
+  async getKnowledgeNode(id: number): Promise<MysterionKnowledgeNode | null> {
+    return this.knowledgeNodes.get(id) || null;
+  }
+  
+  async createKnowledgeNode(node: MysterionKnowledgeNodeInsert): Promise<MysterionKnowledgeNode> {
+    const id = this.nextId.knowledgeNode++;
+    const now = new Date();
+    
+    const newNode: MysterionKnowledgeNode = {
+      id,
+      ...node,
+      createdAt: now,
+      updatedAt: now
+    } as MysterionKnowledgeNode;
+    
+    this.knowledgeNodes.set(id, newNode);
+    return newNode;
+  }
+  
+  async updateKnowledgeNode(id: number, updates: Partial<MysterionKnowledgeNode>): Promise<MysterionKnowledgeNode | null> {
+    const node = this.knowledgeNodes.get(id);
+    if (!node) return null;
+    
+    const updatedNode: MysterionKnowledgeNode = {
+      ...node,
+      ...updates,
+      id, // Ensure id is not changed
+      updatedAt: new Date()
+    };
+    
+    this.knowledgeNodes.set(id, updatedNode);
+    return updatedNode;
+  }
+  
+  async deleteKnowledgeNode(id: number): Promise<boolean> {
+    return this.knowledgeNodes.delete(id);
+  }
+  
+  // Knowledge Edges
+  
+  async getAllKnowledgeEdges(): Promise<MysterionKnowledgeEdge[]> {
+    return Array.from(this.knowledgeEdges.values());
+  }
+  
+  async getKnowledgeEdge(id: number): Promise<MysterionKnowledgeEdge | null> {
+    return this.knowledgeEdges.get(id) || null;
+  }
+  
+  async createKnowledgeEdge(edge: MysterionKnowledgeEdgeInsert): Promise<MysterionKnowledgeEdge> {
+    const id = this.nextId.knowledgeEdge++;
+    const now = new Date();
+    
+    const newEdge: MysterionKnowledgeEdge = {
+      id,
+      ...edge,
+      createdAt: now,
+      updatedAt: now
+    } as MysterionKnowledgeEdge;
+    
+    this.knowledgeEdges.set(id, newEdge);
+    return newEdge;
+  }
+  
+  async updateKnowledgeEdge(id: number, updates: Partial<MysterionKnowledgeEdge>): Promise<MysterionKnowledgeEdge | null> {
+    const edge = this.knowledgeEdges.get(id);
+    if (!edge) return null;
+    
+    const updatedEdge: MysterionKnowledgeEdge = {
+      ...edge,
+      ...updates,
+      id, // Ensure id is not changed
+      updatedAt: new Date()
+    };
+    
+    this.knowledgeEdges.set(id, updatedEdge);
+    return updatedEdge;
+  }
+  
+  async deleteKnowledgeEdge(id: number): Promise<boolean> {
+    return this.knowledgeEdges.delete(id);
+  }
+  
+  // Improvements
+  
+  async getAllImprovements(): Promise<MysterionImprovement[]> {
+    return Array.from(this.improvements.values());
+  }
+  
+  async getImprovement(id: number): Promise<MysterionImprovement | null> {
+    return this.improvements.get(id) || null;
+  }
+  
+  async createImprovement(improvement: MysterionImprovementInsert): Promise<MysterionImprovement> {
+    const id = this.nextId.improvement++;
+    const now = new Date();
+    
+    const newImprovement: MysterionImprovement = {
+      id,
+      ...improvement,
+      status: improvement.status || 'proposed',
+      proposedAt: now,
+      createdAt: now,
+      updatedAt: now
+    } as MysterionImprovement;
+    
+    this.improvements.set(id, newImprovement);
+    return newImprovement;
+  }
+  
+  async updateImprovementStatus(id: number, status: string): Promise<MysterionImprovement | null> {
+    const improvement = this.improvements.get(id);
+    if (!improvement) return null;
+    
+    const updatedImprovement: MysterionImprovement = {
+      ...improvement,
+      status: status as any,
+      updatedAt: new Date()
+    };
+    
+    // If status is 'implemented', set implementedAt
+    if (status === 'implemented') {
+      updatedImprovement.implementedAt = new Date();
+    }
+    
+    this.improvements.set(id, updatedImprovement);
+    return updatedImprovement;
+  }
+  
+  // Agent Types
+  
+  async getAllAgentTypes(): Promise<AgentType[]> {
+    return Array.from(this.agentTypes.values());
+  }
+  
+  async getAgentType(id: number): Promise<AgentType | null> {
+    return this.agentTypes.get(id) || null;
+  }
+  
+  async createAgentType(type: AgentTypeInsert): Promise<AgentType> {
+    const id = this.nextId.agentType++;
+    const now = new Date();
+    
+    const newType: AgentType = {
+      id,
+      ...type,
+      createdAt: now,
+      updatedAt: now
+    } as AgentType;
+    
+    this.agentTypes.set(id, newType);
+    return newType;
+  }
+  
+  // Agents
+  
+  async getAllAgents(): Promise<AgentInstance[]> {
+    return Array.from(this.agents.values());
+  }
+  
+  async getAgent(id: number): Promise<AgentInstance | null> {
+    return this.agents.get(id) || null;
+  }
+  
+  async createAgent(agent: AgentInstanceInsert): Promise<AgentInstance> {
+    const id = this.nextId.agent++;
+    const now = new Date();
+    
+    const newAgent: AgentInstance = {
+      id,
+      ...agent,
+      status: agent.status || 'inactive',
+      createdAt: now,
+      updatedAt: now
+    } as AgentInstance;
+    
+    this.agents.set(id, newAgent);
+    return newAgent;
+  }
+  
+  async updateAgentConfig(id: number, config: any): Promise<AgentInstance | null> {
+    const agent = this.agents.get(id);
+    if (!agent) return null;
+    
+    const now = new Date();
+    const updatedAgent: AgentInstance = {
+      ...agent,
+      configuration: config,
+      lastActive: now,
+      updatedAt: now
+    };
+    
+    this.agents.set(id, updatedAgent);
+    return updatedAgent;
+  }
+  
+  // Tasks
+  
+  async getAgentTasks(agentId: number): Promise<AgentTask[]> {
+    return Array.from(this.tasks.values()).filter(task => task.agentId === agentId);
+  }
+  
+  async getTask(id: number): Promise<AgentTask | null> {
+    return this.tasks.get(id) || null;
+  }
+  
+  async createAgentTask(agentId: number, task: AgentTaskInsert): Promise<AgentTask> {
+    const id = this.nextId.task++;
+    const now = new Date();
+    
+    const newTask: AgentTask = {
+      id,
+      agentId,
+      ...task,
+      status: task.status || 'pending',
+      createdAt: now,
+      updatedAt: now
+    } as AgentTask;
+    
+    this.tasks.set(id, newTask);
+    return newTask;
+  }
+  
+  async updateTaskStatus(id: number, status: string, result?: any): Promise<AgentTask | null> {
+    const task = this.tasks.get(id);
+    if (!task) return null;
+    
+    const now = new Date();
+    const updatedTask: AgentTask = {
+      ...task,
+      status: status as any,
+      updatedAt: now
+    };
+    
+    if (result) {
+      updatedTask.result = result;
+    }
+    
+    // If status is 'in_progress', set startedAt
+    if (status === 'in_progress' && !updatedTask.startedAt) {
+      updatedTask.startedAt = now;
+    }
+    
+    // If status is 'completed' or 'failed', set completedAt
+    if ((status === 'completed' || status === 'failed') && !updatedTask.completedAt) {
+      updatedTask.completedAt = now;
+    }
+    
+    this.tasks.set(id, updatedTask);
+    return updatedTask;
+  }
+  
+  // Contributions
+  
+  async getAllContributions(): Promise<ComputationContribution[]> {
+    return Array.from(this.contributions.values());
+  }
+  
+  async getContribution(id: number): Promise<ComputationContribution | null> {
+    return this.contributions.get(id) || null;
+  }
+  
+  async createContribution(contribution: ComputationContributionInsert): Promise<ComputationContribution> {
+    const id = this.nextId.contribution++;
+    const now = new Date();
+    
+    const newContribution: ComputationContribution = {
+      id,
+      ...contribution,
+      verified: false,
+      createdAt: now,
+      updatedAt: now
+    } as ComputationContribution;
+    
+    this.contributions.set(id, newContribution);
+    return newContribution;
+  }
+  
+  async updateContribution(id: number, updates: Partial<ComputationContribution>): Promise<ComputationContribution | null> {
+    const contribution = this.contributions.get(id);
+    if (!contribution) return null;
+    
+    const updatedContribution: ComputationContribution = {
+      ...contribution,
+      ...updates,
+      id, // Ensure id is not changed
+      updatedAt: new Date()
+    };
+    
+    // If verified is set to true, set verifiedAt
+    if (updates.verified && !contribution.verified) {
+      updatedContribution.verifiedAt = new Date();
+    }
+    
+    this.contributions.set(id, updatedContribution);
+    return updatedContribution;
+  }
+  
+  // Distributions
+  
+  async getAllDistributions(): Promise<RewardDistribution[]> {
+    return Array.from(this.distributions.values());
+  }
+  
+  async getDistribution(id: number): Promise<RewardDistribution | null> {
+    return this.distributions.get(id) || null;
+  }
+  
+  async createDistribution(distribution: RewardDistributionInsert): Promise<RewardDistribution> {
+    const id = this.nextId.distribution++;
+    const now = new Date();
+    
+    const newDistribution: RewardDistribution = {
+      id,
+      ...distribution,
+      status: 'pending',
+      createdAt: now,
+      updatedAt: now
+    } as RewardDistribution;
+    
+    this.distributions.set(id, newDistribution);
+    return newDistribution;
+  }
+  
+  async updateDistributionStatus(id: number, status: string, txHash?: string): Promise<RewardDistribution | null> {
+    const distribution = this.distributions.get(id);
+    if (!distribution) return null;
+    
+    const updatedDistribution: RewardDistribution = {
+      ...distribution,
+      status: status as any,
+      updatedAt: new Date()
+    };
+    
+    if (txHash) {
+      updatedDistribution.transactionHash = txHash;
+    }
+    
+    // If status is 'processed', set distributedAt
+    if (status === 'processed' && !updatedDistribution.distributedAt) {
+      updatedDistribution.distributedAt = new Date();
+    }
+    
+    this.distributions.set(id, updatedDistribution);
+    return updatedDistribution;
+  }
+  
+  // Datasets
+  
+  async getAllDatasets(): Promise<TrainingDataset[]> {
+    return Array.from(this.datasets.values());
+  }
+  
+  async getDataset(id: number): Promise<TrainingDataset | null> {
+    return this.datasets.get(id) || null;
+  }
+  
+  async createDataset(dataset: TrainingDatasetInsert): Promise<TrainingDataset> {
+    const id = this.nextId.dataset++;
+    const now = new Date();
+    
+    const newDataset: TrainingDataset = {
+      id,
+      ...dataset,
+      status: dataset.status || 'draft',
+      fragmentCount: 0,
+      createdAt: now,
+      updatedAt: now
+    } as TrainingDataset;
+    
+    this.datasets.set(id, newDataset);
+    return newDataset;
+  }
+  
+  async updateDataset(id: number, updates: Partial<TrainingDataset>): Promise<TrainingDataset | null> {
+    const dataset = this.datasets.get(id);
+    if (!dataset) return null;
+    
+    const updatedDataset: TrainingDataset = {
+      ...dataset,
+      ...updates,
+      id, // Ensure id is not changed
+      updatedAt: new Date()
+    };
+    
+    this.datasets.set(id, updatedDataset);
+    return updatedDataset;
+  }
+  
+  // Fragments
+  
+  async getAllDatasetFragments(datasetId: number): Promise<TrainingDataFragment[]> {
+    return Array.from(this.fragments.values()).filter(fragment => fragment.datasetId === datasetId);
+  }
+  
+  async getFragment(id: number): Promise<TrainingDataFragment | null> {
+    return this.fragments.get(id) || null;
+  }
+  
+  async createFragment(fragment: TrainingDataFragmentInsert): Promise<TrainingDataFragment> {
+    const id = this.nextId.fragment++;
+    const now = new Date();
+    
+    const newFragment: TrainingDataFragment = {
+      id,
+      ...fragment,
+      status: 'pending',
+      createdAt: now,
+      updatedAt: now
+    } as TrainingDataFragment;
+    
+    this.fragments.set(id, newFragment);
+    
+    // Update fragment count in dataset
+    const dataset = this.datasets.get(fragment.datasetId);
+    if (dataset) {
+      this.datasets.set(fragment.datasetId, {
+        ...dataset,
+        fragmentCount: (dataset.fragmentCount || 0) + 1,
+        updatedAt: now
+      });
+    }
+    
+    return newFragment;
+  }
+  
+  async updateFragment(id: number, updates: Partial<TrainingDataFragment>): Promise<TrainingDataFragment | null> {
+    const fragment = this.fragments.get(id);
+    if (!fragment) return null;
+    
+    const updatedFragment: TrainingDataFragment = {
+      ...fragment,
+      ...updates,
+      id, // Ensure id is not changed
+      updatedAt: new Date()
+    };
+    
+    this.fragments.set(id, updatedFragment);
+    return updatedFragment;
+  }
 }
 
 /**
@@ -714,5 +1197,10 @@ export class PgStorage implements IStorage {
 }
 
 // Create and export storage instance
-export const storage = new PgStorage();
+// Use environment to determine which storage implementation to use
+// For development, use memory storage by default unless specifically set to use the database
+const usePostgres = process.env.USE_POSTGRES === 'true';
+
+// Export a storage instance
+export const storage = usePostgres ? new PgStorage() : new MemStorage();
 export default storage;
