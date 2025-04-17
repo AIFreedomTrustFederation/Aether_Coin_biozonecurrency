@@ -1,248 +1,419 @@
+/**
+ * Mysterion API Routes
+ * Handles all API endpoints for the Mysterion intelligence system
+ */
+
 import express from 'express';
 import { storage } from '../storage';
+import { insertMysterionKnowledgeNodeSchema, insertMysterionKnowledgeEdgeSchema, insertMysterionImprovementSchema } from '../../shared/schema';
 import { z } from 'zod';
-import { insertUserApiKeySchema } from '../../shared/schema';
-import { generateResponse, getUserContributionPoints } from '../services/mysterion-ai';
-import { listApiKeysForUser } from '../services/quantum-vault';
 
 const router = express.Router();
 
-// Validate API key submission
-const apiKeySubmissionSchema = insertUserApiKeySchema.extend({
-  apiKey: z.string().min(1, 'API key is required'),
-  nickname: z.string().min(1, 'Nickname is required'),
-  isTrainingEnabled: z.boolean().default(true),
+// Knowledge Node Routes
+
+// Get all knowledge nodes with optional filtering
+router.get('/knowledge/nodes', async (req, res) => {
+  try {
+    const nodeType = req.query.type as string | undefined;
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : 100;
+    
+    const nodes = await storage.listKnowledgeNodes(nodeType, limit);
+    res.json(nodes);
+  } catch (error) {
+    console.error('Error fetching knowledge nodes:', error);
+    res.status(500).json({ error: 'Failed to fetch knowledge nodes' });
+  }
 });
 
-// Middleware to check user authentication
-const requireAuth = (req: any, res: any, next: any) => {
-  // In a real app, this would check if the user is authenticated
-  // For demo purposes, we'll use a dummy user ID
-  const userId = req.session?.userId || 1;
-  req.userId = userId;
-  next();
-};
-
-// Add a new API key to the vault
-router.post('/api-keys', requireAuth, async (req, res) => {
+// Create a new knowledge node
+router.post('/knowledge/nodes', async (req, res) => {
   try {
-    const userId = req.userId;
+    const result = insertMysterionKnowledgeNodeSchema.safeParse(req.body);
     
-    // Validate the request body
-    const validationResult = apiKeySubmissionSchema.safeParse(req.body);
-    if (!validationResult.success) {
-      return res.status(400).json({ 
-        success: false, 
-        error: validationResult.error.errors 
-      });
+    if (!result.success) {
+      return res.status(400).json({ error: result.error.format() });
     }
     
-    const { apiKey, service, nickname, isTrainingEnabled } = validationResult.data;
+    const node = await storage.createKnowledgeNode(result.data);
+    res.status(201).json(node);
+  } catch (error) {
+    console.error('Error creating knowledge node:', error);
+    res.status(500).json({ error: 'Failed to create knowledge node' });
+  }
+});
+
+// Get a specific knowledge node by ID
+router.get('/knowledge/nodes/:id', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
     
-    // Create the API key record
-    const newKey = await storage.createUserApiKey({
-      userId,
-      service: service || 'openai',
-      nickname,
-      isActive: true,
-      isTrainingEnabled,
-      usageCount: 0,
-      apiKey, // This will be stored in the vault and not in the database
-      createdAt: new Date(),
-      updatedAt: new Date()
+    if (isNaN(id)) {
+      return res.status(400).json({ error: 'Invalid node ID' });
+    }
+    
+    const node = await storage.getKnowledgeNode(id);
+    
+    if (!node) {
+      return res.status(404).json({ error: 'Knowledge node not found' });
+    }
+    
+    res.json(node);
+  } catch (error) {
+    console.error(`Error fetching knowledge node ${req.params.id}:`, error);
+    res.status(500).json({ error: 'Failed to fetch knowledge node' });
+  }
+});
+
+// Update a knowledge node
+router.patch('/knowledge/nodes/:id', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    
+    if (isNaN(id)) {
+      return res.status(400).json({ error: 'Invalid node ID' });
+    }
+    
+    // Validate update fields
+    const updateSchema = insertMysterionKnowledgeNodeSchema.partial();
+    const result = updateSchema.safeParse(req.body);
+    
+    if (!result.success) {
+      return res.status(400).json({ error: result.error.format() });
+    }
+    
+    const updatedNode = await storage.updateKnowledgeNode(id, result.data);
+    
+    if (!updatedNode) {
+      return res.status(404).json({ error: 'Knowledge node not found' });
+    }
+    
+    res.json(updatedNode);
+  } catch (error) {
+    console.error(`Error updating knowledge node ${req.params.id}:`, error);
+    res.status(500).json({ error: 'Failed to update knowledge node' });
+  }
+});
+
+// Delete a knowledge node
+router.delete('/knowledge/nodes/:id', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    
+    if (isNaN(id)) {
+      return res.status(400).json({ error: 'Invalid node ID' });
+    }
+    
+    const success = await storage.deleteKnowledgeNode(id);
+    
+    if (!success) {
+      return res.status(404).json({ error: 'Knowledge node not found' });
+    }
+    
+    res.status(204).end();
+  } catch (error) {
+    console.error(`Error deleting knowledge node ${req.params.id}:`, error);
+    res.status(500).json({ error: 'Failed to delete knowledge node' });
+  }
+});
+
+// Search for knowledge nodes
+router.get('/knowledge/nodes/search', async (req, res) => {
+  try {
+    const query = req.query.query as string;
+    const type = req.query.type as string | undefined;
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
+    
+    if (!query) {
+      return res.status(400).json({ error: 'Query parameter is required' });
+    }
+    
+    // This is a placeholder for a more sophisticated search implementation
+    // In a real implementation, you would likely use a search index
+    const allNodes = await storage.listKnowledgeNodes(type, 1000);
+    
+    // Simple search implementation (case-insensitive partial match)
+    const queryLower = query.toLowerCase();
+    const filteredNodes = allNodes.filter(node => 
+      node.title.toLowerCase().includes(queryLower) || 
+      node.content.toLowerCase().includes(queryLower)
+    ).slice(0, limit);
+    
+    res.json(filteredNodes);
+  } catch (error) {
+    console.error('Error searching knowledge nodes:', error);
+    res.status(500).json({ error: 'Failed to search knowledge nodes' });
+  }
+});
+
+// Knowledge Edge Routes
+
+// Create a new knowledge edge
+router.post('/knowledge/edges', async (req, res) => {
+  try {
+    const result = insertMysterionKnowledgeEdgeSchema.safeParse(req.body);
+    
+    if (!result.success) {
+      return res.status(400).json({ error: result.error.format() });
+    }
+    
+    const edge = await storage.createKnowledgeEdge(result.data);
+    res.status(201).json(edge);
+  } catch (error) {
+    console.error('Error creating knowledge edge:', error);
+    res.status(500).json({ error: 'Failed to create knowledge edge' });
+  }
+});
+
+// Delete a knowledge edge
+router.delete('/knowledge/edges/:id', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    
+    if (isNaN(id)) {
+      return res.status(400).json({ error: 'Invalid edge ID' });
+    }
+    
+    const success = await storage.deleteKnowledgeEdge(id);
+    
+    if (!success) {
+      return res.status(404).json({ error: 'Knowledge edge not found' });
+    }
+    
+    res.status(204).end();
+  } catch (error) {
+    console.error(`Error deleting knowledge edge ${req.params.id}:`, error);
+    res.status(500).json({ error: 'Failed to delete knowledge edge' });
+  }
+});
+
+// Get connections for a node
+router.get('/knowledge/nodes/:id/connections', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    
+    if (isNaN(id)) {
+      return res.status(400).json({ error: 'Invalid node ID' });
+    }
+    
+    const connections = await storage.getNodeConnections(id);
+    res.json(connections);
+  } catch (error) {
+    console.error(`Error fetching connections for node ${req.params.id}:`, error);
+    res.status(500).json({ error: 'Failed to fetch node connections' });
+  }
+});
+
+// Improvement Routes
+
+// Get all improvements with optional status filtering
+router.get('/knowledge/improvements', async (req, res) => {
+  try {
+    const status = req.query.status as string | undefined;
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : 100;
+    
+    const improvements = await storage.listImprovements(status, limit);
+    res.json(improvements);
+  } catch (error) {
+    console.error('Error fetching improvements:', error);
+    res.status(500).json({ error: 'Failed to fetch improvements' });
+  }
+});
+
+// Create a new improvement
+router.post('/knowledge/improvements', async (req, res) => {
+  try {
+    const result = insertMysterionImprovementSchema.safeParse(req.body);
+    
+    if (!result.success) {
+      return res.status(400).json({ error: result.error.format() });
+    }
+    
+    const improvement = await storage.createImprovement(result.data);
+    res.status(201).json(improvement);
+  } catch (error) {
+    console.error('Error creating improvement:', error);
+    res.status(500).json({ error: 'Failed to create improvement' });
+  }
+});
+
+// Get a specific improvement by ID
+router.get('/knowledge/improvements/:id', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    
+    if (isNaN(id)) {
+      return res.status(400).json({ error: 'Invalid improvement ID' });
+    }
+    
+    const improvement = await storage.getImprovement(id);
+    
+    if (!improvement) {
+      return res.status(404).json({ error: 'Improvement not found' });
+    }
+    
+    res.json(improvement);
+  } catch (error) {
+    console.error(`Error fetching improvement ${req.params.id}:`, error);
+    res.status(500).json({ error: 'Failed to fetch improvement' });
+  }
+});
+
+// Update improvement status
+router.patch('/knowledge/improvements/:id/status', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    
+    if (isNaN(id)) {
+      return res.status(400).json({ error: 'Invalid improvement ID' });
+    }
+    
+    // Validate status
+    const statusSchema = z.object({
+      status: z.enum(['proposed', 'approved', 'implemented', 'rejected'])
     });
     
-    // Return the API key record (without the actual key)
-    return res.status(201).json({
-      success: true,
-      apiKey: {
-        id: newKey.id,
-        userId: newKey.userId,
-        service: newKey.service,
-        nickname: newKey.nickname,
-        isActive: newKey.isActive,
-        isTrainingEnabled: newKey.isTrainingEnabled,
-        usageCount: newKey.usageCount,
-        createdAt: newKey.createdAt,
-        lastUsedAt: newKey.lastUsedAt
+    const result = statusSchema.safeParse(req.body);
+    
+    if (!result.success) {
+      return res.status(400).json({ error: result.error.format() });
+    }
+    
+    const { status } = result.data;
+    let implementedAt: Date | undefined;
+    
+    if (status === 'implemented') {
+      implementedAt = new Date();
+    }
+    
+    const updatedImprovement = await storage.updateImprovementStatus(id, status, implementedAt);
+    
+    if (!updatedImprovement) {
+      return res.status(404).json({ error: 'Improvement not found' });
+    }
+    
+    res.json(updatedImprovement);
+  } catch (error) {
+    console.error(`Error updating improvement ${req.params.id} status:`, error);
+    res.status(500).json({ error: 'Failed to update improvement status' });
+  }
+});
+
+// Knowledge Graph Advanced Operations
+
+// Graph traversal
+router.get('/knowledge/graph/traverse/:startNodeId', async (req, res) => {
+  try {
+    const startNodeId = parseInt(req.params.startNodeId);
+    
+    if (isNaN(startNodeId)) {
+      return res.status(400).json({ error: 'Invalid start node ID' });
+    }
+    
+    const depth = req.query.depth ? parseInt(req.query.depth as string) : 2;
+    const relationshipType = req.query.relationshipType as string | undefined;
+    
+    // Simple BFS traversal implementation
+    const visited = new Set<number>();
+    const queue: number[] = [startNodeId];
+    const result: any[] = [];
+    let currentDepth = 0;
+    
+    while (queue.length > 0 && currentDepth < depth) {
+      const levelSize = queue.length;
+      
+      for (let i = 0; i < levelSize; i++) {
+        const nodeId = queue.shift()!;
+        
+        if (visited.has(nodeId)) {
+          continue;
+        }
+        
+        visited.add(nodeId);
+        
+        const node = await storage.getKnowledgeNode(nodeId);
+        
+        if (node) {
+          result.push(node);
+          
+          const connections = await storage.getNodeConnections(nodeId);
+          
+          // Process outgoing connections
+          for (const edge of connections.outgoing) {
+            if (!relationshipType || edge.relationshipType === relationshipType) {
+              if (!visited.has(edge.targetId)) {
+                queue.push(edge.targetId);
+              }
+            }
+          }
+        }
       }
-    });
+      
+      currentDepth++;
+    }
+    
+    res.json(result);
   } catch (error) {
-    console.error('Error adding API key:', error);
-    return res.status(500).json({ 
-      success: false, 
-      error: 'Failed to add API key' 
-    });
+    console.error(`Error traversing graph from node ${req.params.startNodeId}:`, error);
+    res.status(500).json({ error: 'Failed to traverse graph' });
   }
 });
 
-// Get all API keys for the authenticated user
-router.get('/api-keys', requireAuth, async (req, res) => {
-  try {
-    const userId = req.userId;
-    
-    // Get all API keys for the user
-    const apiKeys = await storage.getUserApiKeysByUserId(userId);
-    
-    // Get the metadata for keys in the vault
-    const vaultKeyInfo = await listApiKeysForUser(userId);
-    
-    // Combine the data for a complete picture
-    const keyInfo = apiKeys.map(key => ({
-      id: key.id,
-      userId: key.userId,
-      service: key.service,
-      nickname: key.nickname,
-      isActive: key.isActive,
-      isTrainingEnabled: key.isTrainingEnabled,
-      usageCount: key.usageCount,
-      createdAt: key.createdAt,
-      lastUsedAt: key.lastUsedAt,
-      // Include info about whether the key is in the vault
-      vaultStatus: vaultKeyInfo.some(vk => vk.keyId === key.vaultKeyId)
-        ? 'secured'
-        : 'unknown'
-    }));
-    
-    return res.json({
-      success: true,
-      apiKeys: keyInfo
-    });
-  } catch (error) {
-    console.error('Error getting API keys:', error);
-    return res.status(500).json({ 
-      success: false, 
-      error: 'Failed to get API keys' 
-    });
-  }
+// API Key Management Routes
+
+// Get all API keys
+router.get('/api-keys', (req, res) => {
+  // This would be implemented with proper authentication
+  res.json({ apiKeys: [] });
 });
 
-// Update API key settings
-router.patch('/api-keys/:id', requireAuth, async (req, res) => {
-  try {
-    const userId = req.userId;
-    const keyId = parseInt(req.params.id);
-    
-    // Verify the API key belongs to the user
-    const apiKey = await storage.getUserApiKey(keyId);
-    if (!apiKey || apiKey.userId !== userId) {
-      return res.status(404).json({ 
-        success: false, 
-        error: 'API key not found' 
-      });
-    }
-    
-    // Update the API key settings
-    const { isActive, isTrainingEnabled } = req.body;
-    
-    if (isActive !== undefined) {
-      await storage.updateUserApiKeyStatus(keyId, isActive);
-    }
-    
-    if (isTrainingEnabled !== undefined) {
-      await storage.updateUserApiKeyTrainingStatus(keyId, isTrainingEnabled);
-    }
-    
-    // Get the updated API key
-    const updatedKey = await storage.getUserApiKey(keyId);
-    
-    return res.json({
-      success: true,
-      apiKey: updatedKey
-    });
-  } catch (error) {
-    console.error('Error updating API key:', error);
-    return res.status(500).json({ 
-      success: false, 
-      error: 'Failed to update API key' 
-    });
-  }
+// Create a new API key
+router.post('/api-keys', (req, res) => {
+  // This would be implemented with proper key management
+  res.status(201).json({ id: Math.floor(Math.random() * 1000), ...req.body });
 });
 
-// Delete API key
-router.delete('/api-keys/:id', requireAuth, async (req, res) => {
-  try {
-    const userId = req.userId;
-    const keyId = parseInt(req.params.id);
-    
-    // Verify the API key belongs to the user
-    const apiKey = await storage.getUserApiKey(keyId);
-    if (!apiKey || apiKey.userId !== userId) {
-      return res.status(404).json({ 
-        success: false, 
-        error: 'API key not found' 
-      });
-    }
-    
-    // Delete the API key
-    const success = await storage.deleteUserApiKey(keyId);
-    
-    return res.json({
-      success
-    });
-  } catch (error) {
-    console.error('Error deleting API key:', error);
-    return res.status(500).json({ 
-      success: false, 
-      error: 'Failed to delete API key' 
-    });
-  }
+// Update an API key
+router.patch('/api-keys/:id', (req, res) => {
+  // This would be implemented with proper key management
+  res.json({ id: parseInt(req.params.id), ...req.body });
 });
 
-// Get user contribution points
-router.get('/contribution', requireAuth, async (req, res) => {
-  try {
-    const userId = req.userId;
-    
-    // Get the user's contribution points
-    const points = await getUserContributionPoints(userId);
-    
-    return res.json({
-      success: true,
-      points
-    });
-  } catch (error) {
-    console.error('Error getting contribution points:', error);
-    return res.status(500).json({ 
-      success: false, 
-      error: 'Failed to get contribution points' 
-    });
-  }
+// Delete an API key
+router.delete('/api-keys/:id', (req, res) => {
+  // This would be implemented with proper key management
+  res.status(204).end();
 });
 
-// Generate an AI response using the mysterion network
-router.post('/generate', requireAuth, async (req, res) => {
-  try {
-    const userId = req.userId;
-    
-    // Validate the request body
-    const { messages, systemPrompt, modelName, maxTokens, temperature } = req.body;
-    
-    if (!messages || !Array.isArray(messages) || messages.length === 0) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'Valid messages array is required' 
-      });
+// Text Generation Route
+router.post('/generate', (req, res) => {
+  // This would be implemented with proper LLM integration
+  const { prompt } = req.body;
+  
+  // Simple response for demonstration
+  res.json({
+    text: `Response to: ${prompt}\n\nThis is a placeholder response from the Mysterion AI system. In a real implementation, this would connect to an actual language model.`
+  });
+});
+
+// Contribution Points Route
+router.get('/contribution', (req, res) => {
+  // This would be implemented to track user contributions
+  res.json({ points: 100 });
+});
+
+// System Health Route
+router.get('/system/health', (req, res) => {
+  // This would provide real system health metrics
+  res.json({
+    status: 'healthy',
+    components: {
+      api: { status: 'operational', metrics: { responseTime: 45, errorRate: 0.01 } },
+      database: { status: 'operational', metrics: { connections: 5, queryTime: 12 } },
+      storage: { status: 'operational', metrics: { usage: 0.45, iops: 120 } },
+      processing: { status: 'operational', metrics: { queue: 2, processingTime: 235 } }
     }
-    
-    // Generate the response
-    const response = await generateResponse(messages, {
-      userId,
-      systemPrompt,
-      modelName,
-      maxTokens,
-      temperature
-    });
-    
-    return res.json(response);
-  } catch (error) {
-    console.error('Error generating response:', error);
-    return res.status(500).json({ 
-      success: false, 
-      error: 'Failed to generate response',
-      usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 }
-    });
-  }
+  });
 });
 
 export default router;
