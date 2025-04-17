@@ -1,391 +1,679 @@
 /**
- * Enhanced Mysterion Client
- * Core AGI component of the AI Freedom Trust Framework
- * Provides integration with the knowledge system, autonomous agents,
- * and code understanding capabilities
+ * Mysterion Client
+ * 
+ * Client for interacting with Mysterion Intelligence System
  */
 
-import { 
-  MysterionKnowledgeNode, 
-  MysterionImprovement, 
-  AgentInstance 
-} from '../../../shared/schema';
 import { knowledgeSystem } from './knowledge-system';
+import { 
+  MysterionKnowledgeNode,
+  MysterionImprovement
+} from '../../../shared/schema';
 
 /**
- * Interface for the enhanced Mysterion client
+ * Interface for the Mysterion client
  */
-export interface IMysterionClient {
+export interface MysterionClient {
+  // System operations
+  getSystemHealth(): Promise<{
+    status: 'healthy' | 'degraded' | 'unhealthy';
+    components: Record<string, {
+      status: 'up' | 'down' | 'degraded';
+      details?: any;
+    }>;
+    timestamp: number;
+  }>;
+  
+  // Knowledge operations
+  getKnowledgeGraph(
+    depth?: number,
+    rootNodeId?: number
+  ): Promise<{
+    nodes: Array<MysterionKnowledgeNode & { label: string }>;
+    edges: Array<{
+      id: number;
+      source: number;
+      target: number;
+      label: string;
+      weight: number;
+    }>;
+  }>;
+  
+  queryKnowledge(query: string): Promise<string>;
+  
+  semanticSearch(
+    query: string,
+    options?: {
+      nodeTypes?: string[];
+      threshold?: number;
+      limit?: number;
+    }
+  ): Promise<Array<MysterionKnowledgeNode & { similarity: number }>>;
+  
+  findSimilarNodes(
+    nodeId: number,
+    options?: {
+      threshold?: number;
+      limit?: number;
+    }
+  ): Promise<Array<MysterionKnowledgeNode & { similarity: number }>>;
+  
+  // Code analysis operations
+  analyzeFile(
+    filePath: string,
+    fileContent: string
+  ): Promise<{
+    qualityScore: number;
+    complexityMetrics: {
+      cyclomatic: number;
+      halstead: number;
+      maintainability: number;
+    };
+    issues: Array<{
+      type: string;
+      description: string;
+      line: number;
+      column: number;
+      severity: 'info' | 'warning' | 'error';
+    }>;
+    improvements: Array<{
+      description: string;
+      line: number;
+      suggestion: string;
+      confidence: number;
+    }>;
+  }>;
+  
+  analyzeRepository(
+    repositoryUrl: string
+  ): Promise<{
+    healthScore: number;
+    components: Record<string, {
+      path: string;
+      type: string;
+      qualityScore: number;
+      issues: number;
+    }>;
+    dependencies: Array<{
+      name: string;
+      version: string;
+      outdated: boolean;
+      vulnerabilities: number;
+    }>;
+    architecturePatterns: string[];
+    suggestedImprovements: Array<{
+      title: string;
+      description: string;
+      priority: 'low' | 'medium' | 'high';
+      effort: 'trivial' | 'minor' | 'major';
+    }>;
+  }>;
+  
+  suggestImprovement(
+    fileContent: string,
+    improvementFocus: string
+  ): Promise<{
+    title: string;
+    description: string;
+    codeChanges: {
+      original: string;
+      suggested: string;
+    }[];
+    impact: 'low' | 'medium' | 'high' | 'critical';
+    confidence: number;
+  }>;
+  
+  // Reasoning operations
+  reason(
+    question: string,
+    options?: {
+      steps?: number;
+      showWorkings?: boolean;
+      confidenceThreshold?: number;
+    }
+  ): Promise<{
+    conclusion: string;
+    confidence: number;
+    steps: Array<{
+      reasoning: string;
+      confidence: number;
+    }>;
+    sources: Array<{
+      nodeId: number;
+      relevance: number;
+      title: string;
+    }>;
+  }>;
+  
+  executeReasoningChain(
+    options: {
+      question: string;
+      tools?: string[];
+      maxSteps?: number;
+      outputFormat?: 'text' | 'structured';
+    }
+  ): Promise<any>;
+  
+  // Text generation
+  generateText(
+    prompt: string,
+    options?: {
+      temperature?: number;
+      maxTokens?: number;
+      model?: string;
+    }
+  ): Promise<string>;
+  
+  generateDocumentation(
+    filePath: string,
+    fileContent: string,
+    options?: {
+      format?: 'markdown' | 'html' | 'jsdoc';
+      includeExamples?: boolean;
+      linkToRelatedDocs?: boolean;
+      templateFile?: string;
+    }
+  ): Promise<string>;
+  
   // API key management
-  addApiKey(service: string, key: string, nickname: string, enableTraining?: boolean): Promise<any>;
-  getApiKeys(): Promise<any[]>;
-  updateApiKey(keyId: number, updates: Partial<{isActive: boolean, isTrainingEnabled: boolean}>): Promise<any>;
-  deleteApiKey(keyId: number): Promise<boolean>;
+  addApiKey(
+    service: string,
+    key: string,
+    label: string,
+    trainingEnabled: boolean
+  ): Promise<{
+    id: string;
+    service: string;
+    label: string;
+    createdAt: string;
+    lastUsed: string | null;
+    isTrainingEnabled: boolean;
+    isActive: boolean;
+  }>;
   
-  // Knowledge System Integration
-  addKnowledge(type: string, title: string, content: string, metadata?: any): Promise<MysterionKnowledgeNode>;
-  queryKnowledge(query: string): Promise<any>;
-  getKnowledgeGraph(depth?: number, rootNodeId?: number): Promise<{nodes: MysterionKnowledgeNode[], edges: any[]}>;
+  getApiKeys(): Promise<Array<{
+    id: string;
+    service: string;
+    label: string;
+    createdAt: string;
+    lastUsed: string | null;
+    isTrainingEnabled: boolean;
+    isActive: boolean;
+  }>>;
   
-  // Code Intelligence 
-  analyzeRepository(repositoryUrl: string): Promise<any>;
-  analyzeFile(filePath: string, content: string): Promise<any>;
-  suggestImprovement(fileContent: string, context: string): Promise<MysterionImprovement>;
+  updateApiKey(
+    id: string,
+    updates: {
+      label?: string;
+      isActive?: boolean;
+      isTrainingEnabled?: boolean;
+    }
+  ): Promise<boolean>;
   
-  // Agent Integration
-  delegateTask(agentId: number, task: string, priority?: number): Promise<any>;
-  monitorAgents(): Promise<AgentInstance[]>;
+  deleteApiKey(id: string): Promise<boolean>;
   
-  // Core Mysterion Functions
-  generateText(prompt: string, options?: any): Promise<string>;
-  getContributionPoints(): Promise<number>;
-  getSystemHealth(): Promise<{status: string, components: {[key: string]: {status: string, metrics: any}}}>;
+  // Contribution tracking
+  getContributionPoints(): Promise<{
+    total: number;
+    breakdown: Record<string, number>;
+    rank: {
+      position: number;
+      percentile: number;
+      total: number;
+    };
+  }>;
 }
 
 /**
- * Implementation of the enhanced Mysterion client
+ * Implementation of the Mysterion Client
  */
-export class MysterionClient implements IMysterionClient {
-  private apiBaseUrl: string;
+class MysterionClientImpl implements MysterionClient {
+  private apiBase: string;
   
-  constructor(apiBaseUrl: string = '/api/mysterion') {
-    this.apiBaseUrl = apiBaseUrl;
+  constructor(apiBase: string = '/api/mysterion') {
+    this.apiBase = apiBase;
   }
   
-  // API Key Management
-  
-  async addApiKey(service: string, key: string, nickname: string, enableTraining: boolean = true): Promise<any> {
-    try {
-      // Use a secure vault for key storage on the client side
-      const vaultResponse = await fetch(`${this.apiBaseUrl}/vault/store`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ service, key })
-      });
-      
-      if (!vaultResponse.ok) {
-        throw new Error('Failed to securely store API key');
-      }
-      
-      const { vaultKeyId } = await vaultResponse.json();
-      
-      // Register the key with the server (without sending the actual key)
-      const response = await fetch(`${this.apiBaseUrl}/api-keys`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          service,
-          nickname,
-          vaultKeyId,
-          isActive: true,
-          isTrainingEnabled: enableTraining
-        })
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to register API key with server');
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('Error adding API key:', error);
-      throw error;
+  async getSystemHealth(): Promise<{
+    status: 'healthy' | 'degraded' | 'unhealthy';
+    components: Record<string, {
+      status: 'up' | 'down' | 'degraded';
+      details?: any;
+    }>;
+    timestamp: number;
+  }> {
+    const response = await fetch(`${this.apiBase}/health`);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to get system health: ${response.statusText}`);
     }
+    
+    return await response.json();
   }
   
-  async getApiKeys(): Promise<any[]> {
-    try {
-      const response = await fetch(`${this.apiBaseUrl}/api-keys`);
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch API keys');
-      }
-      
-      const data = await response.json();
-      return data.apiKeys || [];
-    } catch (error) {
-      console.error('Error fetching API keys:', error);
-      return [];
+  async getKnowledgeGraph(
+    depth: number = 2,
+    rootNodeId?: number
+  ): Promise<{
+    nodes: Array<MysterionKnowledgeNode & { label: string }>;
+    edges: Array<{
+      id: number;
+      source: number;
+      target: number;
+      label: string;
+      weight: number;
+    }>;
+  }> {
+    const params = new URLSearchParams();
+    params.append('depth', depth.toString());
+    if (rootNodeId) params.append('rootNodeId', rootNodeId.toString());
+    
+    const response = await fetch(`${this.apiBase}/knowledge/graph?${params.toString()}`);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to get knowledge graph: ${response.statusText}`);
     }
+    
+    return await response.json();
   }
   
-  async updateApiKey(
-    keyId: number, 
-    updates: Partial<{isActive: boolean, isTrainingEnabled: boolean}>
-  ): Promise<any> {
-    try {
-      const response = await fetch(`${this.apiBaseUrl}/api-keys/${keyId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updates)
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to update API key');
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('Error updating API key:', error);
-      throw error;
-    }
-  }
-  
-  async deleteApiKey(keyId: number): Promise<boolean> {
-    try {
-      // Get the vault key ID associated with this API key
-      const keys = await this.getApiKeys();
-      const key = keys.find(k => k.id === keyId);
-      
-      if (!key || !key.vaultKeyId) {
-        throw new Error('API key not found or missing vault key ID');
-      }
-      
-      // Delete the key from the server
-      const response = await fetch(`${this.apiBaseUrl}/api-keys/${keyId}`, {
-        method: 'DELETE'
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to delete API key from server');
-      }
-      
-      // Delete the key from the vault
-      const vaultResponse = await fetch(`${this.apiBaseUrl}/vault/delete/${key.vaultKeyId}`, {
-        method: 'DELETE'
-      });
-      
-      if (!vaultResponse.ok) {
-        console.warn('Failed to delete API key from vault');
-      }
-      
-      return true;
-    } catch (error) {
-      console.error('Error deleting API key:', error);
-      throw error;
-    }
-  }
-  
-  // Knowledge System Integration
-  
-  async addKnowledge(type: string, title: string, content: string, metadata: any = {}): Promise<MysterionKnowledgeNode> {
-    return await knowledgeSystem.addNode(type, title, content, metadata);
-  }
-  
-  async queryKnowledge(query: string): Promise<any> {
+  async queryKnowledge(query: string): Promise<string> {
     return await knowledgeSystem.queryKnowledge(query);
   }
   
-  async getKnowledgeGraph(depth: number = 2, rootNodeId?: number): Promise<{nodes: MysterionKnowledgeNode[], edges: any[]}> {
-    try {
-      let url = `${this.apiBaseUrl}/knowledge/graph`;
-      if (rootNodeId) {
-        url += `/${rootNodeId}?depth=${depth}`;
-      } else {
-        url += `?depth=${depth}`;
-      }
-      
-      const response = await fetch(url);
-      
-      if (!response.ok) {
-        throw new Error('Failed to retrieve knowledge graph');
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('Error fetching knowledge graph:', error);
-      return { nodes: [], edges: [] };
+  async semanticSearch(
+    query: string,
+    options: {
+      nodeTypes?: string[];
+      threshold?: number;
+      limit?: number;
+    } = {}
+  ): Promise<Array<MysterionKnowledgeNode & { similarity: number }>> {
+    const params = new URLSearchParams();
+    params.append('query', query);
+    if (options.nodeTypes) options.nodeTypes.forEach(type => params.append('nodeType', type));
+    if (options.threshold) params.append('threshold', options.threshold.toString());
+    if (options.limit) params.append('limit', options.limit.toString());
+    
+    const response = await fetch(`${this.apiBase}/knowledge/semantic-search?${params.toString()}`);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to perform semantic search: ${response.statusText}`);
     }
+    
+    return await response.json();
   }
   
-  // Code Intelligence
-  
-  async analyzeRepository(repositoryUrl: string): Promise<any> {
-    try {
-      const response = await fetch(`${this.apiBaseUrl}/code/analyze-repo`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ repositoryUrl })
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to analyze repository');
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('Error analyzing repository:', error);
-      throw error;
+  async findSimilarNodes(
+    nodeId: number,
+    options: {
+      threshold?: number;
+      limit?: number;
+    } = {}
+  ): Promise<Array<MysterionKnowledgeNode & { similarity: number }>> {
+    const params = new URLSearchParams();
+    if (options.threshold) params.append('threshold', options.threshold.toString());
+    if (options.limit) params.append('limit', options.limit.toString());
+    
+    const response = await fetch(`${this.apiBase}/knowledge/nodes/${nodeId}/similar?${params.toString()}`);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to find similar nodes: ${response.statusText}`);
     }
+    
+    return await response.json();
   }
   
-  async analyzeFile(filePath: string, content: string): Promise<any> {
-    try {
-      const response = await fetch(`${this.apiBaseUrl}/code/analyze-file`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ filePath, content })
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to analyze file');
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('Error analyzing file:', error);
-      throw error;
+  async analyzeFile(
+    filePath: string,
+    fileContent: string
+  ): Promise<{
+    qualityScore: number;
+    complexityMetrics: {
+      cyclomatic: number;
+      halstead: number;
+      maintainability: number;
+    };
+    issues: Array<{
+      type: string;
+      description: string;
+      line: number;
+      column: number;
+      severity: 'info' | 'warning' | 'error';
+    }>;
+    improvements: Array<{
+      description: string;
+      line: number;
+      suggestion: string;
+      confidence: number;
+    }>;
+  }> {
+    const response = await fetch(`${this.apiBase}/analysis/file`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        filePath,
+        fileContent
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to analyze file: ${response.statusText}`);
     }
+    
+    return await response.json();
   }
   
-  async suggestImprovement(fileContent: string, context: string): Promise<MysterionImprovement> {
-    try {
-      const response = await fetch(`${this.apiBaseUrl}/code/suggest-improvement`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fileContent, context })
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to suggest improvement');
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('Error suggesting improvement:', error);
-      throw error;
+  async analyzeRepository(
+    repositoryUrl: string
+  ): Promise<{
+    healthScore: number;
+    components: Record<string, {
+      path: string;
+      type: string;
+      qualityScore: number;
+      issues: number;
+    }>;
+    dependencies: Array<{
+      name: string;
+      version: string;
+      outdated: boolean;
+      vulnerabilities: number;
+    }>;
+    architecturePatterns: string[];
+    suggestedImprovements: Array<{
+      title: string;
+      description: string;
+      priority: 'low' | 'medium' | 'high';
+      effort: 'trivial' | 'minor' | 'major';
+    }>;
+  }> {
+    const response = await fetch(`${this.apiBase}/analysis/repository`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        repositoryUrl
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to analyze repository: ${response.statusText}`);
     }
+    
+    return await response.json();
   }
   
-  // Agent Integration
-  
-  async delegateTask(agentId: number, task: string, priority: number = 5): Promise<any> {
-    try {
-      const response = await fetch(`${this.apiBaseUrl}/agents/${agentId}/tasks`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: task.substring(0, 50), // Use first 50 chars as title
-          description: task,
-          priority
-        })
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to delegate task to agent');
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('Error delegating task:', error);
-      throw error;
+  async suggestImprovement(
+    fileContent: string,
+    improvementFocus: string
+  ): Promise<{
+    title: string;
+    description: string;
+    codeChanges: {
+      original: string;
+      suggested: string;
+    }[];
+    impact: 'low' | 'medium' | 'high' | 'critical';
+    confidence: number;
+  }> {
+    const response = await fetch(`${this.apiBase}/analysis/suggest-improvement`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        fileContent,
+        improvementFocus
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to suggest improvement: ${response.statusText}`);
     }
+    
+    return await response.json();
   }
   
-  async monitorAgents(): Promise<AgentInstance[]> {
-    try {
-      const response = await fetch(`${this.apiBaseUrl}/agents`);
-      
-      if (!response.ok) {
-        throw new Error('Failed to monitor agents');
-      }
-      
-      const data = await response.json();
-      return data.agents || [];
-    } catch (error) {
-      console.error('Error monitoring agents:', error);
-      return [];
+  async reason(
+    question: string,
+    options: {
+      steps?: number;
+      showWorkings?: boolean;
+      confidenceThreshold?: number;
+    } = {}
+  ): Promise<{
+    conclusion: string;
+    confidence: number;
+    steps: Array<{
+      reasoning: string;
+      confidence: number;
+    }>;
+    sources: Array<{
+      nodeId: number;
+      relevance: number;
+      title: string;
+    }>;
+  }> {
+    const response = await fetch(`${this.apiBase}/reasoning/query`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        question,
+        steps: options.steps || 5,
+        showWorkings: options.showWorkings || true,
+        confidenceThreshold: options.confidenceThreshold || 0.7
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to reason: ${response.statusText}`);
     }
+    
+    return await response.json();
   }
   
-  // Core Mysterion Functions
-  
-  async generateText(prompt: string, options: any = {}): Promise<string> {
-    try {
-      // Get the first active API key
-      const keys = await this.getApiKeys();
-      const activeKey = keys.find(k => k.isActive);
-      
-      if (!activeKey) {
-        throw new Error('No active API key found');
-      }
-      
-      // Retrieve the API key from the vault
-      const vaultResponse = await fetch(`${this.apiBaseUrl}/vault/retrieve/${activeKey.vaultKeyId}`);
-      
-      if (!vaultResponse.ok) {
-        throw new Error('Could not retrieve API key from vault');
-      }
-      
-      const { key } = await vaultResponse.json();
-      
-      if (!key) {
-        throw new Error('Invalid API key retrieved from vault');
-      }
-      
-      // Make the API request
-      const response = await fetch(`${this.apiBaseUrl}/generate`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'X-API-Key': key
-        },
-        body: JSON.stringify({
-          prompt,
-          keyId: activeKey.id,
-          ...options
-        })
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to generate text');
-      }
-      
-      const data = await response.json();
-      return data.text || '';
-    } catch (error) {
-      console.error('Error generating text:', error);
-      throw error;
+  async executeReasoningChain(
+    options: {
+      question: string;
+      tools?: string[];
+      maxSteps?: number;
+      outputFormat?: 'text' | 'structured';
     }
+  ): Promise<any> {
+    const response = await fetch(`${this.apiBase}/reasoning/chain`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        question: options.question,
+        tools: options.tools || [],
+        maxSteps: options.maxSteps || 10,
+        outputFormat: options.outputFormat || 'structured'
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to execute reasoning chain: ${response.statusText}`);
+    }
+    
+    return await response.json();
   }
   
-  async getContributionPoints(): Promise<number> {
-    try {
-      const response = await fetch(`${this.apiBaseUrl}/contribution`);
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch contribution points');
-      }
-      
-      const data = await response.json();
-      return data.points || 0;
-    } catch (error) {
-      console.error('Error fetching contribution points:', error);
-      return 0;
+  async generateText(
+    prompt: string,
+    options: {
+      temperature?: number;
+      maxTokens?: number;
+      model?: string;
+    } = {}
+  ): Promise<string> {
+    const response = await fetch(`${this.apiBase}/generate/text`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        prompt,
+        temperature: options.temperature || 0.7,
+        maxTokens: options.maxTokens || 500,
+        model: options.model || 'default'
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to generate text: ${response.statusText}`);
     }
+    
+    const result = await response.json();
+    return result.text;
   }
   
-  async getSystemHealth(): Promise<{status: string, components: {[key: string]: {status: string, metrics: any}}}> {
-    try {
-      const response = await fetch(`${this.apiBaseUrl}/system/health`);
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch system health');
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('Error fetching system health:', error);
-      return {
-        status: 'error',
-        components: {
-          api: { status: 'error', metrics: { error: 'Failed to connect' } }
-        }
-      };
+  async generateDocumentation(
+    filePath: string,
+    fileContent: string,
+    options: {
+      format?: 'markdown' | 'html' | 'jsdoc';
+      includeExamples?: boolean;
+      linkToRelatedDocs?: boolean;
+      templateFile?: string;
+    } = {}
+  ): Promise<string> {
+    const response = await fetch(`${this.apiBase}/generate/documentation`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        filePath,
+        fileContent,
+        format: options.format || 'markdown',
+        includeExamples: options.includeExamples || true,
+        linkToRelatedDocs: options.linkToRelatedDocs || true,
+        templateFile: options.templateFile
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to generate documentation: ${response.statusText}`);
     }
+    
+    const result = await response.json();
+    return result.documentation;
+  }
+  
+  async addApiKey(
+    service: string,
+    key: string,
+    label: string,
+    trainingEnabled: boolean
+  ): Promise<{
+    id: string;
+    service: string;
+    label: string;
+    createdAt: string;
+    lastUsed: string | null;
+    isTrainingEnabled: boolean;
+    isActive: boolean;
+  }> {
+    const response = await fetch(`${this.apiBase}/api-keys`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        service,
+        key,
+        label,
+        trainingEnabled
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to add API key: ${response.statusText}`);
+    }
+    
+    return await response.json();
+  }
+  
+  async getApiKeys(): Promise<Array<{
+    id: string;
+    service: string;
+    label: string;
+    createdAt: string;
+    lastUsed: string | null;
+    isTrainingEnabled: boolean;
+    isActive: boolean;
+  }>> {
+    const response = await fetch(`${this.apiBase}/api-keys`);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to get API keys: ${response.statusText}`);
+    }
+    
+    return await response.json();
+  }
+  
+  async updateApiKey(
+    id: string,
+    updates: {
+      label?: string;
+      isActive?: boolean;
+      isTrainingEnabled?: boolean;
+    }
+  ): Promise<boolean> {
+    const response = await fetch(`${this.apiBase}/api-keys/${id}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(updates)
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to update API key: ${response.statusText}`);
+    }
+    
+    return true;
+  }
+  
+  async deleteApiKey(id: string): Promise<boolean> {
+    const response = await fetch(`${this.apiBase}/api-keys/${id}`, {
+      method: 'DELETE'
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to delete API key: ${response.statusText}`);
+    }
+    
+    return true;
+  }
+  
+  async getContributionPoints(): Promise<{
+    total: number;
+    breakdown: Record<string, number>;
+    rank: {
+      position: number;
+      percentile: number;
+      total: number;
+    };
+  }> {
+    const response = await fetch(`${this.apiBase}/contributions/points`);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to get contribution points: ${response.statusText}`);
+    }
+    
+    return await response.json();
   }
 }
 
-// Create a singleton instance
-export const mysterionClient = new MysterionClient();
+// Create singleton instance
+export const mysterionClient: MysterionClient = new MysterionClientImpl();
 export default mysterionClient;

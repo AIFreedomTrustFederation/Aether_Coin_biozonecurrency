@@ -1,35 +1,109 @@
 /**
- * AI Freedom Trust Framework - Shared Schema
- * Core types and schemas for the integrated ecosystem components
+ * Shared types and database schema for AI Freedom Trust Framework
  */
 
 import { z } from 'zod';
+import { pgTable, serial, text, timestamp, integer, pgEnum, boolean, jsonb } from 'drizzle-orm/pg-core';
 import { createInsertSchema } from 'drizzle-zod';
-import { integer, pgTable, serial, text, timestamp, boolean, jsonb, real } from 'drizzle-orm/pg-core';
 
-// ==================== MYSTERION INTELLIGENCE SYSTEM ====================
+// --- Enums ---
+
+export const nodeTypeEnum = pgEnum('node_type', [
+  'concept', 
+  'code', 
+  'protocol', 
+  'agent', 
+  'system', 
+  'documentation',
+  'error-pattern',
+  'refactor-action',
+  'code-improvement'
+]);
+
+export const relationshipTypeEnum = pgEnum('relationship_type', [
+  'contains', 
+  'implements', 
+  'depends_on', 
+  'extends',
+  'visualizes',
+  'interacts_with',
+  'influences'
+]);
+
+export const improvementStatusEnum = pgEnum('improvement_status', [
+  'proposed',
+  'reviewing',
+  'approved',
+  'rejected',
+  'implemented',
+  'verified'
+]);
+
+export const improvementImpactEnum = pgEnum('improvement_impact', [
+  'low',
+  'medium',
+  'high',
+  'critical'
+]);
+
+export const agentCategoryEnum = pgEnum('agent_category', [
+  'economic',
+  'security',
+  'development',
+  'governance',
+  'data'
+]);
+
+export const taskStatusEnum = pgEnum('task_status', [
+  'pending',
+  'in_progress',
+  'completed',
+  'failed',
+  'canceled'
+]);
+
+export const contributionTypeEnum = pgEnum('contribution_type', [
+  'cpu',
+  'gpu',
+  'storage',
+  'data',
+  'validation'
+]);
+
+export const datasetStatusEnum = pgEnum('dataset_status', [
+  'processing',
+  'available',
+  'verified',
+  'archived',
+  'error'
+]);
+
+// --- Tables ---
+
+// Mysterion Knowledge System
 
 export const mysterionKnowledgeNode = pgTable('mysterion_knowledge_node', {
   id: serial('id').primaryKey(),
-  nodeType: text('node_type').notNull(), // 'concept', 'code', 'protocol', 'agent', 'system'
+  nodeType: nodeTypeEnum('node_type').notNull(),
   title: text('title').notNull(),
   content: text('content').notNull(),
   metadata: jsonb('metadata'),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
-  version: integer('version').default(1).notNull(),
-  confidence: real('confidence').default(0.8).notNull(),
+  confidence: integer('confidence').default(100),
+  version: integer('version').default(1),
   parentId: integer('parent_id').references(() => mysterionKnowledgeNode.id),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull()
 });
 
 export const mysterionKnowledgeEdge = pgTable('mysterion_knowledge_edge', {
   id: serial('id').primaryKey(),
-  sourceId: integer('source_id').references(() => mysterionKnowledgeNode.id).notNull(),
-  targetId: integer('target_id').references(() => mysterionKnowledgeNode.id).notNull(),
-  relationshipType: text('relationship_type').notNull(), // 'contains', 'implements', 'depends_on', 'extends'
-  weight: real('weight').default(1.0).notNull(),
+  sourceId: integer('source_id').notNull().references(() => mysterionKnowledgeNode.id),
+  targetId: integer('target_id').notNull().references(() => mysterionKnowledgeNode.id),
+  relationshipType: relationshipTypeEnum('relationship_type').notNull(),
+  weight: integer('weight').default(100),
   metadata: jsonb('metadata'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull()
 });
 
 export const mysterionImprovement = pgTable('mysterion_improvement', {
@@ -37,163 +111,174 @@ export const mysterionImprovement = pgTable('mysterion_improvement', {
   title: text('title').notNull(),
   description: text('description').notNull(),
   codeChanges: jsonb('code_changes').notNull(),
-  status: text('status').default('proposed').notNull(), // 'proposed', 'approved', 'implemented', 'rejected'
-  confidence: real('confidence').default(0.7).notNull(),
-  impact: text('impact').default('medium').notNull(), // 'low', 'medium', 'high', 'critical'
-  targetRepository: text('target_repository').notNull(),
-  targetFiles: jsonb('target_files').notNull(),
+  status: improvementStatusEnum('status').default('proposed').notNull(),
+  impact: improvementImpactEnum('impact').default('medium').notNull(),
+  confidence: integer('confidence').default(70),
+  targetRepository: text('target_repository'),
+  targetFiles: text('target_files').array(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
-  implementedAt: timestamp('implemented_at'),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  implementedAt: timestamp('implemented_at')
 });
 
-// ==================== AUTONOMOUS AGENT SYSTEM ====================
+// Agent System
 
 export const agentType = pgTable('agent_type', {
   id: serial('id').primaryKey(),
-  name: text('name').notNull().unique(),
+  name: text('name').notNull(),
   description: text('description').notNull(),
   capabilities: jsonb('capabilities').notNull(),
-  baseRewardRate: real('base_reward_rate').default(1.0).notNull(),
-  category: text('category').notNull(), // 'economic', 'security', 'development', 'governance'
+  baseRewardRate: integer('base_reward_rate').default(100),
+  category: agentCategoryEnum('category').notNull(),
   version: text('version').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull()
 });
 
 export const agentInstance = pgTable('agent_instance', {
   id: serial('id').primaryKey(),
-  agentTypeId: integer('agent_type_id').references(() => agentType.id).notNull(),
+  typeId: integer('type_id').notNull().references(() => agentType.id),
   name: text('name').notNull(),
-  status: text('status').default('active').notNull(), // 'initializing', 'active', 'paused', 'terminated'
   configuration: jsonb('configuration').notNull(),
-  performanceMetrics: jsonb('performance_metrics'),
-  owner: text('owner'), // Can be null for system-owned agents
-  createdAt: timestamp('created_at').defaultNow().notNull(),
+  status: text('status').default('active').notNull(),
+  owner: text('owner').default('system').notNull(),
   lastActive: timestamp('last_active').defaultNow().notNull(),
-  reputation: real('reputation').default(0.5).notNull(),
-  fractalCoinBalance: real('fractal_coin_balance').default(0).notNull(),
-  aiCoinBalance: real('ai_coin_balance').default(0).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull()
 });
 
 export const agentTask = pgTable('agent_task', {
   id: serial('id').primaryKey(),
-  agentInstanceId: integer('agent_instance_id').references(() => agentInstance.id).notNull(),
+  agentId: integer('agent_id').notNull().references(() => agentInstance.id),
   title: text('title').notNull(),
   description: text('description').notNull(),
-  status: text('status').default('pending').notNull(), // 'pending', 'in_progress', 'completed', 'failed'
-  priority: integer('priority').default(5).notNull(), // 1-10 scale
+  priority: integer('priority').default(5),
+  status: taskStatusEnum('status').default('pending').notNull(),
+  parameters: jsonb('parameters'),
   result: jsonb('result'),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
   startedAt: timestamp('started_at'),
   completedAt: timestamp('completed_at'),
-  resourceUsage: jsonb('resource_usage'),
-  rewardAmount: real('reward_amount'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull()
 });
 
-// ==================== COMPUTATIONAL REWARDS SYSTEM ====================
+// Reward System
 
 export const computationContribution = pgTable('computation_contribution', {
   id: serial('id').primaryKey(),
-  userId: text('user_id'), // Can be null for anonymous contributions
-  nodeId: text('node_id').notNull(), // Unique identifier for the contributing node
-  contributionType: text('contribution_type').notNull(), // 'cpu', 'gpu', 'storage', 'bandwidth', 'data'
-  startTime: timestamp('start_time').defaultNow().notNull(),
+  userId: text('user_id').notNull(),
+  nodeId: text('node_id').notNull(),
+  contributionType: contributionTypeEnum('contribution_type').notNull(),
+  resourceAmount: integer('resource_amount').notNull(),
+  startTime: timestamp('start_time').notNull(),
   endTime: timestamp('end_time'),
-  resourceAmount: real('resource_amount').notNull(), // Standardized units based on type
-  quality: real('quality').default(1.0).notNull(), // Quality multiplier
-  verified: boolean('verified').default(false).notNull(),
+  qualityFactor: integer('quality_factor').default(100),
+  verified: boolean('verified').default(false),
   verificationMethod: text('verification_method'),
-  metadata: jsonb('metadata'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull()
 });
 
 export const rewardDistribution = pgTable('reward_distribution', {
   id: serial('id').primaryKey(),
-  contributionId: integer('contribution_id').references(() => computationContribution.id).notNull(),
-  fractalCoinAmount: real('fractal_coin_amount').default(0).notNull(),
-  aiCoinAmount: real('ai_coin_amount').default(0).notNull(),
-  computeCredits: integer('compute_credits').default(0).notNull(),
-  distributionTime: timestamp('distribution_time').defaultNow().notNull(),
+  contributionId: integer('contribution_id').references(() => computationContribution.id),
+  amount: integer('amount').notNull(),
+  tokenType: text('token_type').notNull(),
+  status: text('status').default('pending').notNull(),
   transactionHash: text('transaction_hash'),
-  status: text('status').default('pending').notNull(), // 'pending', 'processed', 'failed'
+  distributedAt: timestamp('distributed_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull()
 });
 
-// ==================== TRAINING DATA BRIDGE SYSTEM ====================
+// Training Data
 
 export const trainingDataset = pgTable('training_dataset', {
   id: serial('id').primaryKey(),
   name: text('name').notNull(),
-  description: text('description'),
-  dataType: text('data_type').notNull(), // 'text', 'image', 'code', 'mixed'
-  size: integer('size').notNull(), // Size in bytes
+  description: text('description').notNull(),
+  dataType: text('data_type').notNull(),
+  size: integer('size').notNull(),
   recordCount: integer('record_count').notNull(),
-  quality: real('quality').default(0.8).notNull(),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
-  status: text('status').default('active').notNull(), // 'processing', 'active', 'archived', 'deprecated'
+  quality: integer('quality').default(100),
   contentHash: text('content_hash').notNull(),
-  filecoinCid: text('filecoin_cid'),
+  status: datasetStatusEnum('status').default('processing').notNull(),
   fractalShardConfig: jsonb('fractal_shard_config'),
+  filecoinCid: text('filecoin_cid'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull()
 });
 
 export const trainingDataFragment = pgTable('training_data_fragment', {
   id: serial('id').primaryKey(),
-  datasetId: integer('dataset_id').references(() => trainingDataset.id).notNull(),
+  datasetId: integer('dataset_id').notNull().references(() => trainingDataset.id),
   fragmentIndex: integer('fragment_index').notNull(),
   contentType: text('content_type').notNull(),
   size: integer('size').notNull(),
   contentHash: text('content_hash').notNull(),
   encryptionMethod: text('encryption_method'),
-  filecoinCid: text('filecoin_cid'),
-  fractalShardIds: jsonb('fractal_shard_ids'),
   metadata: jsonb('metadata'),
+  filecoinCid: text('filecoin_cid'),
+  fractalShardIds: text('fractal_shard_ids').array(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull()
 });
 
-// Create Zod schemas for data validation
+// --- Insert Types ---
 
-// Mysterion Intelligence
-export const insertMysterionKnowledgeNodeSchema = createInsertSchema(mysterionKnowledgeNode).omit({ id: true });
-export const insertMysterionKnowledgeEdgeSchema = createInsertSchema(mysterionKnowledgeEdge).omit({ id: true });
-export const insertMysterionImprovementSchema = createInsertSchema(mysterionImprovement).omit({ id: true, implementedAt: true });
+// Remove auto-generated fields
+export const mysterionKnowledgeNodeInsertSchema = createInsertSchema(mysterionKnowledgeNode)
+  .omit({ id: true, createdAt: true, updatedAt: true });
 
-// Autonomous Agents
-export const insertAgentTypeSchema = createInsertSchema(agentType).omit({ id: true });
-export const insertAgentInstanceSchema = createInsertSchema(agentInstance).omit({ id: true });
-export const insertAgentTaskSchema = createInsertSchema(agentTask).omit({ id: true, startedAt: true, completedAt: true, result: true, resourceUsage: true, rewardAmount: true });
+export const mysterionKnowledgeEdgeInsertSchema = createInsertSchema(mysterionKnowledgeEdge)
+  .omit({ id: true, createdAt: true, updatedAt: true });
 
-// Computational Rewards
-export const insertComputationContributionSchema = createInsertSchema(computationContribution).omit({ id: true, endTime: true, verified: true, verificationMethod: true });
-export const insertRewardDistributionSchema = createInsertSchema(rewardDistribution).omit({ id: true, transactionHash: true });
+export const mysterionImprovementInsertSchema = createInsertSchema(mysterionImprovement)
+  .omit({ id: true, createdAt: true, updatedAt: true, implementedAt: true });
 
-// Training Data Bridge
-export const insertTrainingDatasetSchema = createInsertSchema(trainingDataset).omit({ id: true, filecoinCid: true });
-export const insertTrainingDataFragmentSchema = createInsertSchema(trainingDataFragment).omit({ id: true, filecoinCid: true });
+export const agentTypeInsertSchema = createInsertSchema(agentType)
+  .omit({ id: true, createdAt: true, updatedAt: true });
 
-// TypeScript type definitions for use in the application
+export const agentInstanceInsertSchema = createInsertSchema(agentInstance)
+  .omit({ id: true, lastActive: true, createdAt: true, updatedAt: true });
+
+export const agentTaskInsertSchema = createInsertSchema(agentTask)
+  .omit({ id: true, startedAt: true, completedAt: true, createdAt: true, updatedAt: true });
+
+export const computationContributionInsertSchema = createInsertSchema(computationContribution)
+  .omit({ id: true, createdAt: true, updatedAt: true });
+
+export const rewardDistributionInsertSchema = createInsertSchema(rewardDistribution)
+  .omit({ id: true, distributedAt: true, createdAt: true, updatedAt: true });
+
+export const trainingDatasetInsertSchema = createInsertSchema(trainingDataset)
+  .omit({ id: true, createdAt: true, updatedAt: true });
+
+export const trainingDataFragmentInsertSchema = createInsertSchema(trainingDataFragment)
+  .omit({ id: true, createdAt: true, updatedAt: true });
+
+// --- Infer Types ---
+
+// Insert Types
+export type MysterionKnowledgeNodeInsert = z.infer<typeof mysterionKnowledgeNodeInsertSchema>;
+export type MysterionKnowledgeEdgeInsert = z.infer<typeof mysterionKnowledgeEdgeInsertSchema>;
+export type MysterionImprovementInsert = z.infer<typeof mysterionImprovementInsertSchema>;
+export type AgentTypeInsert = z.infer<typeof agentTypeInsertSchema>;
+export type AgentInstanceInsert = z.infer<typeof agentInstanceInsertSchema>;
+export type AgentTaskInsert = z.infer<typeof agentTaskInsertSchema>;
+export type ComputationContributionInsert = z.infer<typeof computationContributionInsertSchema>;
+export type RewardDistributionInsert = z.infer<typeof rewardDistributionInsertSchema>;
+export type TrainingDatasetInsert = z.infer<typeof trainingDatasetInsertSchema>;
+export type TrainingDataFragmentInsert = z.infer<typeof trainingDataFragmentInsertSchema>;
+
+// Select Types
 export type MysterionKnowledgeNode = typeof mysterionKnowledgeNode.$inferSelect;
 export type MysterionKnowledgeEdge = typeof mysterionKnowledgeEdge.$inferSelect;
 export type MysterionImprovement = typeof mysterionImprovement.$inferSelect;
-
 export type AgentType = typeof agentType.$inferSelect;
 export type AgentInstance = typeof agentInstance.$inferSelect;
 export type AgentTask = typeof agentTask.$inferSelect;
-
 export type ComputationContribution = typeof computationContribution.$inferSelect;
 export type RewardDistribution = typeof rewardDistribution.$inferSelect;
-
 export type TrainingDataset = typeof trainingDataset.$inferSelect;
 export type TrainingDataFragment = typeof trainingDataFragment.$inferSelect;
-
-// Insert types for use with forms and API endpoints
-export type InsertMysterionKnowledgeNode = z.infer<typeof insertMysterionKnowledgeNodeSchema>;
-export type InsertMysterionKnowledgeEdge = z.infer<typeof insertMysterionKnowledgeEdgeSchema>;
-export type InsertMysterionImprovement = z.infer<typeof insertMysterionImprovementSchema>;
-
-export type InsertAgentType = z.infer<typeof insertAgentTypeSchema>;
-export type InsertAgentInstance = z.infer<typeof insertAgentInstanceSchema>;
-export type InsertAgentTask = z.infer<typeof insertAgentTaskSchema>;
-
-export type InsertComputationContribution = z.infer<typeof insertComputationContributionSchema>;
-export type InsertRewardDistribution = z.infer<typeof insertRewardDistributionSchema>;
-
-export type InsertTrainingDataset = z.infer<typeof insertTrainingDatasetSchema>;
-export type InsertTrainingDataFragment = z.infer<typeof insertTrainingDataFragmentSchema>;
