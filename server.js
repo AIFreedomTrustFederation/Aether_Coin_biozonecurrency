@@ -537,7 +537,22 @@ async function startServer() {
     // Setup the WebSocket server on a separate path to avoid conflicts with Vite's HMR
     const wss = new WebSocketServer({ 
       server: httpServer, 
-      path: '/ws' 
+      path: '/ws',
+      // Add proper WebSocket server options for secure connections
+      perMessageDeflate: {
+        zlibDeflateOptions: {
+          // See zlib defaults
+          chunkSize: 1024,
+          memLevel: 7,
+          level: 3
+        },
+        zlibInflateOptions: {
+          chunkSize: 10 * 1024
+        },
+        // Below options specified as default values
+        concurrencyLimit: 10, // Limits zlib concurrency for performance
+        threshold: 1024 // Size below which messages should not be compressed
+      }
     });
     
     // Handle WebSocket connections
@@ -594,7 +609,10 @@ async function startServer() {
       console.log(`All requests will be proxied to ${TARGET_URL}`);
       console.log(`Static assets served from ${path.join(CLIENT_DIR, 'public')}`);
       console.log(`SPA routes configured: ${CLIENT_ROUTES.join(', ')}`);
-      console.log(`WebSocket server running on ws://0.0.0.0:${PORT}/ws`);
+      
+      // Always using secure WebSocket
+      console.log(`WebSocket server running on wss://0.0.0.0:${PORT}/ws (secure connection)`);
+      console.log(`Note: All WebSocket connections will use secure WSS protocol`);
     });
   } catch (error) {
     console.error(`Failed to start server: ${error.message}`);

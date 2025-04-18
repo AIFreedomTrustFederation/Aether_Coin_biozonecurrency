@@ -211,8 +211,8 @@
 
       updateConnectionStatus('connecting', 'Connecting...');
 
-      // Determine the correct protocol based on the current page protocol
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      // Always use secure WebSocket (WSS) protocol
+      const protocol = 'wss:';
       const wsUrl = `${protocol}//${window.location.host}/ws`;
 
       addLogEntry('system', `Connecting to ${wsUrl}`);
