@@ -2,259 +2,249 @@ name: Deploy Aetherion to Traditional Server
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
   workflow_dispatch:
+
+env:
+  NODE_VERSION: 18
+  APP_PORT: 3000
+  NODE_ENV: production
+  # Absolute path on the remote server
+  APP_DIR: /home/${{ secrets.DEPLOY_SSH_USER }}/aetherion
+  SERVICE_NAME: aetherion
 
 jobs:
   deploy-traditional:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    environment:
+      name: production
+      url: https://${{ secrets.DOMAIN_NAME }}
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      
+
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 18
-          cache: 'npm'
-      
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Build application
         run: npm run build
         env:
-          NODE_ENV: production
-      
-      # Copy server-redirect.js to dist directory
-      - name: Prepare server files
+          NODE_ENV: ${{ env.NODE_ENV }}
+
+      - name: Prepare deployment files
         run: |
           cp server-redirect.js dist/
-          echo "NODE_ENV=production" > dist/.env
-          echo "PORT=3000" >> dist/.env
-      
-      # Create necessary deployment files
-      - name: Prepare deployment package
-        run: |
-          tar -czf deploy-package.tar.gz dist package.json
-      
-      # Set up SSH key from secrets
-      - name: Set up SSH key
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ secrets.DEPLOY_SSH_HOST }} >> ~/.ssh/known_hosts
-      
-      # Deploy to server via SSH
+          cat <<EOF > dist/.env
+          NODE_ENV=${{ env.NODE_ENV }}
+          PORT=${{ env.APP_PORT }}
+          EOF
+
+      - name: Package application
+        run: tar czf deploy-package.tar.gz dist package.json
+
+      - name: Start SSH agent and add key
+        uses: webfactory/ssh-agent@v0.5.4
+        with:
+          ssh-private-key: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+
+      - name: Add SSH host to known_hosts
+        run: ssh-keyscan -H ${{ secrets.DEPLOY_SSH_HOST }} >> ~/.ssh/known_hosts
+
       - name: Deploy to server
+        env:
+          DEPLOY_HOST:      ${{ secrets.DEPLOY_SSH_HOST }}
+          DEPLOY_USER:      ${{ secrets.DEPLOY_SSH_USER }}
+          DOMAIN_NAME:      ${{ secrets.DOMAIN_NAME }}
+          DOMAIN_NAME_WWW:  ${{ secrets.DOMAIN_NAME_WWW }}   # optional
+          ADMIN_EMAIL:      ${{ secrets.ADMIN_EMAIL }}
+          APP_DIR:          ${{ env.APP_DIR }}
+          SERVICE_NAME:     ${{ env.SERVICE_NAME }}
+          APP_PORT:         ${{ env.APP_PORT }}
+          NODE_ENV:         ${{ env.NODE_ENV }}
         run: |
-          scp deploy-package.tar.gz ${{ secrets.DEPLOY_SSH_USER }}@${{ secrets.DEPLOY_SSH_HOST }}:~/
-          ssh ${{ secrets.DEPLOY_SSH_USER }}@${{ secrets.DEPLOY_SSH_HOST }} << 'EOF'
-            echo "Starting deployment process..."
-            
-            # Create backup of existing deployment if it exists
-            if [ -d ~/aetherion ]; then
-              echo "Creating backup of existing deployment..."
-              BACKUP_DIR=~/aetherion_backup_$(date +%Y%m%d%H%M%S)
-              mkdir -p $BACKUP_DIR
-              cp -r ~/aetherion/* $BACKUP_DIR/
-              echo "Backup created at $BACKUP_DIR"
+          # Compute www domain if absent
+          if [ -n "$DOMAIN_NAME_WWW" ]; then
+            domain_www="$DOMAIN_NAME_WWW"
+          else
+            domain_www="www.$DOMAIN_NAME"
+          fi
+
+          # Copy the package archive
+          scp deploy-package.tar.gz "$DEPLOY_USER@$DEPLOY_HOST:~/"
+
+          # Execute remote deployment steps
+          ssh "$DEPLOY_USER@$DEPLOY_HOST" bash -s << 'EOF'
+            set -e
+
+            # Expand variables inside the remote shell
+            APP_DIR="${APP_DIR}"
+            SERVICE_NAME="${SERVICE_NAME}"
+            DOMAIN_NAME="${DOMAIN_NAME}"
+            DOMAIN_NAME_WWW="${domain_www}"
+            ADMIN_EMAIL="${ADMIN_EMAIL}"
+            APP_PORT="${APP_PORT}"
+            NODE_ENV="${NODE_ENV}"
+
+            echo "Starting deployment on server..."
+
+            # Backup existing deployment
+            if [ -d "$APP_DIR" ]; then
+              timestamp=$(date +%Y%m%d%H%M%S)
+              backup_dir="${APP_DIR}_backup_$timestamp"
+              echo "Backing up $APP_DIR → $backup_dir"
+              mkdir -p "$backup_dir"
+              cp -r "$APP_DIR"/* "$backup_dir"/
             fi
-            
-            # Extract new deployment
-            echo "Extracting new deployment package..."
-            mkdir -p ~/aetherion
-            tar -xzf deploy-package.tar.gz -C ~/aetherion
-            cd ~/aetherion
-            
-            # Install production dependencies
-            echo "Installing production dependencies..."
+
+            # Extract new version
+            mkdir -p "$APP_DIR"
+            tar -xzf ~/deploy-package.tar.gz -C "$APP_DIR"
+            rm -f ~/deploy-package.tar.gz
+
+            # Install production deps
+            cd "$APP_DIR"
             npm install --production --no-optional
-            
-            # Create systemd service file if it doesn't exist
-            if [ ! -f /etc/systemd/system/aetherion.service ]; then
-              echo "Setting up systemd service..."
-              sudo tee /etc/systemd/system/aetherion.service > /dev/null << 'SERVICEEOF'
-          [Unit]
-          Description=Aetherion UI Wallet
-          After=network.target
 
-          [Service]
-          Type=simple
-          User=$USER
-          WorkingDirectory=$HOME/aetherion
-          ExecStart=/usr/bin/node $HOME/aetherion/dist/server-redirect.js
-          Restart=on-failure
-          RestartSec=10
-          Environment=PORT=3000
-          Environment=NODE_ENV=production
+            # Create/update systemd service
+            if [ ! -f /etc/systemd/system/$SERVICE_NAME.service ]; then
+              echo "Creating systemd service for $SERVICE_NAME"
+              sudo tee /etc/systemd/system/$SERVICE_NAME.service > /dev/null << UNIT
+            [Unit]
+            Description=Aetherion UI Wallet
+            After=network.target
 
-          [Install]
-          WantedBy=multi-user.target
-          SERVICEEOF
+            [Service]
+            Type=simple
+            User=$DEPLOY_USER
+            WorkingDirectory=$APP_DIR
+            ExecStart=/usr/bin/node $APP_DIR/dist/server-redirect.js
+            Restart=on-failure
+            RestartSec=10
+            Environment=PORT=$APP_PORT
+            Environment=NODE_ENV=$NODE_ENV
+
+            [Install]
+            WantedBy=multi-user.target
+            UNIT
 
               sudo systemctl daemon-reload
-              sudo systemctl enable aetherion
+              sudo systemctl enable $SERVICE_NAME
             fi
-            
-            # Restart the service
-            echo "Restarting Aetherion service..."
-            sudo systemctl restart aetherion
+
+            echo "Restarting $SERVICE_NAME"
+            sudo systemctl restart $SERVICE_NAME
             sleep 5
-            
-            # Check if service is running
-            if sudo systemctl is-active --quiet aetherion; then
-              echo "Aetherion service is running successfully."
-            else
-              echo "WARNING: Aetherion service failed to start. Checking logs..."
-              sudo journalctl -u aetherion --no-pager -n 50
-            fi
-            
-            # Set up nginx config if it doesn't exist
-            if [ ! -f /etc/nginx/sites-available/aetherion ]; then
-              echo "Setting up Nginx configuration..."
-              sudo tee /etc/nginx/sites-available/aetherion > /dev/null << 'NGINXEOF'
-          server {
-              listen 80;
-              listen [::]:80;
-              server_name atc.aifreedomtrust.com www.atc.aifreedomtrust.com;
 
-              # For Let's Encrypt
-              location ~ /.well-known {
-                  root /var/www/html;
-                  allow all;
-              }
+            # Nginx configuration
+            if [ ! -f /etc/nginx/sites-available/$SERVICE_NAME ]; then
+              echo "Setting up Nginx for $DOMAIN_NAME and $DOMAIN_NAME_WWW"
+              sudo tee /etc/nginx/sites-available/$SERVICE_NAME > /dev/null << NGINX
+            server {
+                listen 80;
+                listen [::]:80;
+                server_name $DOMAIN_NAME $DOMAIN_NAME_WWW;
 
-              # Redirect all HTTP traffic to HTTPS
-              location / {
-                  return 301 https://$host$request_uri;
-              }
-          }
+                # Redirect all HTTP to HTTPS
+                location / {
+                    return 301 https://\$host\$request_uri;
+                }
+            }
 
-          server {
-              listen 443 ssl http2;
-              listen [::]:443 ssl http2;
-              server_name atc.aifreedomtrust.com www.atc.aifreedomtrust.com;
+            server {
+                listen 443 ssl http2;
+                listen [::]:443 ssl http2;
+                server_name $DOMAIN_NAME $DOMAIN_NAME_WWW;
 
-              # SSL configuration
-              ssl_certificate /etc/letsencrypt/live/atc.aifreedomtrust.com/fullchain.pem;
-              ssl_certificate_key /etc/letsencrypt/live/atc.aifreedomtrust.com/privkey.pem;
-              ssl_trusted_certificate /etc/letsencrypt/live/atc.aifreedomtrust.com/chain.pem;
+                ssl_certificate /etc/letsencrypt/live/$DOMAIN_NAME/fullchain.pem;
+                ssl_certificate_key /etc/letsencrypt/live/$DOMAIN_NAME/privkey.pem;
+                ssl_trusted_certificate /etc/letsencrypt/live/$DOMAIN_NAME/chain.pem;
 
-              # SSL settings
-              ssl_protocols TLSv1.2 TLSv1.3;
-              ssl_prefer_server_ciphers on;
-              ssl_ciphers 'ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256';
-              ssl_session_timeout 1d;
-              ssl_session_cache shared:SSL:50m;
-              ssl_stapling on;
-              ssl_stapling_verify on;
-              
-              # HSTS (comment out if testing)
-              add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload" always;
-              
-              # Other security headers
-              add_header X-Content-Type-Options "nosniff" always;
-              add_header X-Frame-Options "SAMEORIGIN" always;
-              add_header X-XSS-Protection "1; mode=block" always;
-              add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+                ssl_protocols TLSv1.2 TLSv1.3;
+                ssl_prefer_server_ciphers on;
+                ssl_ciphers 'ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256';
+                add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload" always;
+                add_header X-Content-Type-Options "nosniff" always;
+                add_header X-Frame-Options "SAMEORIGIN" always;
+                add_header X-XSS-Protection "1; mode=block" always;
+                add_header Referrer-Policy "strict-origin-when-cross-origin" always;
 
-              # Primary application path at /dapp
-              location /dapp {
-                  proxy_pass http://localhost:3000/dapp;
-                  proxy_http_version 1.1;
-                  proxy_set_header Upgrade \$http_upgrade;
-                  proxy_set_header Connection 'upgrade';
-                  proxy_set_header Host \$host;
-                  proxy_set_header X-Real-IP \$remote_addr;
-                  proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-                  proxy_set_header X-Forwarded-Proto \$scheme;
-                  proxy_cache_bypass \$http_upgrade;
-                  proxy_read_timeout 90;
-              }
+                location /dapp {
+                    proxy_pass http://localhost:$APP_PORT/dapp;
+                    proxy_http_version 1.1;
+                    proxy_set_header Upgrade \$http_upgrade;
+                    proxy_set_header Connection 'upgrade';
+                    proxy_set_header Host \$host;
+                    proxy_set_header X-Real-IP \$remote_addr;
+                    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+                    proxy_set_header X-Forwarded-Proto \$scheme;
+                    proxy_cache_bypass \$http_upgrade;
+                    proxy_read_timeout 90;
+                }
 
-              # Secondary application path at /wallet (legacy support)
-              location /wallet {
-                  proxy_pass http://localhost:3000/wallet;
-                  proxy_http_version 1.1;
-                  proxy_set_header Upgrade \$http_upgrade;
-                  proxy_set_header Connection 'upgrade';
-                  proxy_set_header Host \$host;
-                  proxy_set_header X-Real-IP \$remote_addr;
-                  proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-                  proxy_set_header X-Forwarded-Proto \$scheme;
-                  proxy_cache_bypass \$http_upgrade;
-                  proxy_read_timeout 90;
-              }
+                location /wallet {
+                    proxy_pass http://localhost:$APP_PORT/wallet;
+                    proxy_http_version 1.1;
+                    proxy_set_header Upgrade \$http_upgrade;
+                    proxy_set_header Connection 'upgrade';
+                    proxy_set_header Host \$host;
+                    proxy_set_header X-Real-IP \$remote_addr;
+                    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+                    proxy_set_header X-Forwarded-Proto \$scheme;
+                    proxy_cache_bypass \$http_upgrade;
+                    proxy_read_timeout 90;
+                }
 
-              # Health check endpoint
-              location /health {
-                  proxy_pass http://localhost:3000/health;
-                  proxy_http_version 1.1;
-                  proxy_set_header Host \$host;
-                  proxy_cache_bypass \$http_upgrade;
-              }
+                location /health {
+                    proxy_pass http://localhost:$APP_PORT/health;
+                    proxy_http_version 1.1;
+                    proxy_set_header Host \$host;
+                    proxy_cache_bypass \$http_upgrade;
+                }
 
-              # Redirect root to /dapp
-              location = / {
-                  return 301 /dapp;
-              }
+                location = / {
+                    return 301 /dapp;
+                }
 
-              # For Let's Encrypt
-              location ~ /.well-known {
-                  root /var/www/html;
-                  allow all;
-              }
-          }
-          NGINXEOF
+                location ~ /.well-known {
+                    root /var/www/html;
+                    allow all;
+                }
+            }
+            NGINX
 
-              sudo ln -sf /etc/nginx/sites-available/aetherion /etc/nginx/sites-enabled/
-              
-              # Check Nginx config
-              echo "Checking Nginx configuration..."
+              sudo ln -sf /etc/nginx/sites-available/$SERVICE_NAME /etc/nginx/sites-enabled/
               sudo nginx -t
-              
-              # Restart Nginx
-              echo "Restarting Nginx..."
               sudo systemctl restart nginx
-              
-              # Setup SSL with Let's Encrypt if not already configured
-              if [ ! -d /etc/letsencrypt/live/atc.aifreedomtrust.com ]; then
-                echo "Setting up SSL with Let's Encrypt..."
-                sudo certbot --nginx -d atc.aifreedomtrust.com -d www.atc.aifreedomtrust.com --non-interactive --agree-tos --email admin@aifreedomtrust.com
+
+              # Obtain or renew certificates
+              if [ ! -d "/etc/letsencrypt/live/$DOMAIN_NAME" ]; then
+                sudo certbot --nginx -d $DOMAIN_NAME -d $DOMAIN_NAME_WWW \
+                  --non-interactive --agree-tos --email $ADMIN_EMAIL
               else
-                echo "SSL certificates already exist. Checking for renewal..."
                 sudo certbot renew --dry-run
               fi
-            else
-              # Just restart Nginx if the config already exists
-              echo "Nginx configuration already exists. Restarting Nginx..."
-              sudo systemctl restart nginx
             fi
-            
-            # Clean up
-            echo "Cleaning up..."
-            rm ~/deploy-package.tar.gz
-            
-            echo "Deployment completed successfully!"
+
+            echo "Remote deploy complete."
           EOF
-      
-      # Verify deployment
+
       - name: Verify deployment
         run: |
-          echo "Waiting for application to start up completely..."
+          echo "Waiting for service to become healthy…"
           sleep 10
-          
-          # Check if the site is accessible
-          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://atc.aifreedomtrust.com/dapp || echo "Failed")
-          
-          if [ "$HTTP_STATUS" = "200" ] || [ "$HTTP_STATUS" = "302" ]; then
-            echo "Verification successful! Application is responding with HTTP status: $HTTP_STATUS"
-          else
-            echo "Warning: Application returned unexpected HTTP status: $HTTP_STATUS"
-            # We don't fail the workflow here, just warn
+          STATUS=$(curl -s -o /dev/null -w '%{http_code}' https://${{ secrets.DOMAIN_NAME }}/dapp || echo '000')
+          echo "HTTP status: $STATUS"
+          if [ "$STATUS" != "200" ] && [ "$STATUS" != "302" ]; then
+            echo "::warning::Unexpected status code $STATUS"
           fi

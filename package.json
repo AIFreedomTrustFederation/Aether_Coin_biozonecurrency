@@ -1,4 +1,4 @@
-﻿{
+{
   "name": "rest-express",
   "version": "1.0.0",
   "type": "module",
@@ -11,7 +11,12 @@
     "db:push": "drizzle-kit push",
     "security:audit": "node scripts/security-audit.js",
     "security:deps": "npm audit",
-    "security:fix": "npm audit fix"
+    "security:fix": "npm audit fix",
+    "security:api-keys": "node scripts/pre-commit-hook.js",
+    "security:install-hooks": "powershell -ExecutionPolicy Bypass -File scripts/install-pre-commit-hook.ps1",
+    "eval": "node scripts/braintrust-integration.js",
+    "eval:custom": "node -e \"import('./scripts/braintrust-integration.js').then(m => m.runEvaluation(...process.argv.slice(1)))\" --",
+    "eval:ai": "node scripts/run-ai-evaluation.js"
   },
   "dependencies": {
     "@ethersproject/units": "^5.8.0",
@@ -66,7 +71,9 @@
     "@web3-react/core": "^8.2.3",
     "@web3-react/injected-connector": "^6.0.7",
     "@web3-storage/w3up-client": "^17.2.0",
+    "autoevals": "0.0.127",
     "bcryptjs": "^3.0.2",
+    "braintrust": "0.0.199",
     "browserify-buffer": "^1.1.2",
     "browserify-zlib": "^0.2.0",
     "buffer": "^6.0.3",
