@@ -15,6 +15,7 @@ const Tokenomics = lazy(() => import("./pages/Tokenomics"));
 const Aicon = lazy(() => import("./pages/Aicon"));
 const Wallet = lazy(() => import("./pages/Wallet"));
 const DApp = lazy(() => import("./pages/DApp"));
+const About = lazy(() => import("./pages/About"));
 const Domains = lazy(() => import("./pages/Domains"));
 const Achievements = lazy(() => import("./pages/Achievements"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
@@ -65,6 +66,7 @@ const App = () => (
                 <Route path="/aicon" element={<Aicon />} />
                 <Route path="/wallet" element={<Wallet />} />
                 <Route path="/dapp" element={<DApp />} />
+                <Route path="/about" element={<About />} />
                 <Route path="/domains" element={<Domains />} />
                 <Route path="/achievements" element={<Achievements />} />
                 <Route path="/terms-of-service" element={<TermsOfService />} />

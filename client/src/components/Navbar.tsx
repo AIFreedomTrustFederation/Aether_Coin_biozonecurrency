@@ -119,15 +119,9 @@ const Navbar = () => {
                     </NavigationMenuLink>
                   ))}
                   <NavigationMenuLink asChild>
-                    <Button 
-                      variant="link"
-                      onClick={() => {
-                        toast.info("About page coming soon");
-                      }}
-                      className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
-                    >
+                    <Link to="/about" className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground">
                       <div className="text-sm font-medium leading-none">About</div>
-                    </Button>
+                    </Link>
                   </NavigationMenuLink>
                 </div>
               </NavigationMenuContent>
@@ -206,15 +200,14 @@ const Navbar = () => {
                     </SheetClose>
                   ))}
                   
-                  <Button 
-                    variant="ghost" 
-                    className="justify-start py-2 px-4 hover:bg-accent rounded-md"
-                    onClick={() => {
-                      toast.info("About page coming soon");
-                    }}
-                  >
-                    <span className="text-base">About</span>
-                  </Button>
+                  <SheetClose asChild>
+                    <Link 
+                      to="/about"
+                      className="flex items-center py-2 px-4 hover:bg-accent rounded-md"
+                    >
+                      <span className="text-base">About</span>
+                    </Link>
+                  </SheetClose>
                 </div>
                 
                 <div className="mt-4 pt-4 border-t">
