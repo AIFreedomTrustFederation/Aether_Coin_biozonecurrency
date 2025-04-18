@@ -59,9 +59,10 @@ export class WebSocketClient implements IWebSocketClient {
    * Generate WebSocket URL based on current location, using the appropriate protocol
    */
   private generateWebSocketUrl(): string {
-    // Use WSS if the page is loaded over HTTPS, otherwise use WS
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    console.log(`Using ${protocol} protocol for WebSockets based on current page protocol: ${window.location.protocol}`);
+    // For development, always use standard ws: protocol to avoid mixed content issues
+    // In production, use protocol-relative WebSocket URL
+    const protocol = 'ws:';
+    console.log(`Using ${protocol} protocol for WebSockets`);
     return `${protocol}//${window.location.host}/ws`;
   }
   

@@ -180,7 +180,7 @@ const proxyOptions = {
   target: TARGET_URL,
   changeOrigin: true,
   ws: true,
-  secure: false, // Using HTTP, not HTTPS
+  secure: false, // Using HTTP for development
   logLevel: 'debug',
   pathRewrite: {
     '^/api/': '/api/'  // rewrite path
