@@ -26,9 +26,82 @@ module.exports = {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
+        // Custom colors for biozoecurrency theme
+        forest: {
+          50: "#f0f9f0",
+          100: "#dcf0dc",
+          200: "#bde2be",
+          300: "#92ce94",
+          400: "#65b668",
+          500: "#4d994d",
+          600: "#3a7a3c",
+          700: "#306132",
+          800: "#294e2a",
+          900: "#224224",
+          950: "#0f220f",
+        },
+        water: {
+          50: "#f0f9ff",
+          100: "#e0f2fe",
+          200: "#b9e5fe",
+          300: "#7cd2fc",
+          400: "#36bff8",
+          500: "#0ca3eb",
+          600: "#0082ca",
+          700: "#0068a3",
+          800: "#005786",
+          900: "#074970",
+          950: "#042e49",
+        },
+        cosmic: {
+          50: "#f4f1ff",
+          100: "#ebe5ff",
+          200: "#d9ceff",
+          300: "#bea7ff",
+          400: "#9f75ff",
+          500: "#883eff",
+          600: "#7916ff",
+          700: "#6c00ff",
+          800: "#5a02d1",
+          900: "#4c04aa",
+          950: "#2e0173"
+        },
+        quantum: {
+          50: "#eefaff",
+          100: "#d8f4ff",
+          200: "#b9ecff",
+          300: "#87e3ff",
+          400: "#4cd2ff",
+          500: "#26baff",
+          600: "#0198ff",
+          700: "#0179ff",
+          800: "#0766cf",
+          900: "#0c559f",
+          950: "#0d345f"
+        }
       },
+      fontFamily: {
+        sans: ['Inter', 'sans-serif'],
+        display: ['Montserrat', 'sans-serif'],
+        mono: ['IBM Plex Mono', 'monospace'],
+        serif: ['Roboto Slab', 'serif']
+      },
+      backgroundImage: {
+        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+      },
+      keyframes: {
+        float: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-10px)' },
+        }
+      },
+      animation: {
+        float: 'float 6s ease-in-out infinite',
+      }
     },
   },
-  plugins: [],
+  plugins: [
+    require('@tailwindcss/typography')
+  ],
 }
 
