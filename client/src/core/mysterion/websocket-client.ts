@@ -56,11 +56,12 @@ export class WebSocketClient implements IWebSocketClient {
   }
   
   /**
-   * Generate WebSocket URL based on current location, always using secure connection
+   * Generate WebSocket URL based on current location, using the appropriate protocol
    */
   private generateWebSocketUrl(): string {
-    // Always use WSS protocol for secure connections
-    const protocol = 'wss:';
+    // Use WSS if the page is loaded over HTTPS, otherwise use WS
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    console.log(`Using ${protocol} protocol for WebSockets based on current page protocol: ${window.location.protocol}`);
     return `${protocol}//${window.location.host}/ws`;
   }
   
@@ -75,13 +76,10 @@ export class WebSocketClient implements IWebSocketClient {
     
     return new Promise((resolve, reject) => {
       try {
-        // Generate URL with appropriate protocol
+        // Generate URL with appropriate protocol based on current environment
         let socketUrl = this.url || this.generateWebSocketUrl();
         
         console.log(`Attempting to connect to WebSocket at: ${socketUrl}`);
-        
-        // Always use secure WebSockets
-        socketUrl = socketUrl.replace('ws:', 'wss:');
         console.log(`Using secure WebSocket connection: ${socketUrl}`);
         
         // Create the WebSocket connection with the appropriate protocol

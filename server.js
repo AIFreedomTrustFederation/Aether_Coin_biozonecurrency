@@ -20,7 +20,7 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const TARGET_URL = 'http://0.0.0.0:5173'; // Using 0.0.0.0 to match Vite's binding
+const TARGET_URL = 'http://0.0.0.0:5173'; // Using standard HTTP for Vite
 const CLIENT_DIR = path.join(__dirname, 'client');
 
 console.log(`Starting Aetherion Proxy Service (Biozone Harmony Boost Integration)`);
@@ -180,6 +180,7 @@ const proxyOptions = {
   target: TARGET_URL,
   changeOrigin: true,
   ws: true,
+  secure: false, // Using HTTP, not HTTPS
   logLevel: 'debug',
   pathRewrite: {
     '^/api/': '/api/'  // rewrite path

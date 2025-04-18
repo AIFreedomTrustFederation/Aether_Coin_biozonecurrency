@@ -8,7 +8,7 @@ export default defineConfig(({ mode }) => ({
     host: "0.0.0.0",
     port: 5173,
     hmr: {
-      protocol: 'ws',
+      protocol: 'ws', // Use standard WebSockets for development
       host: '0.0.0.0',
       port: 5173
     }
