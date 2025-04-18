@@ -1,133 +1,62 @@
 /**
  * Mysterion Knowledge System
- * 
- * Core knowledge graph implementation for the Mysterion Intelligence System
+ * Core component of the AI Freedom Trust Framework that maintains
+ * a graph-based knowledge representation of the entire ecosystem.
  */
 
 import { 
   MysterionKnowledgeNode, 
   MysterionKnowledgeEdge, 
-  MysterionImprovement,
-  MysterionImprovementInsert
+  MysterionImprovement
 } from '../../../shared/schema';
 
 /**
- * Interface for interacting with the Mysterion Knowledge Graph
+ * Interface for the Mysterion Knowledge Graph system
  */
-export interface MysterionKnowledgeSystem {
-  // Node operations
-  addNode(
-    nodeType: string, 
-    title: string, 
-    content: string, 
-    metadata?: any
-  ): Promise<MysterionKnowledgeNode>;
-  
+export interface IKnowledgeSystem {
+  // Knowledge Node Management
+  addNode(type: string, title: string, content: string, metadata?: any): Promise<MysterionKnowledgeNode>;
+  updateNode(id: number, updates: Partial<MysterionKnowledgeNode>): Promise<MysterionKnowledgeNode | null>;
+  removeNode(id: number): Promise<boolean>;
   getNode(id: number): Promise<MysterionKnowledgeNode | null>;
+  findNodes(query: string, type?: string, limit?: number): Promise<MysterionKnowledgeNode[]>;
   
-  listKnowledgeNodes(
-    nodeType?: string,
-    limit?: number,
-    offset?: number
-  ): Promise<MysterionKnowledgeNode[]>;
+  // Knowledge Edge Management
+  connectNodes(sourceId: number, targetId: number, relationship: string, weight?: number, metadata?: any): Promise<MysterionKnowledgeEdge>;
+  disconnectNodes(edgeId: number): Promise<boolean>;
+  getNodeConnections(nodeId: number): Promise<{ incoming: MysterionKnowledgeEdge[], outgoing: MysterionKnowledgeEdge[] }>;
   
-  findNodes(
-    query: string,
-    nodeType?: string,
-    limit?: number
-  ): Promise<MysterionKnowledgeNode[]>;
+  // Knowledge Graph Navigation & Query
+  traverseGraph(startNodeId: number, depth: number, relationshipFilter?: string): Promise<MysterionKnowledgeNode[]>;
+  findPath(startNodeId: number, endNodeId: number): Promise<MysterionKnowledgeNode[]>;
+  queryKnowledge(query: string): Promise<any>;
   
-  updateNode(
-    id: number, 
-    updates: Partial<MysterionKnowledgeNode>
-  ): Promise<MysterionKnowledgeNode | null>;
-  
-  deleteNode(id: number): Promise<boolean>;
-  
-  // Edge operations
-  connectNodes(
-    sourceId: number,
-    targetId: number,
-    relationshipType: string,
-    weight?: number,
-    metadata?: any
-  ): Promise<MysterionKnowledgeEdge>;
-  
-  getNodeConnections(
-    nodeId: number
-  ): Promise<{
-    incoming: MysterionKnowledgeEdge[],
-    outgoing: MysterionKnowledgeEdge[]
-  }>;
-  
-  updateEdge(
-    id: number,
-    updates: Partial<MysterionKnowledgeEdge>
-  ): Promise<MysterionKnowledgeEdge | null>;
-  
-  deleteEdge(id: number): Promise<boolean>;
-  
-  // Graph operations
-  traverseGraph(
-    startNodeId: number,
-    depth: number,
-    relationshipType?: string
-  ): Promise<MysterionKnowledgeNode[]>;
-  
-  findPath(
-    startNodeId: number,
-    endNodeId: number,
-    maxDepth?: number
-  ): Promise<{
-    nodes: MysterionKnowledgeNode[],
-    edges: MysterionKnowledgeEdge[]
-  } | null>;
-  
-  // Knowledge operations
-  queryKnowledge(query: string): Promise<string>;
-  
-  // Improvement operations
-  createImprovement(
-    improvement: MysterionImprovementInsert
-  ): Promise<MysterionImprovement>;
-  
+  // Self-Improvement Management
+  proposeImprovement(title: string, description: string, codeChanges: any, repository: string, files: string[]): Promise<MysterionImprovement>;
   getImprovement(id: number): Promise<MysterionImprovement | null>;
-  
-  listImprovements(
-    status?: string,
-    limit?: number,
-    offset?: number
-  ): Promise<MysterionImprovement[]>;
-  
-  updateImprovementStatus(
-    id: number,
-    status: string
-  ): Promise<MysterionImprovement | null>;
+  updateImprovementStatus(id: number, status: string): Promise<MysterionImprovement | null>;
+  getPendingImprovements(): Promise<MysterionImprovement[]>;
 }
 
 /**
- * Implementation of the Mysterion Knowledge System using API calls
+ * Implementation of the Mysterion Knowledge System
  */
-class ApiKnowledgeSystem implements MysterionKnowledgeSystem {
-  private apiBase: string;
+export class MysterionKnowledgeSystem implements IKnowledgeSystem {
+  private apiBaseUrl: string;
   
-  constructor(apiBase: string = '/api/mysterion/knowledge') {
-    this.apiBase = apiBase;
+  constructor(apiBaseUrl: string = '/api/mysterion/knowledge') {
+    this.apiBaseUrl = apiBaseUrl;
   }
   
-  async addNode(
-    nodeType: string, 
-    title: string, 
-    content: string, 
-    metadata?: any
-  ): Promise<MysterionKnowledgeNode> {
-    const response = await fetch(`${this.apiBase}/nodes`, {
+  /**
+   * Adds a new knowledge node to the graph
+   */
+  async addNode(type: string, title: string, content: string, metadata: any = {}): Promise<MysterionKnowledgeNode> {
+    const response = await fetch(`${this.apiBaseUrl}/nodes`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        nodeType,
+        nodeType: type,
         title,
         content,
         metadata
@@ -135,119 +64,102 @@ class ApiKnowledgeSystem implements MysterionKnowledgeSystem {
     });
     
     if (!response.ok) {
-      throw new Error(`Failed to add node: ${response.statusText}`);
+      throw new Error(`Failed to add knowledge node: ${response.statusText}`);
     }
     
     return await response.json();
   }
   
-  async getNode(id: number): Promise<MysterionKnowledgeNode | null> {
-    const response = await fetch(`${this.apiBase}/nodes/${id}`);
-    
-    if (response.status === 404) {
-      return null;
-    }
-    
-    if (!response.ok) {
-      throw new Error(`Failed to get node: ${response.statusText}`);
-    }
-    
-    return await response.json();
-  }
-  
-  async listKnowledgeNodes(
-    nodeType?: string,
-    limit: number = 100,
-    offset: number = 0
-  ): Promise<MysterionKnowledgeNode[]> {
-    const params = new URLSearchParams();
-    if (nodeType) params.append('nodeType', nodeType);
-    params.append('limit', limit.toString());
-    params.append('offset', offset.toString());
-    
-    const response = await fetch(`${this.apiBase}/nodes?${params.toString()}`);
-    
-    if (!response.ok) {
-      throw new Error(`Failed to list nodes: ${response.statusText}`);
-    }
-    
-    return await response.json();
-  }
-  
-  async findNodes(
-    query: string,
-    nodeType?: string,
-    limit: number = 10
-  ): Promise<MysterionKnowledgeNode[]> {
-    const params = new URLSearchParams();
-    params.append('query', query);
-    if (nodeType) params.append('nodeType', nodeType);
-    params.append('limit', limit.toString());
-    
-    const response = await fetch(`${this.apiBase}/nodes/search?${params.toString()}`);
-    
-    if (!response.ok) {
-      throw new Error(`Failed to find nodes: ${response.statusText}`);
-    }
-    
-    return await response.json();
-  }
-  
-  async updateNode(
-    id: number, 
-    updates: Partial<MysterionKnowledgeNode>
-  ): Promise<MysterionKnowledgeNode | null> {
-    const response = await fetch(`${this.apiBase}/nodes/${id}`, {
+  /**
+   * Updates an existing knowledge node
+   */
+  async updateNode(id: number, updates: Partial<MysterionKnowledgeNode>): Promise<MysterionKnowledgeNode | null> {
+    const response = await fetch(`${this.apiBaseUrl}/nodes/${id}`, {
       method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updates)
     });
     
-    if (response.status === 404) {
-      return null;
-    }
-    
     if (!response.ok) {
-      throw new Error(`Failed to update node: ${response.statusText}`);
+      if (response.status === 404) {
+        return null;
+      }
+      throw new Error(`Failed to update knowledge node: ${response.statusText}`);
     }
     
     return await response.json();
   }
   
-  async deleteNode(id: number): Promise<boolean> {
-    const response = await fetch(`${this.apiBase}/nodes/${id}`, {
+  /**
+   * Removes a knowledge node and all its connected edges
+   */
+  async removeNode(id: number): Promise<boolean> {
+    const response = await fetch(`${this.apiBaseUrl}/nodes/${id}`, {
       method: 'DELETE'
     });
     
-    if (response.status === 404) {
-      return false;
-    }
-    
     if (!response.ok) {
-      throw new Error(`Failed to delete node: ${response.statusText}`);
+      if (response.status === 404) {
+        return false;
+      }
+      throw new Error(`Failed to remove knowledge node: ${response.statusText}`);
     }
     
     return true;
   }
   
+  /**
+   * Retrieves a specific knowledge node by ID
+   */
+  async getNode(id: number): Promise<MysterionKnowledgeNode | null> {
+    const response = await fetch(`${this.apiBaseUrl}/nodes/${id}`);
+    
+    if (!response.ok) {
+      if (response.status === 404) {
+        return null;
+      }
+      throw new Error(`Failed to get knowledge node: ${response.statusText}`);
+    }
+    
+    return await response.json();
+  }
+  
+  /**
+   * Finds nodes matching the query string and optional type filter
+   */
+  async findNodes(query: string, type?: string, limit: number = 10): Promise<MysterionKnowledgeNode[]> {
+    const params = new URLSearchParams({
+      query,
+      ...(type && { type }),
+      limit: limit.toString()
+    });
+    
+    const response = await fetch(`${this.apiBaseUrl}/nodes/search?${params.toString()}`);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to search knowledge nodes: ${response.statusText}`);
+    }
+    
+    return await response.json();
+  }
+  
+  /**
+   * Creates a directed edge connecting two nodes
+   */
   async connectNodes(
-    sourceId: number,
-    targetId: number,
-    relationshipType: string,
-    weight: number = 100,
-    metadata?: any
+    sourceId: number, 
+    targetId: number, 
+    relationship: string, 
+    weight: number = 1.0, 
+    metadata: any = {}
   ): Promise<MysterionKnowledgeEdge> {
-    const response = await fetch(`${this.apiBase}/edges`, {
+    const response = await fetch(`${this.apiBaseUrl}/edges`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         sourceId,
         targetId,
-        relationshipType,
+        relationshipType: relationship,
         weight,
         metadata
       })
@@ -260,13 +172,29 @@ class ApiKnowledgeSystem implements MysterionKnowledgeSystem {
     return await response.json();
   }
   
-  async getNodeConnections(
-    nodeId: number
-  ): Promise<{
-    incoming: MysterionKnowledgeEdge[],
-    outgoing: MysterionKnowledgeEdge[]
-  }> {
-    const response = await fetch(`${this.apiBase}/nodes/${nodeId}/connections`);
+  /**
+   * Removes an edge between nodes
+   */
+  async disconnectNodes(edgeId: number): Promise<boolean> {
+    const response = await fetch(`${this.apiBaseUrl}/edges/${edgeId}`, {
+      method: 'DELETE'
+    });
+    
+    if (!response.ok) {
+      if (response.status === 404) {
+        return false;
+      }
+      throw new Error(`Failed to disconnect nodes: ${response.statusText}`);
+    }
+    
+    return true;
+  }
+  
+  /**
+   * Gets all edges connected to a specific node
+   */
+  async getNodeConnections(nodeId: number): Promise<{ incoming: MysterionKnowledgeEdge[], outgoing: MysterionKnowledgeEdge[] }> {
+    const response = await fetch(`${this.apiBaseUrl}/nodes/${nodeId}/connections`);
     
     if (!response.ok) {
       throw new Error(`Failed to get node connections: ${response.statusText}`);
@@ -275,55 +203,16 @@ class ApiKnowledgeSystem implements MysterionKnowledgeSystem {
     return await response.json();
   }
   
-  async updateEdge(
-    id: number,
-    updates: Partial<MysterionKnowledgeEdge>
-  ): Promise<MysterionKnowledgeEdge | null> {
-    const response = await fetch(`${this.apiBase}/edges/${id}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(updates)
+  /**
+   * Traverses the graph from a starting node to a specified depth
+   */
+  async traverseGraph(startNodeId: number, depth: number, relationshipFilter?: string): Promise<MysterionKnowledgeNode[]> {
+    const params = new URLSearchParams({
+      depth: depth.toString(),
+      ...(relationshipFilter && { relationshipType: relationshipFilter })
     });
     
-    if (response.status === 404) {
-      return null;
-    }
-    
-    if (!response.ok) {
-      throw new Error(`Failed to update edge: ${response.statusText}`);
-    }
-    
-    return await response.json();
-  }
-  
-  async deleteEdge(id: number): Promise<boolean> {
-    const response = await fetch(`${this.apiBase}/edges/${id}`, {
-      method: 'DELETE'
-    });
-    
-    if (response.status === 404) {
-      return false;
-    }
-    
-    if (!response.ok) {
-      throw new Error(`Failed to delete edge: ${response.statusText}`);
-    }
-    
-    return true;
-  }
-  
-  async traverseGraph(
-    startNodeId: number,
-    depth: number,
-    relationshipType?: string
-  ): Promise<MysterionKnowledgeNode[]> {
-    const params = new URLSearchParams();
-    params.append('depth', depth.toString());
-    if (relationshipType) params.append('relationshipType', relationshipType);
-    
-    const response = await fetch(`${this.apiBase}/nodes/${startNodeId}/traverse?${params.toString()}`);
+    const response = await fetch(`${this.apiBaseUrl}/graph/traverse/${startNodeId}?${params.toString()}`);
     
     if (!response.ok) {
       throw new Error(`Failed to traverse graph: ${response.statusText}`);
@@ -332,37 +221,26 @@ class ApiKnowledgeSystem implements MysterionKnowledgeSystem {
     return await response.json();
   }
   
-  async findPath(
-    startNodeId: number,
-    endNodeId: number,
-    maxDepth: number = 5
-  ): Promise<{
-    nodes: MysterionKnowledgeNode[],
-    edges: MysterionKnowledgeEdge[]
-  } | null> {
-    const params = new URLSearchParams();
-    params.append('endNodeId', endNodeId.toString());
-    params.append('maxDepth', maxDepth.toString());
-    
-    const response = await fetch(`${this.apiBase}/nodes/${startNodeId}/path?${params.toString()}`);
-    
-    if (response.status === 404) {
-      return null;
-    }
+  /**
+   * Finds the shortest path between two nodes
+   */
+  async findPath(startNodeId: number, endNodeId: number): Promise<MysterionKnowledgeNode[]> {
+    const response = await fetch(`${this.apiBaseUrl}/graph/path/${startNodeId}/${endNodeId}`);
     
     if (!response.ok) {
-      throw new Error(`Failed to find path: ${response.statusText}`);
+      throw new Error(`Failed to find path between nodes: ${response.statusText}`);
     }
     
     return await response.json();
   }
   
-  async queryKnowledge(query: string): Promise<string> {
-    const response = await fetch(`${this.apiBase}/query`, {
+  /**
+   * Performs a natural language query against the knowledge graph
+   */
+  async queryKnowledge(query: string): Promise<any> {
+    const response = await fetch(`${this.apiBaseUrl}/query`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ query })
     });
     
@@ -370,85 +248,89 @@ class ApiKnowledgeSystem implements MysterionKnowledgeSystem {
       throw new Error(`Failed to query knowledge: ${response.statusText}`);
     }
     
-    const result = await response.json();
-    return result.answer;
+    return await response.json();
   }
   
-  async createImprovement(
-    improvement: MysterionImprovementInsert
+  /**
+   * Proposes a new self-improvement
+   */
+  async proposeImprovement(
+    title: string, 
+    description: string, 
+    codeChanges: any, 
+    repository: string, 
+    files: string[]
   ): Promise<MysterionImprovement> {
-    const response = await fetch(`${this.apiBase}/improvements`, {
+    const response = await fetch(`${this.apiBaseUrl}/improvements`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(improvement)
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title,
+        description,
+        codeChanges,
+        targetRepository: repository,
+        targetFiles: files,
+        impact: 'medium' // Default impact
+      })
     });
     
     if (!response.ok) {
-      throw new Error(`Failed to create improvement: ${response.statusText}`);
+      throw new Error(`Failed to propose improvement: ${response.statusText}`);
     }
     
     return await response.json();
   }
   
+  /**
+   * Gets a specific improvement by ID
+   */
   async getImprovement(id: number): Promise<MysterionImprovement | null> {
-    const response = await fetch(`${this.apiBase}/improvements/${id}`);
-    
-    if (response.status === 404) {
-      return null;
-    }
+    const response = await fetch(`${this.apiBaseUrl}/improvements/${id}`);
     
     if (!response.ok) {
+      if (response.status === 404) {
+        return null;
+      }
       throw new Error(`Failed to get improvement: ${response.statusText}`);
     }
     
     return await response.json();
   }
   
-  async listImprovements(
-    status?: string,
-    limit: number = 100,
-    offset: number = 0
-  ): Promise<MysterionImprovement[]> {
-    const params = new URLSearchParams();
-    if (status) params.append('status', status);
-    params.append('limit', limit.toString());
-    params.append('offset', offset.toString());
-    
-    const response = await fetch(`${this.apiBase}/improvements?${params.toString()}`);
+  /**
+   * Updates the status of an improvement
+   */
+  async updateImprovementStatus(id: number, status: string): Promise<MysterionImprovement | null> {
+    const response = await fetch(`${this.apiBaseUrl}/improvements/${id}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status })
+    });
     
     if (!response.ok) {
-      throw new Error(`Failed to list improvements: ${response.statusText}`);
+      if (response.status === 404) {
+        return null;
+      }
+      throw new Error(`Failed to update improvement status: ${response.statusText}`);
     }
     
     return await response.json();
   }
   
-  async updateImprovementStatus(
-    id: number,
-    status: string
-  ): Promise<MysterionImprovement | null> {
-    const response = await fetch(`${this.apiBase}/improvements/${id}/status`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ status })
-    });
-    
-    if (response.status === 404) {
-      return null;
-    }
+  /**
+   * Gets all pending improvements
+   */
+  async getPendingImprovements(): Promise<MysterionImprovement[]> {
+    const response = await fetch(`${this.apiBaseUrl}/improvements?status=proposed`);
     
     if (!response.ok) {
-      throw new Error(`Failed to update improvement status: ${response.statusText}`);
+      throw new Error(`Failed to get pending improvements: ${response.statusText}`);
     }
     
     return await response.json();
   }
 }
 
-// Create singleton instance
-export const knowledgeSystem: MysterionKnowledgeSystem = new ApiKnowledgeSystem();
+// Singleton instance
+export const knowledgeSystem = new MysterionKnowledgeSystem();
 export default knowledgeSystem;
