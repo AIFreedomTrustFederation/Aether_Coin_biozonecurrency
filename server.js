@@ -20,7 +20,7 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const TARGET_URL = 'http://0.0.0.0:5173'; // Using standard HTTP for Vite in development
+const TARGET_URL = 'http://0.0.0.0:5173'; // Using 0.0.0.0 to match Vite's binding
 const CLIENT_DIR = path.join(__dirname, 'client');
 
 console.log(`Starting Aetherion Proxy Service (Biozone Harmony Boost Integration)`);
@@ -168,21 +168,18 @@ app.get('/debug-info', (req, res) => {
 });
 
 // Serve static files from client/public directory directly
-// This will serve index.html for the root path
-app.use(express.static(path.join(CLIENT_DIR, 'public'), {
-  index: 'index.html' // Explicitly tell Express to serve index.html for /
-}));
-
 // Temporarily commenting out the router creation until we properly set up the imports
 // const apiRouter = createRouter(storage);
 // app.use(apiRouter);
+
+// Serve static files from client/public directory directly
+app.use(express.static(path.join(CLIENT_DIR, 'public')));
 
 // Setup proxy options with better debugging
 const proxyOptions = {
   target: TARGET_URL,
   changeOrigin: true,
   ws: true,
-  secure: false, // Using HTTP for development
   logLevel: 'debug',
   pathRewrite: {
     '^/api/': '/api/'  // rewrite path
@@ -279,8 +276,11 @@ app.use((req, res, next) => {
   next();
 });
 
-// Use the static middleware to serve the index.html for the root path
-// This is now handled by express.static above
+// Serve the root path through the Vite dev server
+app.get('/', (req, res) => {
+  console.log('Serving root path through Vite proxy');
+  viteProxyMiddleware(req, res);
+});
 
 // Define React SPA routes based on biozone-harmony-boost App.tsx
 const CLIENT_ROUTES = [
@@ -537,22 +537,7 @@ async function startServer() {
     // Setup the WebSocket server on a separate path to avoid conflicts with Vite's HMR
     const wss = new WebSocketServer({ 
       server: httpServer, 
-      path: '/ws',
-      // Add proper WebSocket server options for secure connections
-      perMessageDeflate: {
-        zlibDeflateOptions: {
-          // See zlib defaults
-          chunkSize: 1024,
-          memLevel: 7,
-          level: 3
-        },
-        zlibInflateOptions: {
-          chunkSize: 10 * 1024
-        },
-        // Below options specified as default values
-        concurrencyLimit: 10, // Limits zlib concurrency for performance
-        threshold: 1024 // Size below which messages should not be compressed
-      }
+      path: '/ws' 
     });
     
     // Handle WebSocket connections
@@ -609,10 +594,7 @@ async function startServer() {
       console.log(`All requests will be proxied to ${TARGET_URL}`);
       console.log(`Static assets served from ${path.join(CLIENT_DIR, 'public')}`);
       console.log(`SPA routes configured: ${CLIENT_ROUTES.join(', ')}`);
-      
-      // Always using secure WebSocket
-      console.log(`WebSocket server running on wss://0.0.0.0:${PORT}/ws (secure connection)`);
-      console.log(`Note: All WebSocket connections will use secure WSS protocol`);
+      console.log(`WebSocket server running on ws://0.0.0.0:${PORT}/ws`);
     });
   } catch (error) {
     console.error(`Failed to start server: ${error.message}`);
