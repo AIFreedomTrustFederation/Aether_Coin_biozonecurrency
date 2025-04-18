@@ -56,14 +56,14 @@ export class WebSocketClient implements IWebSocketClient {
   }
   
   /**
-   * Generate WebSocket URL based on current location, using the appropriate protocol
+   * Generate WebSocket URL based on current location
    */
   private generateWebSocketUrl(): string {
-    // For development, always use standard ws: protocol to avoid mixed content issues
-    // In production, use protocol-relative WebSocket URL
-    const protocol = 'ws:';
-    console.log(`Using ${protocol} protocol for WebSockets`);
-    return `${protocol}//${window.location.host}/ws`;
+    // Use relative WebSocket URL that will work with both HTTP and HTTPS
+    const socketProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const url = `${socketProtocol}//${window.location.host}/ws`;
+    console.log(`Generated WebSocket URL: ${url}`);
+    return url;
   }
   
   /**

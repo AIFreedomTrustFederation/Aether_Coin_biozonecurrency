@@ -20,7 +20,7 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const TARGET_URL = 'http://0.0.0.0:5173'; // Using standard HTTP for Vite
+const TARGET_URL = 'http://0.0.0.0:5173'; // Using standard HTTP for Vite in development
 const CLIENT_DIR = path.join(__dirname, 'client');
 
 console.log(`Starting Aetherion Proxy Service (Biozone Harmony Boost Integration)`);
@@ -168,12 +168,14 @@ app.get('/debug-info', (req, res) => {
 });
 
 // Serve static files from client/public directory directly
+// This will serve index.html for the root path
+app.use(express.static(path.join(CLIENT_DIR, 'public'), {
+  index: 'index.html' // Explicitly tell Express to serve index.html for /
+}));
+
 // Temporarily commenting out the router creation until we properly set up the imports
 // const apiRouter = createRouter(storage);
 // app.use(apiRouter);
-
-// Serve static files from client/public directory directly
-app.use(express.static(path.join(CLIENT_DIR, 'public')));
 
 // Setup proxy options with better debugging
 const proxyOptions = {
@@ -277,11 +279,8 @@ app.use((req, res, next) => {
   next();
 });
 
-// Serve the root path through the Vite dev server
-app.get('/', (req, res) => {
-  console.log('Serving root path through Vite proxy');
-  viteProxyMiddleware(req, res);
-});
+// Use the static middleware to serve the index.html for the root path
+// This is now handled by express.static above
 
 // Define React SPA routes based on biozone-harmony-boost App.tsx
 const CLIENT_ROUTES = [
