@@ -1,0 +1,10 @@
+[Unit]
+Description=Frontend Repository Synchronization Service
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash /path/to/Aether_Coin_biozonecurrency/scripts/sync-frontend-repos.sh --force
+User=your_username
+Group=your_group
+Environment="SLACK_WEBHOOK=your_slack_webhook_url"
