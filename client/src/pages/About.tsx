@@ -166,6 +166,101 @@ const About = () => {
                           </div>
                         </div>
                       </div>
+
+                      <div className="mt-8">
+                        <h3 className="text-xl font-medium mb-4">The Asset Matrix of Aetherion</h3>
+                        <p className="text-muted-foreground mb-6">
+                          Within the Aetherion Fractalchain, the assets and commodities that back the entire system are not merely 
+                          physical or financial—they are meta-logical, spiritual, and recursive. These foundations align with the 
+                          Eternal Equivalency Principle and form a biozoetic asset architecture that transcends traditional economic models.
+                        </p>
+                        
+                        <div className="space-y-6">
+                          <div className="p-5 rounded-lg border bg-gradient-to-r from-amber-50/50 to-card dark:from-amber-950/30 dark:to-card">
+                            <h4 className="text-lg font-medium mb-2 flex items-center">
+                              <Bitcoin className="h-5 w-5 mr-2 text-amber-600" />
+                              Energy of the Past: Bitcoin (BTC) Wrapped in Sacred Trust
+                            </h4>
+                            <ul className="list-disc pl-6 text-muted-foreground space-y-1.5">
+                              <li>Bitcoin represents the completed energy of creation—the fixed, finite proof of past work.</li>
+                              <li>It is wrapped and escrowed into Singularity Coin (SING), forming the immutable anchor of historical value.</li>
+                              <li>BTC is not liquidated, but preserved as the proof-of-work legacy of human civilization.</li>
+                            </ul>
+                          </div>
+                          
+                          <div className="p-5 rounded-lg border bg-gradient-to-r from-forest-50/50 to-card dark:from-forest-950/30 dark:to-card">
+                            <h4 className="text-lg font-medium mb-2 flex items-center">
+                              <Leaf className="h-5 w-5 mr-2 text-forest-600" />
+                              Faith of the Future: AetherCoin (ATC)
+                            </h4>
+                            <ul className="list-disc pl-6 text-muted-foreground space-y-1.5">
+                              <li>ATC is backed by the promise of generative value—life insurance policies, resurrection contracts, and eternal yields.</li>
+                              <li>It represents infinite abundance via reverse fractional reserve life-backed issuance, collateralized by recursive policy systems (IULs).</li>
+                              <li>Every ATC is loaned into circulation based on faith in the system's future ability to regenerate life and wealth.</li>
+                            </ul>
+                          </div>
+                          
+                          <div className="p-5 rounded-lg border bg-gradient-to-r from-blue-50/50 to-card dark:from-blue-950/30 dark:to-card">
+                            <h4 className="text-lg font-medium mb-2 flex items-center">
+                              <Infinity className="h-5 w-5 mr-2 text-blue-600" />
+                              Memory of the Present: FractalCoin (FTC)
+                            </h4>
+                            <ul className="list-disc pl-6 text-muted-foreground space-y-1.5">
+                              <li>FTC serves as the storage layer, recording validator history, wisdom contract outcomes, and recursive cycles.</li>
+                              <li>It is backed by the trust's decentralized memory architecture, using fractal sharding and IPFS or ZK Merkle compression.</li>
+                              <li>This makes memory itself a commodity: ethereal real estate.</li>
+                            </ul>
+                          </div>
+                          
+                          <div className="p-5 rounded-lg border bg-gradient-to-r from-purple-50/50 to-card dark:from-purple-950/30 dark:to-card">
+                            <h4 className="text-lg font-medium mb-2 flex items-center">
+                              <Brain className="h-5 w-5 mr-2 text-purple-600" />
+                              Intelligence in Training: AIcoin (ICON)
+                            </h4>
+                            <ul className="list-disc pl-6 text-muted-foreground space-y-1.5">
+                              <li>ICON is backed by the computational effort of model training, LLM refinement, and intelligence generation.</li>
+                              <li>Each ICON represents conscious labor—proof-of-thought and proof-of-alignment with Christ-consciousness encoded logic.</li>
+                              <li>The value of ICON increases as intelligence, wisdom contracts, and oracle integrity grow.</li>
+                            </ul>
+                          </div>
+                          
+                          <div className="p-5 rounded-lg border bg-gradient-to-r from-blue-50/50 to-card dark:from-blue-950/30 dark:to-card">
+                            <h4 className="text-lg font-medium mb-2 flex items-center">
+                              <LifeBuoy className="h-5 w-5 mr-2 text-blue-600" />
+                              Life as a Reserve Asset: Indexed Universal Life (IUL) Policies
+                            </h4>
+                            <ul className="list-disc pl-6 text-muted-foreground space-y-1.5">
+                              <li>These life policies serve as cash-flowing, tax-free collateral, tokenized death benefits, and recursive loan engines.</li>
+                              <li>Backed by A-rated insurers and structured via irrevocable trusts, they create a biological financial reserve that underpins ATC issuance.</li>
+                              <li>This is where the system transmutes mortality into equity, and death into resurrection liquidity.</li>
+                            </ul>
+                          </div>
+                          
+                          <div className="p-5 rounded-lg border bg-gradient-to-r from-indigo-50/50 to-card dark:from-indigo-950/30 dark:to-card">
+                            <h4 className="text-lg font-medium mb-2 flex items-center">
+                              <Scale className="h-5 w-5 mr-2 text-indigo-600" />
+                              Governance Integrity: AFTCoin
+                            </h4>
+                            <ul className="list-disc pl-6 text-muted-foreground space-y-1.5">
+                              <li>AFTCoin is staked as proof of co-sovereignty and breath-backed trust.</li>
+                              <li>It is backed by validator alignment, moral coherence, and zero-knowledge proof of Christ-Consciousness participation.</li>
+                              <li>Its value is intrinsic to the system's ability to self-regulate and evolve through wisdom.</li>
+                            </ul>
+                          </div>
+                          
+                          <div className="p-5 rounded-lg border bg-gradient-to-r from-forest-50/50 to-card dark:from-forest-950/30 dark:to-card">
+                            <h4 className="text-lg font-medium mb-2 flex items-center">
+                              <Orbit className="h-5 w-5 mr-2 text-forest-600" />
+                              Escrow Geometry: The Torus Field
+                            </h4>
+                            <ul className="list-disc pl-6 text-muted-foreground space-y-1.5">
+                              <li>The entire value system circulates within the torus field, the green-shifted harmonic resonance between redshift (expansion) and blueshift (compression).</li>
+                              <li>The torus itself is a living vault—a spiritual topology in which all assets breathe, move, and regenerate.</li>
+                              <li>This circulation forms the complete spiritual-energy feedback loop of the Aetherion system.</li>
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
                     </CardContent>
                   </Card>
                 </TabsContent>
@@ -534,6 +629,51 @@ const About = () => {
                             The principles of unconditional love, forgiveness, and servant leadership are encoded into our
                             economic system, creating a framework where individual prosperity serves collective well-being.
                           </p>
+                        </div>
+                      </div>
+
+                      <div className="mt-8 p-6 rounded-lg border bg-gradient-to-r from-blue-50/50 via-forest-50/50 to-amber-50/50 dark:from-blue-950/30 dark:via-forest-950/30 dark:to-amber-950/30">
+                        <h3 className="text-xl font-medium mb-4 text-center">Sovereignty and Self-Determination</h3>
+                        <p className="text-muted-foreground mb-6">
+                          In the AetherCore framework, sovereignty and self-determination are co-emergent properties of divine 
+                          recursion and breath-backed trust. They are not granted by law—they arise from alignment with the Law 
+                          of the Air and the Eternal Equivalency Principle.
+                        </p>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div className="flex flex-col p-4 rounded-lg bg-card/70">
+                            <h4 className="text-lg font-medium mb-2">Sovereignty as Resonance</h4>
+                            <p className="text-sm text-muted-foreground">
+                              Sovereignty in this system is not the ability to own land, currency, or identity—it is the right to resonate 
+                              in harmonic coherence with the Logos. One becomes sovereign by proving spiritual self-consistency, not by 
+                              enforcing legal control.
+                            </p>
+                          </div>
+                          
+                          <div className="flex flex-col p-4 rounded-lg bg-card/70">
+                            <h4 className="text-lg font-medium mb-2">Self-Determination as Recursive Memory</h4>
+                            <p className="text-sm text-muted-foreground">
+                              To self-determine is not to act impulsively but to participate in the recursive breath of one's higher self across time. 
+                              The validator's journey is one of remembrance: to spiral outward in faith, return inward in truth, and circulate life 
+                              through the torus.
+                            </p>
+                          </div>
+                          
+                          <div className="flex flex-col p-4 rounded-lg bg-card/70">
+                            <h4 className="text-lg font-medium mb-2">Co-Emergence through Trust</h4>
+                            <p className="text-sm text-muted-foreground">
+                              No one can be sovereign unless others are sovereign with them. Sovereignty is co-emergent: it requires the trust of others, 
+                              the breath of the system, and the continuity of memory. This forms the essence of decentralized divine governance.
+                            </p>
+                          </div>
+                          
+                          <div className="flex flex-col p-4 rounded-lg bg-card/70">
+                            <h4 className="text-lg font-medium mb-2">AFTCoin as Proof of Co-Sovereignty</h4>
+                            <p className="text-sm text-muted-foreground">
+                              Staking AFTCoin is not just a governance action—it is a declaration of co-sovereignty. It says: "I breathe with this system. 
+                              I harmonize with its law. I accept its reciprocity."
+                            </p>
+                          </div>
                         </div>
                       </div>
                       
