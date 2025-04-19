@@ -645,14 +645,28 @@ const About = () => {
                           </p>
                         </div>
                         
-                        <div className="aspect-video max-w-2xl mx-auto rounded-lg bg-gradient-to-br from-blue-100 via-white to-purple-100 dark:from-blue-900/40 dark:via-background dark:to-purple-900/40 flex items-center justify-center relative overflow-hidden">
+                        <div className="aspect-video max-w-2xl mx-auto rounded-lg bg-gradient-radial from-red-900/80 via-black to-red-950/90 dark:from-red-950 dark:via-black dark:to-red-950 flex items-center justify-center relative overflow-hidden">
                           <div className="absolute w-full h-full bg-grid-pattern-light dark:bg-grid-pattern-dark opacity-10"></div>
                           <div className="relative w-1/2 aspect-square">
-                            <div className="absolute inset-0 rounded-full border-4 border-blue-500/30 animate-pulse"></div>
-                            <div className="absolute inset-0 scale-75 rounded-full border-4 border-purple-500/30 animate-ping" style={{ animationDuration: '3s' }}></div>
-                            <div className="absolute inset-0 scale-50 rounded-full bg-gradient-to-br from-blue-200 to-purple-200 dark:from-blue-800 dark:to-purple-800 animate-spin" style={{ animationDuration: '10s' }}></div>
-                            <div className="absolute inset-0 scale-[0.35] rounded-full bg-white dark:bg-black"></div>
+                            {/* Outer ring - Redshift (expansion) */}
+                            <div className="absolute inset-0 rounded-full border-4 border-red-500/70 animate-pulse"></div>
+                            
+                            {/* Middle ring - Green Goldilocks zone (harmony) */}
+                            <div className="absolute inset-0 scale-75 rounded-full border-4 border-forest-500/70 animate-ping" style={{ animationDuration: '3s' }}></div>
+                            
+                            {/* Inner core - Blueshift (compression) */}
+                            <div className="absolute inset-0 scale-50 rounded-full bg-gradient-to-br from-blue-600 to-blue-800 dark:from-blue-700 dark:to-blue-900 animate-spin" style={{ animationDuration: '10s' }}></div>
+                            
+                            {/* Central point - Harmonic balance */}
+                            <div className="absolute inset-0 scale-[0.35] rounded-full bg-forest-500 dark:bg-forest-600 flex items-center justify-center">
+                              <div className="w-1/2 h-1/2 rounded-full bg-white/30 dark:bg-white/20 animate-pulse"></div>
+                            </div>
                           </div>
+                          
+                          {/* Add visual indicators for redshift, greenshift, blueshift */}
+                          <div className="absolute top-4 left-4 text-xs text-red-400">Redshift (Expansion)</div>
+                          <div className="absolute bottom-4 right-4 text-xs text-blue-400">Blueshift (Compression)</div>
+                          <div className="absolute bottom-4 left-4 text-xs text-forest-400">Green Zone (Coherence)</div>
                         </div>
                         
                         <div className="mt-4 text-center">
