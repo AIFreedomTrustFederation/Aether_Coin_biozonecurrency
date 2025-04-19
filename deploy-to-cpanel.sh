@@ -1,241 +1,211 @@
 #!/bin/bash
-#
-# CPanel Deployment Script for Aetherion Wallet
-#
-# This script prepares and deploys the Aetherion Wallet to a CPanel hosting environment
-# It handles:
-# 1. Building the production version
-# 2. Creating necessary files for CPanel (.htaccess, etc.)
-# 3. Preparing the database connection if needed
-# 4. Packaging everything for easy upload
+# Automated deployment script for Aetherion to cPanel hosting
+# This script prepares the application for deployment to a cPanel environment
 
-set -e
-echo "======================================================="
-echo "    Aetherion Wallet - CPanel Deployment Package       "
-echo "======================================================="
+# Configuration - Update these variables
+DEPLOY_DIR="./deployment-package"
+APP_NAME="aetherion"
+BUILD_TYPE="static" # Options: static, node
 
-# Configuration - Edit these variables
-CPANEL_DOMAIN="atc.aifreedomtrust.com"
-CPANEL_USERNAME="your_cpanel_username"
-CPANEL_APP_PATH="/wallet"  # Subdirectory on your website
-DB_REQUIRED=true
+# Color codes for output
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+NC='\033[0m' # No Color
 
-# Create build directory
-BUILD_DIR="./build_cpanel"
-rm -rf "$BUILD_DIR"
-mkdir -p "$BUILD_DIR"
+# Print banner
+echo -e "${GREEN}"
+echo "=========================================================="
+echo "  Aetherion - AI Freedom Trust Deployment Package Builder"
+echo "=========================================================="
+echo -e "${NC}"
 
-# Build the React application for production
-echo "📦 Building application for production..."
-npm run build
-# Copy build files
-cp -r dist/* "$BUILD_DIR"
-
-# Create .htaccess file for React router support
-echo "📝 Creating .htaccess file for SPA routing..."
-cat > "$BUILD_DIR/.htaccess" << EOL
-<IfModule mod_rewrite.c>
-  RewriteEngine On
-  RewriteBase /
-  # Handle Front Controller Pattern (SPA routing)
-  RewriteCond %{REQUEST_FILENAME} !-f
-  RewriteCond %{REQUEST_FILENAME} !-d
-  RewriteRule ^(.*)$ index.html [QSA,L]
-  
-  # Force HTTPS
-  RewriteCond %{HTTPS} off
-  RewriteRule (.*) https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
-</IfModule>
-
-# Set cache control for static assets
-<IfModule mod_expires.c>
-  ExpiresActive On
-  # Set default expiry to 1 month
-  ExpiresDefault "access plus 1 month"
-  # CSS and JS files - 1 week
-  ExpiresByType text/css "access plus 1 week"
-  ExpiresByType application/javascript "access plus 1 week"
-  # Images - 3 months
-  ExpiresByType image/jpg "access plus 3 months"
-  ExpiresByType image/jpeg "access plus 3 months"
-  ExpiresByType image/gif "access plus 3 months"
-  ExpiresByType image/png "access plus 3 months"
-  ExpiresByType image/svg+xml "access plus 3 months"
-</IfModule>
-
-# Disable directory browsing
-Options -Indexes
-EOL
-
-# If database is required, create setup script
-if [ "$DB_REQUIRED" = true ]; then
-    echo "🗄️ Creating database setup script..."
-    cat > "$BUILD_DIR/db_setup.php" << EOL
-<?php
-// Database setup helper for Aetherion Wallet
-// Run this script once to create the necessary tables
-// Delete it immediately after successful execution
-
-// Display errors for debugging
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
-
-// MySQL Connection Settings
-// Edit these with your CPanel database credentials
-\$servername = "localhost";
-\$username = "cpanel_db_username";
-\$password = "your_db_password";
-\$dbname = "cpanel_db_name";
-
-try {
-    \$conn = new PDO("mysql:host=\$servername", \$username, \$password);
-    \$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    
-    // Create database if it doesn't exist
-    \$stmt = \$conn->prepare("CREATE DATABASE IF NOT EXISTS \$dbname");
-    \$stmt->execute();
-    echo "Database created or already exists<br>";
-    
-    // Use the database
-    \$conn->exec("USE \$dbname");
-    
-    // Create your tables
-    \$sql = "
-    CREATE TABLE IF NOT EXISTS users (
-        id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-        username VARCHAR(255) NOT NULL UNIQUE,
-        password_hash VARCHAR(255) NOT NULL,
-        wallet_address VARCHAR(255),
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-    );
-    
-    CREATE TABLE IF NOT EXISTS wallet_transactions (
-        id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-        user_id INT NOT NULL,
-        transaction_hash VARCHAR(255) NOT NULL,
-        amount DECIMAL(18, 8) NOT NULL,
-        transaction_type ENUM('deposit', 'withdrawal', 'transfer') NOT NULL,
-        status ENUM('pending', 'completed', 'failed') NOT NULL DEFAULT 'pending',
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users(id)
-    );
-    
-    CREATE TABLE IF NOT EXISTS node_devices (
-        id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-        user_id INT NOT NULL,
-        device_name VARCHAR(255) NOT NULL,
-        status ENUM('active', 'inactive', 'pending') NOT NULL DEFAULT 'pending',
-        resource_type ENUM('storage', 'computation', 'bandwidth') NOT NULL,
-        resource_amount INT NOT NULL,
-        earnings_rate DECIMAL(10, 6) NOT NULL DEFAULT 0,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users(id)
-    );
-    ";
-    
-    \$conn->exec(\$sql);
-    echo "Tables created successfully<br>";
-    
-    echo "<h3>Setup Completed Successfully!</h3>";
-    echo "<p>Please delete this file immediately for security reasons.</p>";
-} catch(PDOException \$e) {
-    echo "Error: " . \$e->getMessage();
-}
-\$conn = null;
-?>
-EOL
-
-    # Create database connection config file
-    cat > "$BUILD_DIR/server/.env.production.template" << EOL
-# Database Configuration
-# Replace these with your actual CPanel database credentials
-DB_HOST=localhost
-DB_USER=cpanel_db_username
-DB_PASS=your_db_password
-DB_NAME=cpanel_db_name
-
-# Security
-JWT_SECRET=generate_a_secure_random_string_here
-SESSION_SECRET=generate_another_secure_random_string_here
-
-# Application Settings
-NODE_ENV=production
-PORT=8080
-API_BASE_URL=/api
-FRONTEND_URL=https://${CPANEL_DOMAIN}${CPANEL_APP_PATH}
-EOL
+# Create deployment directory if it doesn't exist
+if [ ! -d "$DEPLOY_DIR" ]; then
+  mkdir -p "$DEPLOY_DIR"
+  echo -e "${GREEN}Created deployment directory: $DEPLOY_DIR${NC}"
+else
+  # Clean the directory
+  rm -rf "$DEPLOY_DIR"/*
+  echo -e "${GREEN}Cleaned deployment directory: $DEPLOY_DIR${NC}"
 fi
 
-# Create installation instructions
-cat > "$BUILD_DIR/CPANEL_INSTALLATION.md" << EOL
-# Aetherion Wallet - CPanel Installation Instructions
+# Function to create a static build deployment package
+create_static_build() {
+  echo -e "${YELLOW}Creating static deployment package...${NC}"
+  
+  # Build the application
+  echo "Building the application..."
+  npm run build
+  
+  if [ $? -ne 0 ]; then
+    echo -e "${RED}Build failed. Aborting deployment.${NC}"
+    exit 1
+  fi
+  
+  # Copy build output to deployment directory
+  echo "Copying build files to deployment directory..."
+  cp -r dist/* "$DEPLOY_DIR"
+  
+  # Create .htaccess file
+  echo "Creating .htaccess file for static deployment..."
+  cat > "$DEPLOY_DIR/.htaccess" << 'EOF'
+# Enable the rewrite engine
+RewriteEngine On
 
-This guide will help you deploy the Aetherion Wallet to your CPanel hosting environment.
+# Set the base directory
+RewriteBase /
 
-## Prerequisites
+# Redirect all requests to index.html except for actual files and directories
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.html [L,QSA]
 
-1. A CPanel hosting account with:
-   - PHP 7.4+ support
-   - MySQL database
-   - SSH access (preferred, but optional)
+# Serve static files from the 'aifreedomtrust' directory
+RewriteCond %{REQUEST_URI} ^/aifreedomtrust/(.*)$
+RewriteCond %{DOCUMENT_ROOT}/aifreedomtrust/%1 -f
+RewriteRule ^aifreedomtrust/(.*)$ aifreedomtrust/$1 [L]
 
-## Installation Steps
+# Set security headers
+Header set X-Content-Type-Options "nosniff"
+Header set X-XSS-Protection "1; mode=block"
+Header set X-Frame-Options "SAMEORIGIN"
+Header set Referrer-Policy "strict-origin-when-cross-origin"
+EOF
 
-### 1. Database Setup (if using database)
+  # Create a sample .env file
+  echo "Creating sample .env file..."
+  cat > "$DEPLOY_DIR/.env.example" << 'EOF'
+# Database Configuration
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=your_db_user
+DB_PASSWORD=your_db_password
+DB_NAME=your_db_name
 
-1. Log in to CPanel
-2. Go to MySQL Database Wizard
-3. Create a new database and user
-4. Grant all privileges to the user for this database
-5. Note the database name, username, and password
+# Application Configuration
+NODE_ENV=production
+PORT=8080
+EOF
 
-### 2. Upload Files
+  echo -e "${GREEN}Static deployment package created successfully${NC}"
+}
 
-#### Method 1: Using File Manager
-1. In CPanel, open File Manager
-2. Navigate to public_html/${CPANEL_APP_PATH} (create the directory if it doesn't exist)
-3. Upload all files from this package into that directory
+# Function to create a Node.js deployment package
+create_node_deployment() {
+  echo -e "${YELLOW}Creating Node.js deployment package...${NC}"
+  
+  # Create package structure
+  mkdir -p "$DEPLOY_DIR/client/public"
+  
+  # Copy server files
+  echo "Copying server files..."
+  cp server.js "$DEPLOY_DIR/"
+  cp package.json "$DEPLOY_DIR/"
+  cp -r server "$DEPLOY_DIR/"
+  cp -r shared "$DEPLOY_DIR/"
+  
+  # Build the client application
+  echo "Building the client application..."
+  npm run build
+  
+  if [ $? -ne 0 ]; then
+    echo -e "${RED}Build failed. Aborting deployment.${NC}"
+    exit 1
+  fi
+  
+  # Copy client files
+  echo "Copying client files..."
+  cp -r dist/* "$DEPLOY_DIR/client/public/"
+  cp -r client/public/* "$DEPLOY_DIR/client/public/"
+  
+  # Create a start script
+  echo "Creating start script..."
+  cat > "$DEPLOY_DIR/start.sh" << 'EOF'
+#!/bin/bash
+NODE_ENV=production node server.js
+EOF
+  chmod +x "$DEPLOY_DIR/start.sh"
+  
+  # Create .htaccess file for Node.js proxy
+  echo "Creating .htaccess file for Node.js proxy..."
+  cat > "$DEPLOY_DIR/.htaccess" << 'EOF'
+# Proxy requests to Node.js server
+RewriteEngine On
+RewriteRule ^(.*)$ http://localhost:8080/$1 [P,L]
+EOF
 
-#### Method 2: Using FTP
-1. Connect to your hosting using an FTP client
-2. Navigate to public_html/${CPANEL_APP_PATH}
-3. Upload all files from this package into that directory
+  # Create a sample .env file
+  echo "Creating sample .env file..."
+  cat > "$DEPLOY_DIR/.env.example" << 'EOF'
+# Database Configuration
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=your_db_user
+DB_PASSWORD=your_db_password
+DB_NAME=your_db_name
 
-### 3. Configure Environment
+# Application Configuration
+NODE_ENV=production
+PORT=8080
+EOF
 
-1. If using a database, rename server/.env.production.template to server/.env.production
-2. Edit the file with your actual database credentials and paths
+  echo -e "${GREEN}Node.js deployment package created successfully${NC}"
+}
 
-### 4. Run Database Setup (if using database)
+# Create README file for the deployment package
+create_readme() {
+  echo "Creating deployment README file..."
+  cat > "$DEPLOY_DIR/DEPLOYMENT-README.md" << 'EOF'
+# Aetherion Deployment Package
 
-1. Open your browser and navigate to https://${CPANEL_DOMAIN}${CPANEL_APP_PATH}/db_setup.php
-2. Follow the on-screen instructions
-3. Delete db_setup.php immediately after successful completion
+This package contains the files necessary to deploy the Aetherion application
+to a web hosting environment.
 
-### 5. Test the Installation
+## Deployment Instructions
 
-1. Open your browser and navigate to https://${CPANEL_DOMAIN}${CPANEL_APP_PATH}
-2. The Aetherion Wallet application should load correctly
+1. Upload all files in this package to your web hosting environment
+2. Set appropriate file permissions:
+   - Directories: 755
+   - Files: 644
+   - Configuration files (.env, etc.): 600
+3. Rename `.env.example` to `.env` and update the configuration values
+4. For database setup, refer to the HOSTING-DEPLOYMENT-GUIDE.md file
 
-## Troubleshooting
+## Additional Notes
 
-1. If you see a 404 error for pages other than the homepage, check that .htaccess is correctly uploaded
-2. If you have database connection errors, verify your database credentials
-3. Check the CPanel error logs for more detailed information
+- The .htaccess file contains the necessary rewrite rules for the application
+- If deploying to a subdirectory, modify the RewriteBase directive in .htaccess
 
-## Need Help?
+For more detailed instructions, refer to the HOSTING-DEPLOYMENT-GUIDE.md file.
+EOF
 
-Contact support at support@aifreedomtrust.com
-EOL
+  # Copy the hosting deployment guide
+  cp HOSTING-DEPLOYMENT-GUIDE.md "$DEPLOY_DIR/"
+}
 
-# Create a zip file for easy upload
-echo "📦 Creating deployment package..."
-ZIP_FILE="aetherion-cpanel-deploy.zip"
-cd "$BUILD_DIR"
-zip -r "../$ZIP_FILE" .
+# Create deployment package based on configuration
+if [ "$BUILD_TYPE" = "static" ]; then
+  create_static_build
+else
+  create_node_deployment
+fi
+
+# Create README file
+create_readme
+
+# Create deployment zip file
+echo "Creating deployment zip file..."
+cd "$DEPLOY_DIR"
+zip -r ../${APP_NAME}-deployment-package.zip ./*
 cd ..
 
-echo "✅ Deployment package created: $ZIP_FILE"
-echo "📋 Follow the instructions in CPANEL_INSTALLATION.md inside the zip file"
+echo -e "${GREEN}"
+echo "=========================================================="
+echo "  Deployment package created successfully!"
+echo "  Location: ${APP_NAME}-deployment-package.zip"
+echo "=========================================================="
+echo -e "${NC}"
+
+echo "You can now upload this package to your cPanel hosting environment."
+echo "Please follow the instructions in DEPLOYMENT-README.md for next steps."

@@ -21,6 +21,7 @@ const navItems = [
   { href: "/api", label: "API", icon: null },
   { href: "/enumerator", label: "Enumerator App", icon: <LayoutGrid className="mr-2 h-5 w-5 text-purple-600" /> },
   { href: "/bot-simulation", label: "Bot Simulation", icon: <Bot className="mr-2 h-5 w-5 text-indigo-600" /> },
+  { href: "/aifreedomtrust", label: "AI Freedom Trust", icon: <Globe className="mr-2 h-5 w-5 text-green-600" /> },
 ];
 
 // Legal items
@@ -40,6 +41,11 @@ const ecosystemItems = [
     href: "/aicon", 
     label: "AICoin (ICON)",
     description: "Rewards for contributing processing power to train our AI models"
+  },
+  {
+    href: "/aifreedomtrust",
+    label: "AI Freedom Trust",
+    description: "The 1000-year irrevocable trust that governs the biozoecurrency ecosystem"
   },
 ];
 

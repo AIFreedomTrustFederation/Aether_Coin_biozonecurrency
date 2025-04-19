@@ -162,7 +162,10 @@ app.get('/debug-info', (req, res) => {
   `);
 });
 
-// Serve static files from client/public directory directly
+// Serve AI Freedom Trust static site files first (more specific route)
+app.use('/aifreedomtrust', express.static(path.join(CLIENT_DIR, 'public', 'aifreedomtrust')));
+
+// Then serve general static files from client/public directory
 app.use(express.static(path.join(CLIENT_DIR, 'public')));
 
 // Setup proxy options with better debugging
@@ -278,6 +281,7 @@ const CLIENT_ROUTES = [
   '/aicon',
   '/wallet',
   '/dapp',
+  // '/aifreedomtrust', // Now handled by static file middleware
   '/achievements',
   '/aethercore-browser',
   '/terms-of-service',
@@ -321,6 +325,8 @@ app.use('/api', (req, res, next) => {
   console.log(`Proxying API request: ${req.url}`);
   viteProxyMiddleware(req, res, next);
 });
+
+// The aifreedomtrust route is now handled by the static middleware above
 
 // Domain handling for atc.aifreedomtrust.com - handle both direct route and subdomain access
 app.get(['/atc-aifreedomtrust', '/atc'], (req, res) => {

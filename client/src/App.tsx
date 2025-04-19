@@ -1,5 +1,5 @@
 
-import { Suspense, lazy } from "react";
+import React, { Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -50,6 +50,28 @@ const EnumeratorPage = lazy(() => import("./pages/Enumerator"));
 // Import Bot Simulation page
 const BotSimulationPage = lazy(() => import("./pages/BotSimulation"));
 
+// Create a simple landing page component for AI Freedom Trust
+const AIFreedomTrustRedirect = () => {
+  // Simple component that immediately redirects via meta refresh
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center">
+      <QuantumLoader 
+        size="lg" 
+        variant="dual" 
+        showLabel 
+        labelText="Redirecting to AI Freedom Trust..." 
+      />
+      <script dangerouslySetInnerHTML={{ 
+        __html: `
+          setTimeout(function() {
+            window.location.href = '/aifreedomtrust';
+          }, 1500);
+        `
+      }} />
+    </div>
+  );
+};
+
 // Original App structure with updated Enumerator page
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -82,6 +104,9 @@ const App = () => (
                 
                 {/* Route to Bot Simulation Dashboard */}
                 <Route path="/bot-simulation" element={<BotSimulationPage />} />
+                
+                {/* Route to AI Freedom Trust landing page */}
+                <Route path="/aifreedomtrust" element={<AIFreedomTrustRedirect />} />
                 
                 {/* Catch-all route for 404 */}
                 <Route path="*" element={<NotFound />} />

@@ -1,97 +1,126 @@
-# Aetherion Harmony - Domain Deployment Guide
+# Domain Deployment Guide for AI Freedom Trust
 
-This guide provides all the information needed to deploy the Aetherion Harmony project to your domain with CPanel hosting.
+This guide provides specific instructions for deploying the Aetherion application to your domain with cPanel hosting.
 
-## 1. Domain & DNS Configuration
+## Domain Configuration
 
-### Required DNS Records
+### DNS Configuration
 
-| Record Type | Name/Host | Value/Target | TTL | Priority |
-|-------------|-----------|--------------|-----|----------|
-| A           | atc       | [YOUR_CPANEL_IP_ADDRESS] | 3600 | - |
-| CNAME       | www.atc   | atc.aifreedomtrust.com | 3600 | - |
-| MX          | atc       | mail.atc.aifreedomtrust.com | 3600 | 10 |
-| TXT         | atc       | v=spf1 a mx include:_spf.yourhostingprovider.com ~all | 3600 | - |
+1. Log in to your domain registrar (where you purchased your domain)
+2. Point your domain to your hosting's nameservers (typically provided by your hosting provider)
+3. If using a subdomain (e.g., atc.aifreedomtrust.com), create the subdomain in cPanel
 
-You need to get the correct IP address from your CPanel hosting provider to replace [YOUR_CPANEL_IP_ADDRESS].
+### SSL/TLS Configuration
 
-## 2. Hosting Requirements
+1. In cPanel, navigate to SSL/TLS Status
+2. Install an SSL certificate for your domain
+3. Options:
+   - Let's Encrypt (free, auto-renewal)
+   - AutoSSL (if provided by your hosting)
+   - Purchase a commercial SSL certificate
 
-- **CPanel Hosting**: Your hosting account should provide CPanel access
-- **PHP Version**: 7.4 or higher
-- **MySQL/MariaDB**: 5.7+ or 10.3+ respectively
-- **SSL Certificate**: Let's Encrypt or another SSL provider
-- **Storage**: At least 1GB of space for the application
+## Application Configuration
 
-## 3. Deployment Options
+### Domain-Specific Settings
 
-### Option A: Manual Deployment (Recommended for First-Time Setup)
+Update your application configuration to reflect your domain:
 
-1. Run the deployment script to create a deployment package:
-   ```bash
-   chmod +x deploy-harmony-to-cpanel.sh
-   ./deploy-harmony-to-cpanel.sh
+1. In the `.env` file, set:
+   ```
+   DOMAIN=aifreedomtrust.com
+   SITE_URL=https://aifreedomtrust.com
    ```
 
-2. Upload the generated `harmony-cpanel-deploy.zip` to your CPanel hosting
-3. Extract the files to the correct directory (usually `public_html/wallet`)
-4. Follow the included installation guide
+2. If using a subdomain for specific features, configure those as well:
+   ```
+   ATC_SUBDOMAIN=atc.aifreedomtrust.com
+   ```
 
-### Option B: GitHub Actions Automated Deployment
+### Apache Configuration
 
-For automated deployments from GitHub, you need to:
+Create or update the `.htaccess` file for your domain:
 
-1. Store your deployment credentials as GitHub Secrets:
-   - `CPANEL_FTP_SERVER`: Your CPanel FTP hostname
-   - `CPANEL_FTP_USERNAME`: Your CPanel FTP username
-   - `CPANEL_FTP_PASSWORD`: Your CPanel FTP password
-   - `CPANEL_DB_USER`: Your database username
-   - `CPANEL_DB_PASS`: Your database password
-   - `CPANEL_DB_NAME`: Your database name
-   - `JWT_SECRET`: A secure random string for JWT tokens
-   - `SESSION_SECRET`: Another secure random string for sessions
+```apache
+# Enable HTTPS
+RewriteEngine On
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
-2. Push to the `production` branch to trigger automatic deployment, or manually trigger the workflow from GitHub Actions.
+# www to non-www redirect (if preferred)
+RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
+RewriteRule ^(.*)$ https://%1%{REQUEST_URI} [R=301,L]
 
-## 4. Post-Deployment Steps
+# Application routing rules
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ /index.html [L]
 
-1. **Database Setup**: After files are deployed, navigate to `https://atc.aifreedomtrust.com/wallet/db_setup.php` to set up the database
-2. **Delete Setup Script**: Immediately delete `db_setup.php` after successful setup
-3. **Test Installation**: Verify all features are working correctly
-4. **SSL Verification**: Ensure SSL is properly configured for secure HTTPS connections
+# Special handling for ATC subdomain
+RewriteCond %{HTTP_HOST} ^atc\.aifreedomtrust\.com$ [NC]
+RewriteRule ^/?$ /atc-aifreedomtrust [L,R=302]
 
-## 5. Troubleshooting
+# Serve static files from the 'aifreedomtrust' directory
+RewriteCond %{REQUEST_URI} ^/aifreedomtrust/(.*)$
+RewriteCond %{DOCUMENT_ROOT}/aifreedomtrust/%1 -f
+RewriteRule ^aifreedomtrust/(.*)$ aifreedomtrust/$1 [L]
 
-### Common Issues:
+# Security headers
+Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+Header always set X-Content-Type-Options "nosniff"
+Header always set X-XSS-Protection "1; mode=block"
+Header always set X-Frame-Options "SAMEORIGIN"
+Header always set Referrer-Policy "strict-origin-when-cross-origin"
+Header always set Content-Security-Policy "upgrade-insecure-requests;"
+```
 
-- **Blank Page**: Check PHP error logs in CPanel
-- **Database Connection Error**: Verify database credentials
-- **404 Errors**: Ensure .htaccess is properly uploaded and Apache mod_rewrite is enabled
-- **API Not Working**: Check permissions on PHP files in the server directory
+## Subdomain Configuration
 
-### Accessing Error Logs:
+To set up the ATC subdomain (atc.aifreedomtrust.com):
 
-1. Log in to CPanel
-2. Navigate to "Error Log" 
-3. Check for PHP errors related to the application
+1. In cPanel, navigate to "Subdomains"
+2. Create a new subdomain:
+   - Subdomain: atc
+   - Domain: aifreedomtrust.com
+   - Document Root: (point to your application's directory)
 
-## 6. Security Recommendations
+3. Configure SSL for the subdomain (same process as the main domain)
 
-1. **File Permissions**:
-   - Directories: 755
-   - PHP files: 644
-   - Configuration files (.env): 600
+## Testing Domain Configuration
 
-2. **Regular Updates**:
-   - Keep PHP updated to the latest version
-   - Regularly update the application
+1. Perform DNS propagation check:
+   ```
+   dig aifreedomtrust.com
+   dig atc.aifreedomtrust.com
+   ```
 
-3. **Backups**:
-   - Set up daily database backups
-   - Create regular full-site backups
+2. Test SSL configuration:
+   ```
+   curl -I https://aifreedomtrust.com
+   curl -I https://atc.aifreedomtrust.com
+   ```
 
-## 7. Support & Resources
+3. Test application accessibility:
+   - Visit https://aifreedomtrust.com in your browser
+   - Visit https://atc.aifreedomtrust.com in your browser
 
-- For technical assistance, contact support@aifreedomtrust.com
-- Documentation: https://atc.aifreedomtrust.com/docs
-- GitHub repository: https://github.com/aifreedomtrust/aetherion-wallet
+## Post-Deployment Domain Verification
+
+After deploying, verify:
+
+1. Domain resolves to your application
+2. HTTPS works correctly
+3. No mixed content warnings
+4. All application features work properly
+5. Subdomains redirect as expected
+
+## Domain Maintenance
+
+1. Monitor SSL certificate expiration (set calendar reminders for renewal)
+2. Regularly check domain DNS settings
+3. Consider setting up domain monitoring services
+
+---
+
+For detailed cPanel deployment instructions, refer to [CPANEL-README.md](./CPANEL-README.md).
+
+For complete hosting deployment guide, see [HOSTING-DEPLOYMENT-GUIDE.md](./HOSTING-DEPLOYMENT-GUIDE.md).
