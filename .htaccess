@@ -1,74 +1,66 @@
-# Aetherion Wallet .htaccess
-# This file configures Apache for the Aetherion Wallet frontend
+# .htaccess for Aetherion on AI Freedom Trust cPanel hosting
 
-# Enable rewrite engine
-<IfModule mod_rewrite.c>
-    RewriteEngine On
-    RewriteBase /
-    
-    # Handle SPA routing - redirect all requests to index.html unless file exists
-    RewriteRule ^index\.html$ - [L]
-    RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteRule . /index.html [L]
-</IfModule>
+# Enable the rewrite engine
+RewriteEngine On
 
-# Force HTTPS
-<IfModule mod_rewrite.c>
-    RewriteEngine On
-    RewriteCond %{HTTPS} off
-    RewriteRule (.*) https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
-</IfModule>
+# Set the base directory - update this if deploying to a subdirectory
+RewriteBase /
+
+# Enable HTTPS
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Redirect all requests to index.html except for actual files and directories
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.html [L,QSA]
+
+# Serve static files from the 'aifreedomtrust' directory
+RewriteCond %{REQUEST_URI} ^/aifreedomtrust/(.*)$
+RewriteCond %{DOCUMENT_ROOT}/aifreedomtrust/%1 -f
+RewriteRule ^aifreedomtrust/(.*)$ aifreedomtrust/$1 [L]
 
 # Set security headers
-<IfModule mod_headers.c>
-    Header set X-Content-Type-Options "nosniff"
-    Header set X-Frame-Options "SAMEORIGIN"
-    Header set X-XSS-Protection "1; mode=block"
-    Header set Strict-Transport-Security "max-age=31536000; includeSubDomains"
-    Header set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://*.aifreedomtrust.com https://api.fractalcoin.network;"
-</IfModule>
+Header set X-Content-Type-Options "nosniff"
+Header set X-XSS-Protection "1; mode=block"
+Header set X-Frame-Options "SAMEORIGIN"
+Header set Referrer-Policy "strict-origin-when-cross-origin"
+Header set Content-Security-Policy "upgrade-insecure-requests;"
 
 # Enable gzip compression
 <IfModule mod_deflate.c>
-    AddOutputFilterByType DEFLATE text/plain
-    AddOutputFilterByType DEFLATE text/html
-    AddOutputFilterByType DEFLATE text/xml
-    AddOutputFilterByType DEFLATE text/css
-    AddOutputFilterByType DEFLATE application/xml
-    AddOutputFilterByType DEFLATE application/xhtml+xml
-    AddOutputFilterByType DEFLATE application/rss+xml
-    AddOutputFilterByType DEFLATE application/javascript
-    AddOutputFilterByType DEFLATE application/x-javascript
-    AddOutputFilterByType DEFLATE application/json
+  AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css application/javascript application/json
+  BrowserMatch ^Mozilla/4 gzip-only-text/html
+  BrowserMatch ^Mozilla/4\.0[678] no-gzip
+  BrowserMatch \bMSIE !no-gzip !gzip-only-text/html
 </IfModule>
 
-# Cache static assets
+# Set cache headers for static assets
 <IfModule mod_expires.c>
-    ExpiresActive On
-    ExpiresByType image/jpg "access plus 1 year"
-    ExpiresByType image/jpeg "access plus 1 year"
-    ExpiresByType image/gif "access plus 1 year"
-    ExpiresByType image/png "access plus 1 year"
-    ExpiresByType image/webp "access plus 1 year"
-    ExpiresByType image/svg+xml "access plus 1 year"
-    ExpiresByType text/css "access plus 1 month"
-    ExpiresByType application/pdf "access plus 1 month"
-    ExpiresByType text/javascript "access plus 1 month"
-    ExpiresByType application/javascript "access plus 1 month"
-    ExpiresByType application/x-javascript "access plus 1 month"
-    ExpiresByType application/x-font-woff "access plus 1 year"
-    ExpiresByType application/font-woff2 "access plus 1 year"
-    ExpiresByType application/vnd.ms-fontobject "access plus 1 year"
-    ExpiresByType application/x-font-ttf "access plus 1 year"
-    ExpiresByType font/opentype "access plus 1 year"
+  ExpiresActive On
+  ExpiresByType image/jpg "access plus 1 year"
+  ExpiresByType image/jpeg "access plus 1 year"
+  ExpiresByType image/gif "access plus 1 year"
+  ExpiresByType image/png "access plus 1 year"
+  ExpiresByType image/svg+xml "access plus 1 year"
+  ExpiresByType text/css "access plus 1 month"
+  ExpiresByType application/javascript "access plus 1 month"
+  ExpiresByType application/pdf "access plus 1 month"
+  ExpiresByType application/x-shockwave-flash "access plus 1 month"
 </IfModule>
 
-# Prevent access to sensitive files
-<FilesMatch "^(\.htaccess|\.htpasswd|\.env|\.git|\.gitignore|package\.json|package-lock\.json|composer\.json|composer\.lock)$">
-    Order deny,allow
-    Deny from all
-</FilesMatch>
-
-# Set default index page
-DirectoryIndex index.html index.php
+# PHP settings for improved performance and security
+<IfModule mod_php7.c>
+  php_flag display_errors Off
+  php_flag log_errors On
+  php_value error_log /path/to/php_error.log
+  php_value max_execution_time 30
+  php_value max_input_time 60
+  php_value max_input_vars 1000
+  php_value memory_limit 128M
+  php_value post_max_size 8M
+  php_value upload_max_filesize 2M
+  php_flag session.cookie_httponly On
+  php_flag session.use_only_cookies On
+  php_flag session.cookie_secure On
+</IfModule>
