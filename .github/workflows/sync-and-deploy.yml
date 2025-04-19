@@ -1,0 +1,135 @@
+name: Sync Frontend and Deploy to cPanel
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'client/**'
+      - 'public/**'
+      - 'package.json'
+      - 'tsconfig.json'
+      - 'server-redirect.js'
+      - '.env.example'
+      - 'vite.config.ts'
+      - 'tailwind.config.js'
+      - 'postcss.config.js'
+  workflow_dispatch:  # Allow manual triggering
+    inputs:
+      deploy:
+        description: 'Deploy to cPanel after sync'
+        required: false
+        default: 'true'
+        type: boolean
+
+jobs:
+  sync-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout source repository
+        uses: actions/checkout@v3
+        with:
+          path: source-repo
+          
+      - name: Checkout target repository
+        uses: actions/checkout@v3
+        with:
+          repository: AIFreedomTrustFederation/biozone-harmony-boost
+          path: target-repo
+          token: ${{ secrets.FRONTEND_SYNC_TOKEN }}
+          
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          
+      - name: Copy frontend files
+        run: |
+          # Create directories if they don't exist
+          mkdir -p target-repo/client
+          mkdir -p target-repo/public
+          
+          # Copy directories
+          cp -r source-repo/client/* target-repo/client/
+          cp -r source-repo/public/* target-repo/public/
+          
+          # Copy files
+          cp source-repo/package.json target-repo/
+          cp source-repo/package-lock.json target-repo/ || true
+          cp source-repo/tsconfig.json target-repo/ || true
+          cp source-repo/server-redirect.js target-repo/ || true
+          cp source-repo/.env.example target-repo/ || true
+          cp source-repo/vite.config.ts target-repo/ || true
+          cp source-repo/tailwind.config.js target-repo/ || true
+          cp source-repo/postcss.config.js target-repo/ || true
+          
+          # Update package.json
+          cd target-repo
+          sed -i 's/"name": "aetherion"/"name": "biozone-harmony-boost"/' package.json
+          if grep -q '"repository":' package.json; then
+            sed -i 's|"url": ".*"|"url": "https://github.com/AIFreedomTrustFederation/biozone-harmony-boost.git"|' package.json
+          fi
+          
+      - name: Commit changes to target repository
+        run: |
+          cd target-repo
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+          git add .
+          
+          # Only commit if there are changes
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Sync frontend code from Aether_Coin_biozonecurrency"
+            git push
+          fi
+          
+      - name: Deploy to cPanel
+        if: ${{ github.event.inputs.deploy == 'true' || github.event_name == 'push' }}
+        run: |
+          cd target-repo
+          
+          # Check if deploy-to-cpanel.sh exists
+          if [ -f "deploy-to-cpanel.sh" ]; then
+            # Make script executable
+            chmod +x deploy-to-cpanel.sh
+            
+            # Set up environment variables for deployment
+            export CPANEL_USERNAME=${{ secrets.CPANEL_USERNAME }}
+            export CPANEL_PASSWORD=${{ secrets.CPANEL_PASSWORD }}
+            export CPANEL_HOST=${{ secrets.CPANEL_HOST }}
+            export CPANEL_PORT=${{ secrets.CPANEL_PORT }}
+            export CPANEL_DOMAIN=${{ secrets.CPANEL_DOMAIN }}
+            export CPANEL_PATH=${{ secrets.CPANEL_PATH }}
+            
+            # Run deployment script
+            ./deploy-to-cpanel.sh
+            
+            echo "Deployment to cPanel completed"
+          else
+            echo "deploy-to-cpanel.sh not found in target repository"
+            exit 1
+          fi
+          
+      - name: Notify on success
+        if: success()
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_CHANNEL: deployments
+          SLACK_COLOR: good
+          SLACK_TITLE: Frontend Sync and Deploy Success
+          SLACK_MESSAGE: 'Frontend code successfully synchronized and deployed to cPanel'
+          SLACK_FOOTER: 'GitHub Actions'
+          
+      - name: Notify on failure
+        if: failure()
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_CHANNEL: deployments
+          SLACK_COLOR: danger
+          SLACK_TITLE: Frontend Sync and Deploy Failed
+          SLACK_MESSAGE: 'Failed to synchronize or deploy frontend code. Check GitHub Actions logs for details.'
+          SLACK_FOOTER: 'GitHub Actions'

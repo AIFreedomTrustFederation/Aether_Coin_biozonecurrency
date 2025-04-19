@@ -1,0 +1,13 @@
+[Unit]
+Description=Run Frontend Repository Synchronization and cPanel Deployment on a schedule
+Requires=frontend-sync-deploy.service
+
+[Timer]
+Unit=frontend-sync-deploy.service
+# Run daily at midnight
+OnCalendar=*-*-* 00:00:00
+# Add randomized delay to prevent exact timing
+RandomizedDelaySec=900
+
+[Install]
+WantedBy=timers.target
