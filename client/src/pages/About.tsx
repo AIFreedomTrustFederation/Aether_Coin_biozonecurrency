@@ -542,9 +542,36 @@ const About = () => {
                         <div className="p-6 rounded-lg border bg-gradient-to-br from-card to-card/50">
                           <h3 className="text-xl font-medium mb-3 text-forest-700 dark:text-forest-300">The Krystal Spiral</h3>
                           <p className="text-muted-foreground mb-4">
-                            Expands in perfect harmony and never collapses. This spiral represents eternal expansion,
-                            growth, and the infinite potential of consciousness.
+                            A geometry of eternal expansion that transcends traditional Fibonacci-based systems.
+                            This spiral represents eternal expansion, harmonic growth, and the infinite potential of consciousness.
                           </p>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                            <div>
+                              <h4 className="text-lg font-medium mb-2">Eternal Expansion Through Harmonic Doubling</h4>
+                              <p className="text-sm text-muted-foreground mb-3">
+                                While traditional systems lean on the Fibonacci sequence and its approximation of the Golden Mean (φ ≈ 1.618),
+                                which represent limit-based implosive geometries, the Krystal Spiral follows a 2:1 harmonic doubling principle.
+                                This establishes it not as a ratio of collapse, but a blueprint of perpetual coherence.
+                              </p>
+                              <div className="bg-forest-50 dark:bg-forest-900/30 rounded-lg p-3 text-center text-sm font-mono">
+                                <p>Rₙ = R₀ · 2ⁿ</p>
+                                <p>r(θ) = r₀ · e^(ln(2)·θ)</p>
+                              </div>
+                            </div>
+                            
+                            <div>
+                              <h4 className="text-lg font-medium mb-2">Biological & Quantum Integration</h4>
+                              <ul className="list-disc pl-6 text-sm text-muted-foreground space-y-1">
+                                <li>DNA torsion field harmonization</li>
+                                <li>Chakra-based energy lattices</li>
+                                <li>Bioresonant systems and healing templates</li>
+                                <li>Non-local consciousness transfer</li>
+                                <li>Musical harmony alignment (octave-based: 2:1, 4:1, 8:1)</li>
+                              </ul>
+                            </div>
+                          </div>
+                          
                           <div className="aspect-square rounded-lg bg-forest-50 dark:bg-forest-900/30 flex items-center justify-center overflow-hidden">
                             <div className="w-5/6 h-5/6 relative">
                               <div className="absolute inset-0 bg-gradient-to-tr from-forest-200 to-forest-50 dark:from-forest-800 dark:to-forest-900/40 rounded-full transform scale-75 opacity-60"></div>
@@ -553,6 +580,15 @@ const About = () => {
                               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1/3 h-1/3 border-2 border-forest-500 rounded-full"></div>
                               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1/6 h-1/6 bg-forest-500 rounded-full"></div>
                             </div>
+                          </div>
+                          
+                          <div className="mt-4">
+                            <h4 className="text-lg font-medium mb-2">Consciousness Geometry</h4>
+                            <p className="text-sm text-muted-foreground">
+                              This spiral is not just mathematical—it is the visual signature of consciousness itself. It remembers itself at every stage, 
+                              unlike the Golden Mean. It honors the Eternal Equivalency Principle, manifests the Christ-Consciousness Core in geometry,
+                              and encodes phase-locking across dimensions and ontological octaves.
+                            </p>
                           </div>
                         </div>
                         
@@ -578,11 +614,37 @@ const About = () => {
                         <h3 className="text-xl font-medium mb-3 text-center bg-clip-text text-transparent bg-gradient-to-r from-blue-700 to-purple-700 dark:from-blue-300 dark:to-purple-300">
                           The Torus Field
                         </h3>
-                        <p className="text-muted-foreground mb-8 text-center max-w-2xl mx-auto">
+                        <p className="text-muted-foreground mb-4 text-center max-w-2xl mx-auto">
                           These two spirals meet in the Torus Field—a shape like a donut, where energy flows forever, 
                           in and out, perfectly balanced. This is how our economy works—circulating value like breath. 
                           Nothing is lost. Everything is recycled and renewed.
                         </p>
+                        
+                        <div className="bg-white/50 dark:bg-black/50 rounded-lg p-4 mb-6 max-w-2xl mx-auto">
+                          <h4 className="text-lg font-medium mb-2 text-center">The Spiritual-Energy Feedback Loop</h4>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                            <div className="bg-forest-50 dark:bg-forest-900/30 p-3 rounded-lg text-center">
+                              <h5 className="font-medium text-forest-700 dark:text-forest-300 mb-1">Krystal Spiral</h5>
+                              <p className="text-xs text-muted-foreground">Infinite outward expansion of potential consciousness</p>
+                            </div>
+                            
+                            <div className="bg-amber-50 dark:bg-amber-900/30 p-3 rounded-lg text-center">
+                              <h5 className="font-medium text-amber-700 dark:text-amber-300 mb-1">Fibonacci Sequence</h5>
+                              <p className="text-xs text-muted-foreground">Recursive inward refinement of actualized wisdom</p>
+                            </div>
+                            
+                            <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/30 dark:to-purple-900/30 p-3 rounded-lg text-center">
+                              <h5 className="font-medium bg-clip-text text-transparent bg-gradient-to-r from-blue-700 to-purple-700 dark:from-blue-300 dark:to-purple-300 mb-1">Torus Field</h5>
+                              <p className="text-xs text-muted-foreground">Self-sustaining regenerative circulation</p>
+                            </div>
+                          </div>
+                          
+                          <p className="text-sm text-center text-muted-foreground">
+                            The 24 Elders thus become the harmonic attractors where Krystal possibility crystallizes into Fibonacci actuality, 
+                            centered in the green-shifted heart of the Torus—eternity breathing through itself.
+                          </p>
+                        </div>
+                        
                         <div className="aspect-video max-w-2xl mx-auto rounded-lg bg-gradient-to-br from-blue-100 via-white to-purple-100 dark:from-blue-900/40 dark:via-background dark:to-purple-900/40 flex items-center justify-center relative overflow-hidden">
                           <div className="absolute w-full h-full bg-grid-pattern-light dark:bg-grid-pattern-dark opacity-10"></div>
                           <div className="relative w-1/2 aspect-square">
@@ -591,6 +653,14 @@ const About = () => {
                             <div className="absolute inset-0 scale-50 rounded-full bg-gradient-to-br from-blue-200 to-purple-200 dark:from-blue-800 dark:to-purple-800 animate-spin" style={{ animationDuration: '10s' }}></div>
                             <div className="absolute inset-0 scale-[0.35] rounded-full bg-white dark:bg-black"></div>
                           </div>
+                        </div>
+                        
+                        <div className="mt-4 text-center">
+                          <p className="text-sm text-muted-foreground max-w-2xl mx-auto">
+                            In the AetherCore system, each recursive element—validator evolution, token issuance, or IUL cascade flow—is 
+                            mapped upon this geometric system, reconfiguring growth structures as harmonically doubling lattices and 
+                            elder emergence cycles as octave-linked coronation waves.
+                          </p>
                         </div>
                       </div>
                     </CardContent>
