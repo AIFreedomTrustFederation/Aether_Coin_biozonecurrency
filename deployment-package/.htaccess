@@ -1,0 +1,26 @@
+# Enable the rewrite engine
+RewriteEngine On
+
+# Set the base directory
+RewriteBase /aetherion/
+
+# Enable HTTPS
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Redirect all requests to index.html except for actual files and directories
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.html [L,QSA]
+
+# Serve static files from the 'aifreedomtrust' directory
+RewriteCond %{REQUEST_URI} ^/aetherion/aifreedomtrust/(.*)$
+RewriteCond %{DOCUMENT_ROOT}/aetherion/aifreedomtrust/%1 -f
+RewriteRule ^aifreedomtrust/(.*)$ aifreedomtrust/$1 [L]
+
+# Set security headers
+Header set X-Content-Type-Options "nosniff"
+Header set X-XSS-Protection "1; mode=block"
+Header set X-Frame-Options "SAMEORIGIN"
+Header set Referrer-Policy "strict-origin-when-cross-origin"
+Header set Content-Security-Policy "upgrade-insecure-requests;"
