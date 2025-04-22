@@ -3,10 +3,12 @@
  * 
  * Extracts conversation data from a public ChatGPT conversation link
  * and converts it into a format suitable for the Scroll Keeper.
+ * Uses Puppeteer for full JavaScript rendering support.
  */
 
 import fetch from 'node-fetch';
 import { JSDOM } from 'jsdom';
+import puppeteer from 'puppeteer';
 
 /**
  * Extract conversation from a ChatGPT public link
@@ -15,15 +17,15 @@ import { JSDOM } from 'jsdom';
  * @returns {Promise<Object>} - The extracted conversation data
  */
 export async function extractConversation(url) {
+  console.log(`Extracting conversation from: ${url}`);
+  
   try {
-    console.log(`Extracting conversation from: ${url}`);
-    
     // Validate URL format
     if (!url.includes('chat.openai.com/share/') && !url.includes('chatgpt.com/share/')) {
       throw new Error('Invalid ChatGPT share URL format. Expected format: https://chat.openai.com/share/[id] or https://chatgpt.com/share/[id]');
     }
     
-    // Fetch the conversation HTML
+    // First try to extract title from basic HTML fetch (faster)
     const response = await fetch(url);
     
     if (!response.ok) {
@@ -31,8 +33,6 @@ export async function extractConversation(url) {
     }
     
     const html = await response.text();
-    
-    // Parse HTML content
     const dom = new JSDOM(html);
     const document = dom.window.document;
     
@@ -44,124 +44,235 @@ export async function extractConversation(url) {
       title = titleElement.textContent.replace('- ChatGPT', '').trim();
     }
     
-    // Extract messages using different selectors depending on the page structure
-    const messages = [];
+    console.log('Title extracted:', title);
+    console.log('Now launching Puppeteer for full content extraction...');
     
-    // Try the standard selector first
-    let messageElements = document.querySelectorAll('[data-message-author-role]');
+    // Set a timeout for the Puppeteer extraction
+    let browserClosed = false;
+    let browser = null;
     
-    console.log(`Found ${messageElements.length} message elements with data-message-author-role`);
-    
-    // If no messages found, try alternate selectors
-    if (messageElements.length === 0) {
-      // Try to find message containers (may vary depending on ChatGPT's HTML structure)
-      messageElements = document.querySelectorAll('.conversation-turn');
-      console.log(`Found ${messageElements.length} message elements with .conversation-turn`);
-      
-      if (messageElements.length === 0) {
-        messageElements = document.querySelectorAll('.message');
-        console.log(`Found ${messageElements.length} message elements with .message`);
-      }
-    }
-    
-    // Log document structure for debugging
-    console.log('Document structure:', {
-      title: document.title,
-      bodyChildCount: document.body?.childElementCount || 0,
-      hasConversationContainer: !!document.querySelector('.conversation-container'),
-      hasMarkdown: !!document.querySelector('.markdown')
-    });
-    
-    // Process the message elements
-    messageElements.forEach((element, index) => {
-      try {
-        // Try to determine the role (user or assistant)
-        let role = element.getAttribute('data-message-author-role');
-        
-        if (!role) {
-          // Try alternate methods to determine role
-          const isUser = element.classList.contains('user') || 
-                        element.querySelector('.user') || 
-                        element.querySelector('.from-user');
-                        
-          const isAssistant = element.classList.contains('assistant') || 
-                            element.querySelector('.assistant') || 
-                            element.querySelector('.from-assistant');
-          
-          role = isUser ? 'user' : (isAssistant ? 'assistant' : (index % 2 === 0 ? 'user' : 'assistant'));
-        }
-        
-        // Try to find content element with various selectors
-        let contentElement = element.querySelector('.markdown');
-        
-        if (!contentElement) {
-          contentElement = element.querySelector('.message-content') || 
-                          element.querySelector('.content') ||
-                          element; // Fallback to the element itself
-        }
-        
-        if (contentElement) {
-          // Get text content with proper formatting
-          const content = contentElement.innerHTML || contentElement.textContent;
-          
-          if (content && content.trim()) {
-            messages.push({
-              role,
-              content
-            });
-          }
-        }
-      } catch (error) {
-        console.error(`Error processing message element ${index}:`, error);
-      }
-    });
-    
-    // Generate a summary using the first few messages
-    const summaryContent = messages.slice(0, 3).map(msg => {
-      // Strip HTML and truncate
-      const plainText = msg.content.replace(/<[^>]*>/g, '');
-      return plainText.length > 100 ? plainText.substring(0, 100) + '...' : plainText;
-    }).join(' ');
-    
-    // Create conversation object
-    const conversation = {
-      title,
-      url,
-      extractedAt: new Date().toISOString(),
-      summary: summaryContent.substring(0, 200) + (summaryContent.length > 200 ? '...' : ''),
-      messageCount: messages.length,
-      messages
-    };
-    
-    // If no messages were extracted, create a fallback message explaining the issue
-    if (messages.length === 0) {
-      console.log('No messages extracted, creating fallback content');
-      
-      // Add fallback messages to indicate extraction issues
-      messages.push({
-        role: 'system',
-        content: `<div class="error-message">
-          <p><strong>Limited Extraction Notice:</strong></p>
-          <p>The conversation content could not be fully extracted because ChatGPT's shared conversations use dynamic JavaScript rendering which our server-side HTML parser cannot process.</p>
-          <p>We've successfully saved the conversation link and basic information. You can view the original conversation at: <a href="${url}" target="_blank">${url}</a></p>
-        </div>`
+    try {
+      // Use Puppeteer for full JavaScript rendering with optimized performance settings
+      browser = await puppeteer.launch({
+        headless: 'new',
+        executablePath: '/nix/store/zi4f80l169xlmivz8vja8wlphq74qqk0-chromium-125.0.6422.141/bin/chromium',
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-accelerated-2d-canvas',
+          '--no-first-run',
+          '--no-zygote',
+          '--single-process',
+          '--disable-gpu'
+        ],
+        defaultViewport: { width: 1280, height: 1024 }
       });
       
-      // If we have a title, we can still provide some context
-      if (title && title !== "ChatGPT Conversation") {
-        messages.push({
-          role: 'assistant',
-          content: `<div>This appears to be a conversation about: <strong>${title}</strong></div>`
-        });
+      // Create a timeout to automatically close the browser after 20 seconds
+      const browserTimeoutId = setTimeout(() => {
+        console.log('Browser extraction timed out, closing browser...');
+        if (browser && !browserClosed) {
+          browser.close().catch(e => console.error('Error closing browser on timeout:', e));
+          browserClosed = true;
+        }
+      }, 20000);
+      
+      const page = await browser.newPage();
+      
+      // Set a reasonable timeout
+      await page.setDefaultNavigationTimeout(15000);
+      
+      // Navigate to the page
+      console.log('Navigating to URL...');
+      await page.goto(url, { waitUntil: 'networkidle2' });
+      
+      // Wait for content to load
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      console.log('Page loaded, extracting conversation...');
+      
+      // Get updated title from the loaded page (if available)
+      const pageTitle = await page.title();
+      if (pageTitle) {
+        title = pageTitle.replace('- ChatGPT', '').trim();
       }
+      
+      // Extract messages using Puppeteer
+      const messages = await page.evaluate(() => {
+        const extractedMessages = [];
+        
+        // Try different selectors that might identify message blocks
+        const selectors = [
+          '[data-message-author-role]',
+          '.conversation-turn',
+          '.message',
+          '.prose',
+          'div[data-testid^="conversation-turn-"]'
+        ];
+        
+        let messageElements = [];
+        
+        // Try each selector until we find elements
+        for (const selector of selectors) {
+          const elements = document.querySelectorAll(selector);
+          if (elements.length > 0) {
+            messageElements = Array.from(elements);
+            console.log(`Found ${elements.length} messages with selector: ${selector}`);
+            break;
+          }
+        }
+        
+        // Process the message elements
+        if (messageElements.length > 0) {
+          messageElements.forEach((element, index) => {
+            // Try to determine the role (user or assistant)
+            let role = element.getAttribute('data-message-author-role');
+            
+            if (!role) {
+              // Simple alternating pattern if roles can't be determined
+              role = index % 2 === 0 ? 'user' : 'assistant';
+            }
+            
+            // Get content
+            const content = element.innerHTML || element.textContent;
+            
+            if (content && content.trim()) {
+              extractedMessages.push({
+                role,
+                content: content.trim()
+              });
+            }
+          });
+        } else {
+          // Fallback to looking for paragraphs
+          const paragraphs = document.querySelectorAll('p');
+          if (paragraphs.length > 0) {
+            // Just create some basic alternating messages
+            let isUser = true;
+            let currentMessage = '';
+            
+            paragraphs.forEach((p, i) => {
+              if (i > 0 && i % 3 === 0) { // Group paragraphs in chunks of 3
+                if (currentMessage.trim()) {
+                  extractedMessages.push({
+                    role: isUser ? 'user' : 'assistant',
+                    content: currentMessage
+                  });
+                  isUser = !isUser;
+                  currentMessage = p.outerHTML;
+                }
+              } else {
+                currentMessage += p.outerHTML;
+              }
+            });
+            
+            // Add the last message if there is one
+            if (currentMessage.trim()) {
+              extractedMessages.push({
+                role: isUser ? 'user' : 'assistant',
+                content: currentMessage
+              });
+            }
+          }
+        }
+        
+        return extractedMessages;
+      });
+      
+      // Clear the browser timeout since we're done
+      clearTimeout(browserTimeoutId);
+      
+      // Close the browser
+      if (browser && !browserClosed) {
+        await browser.close();
+        browserClosed = true;
+        console.log('Puppeteer browser closed');
+      }
+      
+      console.log(`Puppeteer extracted ${messages.length} messages`);
+      
+      // Generate a summary
+      const summaryText = messages.length > 0 
+        ? messages.slice(0, 2).map(m => m.content.replace(/<[^>]*>/g, '').substring(0, 100)).join(' ') 
+        : "No message content extracted";
+      
+      // Create conversation object
+      const conversation = {
+        title,
+        url,
+        extractedAt: new Date().toISOString(),
+        summary: summaryText.substring(0, 200) + (summaryText.length > 200 ? '...' : ''),
+        messageCount: messages.length,
+        messages
+      };
+      
+      // If no messages were extracted, add fallback content
+      if (messages.length === 0) {
+        console.log('No messages extracted with Puppeteer, creating fallback content');
+        
+        conversation.messages.push({
+          role: 'system',
+          content: `<div class="error-message">
+            <p><strong>Extraction Limitation:</strong></p>
+            <p>We attempted to extract the conversation content using browser rendering, but were unable to identify the message structure on this page.</p>
+            <p>We've saved the link for reference. You can view the original conversation at: <a href="${url}" target="_blank">${url}</a></p>
+          </div>`
+        });
+        
+        if (title && title !== "ChatGPT Conversation") {
+          conversation.messages.push({
+            role: 'assistant',
+            content: `<div>This appears to be a conversation about: <strong>${title}</strong></div>`
+          });
+        }
+        
+        conversation.messageCount = conversation.messages.length;
+      }
+      
+      return conversation;
+      
+    } catch (puppeteerError) {
+      console.error('Puppeteer extraction error:', puppeteerError);
+      
+      // Close the browser if it's still open
+      if (browser && !browserClosed) {
+        try {
+          await browser.close();
+          console.log('Puppeteer browser closed after error');
+        } catch (closeError) {
+          console.error('Error closing browser:', closeError);
+        }
+      }
+      
+      // Return a basic conversation with just the title we already extracted
+      return {
+        title,
+        url,
+        extractedAt: new Date().toISOString(),
+        summary: `Failed to extract complete content: ${puppeteerError.message}`,
+        messageCount: 2,
+        messages: [
+          {
+            role: 'system',
+            content: `<div class="error-message">
+              <p><strong>Extraction Error:</strong></p>
+              <p>We encountered an error while trying to extract the full conversation content: ${puppeteerError.message}</p>
+              <p>We've saved the link for reference. You can view the original conversation at: <a href="${url}" target="_blank">${url}</a></p>
+            </div>`
+          },
+          {
+            role: 'assistant',
+            content: `<div>This appears to be a conversation about: <strong>${title}</strong></div>`
+          }
+        ]
+      };
     }
     
-    return conversation;
   } catch (error) {
     console.error('Error extracting conversation:', error);
     
-    // Instead of failing completely, return a minimal conversation object
-    // This allows the system to still create a scroll with error information
+    // Return a minimal error conversation
     return {
       title: "Extraction Error - ChatGPT Conversation",
       url,
