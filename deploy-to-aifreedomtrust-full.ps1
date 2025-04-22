@@ -191,7 +191,7 @@ function Get-DeploymentCredentials {
     if ([string]::IsNullOrWhiteSpace($credentials.SSH_PORT)) {
         $credentials.SSH_PORT = "22"
     }
-    $credentials.SLACK_WEBHOOK_URL = Read-Host "Enter your Slack Webhook URL (optional, press enter to skip)"
+    $credentials.SLACK_WEBHOOK_URL = Read-Host -Prompt "Enter your Slack Webhook URL (optional, press enter to skip)"
     
     Write-ColorOutput "Credentials collected successfully!" "SUCCESS"
     return $credentials
@@ -415,10 +415,10 @@ function Start-TraditionalDeployment {
         tar -xzf ~/aetherion-deploy.tar.gz -C ~/aetherion
 
         # Install dependencies
-        cd ~/aetherion && npm install --production
+        cd ~/aetherion; npm install --production
 
         # Setup systemd service if it doesn't exist
-        if [ ! -f /etc/systemd/system/aetherion.service ]; then
+        if (-not (Test-Path /etc/systemd/system/aetherion.service)) {
           echo 'Creating systemd service...'
           echo '[Unit]
 Description=Aetherion Wallet Server
@@ -452,7 +452,8 @@ WantedBy=multi-user.target' | sudo tee /etc/systemd/system/aetherion.service
         echo 'Deployment completed!'
 "@
         
-        ssh -p $Credentials.SSH_PORT "$($Credentials.SSH_USER)@$($Credentials.SSH_HOST)" $sshCmd
+        $sshString = "$($Credentials.SSH_USER)@$($Credentials.SSH_HOST)"
+        ssh -p $Credentials.SSH_PORT $sshString $sshCmd
         if ($LASTEXITCODE -ne 0) {
             Write-ColorOutput "Failed to deploy on server" "ERROR"
             return $false
