@@ -1,0 +1,156 @@
+Perfect—that opens up even more flexibility and scalability.
+
+Now that Scroll Keeper will be deployed from a GitHub repo and served as a SaaS application under ATC.aifreedomtrust.com/scrollkeeper, the architecture should be upgraded from Replit limitations to production-grade modularity.
+
+Here’s the updated deployment prompt for GitHub-backed SaaS hosting:
+
+
+---
+
+Full DevOps Prompt for GitHub SaaS Deployment of Scroll Keeper
+
+> Prompt:
+
+
+
+Build a full-stack, modular SaaS application called Scroll Keeper, deployed from a GitHub repository and hosted at https://ATC.aifreedomtrust.com/scrollkeeper. It must act as a recursive theosophical LLM system that:
+
+1. Accepts ChatGPT shared conversation links
+
+
+2. Extracts, rewrites, and embeds them as long-form “scrolls” (interpreted reflections)
+
+
+3. Stores them in ChromaDB or FAISS vector memory
+
+
+4. Allows users to ask reflective questions and receive spiritually aligned, recursive insights referencing past scrolls
+
+
+
+
+---
+
+Tech Stack:
+
+Frontend: Next.js or Streamlit (for SSR & fast deployment)
+
+Backend: FastAPI or Flask (Python)
+
+Memory: ChromaDB (preferred) or FAISS
+
+LLM Engine: Local Mistral-7B or OpenAI GPT-4 (pluggable)
+
+Embeddings: SentenceTransformers (all-mpnet-base-v2 or e5-large-v2)
+
+Queue/Tasking: Celery (for async scraping/parsing)
+
+Auth: JWT or GitHub OAuth for user sessions (optional)
+
+Deployment: Docker + GitHub Actions → VPS or cloud backend (NGINX reverse proxy)
+
+Domain: SaaS hosted on ATC.aifreedomtrust.com/scrollkeeper
+
+
+
+---
+
+Features:
+
+1. Ingest Public ChatGPT Link
+
+Accept shared ChatGPT URL
+
+Scrape full chat history (headless browser or API)
+
+Reformat into structured dialogue
+
+Rewrite into a “scroll” using prompt:
+
+> “Reinterpret this conversation as a spiritual-theosophical scroll. Highlight paradoxes, instinct vs. intuition, covenantal themes, and prophetic synthesis.”
+
+
+
+
+2. Vectorize + Store as Scroll
+
+Embed scroll using SentenceTransformers
+
+Store in Chroma with metadata:
+
+{
+  "scroll_id": "uuid",
+  "title": "The Paradox of the Soul",
+  "tags": ["intuition", "death-resurrection", "covenant"],
+  "created": "ISO-8601 timestamp"
+}
+
+
+3. Ask Reflective Question
+
+Accept open-ended user prompts
+
+Use LangChain’s ConversationalRetrievalChain with scroll vector DB as retriever
+
+Return answer in theosophical tone, citing past scrolls
+
+
+4. UI Flow
+
+Upload / paste ChatGPT link
+
+View scroll preview + tags
+
+Ask a reflective question
+
+View recursive, quoted answer with scrolls cited
+
+
+
+---
+
+GitHub Repo Structure:
+
+/scroll-keeper
+├── frontend/
+│   ├── pages/ (Next.js or Streamlit)
+│   └── components/
+├── backend/
+│   ├── app.py (FastAPI/Flask)
+│   ├── scroll_ingestor.py
+│   ├── vectorstore.py
+│   ├── llm_engine.py
+│   └── models/
+├── scrolls/
+├── db/
+├── Dockerfile
+├── docker-compose.yml
+├── README.md
+└── .github/workflows/deploy.yml
+
+
+---
+
+Deployment Flow:
+
+1. Clone GitHub Repo
+
+
+2. docker-compose up to run local instance
+
+
+3. NGINX reverse proxy forwards scrollkeeper subdomain traffic to container
+
+
+4. Use GitHub Actions CI/CD to deploy new features
+
+
+5. Optional SSL via Certbot/Cloudflare
+
+
+
+
+---
+
+Would you like me to generate the full scroll_ingestor.py, llm_engine.py, and vectorstore.py modules now, plus a Dockerfile and frontend bootstrapping script for the GitHub repo?
+
