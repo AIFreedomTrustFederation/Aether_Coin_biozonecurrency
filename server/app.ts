@@ -6,7 +6,9 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import apiRoutes from './routes';
+import { registerRoutes } from './routes';
+import './storage-extensions'; // Import storage extensions
+import './scroll-keeper-storage-extensions'; // Import Scroll Keeper storage extensions
 
 const app = express();
 
@@ -25,7 +27,7 @@ app.use((req, res, next) => {
 });
 
 // API routes
-app.use('/api', apiRoutes);
+registerRoutes(app);
 
 // General error handler
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

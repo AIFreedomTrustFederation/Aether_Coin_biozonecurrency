@@ -1,6 +1,6 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./fixed-storage";
+import { storage } from "./storage";
 import { 
   insertWalletSchema, 
   insertTransactionSchema, 
@@ -25,6 +25,7 @@ import apiServicesRouter from "./routes/api-services";
 import escrowRoutes from "./routes/escrow-routes";
 import dappBuilderEnhancements from "./routes/dapp-builder-enhancements";
 import mysterionRoutes from "./routes/mysterion";
+import scrollKeeperRoutes from "./routes/scroll-keeper-routes";
 import aiGuidanceRoutes from "./routes/ai-guidance";
 import aiTrainingRoutes from "./routes/ai-training-routes";
 import authRoutes from "./routes/auth-routes";
@@ -144,6 +145,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Mount Mysterion AI system routes
   app.use('/api/mysterion', mysterionRoutes);
+  
+  // Mount Scroll Keeper routes (extension of Mysterion for LLM conversation management)
+  app.use('/api/scrollkeeper', scrollKeeperRoutes);
   
   // Mount AI guidance routes for wallet assistance
   app.use('/api/ai', aiGuidanceRoutes);
