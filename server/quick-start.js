@@ -130,8 +130,8 @@ const server = app.listen(PORT, '0.0.0.0', () => {
     console.log('Starting main application server...');
     
     // Spawn the main server as a separate process using a different approach
-    // First, compile the TypeScript file
-    const tsc = spawn('npx', ['tsc', './server/index.ts', '--outDir', './server/dist'], {
+    // First, compile the TypeScript file with our custom config
+    const tsc = spawn('npx', ['tsc', '-p', './server/tsconfig-build.json'], {
       stdio: 'inherit'
     });
     
@@ -139,7 +139,7 @@ const server = app.listen(PORT, '0.0.0.0', () => {
       console.log('TypeScript compiled, starting main server...');
       
       // Then run the compiled JavaScript
-      const mainServer = spawn('node', ['./server/dist/index.js'], {
+      const mainServer = spawn('node', ['./server/dist/server/index.js'], {
         stdio: 'inherit',
         env: { ...process.env, QUICK_START: 'true' }
       });

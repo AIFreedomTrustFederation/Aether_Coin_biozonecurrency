@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scroll Keeper WebSocket Test</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    .container {
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      color: #333;
+      margin-top: 0;
+    }
+    .status {
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 4px;
+    }
+    .connected {
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    .disconnected {
+      background-color: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    .message-box {
+      height: 300px;
+      overflow-y: auto;
+      border: 1px solid #ddd;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 4px;
+      background-color: #f9f9f9;
+    }
+    .message {
+      margin: 5px 0;
+      padding: 5px;
+      border-bottom: 1px solid #eee;
+    }
+    .message pre {
+      margin: 5px 0;
+      white-space: pre-wrap;
+    }
+    .timestamp {
+      font-size: 0.8em;
+      color: #777;
+    }
+    .controls {
+      margin: 15px 0;
+    }
+    input, button, select {
+      padding: 8px;
+      margin: 5px 0;
+    }
+    button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0069d9;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    .scroll-form {
+      background-color: #e9ecef;
+      padding: 15px;
+      border-radius: 4px;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Scroll Keeper WebSocket Test</h1>
+    
+    <div id="connectionStatus" class="status disconnected">
+      Disconnected
+    </div>
+    
+    <div class="controls">
+      <button id="connectBtn">Connect to WebSocket</button>
+      <button id="disconnectBtn" disabled>Disconnect</button>
+    </div>
+    
+    <div class="form-group">
+      <label for="userId">User ID:</label>
+      <input type="text" id="userId" placeholder="Enter user ID">
+      <button id="subscribeBtn" disabled>Subscribe</button>
+    </div>
+    
+    <div class="form-group">
+      <button id="pingBtn" disabled>Send Ping</button>
+    </div>
+    
+    <h3>Messages</h3>
+    <div id="messageBox" class="message-box">
+      <div class="message">
+        <div class="timestamp">Welcome to Scroll Keeper WebSocket Test</div>
+      </div>
+    </div>
+    
+    <div class="scroll-form">
+      <h3>Create New Scroll</h3>
+      <div class="form-group">
+        <label for="scrollTitle">Title:</label>
+        <input type="text" id="scrollTitle" placeholder="Enter scroll title">
+      </div>
+      <div class="form-group">
+        <label for="scrollContent">Content:</label>
+        <textarea id="scrollContent" rows="4" style="width: 100%" placeholder="Enter scroll content"></textarea>
+      </div>
+      <div class="form-group">
+        <label for="scrollUserId">User ID:</label>
+        <input type="text" id="scrollUserId" placeholder="Enter user ID">
+      </div>
+      <button id="createScrollBtn">Create Scroll</button>
+    </div>
+  </div>
+
+  <script>
+    // DOM Elements
+    const connectBtn = document.getElementById('connectBtn');
+    const disconnectBtn = document.getElementById('disconnectBtn');
+    const pingBtn = document.getElementById('pingBtn');
+    const subscribeBtn = document.getElementById('subscribeBtn');
+    const userIdInput = document.getElementById('userId');
+    const connectionStatus = document.getElementById('connectionStatus');
+    const messageBox = document.getElementById('messageBox');
+    const scrollTitleInput = document.getElementById('scrollTitle');
+    const scrollContentInput = document.getElementById('scrollContent');
+    const scrollUserIdInput = document.getElementById('scrollUserId');
+    const createScrollBtn = document.getElementById('createScrollBtn');
+    
+    // WebSocket connection
+    let socket = null;
+    
+    // Connect to WebSocket server
+    function connect() {
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${protocol}//${window.location.host}/ws`;
+      
+      try {
+        socket = new WebSocket(wsUrl);
+        
+        socket.onopen = () => {
+          connectionStatus.className = 'status connected';
+          connectionStatus.textContent = 'Connected';
+          
+          connectBtn.disabled = true;
+          disconnectBtn.disabled = false;
+          pingBtn.disabled = false;
+          subscribeBtn.disabled = false;
+          
+          addMessage('System', 'Connected to WebSocket server');
+        };
+        
+        socket.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            addMessage('Server', data);
+          } catch (error) {
+            addMessage('Error', `Failed to parse message: ${error.message}`);
+          }
+        };
+        
+        socket.onclose = () => {
+          connectionStatus.className = 'status disconnected';
+          connectionStatus.textContent = 'Disconnected';
+          
+          connectBtn.disabled = false;
+          disconnectBtn.disabled = true;
+          pingBtn.disabled = true;
+          subscribeBtn.disabled = true;
+          
+          addMessage('System', 'Disconnected from WebSocket server');
+          socket = null;
+        };
+        
+        socket.onerror = (error) => {
+          addMessage('Error', `WebSocket error: ${error.message}`);
+        };
+      } catch (error) {
+        addMessage('Error', `Failed to connect: ${error.message}`);
+      }
+    }
+    
+    // Disconnect from WebSocket server
+    function disconnect() {
+      if (socket) {
+        socket.close();
+      }
+    }
+    
+    // Send ping message
+    function sendPing() {
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        const ping = {
+          type: 'ping',
+          timestamp: new Date().toISOString()
+        };
+        
+        socket.send(JSON.stringify(ping));
+        addMessage('Client', ping);
+      } else {
+        addMessage('Error', 'Socket is not connected');
+      }
+    }
+    
+    // Subscribe to user notifications
+    function subscribe() {
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        const userId = userIdInput.value.trim();
+        
+        if (!userId) {
+          addMessage('Error', 'User ID is required');
+          return;
+        }
+        
+        const subscribe = {
+          type: 'subscribe',
+          userId
+        };
+        
+        socket.send(JSON.stringify(subscribe));
+        addMessage('Client', subscribe);
+        
+        // Auto-fill the user ID in the create scroll form
+        scrollUserIdInput.value = userId;
+      } else {
+        addMessage('Error', 'Socket is not connected');
+      }
+    }
+    
+    // Create a new scroll via API
+    function createScroll() {
+      const title = scrollTitleInput.value.trim();
+      const content = scrollContentInput.value.trim();
+      const userId = scrollUserIdInput.value.trim();
+      
+      if (!title || !content) {
+        addMessage('Error', 'Title and content are required');
+        return;
+      }
+      
+      const scroll = {
+        title,
+        content,
+        userId: userId || null
+      };
+      
+      fetch('/api/scrollkeeper/scrolls', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(scroll)
+      })
+      .then(response => response.json())
+      .then(data => {
+        addMessage('API Response', data);
+        
+        // Clear form
+        scrollTitleInput.value = '';
+        scrollContentInput.value = '';
+      })
+      .catch(error => {
+        addMessage('API Error', `Failed to create scroll: ${error.message}`);
+      });
+    }
+    
+    // Add message to message box
+    function addMessage(source, data) {
+      const message = document.createElement('div');
+      message.className = 'message';
+      
+      const timestamp = document.createElement('div');
+      timestamp.className = 'timestamp';
+      timestamp.textContent = `${new Date().toLocaleTimeString()} - ${source}:`;
+      
+      const content = document.createElement('pre');
+      content.textContent = typeof data === 'object' ? JSON.stringify(data, null, 2) : data;
+      
+      message.appendChild(timestamp);
+      message.appendChild(content);
+      
+      messageBox.appendChild(message);
+      
+      // Scroll to bottom
+      messageBox.scrollTop = messageBox.scrollHeight;
+    }
+    
+    // Event listeners
+    connectBtn.addEventListener('click', connect);
+    disconnectBtn.addEventListener('click', disconnect);
+    pingBtn.addEventListener('click', sendPing);
+    subscribeBtn.addEventListener('click', subscribe);
+    createScrollBtn.addEventListener('click', createScroll);
+  </script>
+</body>
+</html>
