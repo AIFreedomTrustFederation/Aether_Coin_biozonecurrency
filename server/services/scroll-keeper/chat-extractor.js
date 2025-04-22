@@ -19,8 +19,8 @@ export async function extractConversation(url) {
     console.log(`Extracting conversation from: ${url}`);
     
     // Validate URL format
-    if (!url.includes('chat.openai.com/share/')) {
-      throw new Error('Invalid ChatGPT share URL format. Expected format: https://chat.openai.com/share/[id]');
+    if (!url.includes('chat.openai.com/share/') && !url.includes('chatgpt.com/share/')) {
+      throw new Error('Invalid ChatGPT share URL format. Expected format: https://chat.openai.com/share/[id] or https://chatgpt.com/share/[id]');
     }
     
     // Fetch the conversation HTML
@@ -44,22 +44,75 @@ export async function extractConversation(url) {
       title = titleElement.textContent.replace('- ChatGPT', '').trim();
     }
     
-    // Extract messages
+    // Extract messages using different selectors depending on the page structure
     const messages = [];
-    const messageElements = document.querySelectorAll('[data-message-author-role]');
     
-    messageElements.forEach((element) => {
-      const role = element.getAttribute('data-message-author-role');
-      const contentElement = element.querySelector('.markdown');
+    // Try the standard selector first
+    let messageElements = document.querySelectorAll('[data-message-author-role]');
+    
+    console.log(`Found ${messageElements.length} message elements with data-message-author-role`);
+    
+    // If no messages found, try alternate selectors
+    if (messageElements.length === 0) {
+      // Try to find message containers (may vary depending on ChatGPT's HTML structure)
+      messageElements = document.querySelectorAll('.conversation-turn');
+      console.log(`Found ${messageElements.length} message elements with .conversation-turn`);
       
-      if (contentElement) {
-        // Get text content with proper formatting
-        const content = contentElement.innerHTML;
+      if (messageElements.length === 0) {
+        messageElements = document.querySelectorAll('.message');
+        console.log(`Found ${messageElements.length} message elements with .message`);
+      }
+    }
+    
+    // Log document structure for debugging
+    console.log('Document structure:', {
+      title: document.title,
+      bodyChildCount: document.body?.childElementCount || 0,
+      hasConversationContainer: !!document.querySelector('.conversation-container'),
+      hasMarkdown: !!document.querySelector('.markdown')
+    });
+    
+    // Process the message elements
+    messageElements.forEach((element, index) => {
+      try {
+        // Try to determine the role (user or assistant)
+        let role = element.getAttribute('data-message-author-role');
         
-        messages.push({
-          role,
-          content
-        });
+        if (!role) {
+          // Try alternate methods to determine role
+          const isUser = element.classList.contains('user') || 
+                        element.querySelector('.user') || 
+                        element.querySelector('.from-user');
+                        
+          const isAssistant = element.classList.contains('assistant') || 
+                            element.querySelector('.assistant') || 
+                            element.querySelector('.from-assistant');
+          
+          role = isUser ? 'user' : (isAssistant ? 'assistant' : (index % 2 === 0 ? 'user' : 'assistant'));
+        }
+        
+        // Try to find content element with various selectors
+        let contentElement = element.querySelector('.markdown');
+        
+        if (!contentElement) {
+          contentElement = element.querySelector('.message-content') || 
+                          element.querySelector('.content') ||
+                          element; // Fallback to the element itself
+        }
+        
+        if (contentElement) {
+          // Get text content with proper formatting
+          const content = contentElement.innerHTML || contentElement.textContent;
+          
+          if (content && content.trim()) {
+            messages.push({
+              role,
+              content
+            });
+          }
+        }
+      } catch (error) {
+        console.error(`Error processing message element ${index}:`, error);
       }
     });
     
@@ -80,10 +133,46 @@ export async function extractConversation(url) {
       messages
     };
     
+    // If no messages were extracted, create a fallback message explaining the issue
+    if (messages.length === 0) {
+      console.log('No messages extracted, creating fallback content');
+      
+      // Add fallback messages to indicate extraction issues
+      messages.push({
+        role: 'system',
+        content: `<div class="error-message">
+          <p><strong>Limited Extraction Notice:</strong></p>
+          <p>The conversation content could not be fully extracted because ChatGPT's shared conversations use dynamic JavaScript rendering which our server-side HTML parser cannot process.</p>
+          <p>We've successfully saved the conversation link and basic information. You can view the original conversation at: <a href="${url}" target="_blank">${url}</a></p>
+        </div>`
+      });
+      
+      // If we have a title, we can still provide some context
+      if (title && title !== "ChatGPT Conversation") {
+        messages.push({
+          role: 'assistant',
+          content: `<div>This appears to be a conversation about: <strong>${title}</strong></div>`
+        });
+      }
+    }
+    
     return conversation;
   } catch (error) {
     console.error('Error extracting conversation:', error);
-    throw error;
+    
+    // Instead of failing completely, return a minimal conversation object
+    // This allows the system to still create a scroll with error information
+    return {
+      title: "Extraction Error - ChatGPT Conversation",
+      url,
+      extractedAt: new Date().toISOString(),
+      summary: "There was an error extracting this conversation. The link may be invalid or the page structure unsupported.",
+      messageCount: 1,
+      messages: [{
+        role: 'system',
+        content: `<div class="error-message">Failed to extract the conversation: ${error.message}</div><div>URL attempted: ${url}</div>`
+      }]
+    };
   }
 }
 

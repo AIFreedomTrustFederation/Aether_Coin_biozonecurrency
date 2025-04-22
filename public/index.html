@@ -617,8 +617,8 @@
         return;
       }
       
-      if (!url.includes('chat.openai.com/share/')) {
-        showExtractStatus('error', 'Invalid ChatGPT URL format. Expected format: https://chat.openai.com/share/[id]');
+      if (!url.includes('chat.openai.com/share/') && !url.includes('chatgpt.com/share/')) {
+        showExtractStatus('error', 'Invalid ChatGPT URL format. Expected format: https://chat.openai.com/share/[id] or https://chatgpt.com/share/[id]');
         return;
       }
       

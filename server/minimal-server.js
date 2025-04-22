@@ -57,8 +57,21 @@ app.get('/api/scrollkeeper/status', (req, res) => {
     message: 'Scroll Keeper service is available in minimal mode',
     features: [
       'Basic conversation storage',
-      'Simple retrieval'
-    ]
+      'Simple retrieval',
+      'ChatGPT conversation extraction (basic metadata only)',
+      'Real-time updates via WebSockets'
+    ],
+    documentation: {
+      extraction: {
+        endpoint: '/api/scrollkeeper/extract',
+        method: 'POST',
+        parameters: {
+          url: 'ChatGPT shared conversation URL (https://chat.openai.com/share/... or https://chatgpt.com/share/...)',
+          userId: 'Optional user ID to associate with the scroll'
+        },
+        limitations: 'Currently only extracts basic metadata such as title and URL. Content extraction is limited due to ChatGPT\'s dynamic JavaScript rendering.'
+      }
+    }
   });
 });
 
