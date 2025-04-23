@@ -14,7 +14,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Create app
 const app = express();
-const port = 3000;
+// Use PORT from environment or default to 5000 for platform independence
+const port = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors());

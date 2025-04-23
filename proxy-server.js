@@ -11,7 +11,8 @@ const path = require('path');
 
 // Create Express server
 const app = express();
-const PORT = process.env.PORT || 3000;
+// Use PORT from environment or default to 5000 for platform independence
+const PORT = process.env.PORT || 5000;
 
 // Create proxy middleware
 const apiProxy = createProxyMiddleware({

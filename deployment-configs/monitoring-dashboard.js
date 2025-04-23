@@ -16,7 +16,7 @@ const os = require('os');
 // Configuration
 const PORT = process.env.DASHBOARD_PORT || 8090;
 const INSTANCES = [
-  { name: 'Instance 0', url: 'http://localhost:3000/health' },
+  { name: 'Instance 0', url: 'http://localhost:5000/health' },
   { name: 'Instance 1', url: 'http://localhost:3001/health' },
   { name: 'Instance 2', url: 'http://localhost:3002/health' }
 ];

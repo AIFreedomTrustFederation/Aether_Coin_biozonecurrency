@@ -14,7 +14,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+// Use PORT from environment or default to 5000 for platform independence
+const PORT = process.env.PORT || 5000;
 
 // Serve static files from the 'dist' directory (production build) for both paths
 app.use('/wallet', express.static(path.join(__dirname, 'dist')));

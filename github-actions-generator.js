@@ -194,7 +194,7 @@ jobs:
           WorkingDirectory=/home/\${{ secrets.DEPLOY_SSH_USER }}/aetherion
           ExecStart=/usr/bin/node /home/\${{ secrets.DEPLOY_SSH_USER }}/aetherion/server-redirect.js
           Restart=on-failure
-          Environment=PORT=3000
+          Environment=PORT=5000
           Environment=NODE_ENV=production
           Environment=DATABASE_URL=\${{ secrets.DATABASE_URL }}
           Environment=SESSION_SECRET=\${{ secrets.SESSION_SECRET }}

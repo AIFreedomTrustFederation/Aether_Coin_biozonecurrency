@@ -58,7 +58,7 @@ server {
 
     # Primary application path at /dapp
     location /dapp {
-        proxy_pass http://localhost:3000/dapp;
+        proxy_pass http://localhost:5000/dapp;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -68,7 +68,7 @@ server {
 
     # Secondary application path at /wallet (legacy support)
     location ${DEPLOY_PATH} {
-        proxy_pass http://localhost:3000${DEPLOY_PATH};
+        proxy_pass http://localhost:5000${DEPLOY_PATH};
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -108,7 +108,7 @@ User=YOUR_USERNAME
 WorkingDirectory=/path/to/aetherion
 ExecStart=/usr/bin/node /path/to/aetherion/${SERVER_SCRIPT}
 Restart=on-failure
-Environment=PORT=3000
+Environment=PORT=5000
 Environment=NODE_ENV=production
 
 [Install]
