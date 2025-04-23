@@ -1,9 +1,9 @@
 /**
- * Server Entry Point for AI Freedom Trust Framework
+ * Scroll Keeper
+ * Main server entry point
  * 
- * This file uses our minimal server to ensure that the application
- * starts within Replit's 20-second timeout for workflows.
+ * This file loads the minimal server first to ensure a quick start,
+ * then proceeds to load the full application in the background.
  */
 
-// Use minimal server for faster startup
 import './server/minimal-server.js';

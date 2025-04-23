@@ -3,697 +3,1264 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Scroll Keeper Dashboard</title>
+  <title>Scroll Keeper - Knowledge Management</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/2.1.0/showdown.min.js"></script>
   <style>
+    :root {
+      --primary: #4F46E5;
+      --primary-light: #6366F1;
+      --primary-dark: #4338CA;
+      --secondary: #0EA5E9;
+      --success: #16A34A;
+      --danger: #DC2626;
+      --warning: #F59E0B;
+      --info: #06B6D4;
+      --background: #F9FAFB;
+      --surface: #FFFFFF;
+      --surface-hover: #F3F4F6;
+      --text: #1F2937;
+      --text-secondary: #6B7280;
+      --border: #E5E7EB;
+      --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      --radius: 0.5rem;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --primary: #6366F1;
+        --primary-light: #818CF8;
+        --primary-dark: #4F46E5;
+        --background: #111827;
+        --surface: #1F2937;
+        --surface-hover: #374151;
+        --text: #F9FAFB;
+        --text-secondary: #9CA3AF;
+        --border: #374151;
+        --shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+      }
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      max-width: 1000px;
-      margin: 0 auto;
-      padding: 20px;
-      background-color: #f0f2f5;
-      color: #333;
-      line-height: 1.6;
+      font-family: 'Inter', system-ui, sans-serif;
+      background-color: var(--background);
+      color: var(--text);
+      line-height: 1.5;
     }
-    
-    .app-container {
-      display: grid;
-      grid-template-columns: 250px 1fr;
-      gap: 20px;
-      background-color: white;
-      border-radius: 10px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      overflow: hidden;
-    }
-    
-    .sidebar {
-      background-color: #1a202c;
-      color: white;
-      padding: 20px;
-      min-height: 100vh;
-    }
-    
-    .sidebar h1 {
-      margin-top: 0;
-      font-size: 1.5rem;
-      border-bottom: 1px solid #374151;
-      padding-bottom: 10px;
-    }
-    
-    .main-content {
-      padding: 20px;
-    }
-    
-    .status-indicator {
-      display: flex;
-      align-items: center;
-      margin-bottom: 10px;
-      padding: 8px;
-      border-radius: 6px;
-      background-color: #2d3748;
-    }
-    
-    .status-dot {
-      height: 12px;
-      width: 12px;
-      border-radius: 50%;
-      margin-right: 10px;
-    }
-    
-    .status-dot.connected {
-      background-color: #48bb78;
-    }
-    
-    .status-dot.disconnected {
-      background-color: #f56565;
-    }
-    
-    .nav-links {
-      margin-top: 20px;
-    }
-    
-    .nav-link {
-      display: block;
-      padding: 10px;
-      color: #cbd5e0;
+
+    a {
+      color: var(--primary);
       text-decoration: none;
-      border-radius: 6px;
-      margin-bottom: 5px;
-      transition: background-color 0.2s;
     }
-    
-    .nav-link:hover, .nav-link.active {
-      background-color: #2d3748;
-      color: white;
+
+    a:hover {
+      text-decoration: underline;
     }
-    
-    .card {
-      background-color: white;
-      border-radius: 8px;
-      border: 1px solid #e2e8f0;
-      padding: 20px;
-      margin-bottom: 20px;
-    }
-    
-    .card h2 {
-      margin-top: 0;
-      border-bottom: 1px solid #e2e8f0;
-      padding-bottom: 10px;
-      color: #2d3748;
-    }
-    
-    .form-group {
-      margin-bottom: 15px;
-    }
-    
-    .form-group label {
-      display: block;
-      margin-bottom: 5px;
+
+    button, .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       font-weight: 500;
-    }
-    
-    input, textarea, button, select {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid #e2e8f0;
-      border-radius: 6px;
-      font-size: 16px;
-    }
-    
-    textarea {
-      min-height: 100px;
-      resize: vertical;
-    }
-    
-    button {
-      background-color: #4299e1;
+      border-radius: var(--radius);
+      padding: 0.5rem 1rem;
+      background-color: var(--primary);
       color: white;
       border: none;
       cursor: pointer;
-      font-weight: 500;
-      transition: background-color 0.2s;
+      transition: background-color 0.2s, transform 0.1s;
+      gap: 0.5rem;
+    }
+
+    button:hover, .button:hover {
+      background-color: var(--primary-light);
+      text-decoration: none;
+    }
+
+    button:active, .button:active {
+      transform: translateY(1px);
+      background-color: var(--primary-dark);
     }
     
-    button:hover {
-      background-color: #3182ce;
+    button.secondary, .button.secondary {
+      background-color: transparent;
+      color: var(--primary);
+      border: 1px solid var(--primary);
     }
-    
-    button:disabled {
-      background-color: #a0aec0;
-      cursor: not-allowed;
+
+    button.secondary:hover, .button.secondary:hover {
+      background-color: rgba(99, 102, 241, 0.1);
     }
-    
-    .button-row {
+
+    input, textarea {
+      width: 100%;
+      padding: 0.75rem;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+    }
+
+    input:focus, textarea:focus {
+      outline: 2px solid var(--primary);
+      border-color: var(--primary);
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 1rem;
+    }
+
+    header {
+      background-color: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 0;
+      box-shadow: var(--shadow);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    header .container {
       display: flex;
-      gap: 10px;
-      margin-top: 10px;
+      justify-content: space-between;
+      align-items: center;
     }
-    
-    .button-row button {
+
+    .logo {
+      display: flex;
+      align-items: center;
+      font-weight: 700;
+      font-size: 1.5rem;
+      color: var(--text);
+      gap: 0.5rem;
+    }
+
+    .logo svg {
+      color: var(--primary);
+    }
+
+    nav {
+      display: flex;
+      gap: 1.5rem;
+    }
+
+    nav a {
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    nav a:hover, nav a.active {
+      color: var(--primary);
+      text-decoration: none;
+    }
+
+    main {
+      padding: 2rem 0;
+    }
+
+    .hero {
+      padding: 3rem 0;
+      text-align: center;
+    }
+
+    .hero h1 {
+      font-size: 2.5rem;
+      font-weight: 800;
+      margin-bottom: 1rem;
+      line-height: 1.2;
+    }
+
+    .hero p {
+      font-size: 1.25rem;
+      color: var(--text-secondary);
+      max-width: 36rem;
+      margin: 0 auto 2rem;
+    }
+
+    .section-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .card {
+      background-color: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1rem;
+    }
+
+    .card-title {
+      font-weight: 700;
+      font-size: 1.25rem;
+    }
+
+    .card-meta {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+    }
+
+    .card-content {
+      color: var(--text-secondary);
+      margin-bottom: 1rem;
+    }
+
+    .card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 1rem;
+    }
+
+    .tag {
+      display: inline-block;
+      background-color: rgba(99, 102, 241, 0.1);
+      color: var(--primary);
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      margin-right: 0.5rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+    }
+
+    .form-row {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .form-row > * {
       flex: 1;
     }
-    
-    .messages {
-      height: 300px;
-      overflow-y: auto;
-      border: 1px solid #e2e8f0;
-      border-radius: 6px;
-      padding: 10px;
-      background-color: #f8fafc;
+
+    .error {
+      color: var(--danger);
+      background-color: rgba(220, 38, 38, 0.1);
+      padding: 0.75rem;
+      border-radius: var(--radius);
+      margin-bottom: 1rem;
+      font-size: 0.875rem;
     }
-    
+
+    .success {
+      color: var(--success);
+      background-color: rgba(22, 163, 74, 0.1);
+      padding: 0.75rem;
+      border-radius: var(--radius);
+      margin-bottom: 1rem;
+      font-size: 0.875rem;
+    }
+
+    .loading {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem;
+      color: var(--text-secondary);
+    }
+
+    .spinner {
+      border: 3px solid rgba(0, 0, 0, 0.1);
+      border-radius: 50%;
+      border-top: 3px solid var(--primary);
+      width: 24px;
+      height: 24px;
+      animation: spin 1s linear infinite;
+      margin-right: 0.5rem;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 1.5rem;
+    }
+
+    .tab {
+      padding: 0.75rem 1.5rem;
+      cursor: pointer;
+      font-weight: 500;
+      color: var(--text-secondary);
+      border-bottom: 2px solid transparent;
+    }
+
+    .tab:hover {
+      color: var(--primary);
+    }
+
+    .tab.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+    }
+
+    .scroll-view {
+      background-color: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .conversation {
+      padding: 1.5rem 0;
+    }
+
     .message {
-      margin-bottom: 10px;
-      padding-bottom: 10px;
-      border-bottom: 1px solid #e2e8f0;
+      margin-bottom: 1.5rem;
+      animation: fadeIn 0.3s ease-in-out;
     }
-    
-    .message:last-child {
-      border-bottom: none;
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
     }
-    
+
     .message-header {
       display: flex;
-      justify-content: space-between;
-      margin-bottom: 5px;
-      font-size: 0.875rem;
-      color: #718096;
+      align-items: center;
+      margin-bottom: 0.5rem;
+      gap: 0.5rem;
     }
-    
+
+    .message-avatar {
+      width: 2rem;
+      height: 2rem;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: white;
+    }
+
+    .user-avatar {
+      background-color: var(--secondary);
+    }
+
+    .assistant-avatar {
+      background-color: var(--primary);
+    }
+
+    .system-avatar {
+      background-color: var(--info);
+    }
+
+    .message-name {
+      font-weight: 600;
+    }
+
     .message-content {
-      background-color: white;
-      padding: 10px;
-      border-radius: 6px;
-      border: 1px solid #e2e8f0;
-      white-space: pre-wrap;
-      overflow-wrap: break-word;
+      padding-left: 2.5rem;
+      line-height: 1.6;
     }
-    
-    .scrolls-list {
-      margin-top: 20px;
+
+    .message-content p {
+      margin-bottom: 1rem;
     }
-    
-    .scroll-item {
-      padding: 15px;
-      border: 1px solid #e2e8f0;
-      border-radius: 6px;
-      margin-bottom: 10px;
-      transition: transform 0.2s;
-      cursor: pointer;
+
+    .message-content pre {
+      background-color: #1E293B;
+      border-radius: var(--radius);
+      padding: 1rem;
+      overflow-x: auto;
+      margin-bottom: 1rem;
     }
-    
-    .scroll-item:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+
+    .message-content code {
+      font-family: monospace;
     }
-    
-    .scroll-header {
+
+    .message-content img {
+      max-width: 100%;
+      border-radius: var(--radius);
+    }
+
+    .message-content ul, .message-content ol {
+      margin-bottom: 1rem;
+      padding-left: 1.5rem;
+    }
+
+    .error-message {
+      border-left: 4px solid var(--danger);
+      padding-left: 1rem;
+      color: var(--danger);
+    }
+
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 1rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+
+    .modal.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-content {
+      background-color: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-lg);
+      max-width: 32rem;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      animation: modalIn 0.3s forwards;
+    }
+
+    @keyframes modalIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .modal-header {
       display: flex;
       justify-content: space-between;
-      margin-bottom: 10px;
+      align-items: center;
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--border);
     }
-    
-    .scroll-title {
-      font-weight: 500;
-      font-size: 1.1rem;
-      color: #2d3748;
+
+    .modal-title {
+      font-weight: 600;
+      font-size: 1.25rem;
     }
-    
-    .scroll-date {
-      color: #718096;
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+
+    .modal-body {
+      padding: 1.5rem;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.75rem;
+      padding: 1rem 1.5rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .search-bar {
+      display: flex;
+      margin-bottom: 2rem;
+    }
+
+    .search-bar input {
+      border-top-right-radius: 0;
+      border-bottom-right-radius: 0;
+      border-right: none;
+    }
+
+    .search-bar button {
+      border-top-left-radius: 0;
+      border-bottom-left-radius: 0;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 3rem;
+      color: var(--text-secondary);
+    }
+
+    .empty-state svg {
+      color: var(--text-secondary);
+      margin-bottom: 1rem;
+      opacity: 0.5;
+    }
+
+    .empty-state h3 {
+      font-size: 1.25rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .empty-state p {
+      margin-bottom: 1.5rem;
+    }
+
+    footer {
+      text-align: center;
+      padding: 2rem 0;
+      color: var(--text-secondary);
       font-size: 0.875rem;
+      border-top: 1px solid var(--border);
+      margin-top: 3rem;
+    }
+
+    #dashboard, #extractForm, #scrollView, #searchResults {
+      display: none;
+    }
+
+    /* Notification system */
+    .notification {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      background-color: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-lg);
+      padding: 1rem;
+      z-index: 1000;
+      transform: translateX(100%);
+      transition: transform 0.3s ease-out;
+      max-width: 24rem;
+      border-left: 4px solid var(--primary);
     }
     
-    .scroll-preview {
-      color: #4a5568;
+    .notification.show {
+      transform: translateX(0);
     }
     
-    @media (max-width: 768px) {
-      .app-container {
+    .notification.info {
+      border-left-color: var(--info);
+    }
+    
+    .notification.success {
+      border-left-color: var(--success);
+    }
+    
+    .notification.warning {
+      border-left-color: var(--warning);
+    }
+    
+    .notification.error {
+      border-left-color: var(--danger);
+    }
+    
+    .notification-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .notification-close {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 1.25rem;
+      cursor: pointer;
+      padding: 0.25rem;
+      margin-left: 1rem;
+    }
+    
+    /* Small screens */
+    @media (max-width: 640px) {
+      .header .container {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+      }
+
+      nav {
+        width: 100%;
+        justify-content: space-between;
+      }
+
+      .grid {
         grid-template-columns: 1fr;
       }
+
+      .form-row {
+        flex-direction: column;
+      }
+
+      .hero h1 {
+        font-size: 2rem;
+      }
+
+      .hero p {
+        font-size: 1rem;
+      }
       
-      .sidebar {
-        min-height: auto;
+      .notification {
+        left: 1rem;
+        right: 1rem;
+        max-width: none;
       }
     }
   </style>
 </head>
 <body>
-  <div class="app-container">
-    <div class="sidebar">
-      <h1>Scroll Keeper</h1>
-      <div class="status-indicator">
-        <div id="connectionStatus" class="status-dot disconnected"></div>
-        <span id="connectionText">Disconnected</span>
+  <header>
+    <div class="container">
+      <div class="logo">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 5H3a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2Z"></path>
+          <path d="M9 21h6"></path>
+          <path d="M12 17v4"></path>
+          <path d="m3 5 2-1h14l2 1"></path>
+        </svg>
+        Scroll Keeper
       </div>
-      <div class="nav-links">
-        <a href="#" class="nav-link active">Dashboard</a>
-        <a href="#" class="nav-link">Scrolls</a>
-        <a href="#" class="nav-link">Search</a>
-        <a href="#" class="nav-link">Settings</a>
-      </div>
+      <nav>
+        <a href="#" class="active" id="navHome">Home</a>
+        <a href="#" id="navScrolls">Scrolls</a>
+        <a href="#" id="navExtract">Extract</a>
+        <a href="#" id="navSettings">Settings</a>
+      </nav>
     </div>
-    
-    <div class="main-content">
-      <div class="card">
-        <h2>WebSocket Connection</h2>
-        <div class="button-row">
-          <button id="connectBtn">Connect</button>
-          <button id="disconnectBtn" disabled>Disconnect</button>
-        </div>
-        <div class="form-group">
-          <label for="userId">User ID:</label>
-          <input type="text" id="userId" placeholder="Enter your user ID">
-        </div>
-        <button id="subscribeBtn" disabled>Subscribe to Updates</button>
-        <button id="pingBtn" disabled>Send Ping</button>
+  </header>
+
+  <main class="container">
+    <section id="welcome" class="hero">
+      <h1>Knowledge Extraction & Management</h1>
+      <p>Scroll Keeper helps you extract, process, and utilize knowledge from your AI conversations for long-term reference and learning.</p>
+      <div>
+        <button id="startExploring">Start Exploring</button>
+        <button class="secondary" id="extractNew">Extract New Conversation</button>
       </div>
-      
-      <div class="card">
-        <h2>Communication Log</h2>
-        <div id="messageBox" class="messages">
-          <div class="message">
-            <div class="message-header">
-              <span>System</span>
-              <span>Welcome to Scroll Keeper WebSocket Test</span>
-            </div>
-          </div>
+    </section>
+
+    <section id="dashboard">
+      <h2 class="section-title">Your Knowledge Dashboard</h2>
+      <div class="grid" id="scrollsGrid">
+        <div class="loading">
+          <div class="spinner"></div>
+          <span>Loading your scrolls...</span>
         </div>
       </div>
-      
+    </section>
+
+    <section id="extractForm">
+      <h2 class="section-title">Extract Conversation</h2>
       <div class="card">
-        <h2>Extract ChatGPT Conversation</h2>
         <div class="form-group">
-          <label for="chatgptUrl">ChatGPT Public Share URL:</label>
-          <input type="text" id="chatgptUrl" placeholder="https://chat.openai.com/share/...">
+          <label for="chatUrl">ChatGPT Public URL</label>
+          <input type="url" id="chatUrl" placeholder="https://chat.openai.com/share/..." required>
         </div>
-        <div class="form-group">
-          <label for="extractUserId">User ID:</label>
-          <input type="text" id="extractUserId" placeholder="Enter user ID">
+        <div id="extractError" class="error" style="display: none;"></div>
+        <div id="extractSuccess" class="success" style="display: none;"></div>
+        <div id="extractLoading" class="loading" style="display: none;">
+          <div class="spinner"></div>
+          <span>Extracting conversation content...</span>
         </div>
-        <button id="extractBtn">Extract Conversation</button>
-        <div id="extractStatus" style="margin-top: 10px; display: none;"></div>
+        <button id="submitExtract">Extract Conversation</button>
+      </div>
+    </section>
+
+    <section id="scrollView">
+      <div class="card-header" style="margin-bottom: 2rem;">
+        <div>
+          <h2 class="section-title" id="scrollTitle">Conversation Title</h2>
+          <div class="card-meta" id="scrollMeta">Extracted on</div>
+        </div>
+        <a href="#" class="button secondary" id="backToScrolls">Back to Scrolls</a>
       </div>
       
-      <div class="card">
-        <h2>Create New Scroll</h2>
-        <div class="form-group">
-          <label for="scrollTitle">Title:</label>
-          <input type="text" id="scrollTitle" placeholder="Enter scroll title">
+      <div class="scroll-view">
+        <div class="conversation" id="conversationContent">
+          <!-- Message content will be populated here -->
         </div>
-        <div class="form-group">
-          <label for="scrollContent">Content:</label>
-          <textarea id="scrollContent" placeholder="Enter scroll content"></textarea>
-        </div>
-        <div class="form-group">
-          <label for="scrollUserId">User ID:</label>
-          <input type="text" id="scrollUserId" placeholder="Enter user ID">
-        </div>
-        <button id="createScrollBtn">Create Scroll</button>
+      </div>
+    </section>
+
+    <section id="searchResults">
+      <div class="card-header" style="margin-bottom: 1rem;">
+        <h2 class="section-title">Search Results</h2>
+        <a href="#" class="button secondary" id="backFromSearch">Back</a>
       </div>
       
-      <div class="card">
-        <h2>Recent Scrolls</h2>
-        <div id="scrollsList" class="scrolls-list">
-          <!-- Scrolls will be loaded here -->
+      <div id="resultsGrid" class="grid">
+        <!-- Search results will be populated here -->
+      </div>
+    </section>
+  </main>
+
+  <div class="modal" id="extractModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Extraction Complete</h3>
+        <button class="modal-close" id="closeExtractModal">×</button>
+      </div>
+      <div class="modal-body">
+        <p>The conversation has been successfully extracted and added to your scrolls.</p>
+        <div class="form-group">
+          <label>Title</label>
+          <p id="extractedTitle">Title will appear here</p>
         </div>
+        <div class="form-group">
+          <label>Messages</label>
+          <p id="extractedMessages">0 messages</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="secondary" id="viewMore">View More</button>
+        <button id="extractAnother">Extract Another</button>
       </div>
     </div>
   </div>
 
+  <footer>
+    <div class="container">
+      <p>Scroll Keeper - Part of the AI Freedom Trust Framework © 2025</p>
+    </div>
+  </footer>
+
   <script>
     // DOM Elements
-    const connectBtn = document.getElementById('connectBtn');
-    const disconnectBtn = document.getElementById('disconnectBtn');
-    const pingBtn = document.getElementById('pingBtn');
-    const subscribeBtn = document.getElementById('subscribeBtn');
-    const userIdInput = document.getElementById('userId');
-    const connectionStatus = document.getElementById('connectionStatus');
-    const connectionText = document.getElementById('connectionText');
-    const messageBox = document.getElementById('messageBox');
-    const scrollTitleInput = document.getElementById('scrollTitle');
-    const scrollContentInput = document.getElementById('scrollContent');
-    const scrollUserIdInput = document.getElementById('scrollUserId');
-    const createScrollBtn = document.getElementById('createScrollBtn');
-    const scrollsList = document.getElementById('scrollsList');
-    const chatgptUrlInput = document.getElementById('chatgptUrl');
-    const extractUserIdInput = document.getElementById('extractUserId');
-    const extractBtn = document.getElementById('extractBtn');
-    const extractStatus = document.getElementById('extractStatus');
+    const elements = {
+      welcome: document.getElementById('welcome'),
+      dashboard: document.getElementById('dashboard'),
+      extractForm: document.getElementById('extractForm'),
+      scrollView: document.getElementById('scrollView'),
+      searchResults: document.getElementById('searchResults'),
+      scrollsGrid: document.getElementById('scrollsGrid'),
+      scrollTitle: document.getElementById('scrollTitle'),
+      scrollMeta: document.getElementById('scrollMeta'),
+      conversationContent: document.getElementById('conversationContent'),
+      chatUrl: document.getElementById('chatUrl'),
+      extractError: document.getElementById('extractError'),
+      extractSuccess: document.getElementById('extractSuccess'),
+      extractLoading: document.getElementById('extractLoading'),
+      extractModal: document.getElementById('extractModal'),
+      extractedTitle: document.getElementById('extractedTitle'),
+      extractedMessages: document.getElementById('extractedMessages'),
+      navHome: document.getElementById('navHome'),
+      navScrolls: document.getElementById('navScrolls'),
+      navExtract: document.getElementById('navExtract'),
+      navSettings: document.getElementById('navSettings'),
+    };
     
     // WebSocket connection
     let socket = null;
+    let socketReconnectAttempts = 0;
+    const MAX_RECONNECT_ATTEMPTS = 5;
     
-    // Connect to WebSocket server
-    function connect() {
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const wsUrl = `${protocol}//${window.location.host}/ws`;
-      
-      try {
-        socket = new WebSocket(wsUrl);
-        
-        socket.onopen = () => {
-          connectionStatus.className = 'status-dot connected';
-          connectionText.textContent = 'Connected';
-          
-          connectBtn.disabled = true;
-          disconnectBtn.disabled = false;
-          pingBtn.disabled = false;
-          subscribeBtn.disabled = false;
-          
-          addMessage('System', 'Connected to WebSocket server');
-        };
-        
-        socket.onmessage = (event) => {
-          try {
-            const data = JSON.parse(event.data);
-            addMessage('Server', data);
-            
-            // Handle different message types
-            if (data.type === 'scroll_created') {
-              loadScrolls(); // Refresh scrolls when a new one is created
-            }
-          } catch (error) {
-            addMessage('Error', `Failed to parse message: ${error.message}`);
-          }
-        };
-        
-        socket.onclose = () => {
-          connectionStatus.className = 'status-dot disconnected';
-          connectionText.textContent = 'Disconnected';
-          
-          connectBtn.disabled = false;
-          disconnectBtn.disabled = true;
-          pingBtn.disabled = true;
-          subscribeBtn.disabled = true;
-          
-          addMessage('System', 'Disconnected from WebSocket server');
-          socket = null;
-        };
-        
-        socket.onerror = (error) => {
-          addMessage('Error', `WebSocket error: ${error.message}`);
-        };
-      } catch (error) {
-        addMessage('Error', `Failed to connect: ${error.message}`);
-      }
-    }
-    
-    // Disconnect from WebSocket server
-    function disconnect() {
+    // Initialize WebSocket connection
+    function initWebSocket() {
+      // Close existing socket if it exists
       if (socket) {
         socket.close();
       }
-    }
-    
-    // Send ping message
-    function sendPing() {
-      if (socket && socket.readyState === WebSocket.OPEN) {
-        const ping = {
-          type: 'ping',
-          timestamp: new Date().toISOString()
-        };
+      
+      // Create new WebSocket connection
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${protocol}//${window.location.host}/ws`;
+      
+      socket = new WebSocket(wsUrl);
+      
+      // Connection opened
+      socket.addEventListener('open', () => {
+        console.log('Connected to WebSocket server');
+        socketReconnectAttempts = 0;
         
-        socket.send(JSON.stringify(ping));
-        addMessage('Client', ping);
-      } else {
-        addMessage('Error', 'Socket is not connected');
-      }
-    }
-    
-    // Subscribe to user notifications
-    function subscribe() {
-      if (socket && socket.readyState === WebSocket.OPEN) {
-        const userId = userIdInput.value.trim();
-        
-        if (!userId) {
-          addMessage('Error', 'User ID is required');
-          return;
-        }
-        
-        const subscribe = {
+        // Subscribe to scroll updates
+        socket.send(JSON.stringify({
           type: 'subscribe',
-          userId
-        };
-        
-        socket.send(JSON.stringify(subscribe));
-        addMessage('Client', subscribe);
-        
-        // Auto-fill the user ID in the create scroll form
-        scrollUserIdInput.value = userId;
-        
-        // Load scrolls for this user
-        loadScrolls(userId);
-      } else {
-        addMessage('Error', 'Socket is not connected');
-      }
-    }
-    
-    // Create a new scroll via API
-    function createScroll() {
-      const title = scrollTitleInput.value.trim();
-      const content = scrollContentInput.value.trim();
-      const userId = scrollUserIdInput.value.trim();
+          channel: 'scrolls'
+        }));
+      });
       
-      if (!title || !content) {
-        addMessage('Error', 'Title and content are required');
-        return;
-      }
+      // Listen for messages
+      socket.addEventListener('message', (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          
+          switch (data.type) {
+            case 'welcome':
+              console.log('WebSocket welcome message:', data.message);
+              break;
+              
+            case 'scroll:created':
+            case 'scroll:updated':
+            case 'scroll:deleted':
+              // Refresh scrolls if we're on the dashboard
+              if (elements.dashboard.style.display === 'block') {
+                fetchScrolls();
+              }
+              break;
+              
+            case 'extraction:complete':
+              // Show notification if a background extraction completes
+              if (data.scrollId && data.scrollId !== elements.extractModal.dataset.scrollId) {
+                showNotification(`Extraction complete: ${data.title || 'New scroll'}`);
+              }
+              break;
+          }
+        } catch (error) {
+          console.error('Error parsing WebSocket message:', error);
+        }
+      });
       
-      const scroll = {
-        title,
-        content,
-        userId: userId || null
-      };
+      // Connection closed
+      socket.addEventListener('close', () => {
+        console.log('WebSocket connection closed');
+        
+        // Attempt to reconnect after delay
+        if (socketReconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+          socketReconnectAttempts++;
+          const delay = Math.min(1000 * socketReconnectAttempts, 5000);
+          
+          console.log(`Attempting to reconnect in ${delay}ms (attempt ${socketReconnectAttempts})`);
+          setTimeout(initWebSocket, delay);
+        }
+      });
       
-      fetch('/api/scrollkeeper/scrolls', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(scroll)
-      })
-      .then(response => response.json())
-      .then(data => {
-        addMessage('API Response', data);
-        
-        // Clear form
-        scrollTitleInput.value = '';
-        scrollContentInput.value = '';
-        
-        // Reload scrolls
-        loadScrolls(userId);
-      })
-      .catch(error => {
-        addMessage('API Error', `Failed to create scroll: ${error.message}`);
+      // Connection error
+      socket.addEventListener('error', (error) => {
+        console.error('WebSocket error:', error);
       });
     }
     
-    // Load scrolls from API
-    function loadScrolls(userId = null) {
-      let url = '/api/scrollkeeper/scrolls';
-      if (userId) {
-        url += `?userId=${encodeURIComponent(userId)}`;
-      }
+    // Show a notification
+    function showNotification(message, type = 'info') {
+      // Create notification element
+      const notification = document.createElement('div');
+      notification.className = `notification ${type}`;
+      notification.innerHTML = `
+        <div class="notification-content">
+          <span>${message}</span>
+          <button class="notification-close">&times;</button>
+        </div>
+      `;
       
-      fetch(url)
-        .then(response => response.json())
-        .then(data => {
-          renderScrolls(data.scrolls);
-        })
-        .catch(error => {
-          console.error('Error loading scrolls:', error);
-          addMessage('Error', `Failed to load scrolls: ${error.message}`);
-        });
+      // Add to body
+      document.body.appendChild(notification);
+      
+      // Add slide-in animation
+      setTimeout(() => {
+        notification.classList.add('show');
+      }, 10);
+      
+      // Remove after 5 seconds
+      setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => {
+          document.body.removeChild(notification);
+        }, 300);
+      }, 5000);
+      
+      // Close button handler
+      notification.querySelector('.notification-close').addEventListener('click', () => {
+        notification.classList.remove('show');
+        setTimeout(() => {
+          document.body.removeChild(notification);
+        }, 300);
+      });
     }
     
-    // Render scrolls to the UI
-    function renderScrolls(scrolls) {
-      scrollsList.innerHTML = '';
-      
-      if (scrolls.length === 0) {
-        scrollsList.innerHTML = '<p>No scrolls found.</p>';
-        return;
+    // Initialize WebSocket when page loads
+    document.addEventListener('DOMContentLoaded', initWebSocket);
+
+    // Navigation handlers
+    document.getElementById('startExploring').addEventListener('click', showDashboard);
+    document.getElementById('extractNew').addEventListener('click', showExtractForm);
+    document.getElementById('submitExtract').addEventListener('click', extractConversation);
+    document.getElementById('backToScrolls').addEventListener('click', showDashboard);
+    document.getElementById('closeExtractModal').addEventListener('click', closeModal);
+    document.getElementById('extractAnother').addEventListener('click', () => {
+      closeModal();
+      showExtractForm();
+    });
+    document.getElementById('viewMore').addEventListener('click', () => {
+      const scrollId = document.getElementById('extractModal').dataset.scrollId;
+      if (scrollId) {
+        closeModal();
+        viewScroll(scrollId);
       }
+    });
+    document.getElementById('navHome').addEventListener('click', (e) => {
+      e.preventDefault();
+      showWelcome();
+    });
+    document.getElementById('navScrolls').addEventListener('click', (e) => {
+      e.preventDefault();
+      showDashboard();
+    });
+    document.getElementById('navExtract').addEventListener('click', (e) => {
+      e.preventDefault();
+      showExtractForm();
+    });
+    document.getElementById('navSettings').addEventListener('click', (e) => {
+      e.preventDefault();
+      // Show settings (not implemented yet)
+    });
+
+    // Show only welcome section on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      fetchScrolls();
+    });
+
+    // Navigation functions
+    function showWelcome() {
+      hideAllSections();
+      elements.welcome.style.display = 'block';
+      setActiveNav(elements.navHome);
+    }
+
+    function showDashboard() {
+      hideAllSections();
+      elements.dashboard.style.display = 'block';
+      setActiveNav(elements.navScrolls);
+      fetchScrolls();
+    }
+
+    function showExtractForm() {
+      hideAllSections();
+      elements.extractForm.style.display = 'block';
+      setActiveNav(elements.navExtract);
+      elements.chatUrl.focus();
+    }
+
+    function hideAllSections() {
+      elements.welcome.style.display = 'none';
+      elements.dashboard.style.display = 'none';
+      elements.extractForm.style.display = 'none';
+      elements.scrollView.style.display = 'none';
+      elements.searchResults.style.display = 'none';
+    }
+
+    function setActiveNav(activeElement) {
+      // Remove active class from all nav items
+      document.querySelectorAll('nav a').forEach(link => {
+        link.classList.remove('active');
+      });
+      // Add active class to current nav item
+      activeElement.classList.add('active');
+    }
+
+    // API Interaction Functions
+    async function fetchScrolls() {
+      try {
+        elements.scrollsGrid.innerHTML = `
+          <div class="loading">
+            <div class="spinner"></div>
+            <span>Loading your scrolls...</span>
+          </div>
+        `;
+        
+        const response = await fetch('/api/scrollkeeper/scrolls');
+        const data = await response.json();
+        
+        if (data.scrolls && data.scrolls.length > 0) {
+          renderScrolls(data.scrolls);
+        } else {
+          elements.scrollsGrid.innerHTML = `
+            <div class="empty-state">
+              <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 5H3a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2Z"></path>
+                <path d="M9 21h6"></path>
+                <path d="M12 17v4"></path>
+              </svg>
+              <h3>No scrolls yet</h3>
+              <p>Extract your first conversation to get started.</p>
+              <button id="emptyStateExtract">Extract Conversation</button>
+            </div>
+          `;
+          document.getElementById('emptyStateExtract').addEventListener('click', showExtractForm);
+        }
+      } catch (error) {
+        console.error('Error fetching scrolls:', error);
+        elements.scrollsGrid.innerHTML = `
+          <div class="error">
+            <p>Error loading scrolls. Please try again later.</p>
+            <button onclick="fetchScrolls()">Retry</button>
+          </div>
+        `;
+      }
+    }
+
+    function renderScrolls(scrolls) {
+      elements.scrollsGrid.innerHTML = '';
       
       scrolls.forEach(scroll => {
-        const scrollItem = document.createElement('div');
-        scrollItem.className = 'scroll-item';
+        const card = document.createElement('div');
+        card.className = 'card';
         
-        // If the scroll has ChatGPT metadata, add a special class
-        if (scroll.metadata && scroll.metadata.source === 'chatgpt') {
-          scrollItem.classList.add('chatgpt-scroll');
-          scrollItem.style.borderLeft = '3px solid #10a37f'; // OpenAI green color
-        }
+        // Format date
+        const date = new Date(scroll.createdAt);
+        const formattedDate = date.toLocaleDateString() + ' at ' + date.toLocaleTimeString();
         
-        const scrollHeader = document.createElement('div');
-        scrollHeader.className = 'scroll-header';
+        card.innerHTML = `
+          <div class="card-header">
+            <h3 class="card-title">${scroll.title}</h3>
+            <div class="card-meta">${formattedDate}</div>
+          </div>
+          <div class="card-content">
+            <p>Click to view the extracted conversation.</p>
+          </div>
+          <div class="card-footer">
+            <div>
+              <span class="tag">ChatGPT</span>
+            </div>
+            <button class="view-scroll" data-id="${scroll.id}">View</button>
+          </div>
+        `;
         
-        const scrollTitle = document.createElement('div');
-        scrollTitle.className = 'scroll-title';
-        scrollTitle.textContent = scroll.title;
+        elements.scrollsGrid.appendChild(card);
         
-        const scrollDate = document.createElement('div');
-        scrollDate.className = 'scroll-date';
-        scrollDate.textContent = new Date(scroll.createdAt).toLocaleString();
-        
-        scrollHeader.appendChild(scrollTitle);
-        scrollHeader.appendChild(scrollDate);
-        
-        scrollItem.appendChild(scrollHeader);
-        
-        // Add source indicator if available
-        if (scroll.metadata && scroll.metadata.source) {
-          const sourceTag = document.createElement('div');
-          sourceTag.style.display = 'inline-block';
-          sourceTag.style.padding = '2px 6px';
-          sourceTag.style.borderRadius = '4px';
-          sourceTag.style.fontSize = '0.75rem';
-          sourceTag.style.marginTop = '5px';
-          
-          if (scroll.metadata.source === 'chatgpt') {
-            sourceTag.style.backgroundColor = '#e6f7f0';
-            sourceTag.style.color = '#10a37f';
-            sourceTag.style.border = '1px solid #c2e8db';
-            sourceTag.textContent = 'ChatGPT';
-          }
-          
-          scrollItem.appendChild(sourceTag);
-        }
-        
-        // Add a click handler to view the full scroll
-        scrollItem.addEventListener('click', () => {
-          fetch(`/api/scrollkeeper/scrolls/${scroll.id}`)
-            .then(response => response.json())
-            .then(data => {
-              addMessage('Scroll Content', data.scroll);
-            })
-            .catch(error => {
-              addMessage('Error', `Failed to load scroll: ${error.message}`);
-            });
+        // Add event listener to view button
+        card.querySelector('.view-scroll').addEventListener('click', function() {
+          viewScroll(this.dataset.id);
         });
-        
-        scrollsList.appendChild(scrollItem);
       });
     }
-    
-    // Add message to message box
-    function addMessage(source, data) {
-      const message = document.createElement('div');
-      message.className = 'message';
+
+    async function viewScroll(id) {
+      hideAllSections();
+      elements.scrollView.style.display = 'block';
       
-      const messageHeader = document.createElement('div');
-      messageHeader.className = 'message-header';
-      
-      const sourceSpan = document.createElement('span');
-      sourceSpan.textContent = source;
-      
-      const timeSpan = document.createElement('span');
-      timeSpan.textContent = new Date().toLocaleTimeString();
-      
-      messageHeader.appendChild(sourceSpan);
-      messageHeader.appendChild(timeSpan);
-      
-      const messageContent = document.createElement('div');
-      messageContent.className = 'message-content';
-      messageContent.textContent = typeof data === 'object' ? JSON.stringify(data, null, 2) : data;
-      
-      message.appendChild(messageHeader);
-      message.appendChild(messageContent);
-      
-      messageBox.appendChild(message);
-      
-      // Scroll to bottom
-      messageBox.scrollTop = messageBox.scrollHeight;
+      try {
+        elements.conversationContent.innerHTML = `
+          <div class="loading">
+            <div class="spinner"></div>
+            <span>Loading conversation...</span>
+          </div>
+        `;
+        
+        const response = await fetch(`/api/scrollkeeper/scrolls/${id}`);
+        const scroll = await response.json();
+        
+        elements.scrollTitle.textContent = scroll.title;
+        
+        const date = new Date(scroll.createdAt);
+        elements.scrollMeta.textContent = `Extracted on ${date.toLocaleDateString()} at ${date.toLocaleTimeString()}`;
+        
+        renderConversation(scroll);
+      } catch (error) {
+        console.error('Error fetching scroll:', error);
+        elements.conversationContent.innerHTML = `
+          <div class="error">
+            <p>Error loading conversation. Please try again later.</p>
+            <button onclick="viewScroll('${id}')">Retry</button>
+          </div>
+        `;
+      }
     }
-    
-    // Extract ChatGPT conversation
-    function extractChatGPT() {
-      const url = chatgptUrlInput.value.trim();
-      const userId = extractUserIdInput.value.trim();
+
+    function renderConversation(scroll) {
+      elements.conversationContent.innerHTML = '';
+      
+      if (scroll.content) {
+        // Initialize markdown converter
+        const converter = new showdown.Converter({
+          tables: true,
+          tasklists: true,
+          strikethrough: true,
+          ghCodeBlocks: true
+        });
+        
+        // If we have structured messages, render them nicely
+        if (scroll.messages && scroll.messages.length > 0) {
+          scroll.messages.forEach(message => {
+            const messageEl = document.createElement('div');
+            messageEl.className = 'message';
+            
+            const role = message.role === 'assistant' ? 'ChatGPT' : 
+                        message.role === 'user' ? 'You' : 'System';
+            
+            const avatarClass = message.role === 'assistant' ? 'assistant-avatar' : 
+                              message.role === 'user' ? 'user-avatar' : 'system-avatar';
+            
+            const avatarText = message.role === 'assistant' ? 'AI' : 
+                             message.role === 'user' ? 'U' : 'S';
+            
+            // Convert markdown content to HTML
+            const htmlContent = converter.makeHtml(message.content);
+            
+            messageEl.innerHTML = `
+              <div class="message-header">
+                <div class="message-avatar ${avatarClass}">${avatarText}</div>
+                <div class="message-name">${role}</div>
+              </div>
+              <div class="message-content">${htmlContent}</div>
+            `;
+            
+            elements.conversationContent.appendChild(messageEl);
+          });
+          
+          // Apply syntax highlighting to code blocks
+          document.querySelectorAll('pre code').forEach((block) => {
+            hljs.highlightElement(block);
+          });
+        } 
+        // Detect if the content is formatted as markdown conversation
+        else if (scroll.content.includes('### ChatGPT') || scroll.content.includes('### You') || scroll.content.includes('### System')) {
+          // Convert markdown content to HTML
+          const html = converter.makeHtml(scroll.content);
+          elements.conversationContent.innerHTML = html;
+          
+          // Apply syntax highlighting to code blocks
+          document.querySelectorAll('pre code').forEach((block) => {
+            hljs.highlightElement(block);
+          });
+        } else {
+          // Fallback to display the content as markdown
+          const html = converter.makeHtml(scroll.content);
+          elements.conversationContent.innerHTML = `<div class="message-content">${html}</div>`;
+          
+          // Apply syntax highlighting to code blocks
+          document.querySelectorAll('pre code').forEach((block) => {
+            hljs.highlightElement(block);
+          });
+        }
+      } else {
+        elements.conversationContent.innerHTML = `
+          <div class="empty-state">
+            <p>No content available for this scroll.</p>
+          </div>
+        `;
+      }
+    }
+
+    async function extractConversation() {
+      const url = elements.chatUrl.value.trim();
       
       if (!url) {
-        showExtractStatus('error', 'ChatGPT URL is required');
+        showExtractError('Please enter a ChatGPT conversation URL');
         return;
       }
       
       if (!url.includes('chat.openai.com/share/') && !url.includes('chatgpt.com/share/')) {
-        showExtractStatus('error', 'Invalid ChatGPT URL format. Expected format: https://chat.openai.com/share/[id] or https://chatgpt.com/share/[id]');
+        showExtractError('Invalid URL format. Please enter a valid ChatGPT sharing URL (e.g., https://chat.openai.com/share/...)');
         return;
       }
       
-      showExtractStatus('processing', 'Extracting conversation, please wait...');
+      showExtractLoading(true);
+      hideExtractMessages();
       
-      fetch('/api/scrollkeeper/extract', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          url,
-          userId: userId || null
-        })
-      })
-      .then(response => {
-        if (!response.ok) {
-          return response.json().then(error => Promise.reject(error));
+      try {
+        const response = await fetch('/api/scrollkeeper/extract', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ url })
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+          showExtractSuccess('Conversation extracted successfully!');
+          
+          // Get the scroll details for the modal
+          const scrollResponse = await fetch(`/api/scrollkeeper/scrolls/${result.scrollId}`);
+          const scroll = await scrollResponse.json();
+          
+          // Show extraction completion modal
+          showExtractionModal(scroll, result.scrollId);
+        } else {
+          showExtractError(result.message || 'Error extracting conversation');
         }
-        return response.json();
-      })
-      .then(data => {
-        showExtractStatus('success', `Conversation "${data.title}" extracted successfully!`);
-        addMessage('API Response', data);
-        
-        // Clear form
-        chatgptUrlInput.value = '';
-        
-        // Reload scrolls
-        loadScrolls(userId);
-      })
-      .catch(error => {
-        showExtractStatus('error', error.message || 'Failed to extract conversation');
-        addMessage('API Error', error);
-      });
-    }
-    
-    // Show extraction status with appropriate styling
-    function showExtractStatus(type, message) {
-      extractStatus.style.display = 'block';
-      
-      if (type === 'processing') {
-        extractStatus.style.backgroundColor = '#cff4fc';
-        extractStatus.style.color = '#055160';
-        extractStatus.style.border = '1px solid #b6effb';
-      } else if (type === 'success') {
-        extractStatus.style.backgroundColor = '#d1e7dd';
-        extractStatus.style.color = '#0f5132';
-        extractStatus.style.border = '1px solid #badbcc';
-      } else if (type === 'error') {
-        extractStatus.style.backgroundColor = '#f8d7da';
-        extractStatus.style.color = '#842029';
-        extractStatus.style.border = '1px solid #f5c2c7';
-      }
-      
-      extractStatus.textContent = message;
-      
-      // Hide after 5 seconds for success messages
-      if (type === 'success') {
-        setTimeout(() => {
-          extractStatus.style.display = 'none';
-        }, 5000);
+      } catch (error) {
+        console.error('Error during extraction:', error);
+        showExtractError('Error connecting to the server. Please try again later.');
+      } finally {
+        showExtractLoading(false);
       }
     }
-    
-    // Event listeners
-    connectBtn.addEventListener('click', connect);
-    disconnectBtn.addEventListener('click', disconnect);
-    pingBtn.addEventListener('click', sendPing);
-    subscribeBtn.addEventListener('click', subscribe);
-    createScrollBtn.addEventListener('click', createScroll);
-    extractBtn.addEventListener('click', extractChatGPT);
-    
-    // Load scrolls on page load
-    loadScrolls();
+
+    function showExtractionModal(scroll, scrollId) {
+      elements.extractedTitle.textContent = scroll.title;
+      elements.extractedMessages.textContent = `${scroll.messages?.length || 0} messages extracted`;
+      elements.extractModal.dataset.scrollId = scrollId;
+      elements.extractModal.classList.add('open');
+    }
+
+    function closeModal() {
+      elements.extractModal.classList.remove('open');
+    }
+
+    function showExtractError(message) {
+      elements.extractError.textContent = message;
+      elements.extractError.style.display = 'block';
+      elements.extractSuccess.style.display = 'none';
+    }
+
+    function showExtractSuccess(message) {
+      elements.extractSuccess.textContent = message;
+      elements.extractSuccess.style.display = 'block';
+      elements.extractError.style.display = 'none';
+    }
+
+    function hideExtractMessages() {
+      elements.extractError.style.display = 'none';
+      elements.extractSuccess.style.display = 'none';
+    }
+
+    function showExtractLoading(show) {
+      elements.extractLoading.style.display = show ? 'flex' : 'none';
+      document.getElementById('submitExtract').disabled = show;
+    }
+
+    // Handle ESC key to close modals
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        closeModal();
+      }
+    });
+
+    // Close modal when clicking outside content
+    elements.extractModal.addEventListener('click', function(e) {
+      if (e.target === elements.extractModal) {
+        closeModal();
+      }
+    });
   </script>
 </body>
 </html>
