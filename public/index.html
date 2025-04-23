@@ -798,10 +798,16 @@
         socket.close();
       }
       
-      // Create new WebSocket connection
+      // Create new WebSocket connection - platform-agnostic approach
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const wsUrl = `${protocol}//${window.location.host}/ws`;
       
+      // Dynamic host detection with fallback - works in any environment
+      // This approach allows the application to work seamlessly across
+      // FractalCoin, AICoin AetherCore services, or any other hosting platforms
+      const host = window.location.host || 'localhost:5000';
+      const wsUrl = `${protocol}//${host}/ws`;
+      
+      console.log('Connecting to WebSocket at:', wsUrl);
       socket = new WebSocket(wsUrl);
       
       // Connection opened

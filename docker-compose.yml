@@ -1,84 +1,45 @@
 version: '3.8'
 
 services:
-  aetherion-app:
+  scroll-keeper:
     build:
       context: .
       dockerfile: Dockerfile
+    container_name: scroll-keeper
+    restart: unless-stopped
     ports:
       - "5000:5000"
-    depends_on:
-      - postgres
-      - redis
-    environment:
-      - NODE_ENV=production
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/aetherion
-      - REDIS_URL=redis://redis:6379
-      - JWT_SECRET=${JWT_SECRET:-default_jwt_secret_please_change_in_production}
-      - SESSION_SECRET=${SESSION_SECRET:-default_session_secret_please_change_in_production}
-      - FRACTALCOIN_API_KEY=${FRACTALCOIN_API_KEY:-}
-      - GITHUB_TOKEN=${GITHUB_TOKEN:-}
+    env_file:
+      - .env
     volumes:
-      - ./logs:/app/logs
-      - ./data:/app/data
-    restart: unless-stopped
-    networks:
-      - aetherion-network
-
-  postgres:
-    image: postgres:15-alpine
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=aetherion
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - scroll-data:/app/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    ports:
-      - "5432:5432"
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5000/api/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
     networks:
-      - aetherion-network
+      - scroll-network
 
-  redis:
-    image: redis:alpine
-    volumes:
-      - redis-data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    ports:
-      - "6379:6379"
-    networks:
-      - aetherion-network
-
-  # API Gateway service
-  api-gateway:
-    build:
-      context: ./api-gateway
-      dockerfile: Dockerfile
-    ports:
-      - "3001:3001"
-    depends_on:
-      - aetherion-app
-    environment:
-      - NODE_ENV=production
-      - PORT=3001
-      - MAIN_APP_URL=http://aetherion-app:5000
-      - JWT_SECRET=${JWT_SECRET:-default_jwt_secret_please_change_in_production}
-    restart: unless-stopped
-    networks:
-      - aetherion-network
-
-volumes:
-  postgres-data:
-  redis-data:
+  # Optional vector database for production deployments
+  # Uncomment to enable
+  # vector-db:
+  #   image: qdrant/qdrant
+  #   container_name: vector-db
+  #   restart: unless-stopped
+  #   ports:
+  #     - "6333:6333"
+  #     - "6334:6334"
+  #   volumes:
+  #     - vector-data:/qdrant/storage
+  #   networks:
+  #     - scroll-network
 
 networks:
-  aetherion-network:
+  scroll-network:
     driver: bridge
+
+volumes:
+  scroll-data:
+  # vector-data:

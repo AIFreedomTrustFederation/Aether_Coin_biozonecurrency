@@ -1,13 +1,19 @@
 /**
- * Scroll Keeper Minimal Server
+ * Scroll Keeper Platform-Agnostic Server
  * 
- * A lightweight Express server that provides APIs for the Scroll Keeper
- * functionality. Designed to load quickly within Replit's timeout constraints.
+ * A universal Express server that provides APIs for the Scroll Keeper functionality.
+ * Designed for deployment to any platform including:
+ * - FractalCoin nodes
+ * - AICoin AetherCore services
+ * - Standard hosting environments
+ * 
+ * This server implements WebSocket for real-time communication
+ * and a RESTful API for data operations.
  */
 
 import express from 'express';
 import cors from 'cors';
-import { WebSocketServer } from 'ws';
+import { WebSocketServer, WebSocket } from 'ws';
 import { createServer } from 'http';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -21,6 +27,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Create a minimal Express server
 const app = express();
+// Use PORT from environment or default to standard port 5000
+// This works on any platform, not tied to any specific hosting provider
 const PORT = process.env.PORT || 5000;
 
 // Create HTTP server for Express and WebSockets
@@ -131,9 +139,9 @@ function broadcastToChannel(channel, message) {
   });
 }
 
-// Start the server
-httpServer.listen(PORT, () => {
+// Start the server - bind to all interfaces (0.0.0.0) for platform-agnostic deployment
+httpServer.listen(PORT, '0.0.0.0', () => {
   console.log(`✓ Scroll Keeper minimal server running on port ${PORT}`);
-  console.log(`✓ API available at http://localhost:${PORT}/api`);
-  console.log(`✓ WebSocket server available at ws://localhost:${PORT}/ws`);
+  console.log(`✓ API available at http://0.0.0.0:${PORT}/api`);
+  console.log(`✓ WebSocket server available at ws://0.0.0.0:${PORT}/ws`);
 });

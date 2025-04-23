@@ -1,53 +1,36 @@
-FROM node:20-slim
+FROM node:18-alpine
 
+# Set working directory
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    git \
-    curl \
-    postgresql-client \
-    && rm -rf /var/lib/apt/lists/*
-
-# Copy package files first for better layer caching
-COPY package.json package-lock.json ./
-
-# Install dependencies
-RUN npm ci
-
-# Copy the rest of the application
-COPY . .
-
-# Build the application
-RUN npm run build
-
-# Set up environment variables
+# Environment setup
 ENV NODE_ENV=production
 ENV PORT=5000
-ENV HOST=0.0.0.0
 
-# Expose the port the app runs on
+# Create and use non-root user for security
+RUN addgroup -S scrollkeeper && \
+    adduser -S -G scrollkeeper scrollkeeper && \
+    chown -R scrollkeeper:scrollkeeper /app
+
+# Install dependencies first (for better caching)
+COPY package*.json ./
+RUN npm ci --only=production
+
+# Copy application code
+COPY . .
+
+# Set file permissions
+RUN chown -R scrollkeeper:scrollkeeper /app
+
+# Switch to non-root user
+USER scrollkeeper
+
+# Expose application port
 EXPOSE 5000
 
-# Create startup script that runs automated processes
-RUN echo '#!/bin/bash\n\
-# Run database migrations\n\
-echo "Running database migrations..."\n\
-npm run db:push\n\
-\n\
-# Run automated code quality checks\n\
-echo "Running code quality checks..."\n\
-npm run lint || true\n\
-\n\
-# Run type safety checks\n\
-echo "Running type safety checks..."\n\
-npm run typecheck || true\n\
-\n\
-# Start the application\n\
-echo "Starting Aetherion Wallet..."\n\
-npm run start\n\
-' > /app/docker-entrypoint.sh \
-&& chmod +x /app/docker-entrypoint.sh
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:$PORT/api/status || exit 1
 
-# Set the entrypoint
-ENTRYPOINT ["/app/docker-entrypoint.sh"]
+# Command to run the application
+CMD ["node", "server.js"]
