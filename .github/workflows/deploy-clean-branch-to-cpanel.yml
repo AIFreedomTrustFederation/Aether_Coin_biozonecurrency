@@ -1,18 +1,17 @@
-name: Deploy Harmony to CPanel (Disabled for website)
+name: Deploy Clean Branch to CPanel
 
-# This workflow is now disabled for the main website
-# The clean_fixes_20250410_163230 branch should be used instead
-# To manually trigger this workflow, use workflow_dispatch
 on:
-  # No longer trigger on push
+  push:
+    branches: [ clean_fixes_20250410_163230 ]
   workflow_dispatch:
     inputs:
       environment:
-        description: 'Environment to deploy to (staging only)'
+        description: 'Environment to deploy to'
         required: true
-        default: 'staging'
+        default: 'production'
         type: choice
         options:
+        - production
         - staging
 
 jobs:
@@ -22,6 +21,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+          ref: clean_fixes_20250410_163230
       
       - name: Setup Node.js
         uses: actions/setup-node@v3
@@ -52,7 +53,7 @@ jobs:
           
           # Application Settings
           APP_ENV=production
-          APP_NAME=Aetherion Harmony
+          APP_NAME=Aetherion
           APP_VERSION=1.0.0
           APP_URL=https://atc.aifreedomtrust.com/wallet
           API_BASE_URL=/wallet/api
@@ -111,7 +112,7 @@ jobs:
         run: |
           cat > dist/db_setup.php << 'EOF'
           <?php
-          // Database setup helper for Aetherion Harmony
+          // Database setup helper for Aetherion
           // Run this script once to create the necessary tables
           // Delete it immediately after successful execution
           
@@ -190,7 +191,7 @@ jobs:
               $initialSettings = "
               INSERT INTO atc_settings (setting_key, setting_value) 
               VALUES 
-              ('app_name', 'Aetherion Harmony'),
+              ('app_name', 'Aetherion'),
               ('app_version', '1.0.0'),
               ('maintenance_mode', 'false'),
               ('wallet_features_enabled', 'true'),
@@ -221,26 +222,26 @@ jobs:
       - name: Create deployment package
         run: |
           cd dist
-          zip -r ../harmony-cpanel-deploy.zip .
+          zip -r ../clean-cpanel-deploy.zip .
           cd ..
       
-      - name: Deploy to CPanel (Staging Only)
+      - name: Deploy to CPanel
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
           server: ${{ secrets.CPANEL_FTP_SERVER }}
           username: ${{ secrets.CPANEL_FTP_USERNAME }}
           password: ${{ secrets.CPANEL_FTP_PASSWORD }}
           local-dir: ./dist/
-          server-dir: ./public_html/wallet-staging/
+          server-dir: ./public_html/wallet/
           dangerous-clean-slate: true
       
       - name: Notify deployment status
         if: always()
         run: |
           if [ "${{ job.status }}" == "success" ]; then
-            echo "Deployment completed successfully!"
+            echo "Clean branch deployment completed successfully!"
             # You could add notification to Slack, Discord, etc. here
           else
-            echo "Deployment failed!"
+            echo "Clean branch deployment failed!"
             # You could add notification to Slack, Discord, etc. here
           fi
