@@ -11,9 +11,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-// Check and resolve duplicate declaration of CodeEditor
-// Ensure CodeEditor is only declared once in the file
-const CodeEditor: React.FC = () => {
+const CodeEditor = () => {
   return (
     <div className="code-editor">
       <p>Code Editor Component</p>
@@ -24,12 +22,10 @@ const CodeEditor: React.FC = () => {
 const CodesterPage = () => {
   const [isClient, setIsClient] = useState(false);
   
-  // Handle client-side rendering for animations
   useEffect(() => {
     setIsClient(true);
   }, []);
 
-  // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
