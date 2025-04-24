@@ -6,6 +6,7 @@
   <title>Scroll Keeper</title>
   <style>
     :root {
+      /* Default theme - Blue */
       --primary-color: #3498db;
       --primary-dark: #2980b9;
       --secondary-color: #2c3e50;
@@ -17,8 +18,62 @@
       --border-color: #ddd;
       --text-color: #333;
       --light-text: #7f8c8d;
+      --input-bg: #fff;
       --radius: 6px;
       --shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    /* Dark Theme */
+    [data-theme="dark"] {
+      --primary-color: #4ea8de;
+      --primary-dark: #3a86c4;
+      --secondary-color: #566573;
+      --light-bg: #1e272e;
+      --card-bg: #2c3e50;
+      --border-color: #444;
+      --text-color: #eee;
+      --light-text: #bdc3c7;
+      --input-bg: #34495e;
+      --shadow: 0 2px 10px rgba(0,0,0,0.3);
+    }
+    
+    /* Purple Theme */
+    [data-theme="purple"] {
+      --primary-color: #9b59b6;
+      --primary-dark: #8e44ad;
+      --secondary-color: #4a235a;
+      --light-bg: #f5f0fa;
+      --card-bg: #ffffff;
+      --border-color: #e5d8ed;
+      --text-color: #333;
+      --light-text: #7f8c8d;
+      --input-bg: #fff;
+    }
+    
+    /* Green Theme */
+    [data-theme="green"] {
+      --primary-color: #2ecc71;
+      --primary-dark: #27ae60;
+      --secondary-color: #145a32;
+      --light-bg: #e8f8f5;
+      --card-bg: #ffffff;
+      --border-color: #d5f5e3;
+      --text-color: #333;
+      --light-text: #7f8c8d;
+      --input-bg: #fff;
+    }
+    
+    /* Amber Theme */
+    [data-theme="amber"] {
+      --primary-color: #f39c12;
+      --primary-dark: #d35400;
+      --secondary-color: #784212;
+      --light-bg: #fef5e7;
+      --card-bg: #ffffff;
+      --border-color: #fad7a0;
+      --text-color: #333;
+      --light-text: #7f8c8d;
+      --input-bg: #fff;
     }
     
     body {
@@ -37,6 +92,123 @@
       padding: 30px;
       border-radius: 8px;
       box-shadow: var(--shadow);
+    }
+    
+    /* Responsive design for mobile */
+    @media (max-width: 768px) {
+      body {
+        padding: 0;
+      }
+      
+      .container {
+        padding: 15px 10px;
+        margin: 0;
+        border-radius: 0;
+        box-shadow: none;
+        max-width: 100%;
+      }
+      
+      h1 {
+        font-size: 22px;
+        text-align: center;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+      }
+      
+      h2 {
+        font-size: 18px;
+        margin-top: 20px;
+      }
+      
+      .card {
+        padding: 12px;
+        margin-bottom: 15px;
+        border-radius: 8px;
+      }
+      
+      button {
+        padding: 8px 12px;
+        font-size: 13px;
+        margin-right: 5px;
+        margin-bottom: 5px;
+      }
+      
+      .logs {
+        max-height: 150px;
+      }
+      
+      /* Improve chat interface on mobile */
+      .chat-container {
+        height: 400px;
+      }
+      
+      .url-input {
+        flex-direction: column;
+      }
+      
+      .url-input input, 
+      .url-input button {
+        width: 100%;
+      }
+      
+      .api-key-input {
+        flex-direction: column;
+      }
+      
+      .api-key-input input,
+      .api-key-input button {
+        width: 100%;
+      }
+      
+      .chat-options {
+        flex-wrap: wrap;
+      }
+      
+      .status {
+        display: block;
+        margin-bottom: 10px;
+        text-align: center;
+        width: 100%;
+      }
+      
+      /* Simplified connection controls for mobile */
+      .connection-controls {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin-bottom: 15px;
+      }
+      
+      .stats {
+        grid-template-columns: 1fr;
+      }
+      
+      .interceptor-controls, 
+      .training-controls, 
+      .training-prep-controls {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      
+      /* Fixed floating chat button for mobile */
+      .mobile-chat-toggle {
+        display: block;
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background-color: var(--primary-color);
+        color: white;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+        z-index: 100;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        cursor: pointer;
+      }
     }
     
     h1, h2 {
@@ -263,6 +435,59 @@
       flex: 1;
     }
     
+    .api-key-instructions {
+      margin-bottom: 20px;
+      background-color: rgba(52, 152, 219, 0.1);
+      padding: 15px;
+      border-radius: var(--radius);
+      border-left: 4px solid var(--primary-color);
+    }
+    
+    .api-key-instructions h3 {
+      margin-top: 0;
+      margin-bottom: 10px;
+      color: var(--primary-color);
+      font-size: 18px;
+    }
+    
+    .api-key-instructions ol {
+      margin: 15px 0;
+      padding-left: 25px;
+    }
+    
+    .api-key-instructions li {
+      margin-bottom: 8px;
+      color: var(--text-color);
+    }
+    
+    .api-key-instructions a {
+      color: var(--primary-color);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    
+    .api-key-instructions a:hover {
+      text-decoration: underline;
+    }
+    
+    .key-note {
+      font-size: 13px;
+      color: var(--light-text);
+      margin-top: 12px;
+      padding: 8px;
+      background-color: rgba(0,0,0,0.03);
+      border-radius: 4px;
+    }
+    
+    .alternative-key-option {
+      font-size: 13px;
+      color: var(--light-text);
+      margin-top: 12px;
+      text-align: center;
+      padding-top: 10px;
+      border-top: 1px dashed var(--border-color);
+    }
+    
     .api-key-message {
       font-size: 12px;
       color: var(--light-text);
@@ -392,17 +617,220 @@
       50% { transform: translateY(-5px); }
       100% { transform: translateY(0); }
     }
+    
+    /* API Key Status */
+    .dashboard-header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    
+    .api-key-status {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .api-status {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.9em;
+      font-weight: 500;
+    }
+    
+    .api-status.active {
+      background-color: #2ecc71;
+      color: #fff;
+    }
+    
+    .api-status.missing {
+      background-color: #e74c3c;
+      color: #fff;
+    }
+    
+    .api-status.expired {
+      background-color: #f39c12;
+      color: #fff;
+    }
+    
+    /* API Key Modal */
+    .api-key-modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+    }
+    
+    .api-key-modal-content {
+      background-color: var(--card-bg);
+      border-radius: 8px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      max-width: 500px;
+      width: 90%;
+      margin: 10% auto;
+      padding: 25px;
+      position: relative;
+    }
+    
+    .api-key-modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 10px;
+    }
+    
+    .api-key-modal-header h3 {
+      margin: 0;
+    }
+    
+    .close-modal {
+      cursor: pointer;
+      font-size: 24px;
+      background: none;
+      border: none;
+      color: var(--text-color);
+    }
+    
+    .api-key-input-group {
+      margin-bottom: 15px;
+    }
+    
+    .api-key-input-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+    }
+    
+    .api-key-input-group input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      background-color: var(--input-bg);
+      color: var(--text-color);
+    }
+    
+    .api-key-modal-footer {
+      margin-top: 20px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+    
+    /* Theme Selector */
+    .theme-selector {
+      display: flex;
+      align-items: center;
+      margin-left: auto;
+      gap: 10px;
+    }
+    
+    .theme-selector label {
+      font-size: 14px;
+      color: var(--light-text);
+      margin-right: 5px;
+    }
+    
+    .theme-selector .select-wrapper {
+      position: relative;
+      display: inline-block;
+      min-width: 140px;
+    }
+    
+    .theme-selector select {
+      width: 100%;
+      padding: 8px 30px 8px 12px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border-color);
+      background-color: var(--input-bg);
+      color: var(--text-color);
+      cursor: pointer;
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 8px center;
+      background-size: 16px;
+    }
+    
+    .theme-selector select:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+    }
+    
+    .color-blue { background-color: #3498db; }
+    .color-dark { background-color: #2c3e50; }
+    .color-purple { background-color: #9b59b6; }
+    .color-green { background-color: #2ecc71; }
+    .color-amber { background-color: #f39c12; }
+    
+    /* Mobile responsiveness - API Key Status and Theme */
+    @media (max-width: 768px) {
+      .dashboard-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+      }
+      
+      .api-key-status, .theme-selector {
+        width: 100%;
+        justify-content: space-between;
+      }
+      
+      .api-key-modal-content {
+        width: 95%;
+        margin: 5% auto;
+      }
+      
+      .theme-selector {
+        margin-left: 0;
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid var(--border-color);
+      }
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Scroll Keeper Dashboard</h1>
+    <!-- Mobile chat toggle button -->
+    <div class="mobile-chat-toggle" id="mobileChatToggle" style="display: none;">💬</div>
     
-    <div>
-      <span id="connectionStatus" class="status disconnected">Disconnected</span>
-      <button id="connectBtn">Connect</button>
-      <button id="disconnectBtn">Disconnect</button>
-      <button id="clearLogsBtn">Clear Logs</button>
+    <div class="dashboard-header">
+      <div class="connection-controls">
+        <span id="connectionStatus" class="status disconnected">Disconnected</span>
+        <button id="connectBtn">Connect</button>
+        <button id="disconnectBtn">Disconnect</button>
+        <button id="clearLogsBtn">Clear Logs</button>
+      </div>
+      <div class="api-key-status">
+        <span id="openaiKeyStatus" class="api-status missing">OpenAI API Key: Missing</span>
+        <button id="manageApiKeysBtn">Manage API Keys</button>
+      </div>
+      <div class="theme-selector">
+        <label for="themeSelect">Theme:</label>
+        <div class="select-wrapper">
+          <select id="themeSelect">
+            <option value="default">Default Blue</option>
+            <option value="dark">Dark Mode</option>
+            <option value="purple">Royal Purple</option>
+            <option value="green">Emerald Green</option>
+            <option value="amber">Amber Gold</option>
+          </select>
+        </div>
+      </div>
     </div>
     
     <h2>WebSocket Communication</h2>
@@ -425,11 +853,25 @@
     <div class="card">
       <p>Chat with OpenAI and automatically capture conversations for Mysterion training:</p>
       <div class="api-key-section" id="apiKeySection">
+        <div class="api-key-instructions">
+          <h3>🔑 API Key Required</h3>
+          <p>To access the chat interface, please provide your OpenAI API key:</p>
+          <ol>
+            <li>Visit <a href="https://platform.openai.com/api-keys" target="_blank">OpenAI API Keys</a> (requires an OpenAI account)</li>
+            <li>Create a new secret key and copy it</li>
+            <li>Paste the key in the field below and click "Save API Key"</li>
+          </ol>
+          <div class="key-note">
+            <strong>Note:</strong> Your API key will be stored locally in your browser and is never sent to our servers. API usage charges apply based on your OpenAI account.
+          </div>
+        </div>
         <div class="api-key-input">
-          <input type="password" id="apiKeyInput" placeholder="Enter your OpenAI API key...">
+          <input type="password" id="apiKeyInput" placeholder="Enter your OpenAI API key (starts with 'sk-')">
           <button id="saveApiKeyBtn">Save API Key</button>
         </div>
-        <p class="api-key-message">Your API key will be stored locally on your device and not sent to any servers.</p>
+        <p class="alternative-key-option">
+          You can also click <strong>"Manage API Keys"</strong> in the dashboard header to add both OpenAI and HuggingFace API keys.
+        </p>
       </div>
       <div class="chat-container" id="chatContainer" style="display: none;">
         <div class="chat-messages" id="chatMessages">
@@ -494,6 +936,39 @@
           <div>Loss: <span id="lossValue">-</span></div>
           <div>Model: <span id="modelName">-</span></div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- API Key Modal -->
+  <div class="api-key-modal" id="apiKeyModal">
+    <div class="api-key-modal-content">
+      <div class="api-key-modal-header">
+        <h3>Manage API Keys</h3>
+        <button class="close-modal" id="closeApiKeyModal">×</button>
+      </div>
+      <div class="api-key-modal-body">
+        <div class="api-key-input-group">
+          <label for="openaiApiKeyInput">OpenAI API Key</label>
+          <input 
+            type="password" 
+            id="openaiApiKeyInput" 
+            placeholder="Enter your OpenAI API key..."
+          >
+        </div>
+        <div class="api-key-input-group">
+          <label for="huggingfaceApiKeyInput">Hugging Face API Key</label>
+          <input 
+            type="password" 
+            id="huggingfaceApiKeyInput" 
+            placeholder="Enter your Hugging Face API key..."
+          >
+        </div>
+        <p class="api-key-message">Your API keys will be stored locally on your device and not sent to any servers.</p>
+      </div>
+      <div class="api-key-modal-footer">
+        <button id="cancelApiKeyBtn">Cancel</button>
+        <button id="saveApiKeysBtn">Save Keys</button>
       </div>
     </div>
   </div>
@@ -892,14 +1367,44 @@
         const response = await fetch('/api/keys/check/openai');
         const data = await response.json();
         
+        // Update key status indicator
         if (data.hasKey) {
           // Show chat interface if we have a key
           apiKeySection.style.display = 'none';
           chatContainer.style.display = 'flex';
+          
+          // Update status indicator
+          openaiKeyStatus.textContent = 'OpenAI API Key: Active';
+          openaiKeyStatus.className = 'api-status active';
+          
           log(interceptorLogs, 'Using stored OpenAI API key');
+        } else {
+          // No key found
+          openaiKeyStatus.textContent = 'OpenAI API Key: Missing';
+          openaiKeyStatus.className = 'api-status missing';
+          
+          // Make sure API key section is shown
+          apiKeySection.style.display = 'block';
+          chatContainer.style.display = 'none';
         }
       } catch (error) {
         console.error('Error checking API key:', error);
+        
+        // Set status to error state
+        openaiKeyStatus.textContent = 'OpenAI API Key: Error';
+        openaiKeyStatus.className = 'api-status missing';
+      }
+      
+      // Also check for Hugging Face API key
+      try {
+        const response = await fetch('/api/keys/check/huggingface');
+        const data = await response.json();
+        
+        if (data.hasKey) {
+          log(interceptorLogs, 'Using stored Hugging Face API key');
+        }
+      } catch (error) {
+        console.error('Error checking Hugging Face API key:', error);
       }
     }
     
@@ -935,6 +1440,10 @@
         // Hide API key section and show chat
         apiKeySection.style.display = 'none';
         chatContainer.style.display = 'flex';
+        
+        // Update key status indicator
+        openaiKeyStatus.textContent = 'OpenAI API Key: Active';
+        openaiKeyStatus.className = 'api-status active';
         
         // Clear input
         apiKeyInput.value = '';
@@ -1063,11 +1572,223 @@
       `;
     }
     
+    // API Key Modal elements
+    const openaiKeyStatus = document.getElementById('openaiKeyStatus');
+    const manageApiKeysBtn = document.getElementById('manageApiKeysBtn');
+    const apiKeyModal = document.getElementById('apiKeyModal');
+    const closeApiKeyModal = document.getElementById('closeApiKeyModal');
+    const cancelApiKeyBtn = document.getElementById('cancelApiKeyBtn');
+    const saveApiKeysBtn = document.getElementById('saveApiKeysBtn');
+    const openaiApiKeyInput = document.getElementById('openaiApiKeyInput');
+    const huggingfaceApiKeyInput = document.getElementById('huggingfaceApiKeyInput');
+    
+    // Theme selector elements
+    const themeSelect = document.getElementById('themeSelect');
+    
+    // API Key Modal Functions
+    function openApiKeyModalFn() {
+      // Populate form with existing values
+      const storedOpenaiKey = localStorage.getItem('openai_api_key');
+      const storedHuggingfaceKey = localStorage.getItem('huggingface_api_key');
+      
+      if (storedOpenaiKey) {
+        openaiApiKeyInput.value = storedOpenaiKey;
+      }
+      
+      if (storedHuggingfaceKey) {
+        huggingfaceApiKeyInput.value = storedHuggingfaceKey;
+      }
+      
+      // Show modal
+      apiKeyModal.style.display = 'block';
+    }
+    
+    function closeApiKeyModalFn() {
+      apiKeyModal.style.display = 'none';
+    }
+    
+    async function saveApiKeysFromModal() {
+      const openaiKey = openaiApiKeyInput.value.trim();
+      const huggingfaceKey = huggingfaceApiKeyInput.value.trim();
+      
+      let hasChanges = false;
+      
+      // Store OpenAI Key
+      if (openaiKey) {
+        try {
+          const response = await fetch('/api/keys/store', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              service: 'openai',
+              apiKey: openaiKey
+            })
+          });
+          
+          const data = await response.json();
+          
+          if (!response.ok) {
+            throw new Error(data.error || 'Failed to store API key');
+          }
+          
+          // Also store in localStorage for form persistence
+          localStorage.setItem('openai_api_key', openaiKey);
+          
+          // Update key status indicator
+          openaiKeyStatus.textContent = 'OpenAI API Key: Active';
+          openaiKeyStatus.className = 'api-status active';
+          
+          // Also update apiKeyInput for consistency
+          apiKeyInput.value = openaiKey;
+          
+          // Show chat interface
+          apiKeySection.style.display = 'none';
+          chatContainer.style.display = 'flex';
+          
+          log(interceptorLogs, 'OpenAI API key saved successfully');
+          hasChanges = true;
+        } catch (error) {
+          alert(`Error saving OpenAI API key: ${error.message}`);
+          console.error('API key storage error:', error);
+        }
+      }
+      
+      // Store Hugging Face Key
+      if (huggingfaceKey) {
+        try {
+          const response = await fetch('/api/keys/store', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              service: 'huggingface',
+              apiKey: huggingfaceKey
+            })
+          });
+          
+          const data = await response.json();
+          
+          if (!response.ok) {
+            throw new Error(data.error || 'Failed to store Hugging Face API key');
+          }
+          
+          // Also store in localStorage for form persistence
+          localStorage.setItem('huggingface_api_key', huggingfaceKey);
+          
+          log(interceptorLogs, 'Hugging Face API key saved successfully');
+          hasChanges = true;
+        } catch (error) {
+          alert(`Error saving Hugging Face API key: ${error.message}`);
+          console.error('API key storage error:', error);
+        }
+      }
+      
+      if (hasChanges) {
+        closeApiKeyModalFn();
+      } else if (!openaiKey && !huggingfaceKey) {
+        alert('Please enter at least one API key');
+      }
+    }
+    
+    // Add event listeners for API Key Modal
+    manageApiKeysBtn.addEventListener('click', openApiKeyModalFn);
+    closeApiKeyModal.addEventListener('click', closeApiKeyModalFn);
+    cancelApiKeyBtn.addEventListener('click', closeApiKeyModalFn);
+    saveApiKeysBtn.addEventListener('click', saveApiKeysFromModal);
+    
     // Check for stored API key on page load
     checkStoredApiKey();
     prepareTrainingBtn.addEventListener('click', prepareTrainingData);
     startTrainingBtn.addEventListener('click', startTraining);
     checkStatusBtn.addEventListener('click', checkTrainingStatus);
+    
+    // Mobile chat toggle functionality
+    const mobileChatToggle = document.getElementById('mobileChatToggle');
+    if (mobileChatToggle) {
+      // Show/hide mobile chat toggle based on screen size
+      function updateMobileUI() {
+        if (window.innerWidth <= 768) {
+          mobileChatToggle.style.display = 'flex';
+          
+          // On mobile, we want to use shorter logs
+          const allLogs = document.querySelectorAll('.logs');
+          allLogs.forEach(log => {
+            log.style.maxHeight = '150px';
+          });
+        } else {
+          mobileChatToggle.style.display = 'none';
+          
+          // Reset logs height on desktop
+          const allLogs = document.querySelectorAll('.logs');
+          allLogs.forEach(log => {
+            log.style.maxHeight = '200px';
+          });
+        }
+      }
+      
+      // Focus on chat section
+      mobileChatToggle.addEventListener('click', () => {
+        // Find the chat section by its heading text
+        const headings = Array.from(document.querySelectorAll('h2'));
+        const chatSection = headings.find(h2 => h2.textContent.includes('ChatGPT Interface'));
+        
+        if (chatSection) {
+          chatSection.scrollIntoView({ behavior: 'smooth' });
+          setTimeout(() => {
+            if (chatContainer.style.display !== 'none') {
+              chatInput.focus();
+            } else {
+              apiKeyInput.focus();
+            }
+          }, 500);
+        }
+      });
+      
+      // Update on page load and resize
+      window.addEventListener('resize', updateMobileUI);
+      updateMobileUI();
+    }
+    
+    // Theme management functions
+    function setTheme(themeName) {
+      // Remove any existing theme
+      document.documentElement.removeAttribute('data-theme');
+      
+      // If not default theme, apply the new theme
+      if (themeName !== 'default') {
+        document.documentElement.setAttribute('data-theme', themeName);
+      }
+      
+      // Save user preference
+      localStorage.setItem('scroll_keeper_theme', themeName);
+      
+      // Update select element
+      if (themeSelect) {
+        themeSelect.value = themeName;
+      }
+      
+      log(wsLogs, `Theme changed to: ${themeName}`);
+    }
+    
+    function loadSavedTheme() {
+      const savedTheme = localStorage.getItem('scroll_keeper_theme');
+      if (savedTheme) {
+        setTheme(savedTheme);
+      }
+    }
+    
+    // Add event listener for theme selector
+    if (themeSelect) {
+      themeSelect.addEventListener('change', (e) => {
+        setTheme(e.target.value);
+      });
+    }
+    
+    // Load saved theme on page load
+    loadSavedTheme();
     
     // Auto-connect on page load
     window.addEventListener('load', connectWebSocket);
