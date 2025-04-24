@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { Cpu, Database, Brain, CircleDollarSign, Coins, Sparkles, ArrowUpRight, Code, BrainCircuit } from 'lucide-react';
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link } from "wouter";
 
 const aiDistribution = [
   { name: 'Training Rewards', value: 45, color: '#6b21a8' },

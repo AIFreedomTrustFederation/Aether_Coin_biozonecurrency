@@ -1,5 +1,5 @@
 import React from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Switch, Route, Redirect } from "wouter";
 import { AppShell } from "./components/app-shell";
 import { SecurityProvider } from "./components/app-shell/SecurityProvider";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -33,16 +33,22 @@ const EnumeratorApp: React.FC = () => {
           <Toaster />
           <Sonner />
           <SecurityProvider>
-            <Routes>
+            <Switch>
               {/* Redirect root to the default app */}
-              <Route path="/" element={<Navigate to="/enumerator/dashboard" replace />} />
+              <Route path="/">
+                <Redirect to="/enumerator/dashboard" />
+              </Route>
               
               {/* App Shell handles all registered apps */}
-              <Route path="/:appId/*" element={<AppShell />} />
+              <Route path="/:appId/*">
+                <AppShell />
+              </Route>
               
               {/* Catch-all route for 404 */}
-              <Route path="*" element={<Navigate to="/enumerator/dashboard" replace />} />
-            </Routes>
+              <Route path="*">
+                <Redirect to="/enumerator/dashboard" />
+              </Route>
+            </Switch>
           </SecurityProvider>
         </TooltipProvider>
       </ThemeProvider>

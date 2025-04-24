@@ -10,12 +10,12 @@ import { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Shield, Check, Globe } from 'lucide-react';
 import AetherCoreBrowser, { AetherCoreBrowserProps } from '../components/browser/AetherCoreBrowser';
-import { useLocation } from 'react-router-dom';
+import { useLocation } from 'wouter';
 
 const AetherCoreBrowserPage = () => {
-  const location = useLocation();
-  const state = location.state as { initialUrl?: string } | null;
-  const initialUrl = state?.initialUrl || 'httqs://www.AetherCore.trust';
+  const [location] = useLocation();
+  // Since wouter doesn't have a state object like react-router-dom, we'll just use a default URL
+  const initialUrl = 'httqs://www.AetherCore.trust';
   
   useEffect(() => {
     document.title = 'AetherCore Quantum Browser | Aetherion Wallet';

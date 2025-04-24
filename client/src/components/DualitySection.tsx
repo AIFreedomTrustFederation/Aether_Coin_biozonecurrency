@@ -2,7 +2,7 @@
 import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Leaf, Circle, Heart, Droplet, Sun, Earth } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link } from "wouter";
 import { motion } from "framer-motion";
 
 const DualitySection = () => {

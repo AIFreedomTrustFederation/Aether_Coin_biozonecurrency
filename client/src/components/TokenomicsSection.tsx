@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { Coins, Percent, Wallet, ChartPie, ChartBar, DollarSign, Shield, Recycle, Rocket, Bitcoin, Globe } from 'lucide-react';
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link } from "wouter";
 
 const tokenDistribution = [
   { name: 'ICO Launch', value: 35, color: '#4d994d' },

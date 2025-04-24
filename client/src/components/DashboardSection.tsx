@@ -5,7 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Target, Sprout, Users, Clock, Globe, Orbit, Rocket, CloudLightning } from 'lucide-react';
-import { Link } from "react-router-dom";
+import { Link } from "wouter";
 
 const presaleData = [
   { name: 'Stage 1', target: 1000000, price: 0.0425 },

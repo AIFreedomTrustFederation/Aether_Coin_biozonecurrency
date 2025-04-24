@@ -1,5 +1,5 @@
-import React from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import React, { useEffect } from "react";
+import { Route, Switch, useLocation } from "wouter";
 import { AppShell } from "./components/app-shell";
 import { SecurityProvider } from "./components/app-shell/SecurityProvider";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -19,6 +19,17 @@ const queryClient = new QueryClient({
   }
 });
 
+// Redirect component using wouter's useLocation
+const Redirect = ({ to }: { to: string }) => {
+  const [, setLocation] = useLocation();
+  
+  useEffect(() => {
+    setLocation(to);
+  }, [to, setLocation]);
+  
+  return null;
+};
+
 /**
  * Main App Router
  * 
@@ -33,18 +44,22 @@ const MainAppRouter: React.FC = () => {
           <Toaster />
           <Sonner />
           <SecurityProvider>
-            <BrowserRouter>
-              <Routes>
-                {/* Redirect root to the default app */}
-                <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                
-                {/* App Shell handles all registered apps */}
-                <Route path="/:appId/*" element={<AppShell />} />
-                
-                {/* Catch-all route for 404 */}
-                <Route path="*" element={<Navigate to="/dashboard" replace />} />
-              </Routes>
-            </BrowserRouter>
+            <Switch>
+              {/* Redirect root to the default app */}
+              <Route path="/">
+                <Redirect to="/dashboard" />
+              </Route>
+              
+              {/* App Shell handles all registered apps */}
+              <Route path="/:appId/*">
+                <AppShell />
+              </Route>
+              
+              {/* Catch-all route for 404 */}
+              <Route path="*">
+                <Redirect to="/dashboard" />
+              </Route>
+            </Switch>
           </SecurityProvider>
         </TooltipProvider>
       </ThemeProvider>

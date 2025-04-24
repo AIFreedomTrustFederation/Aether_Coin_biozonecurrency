@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation } from "wouter";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -109,7 +109,7 @@ const saasFeatures = [
 
 // Main DApp component - SaaS landing page
 const DApp = () => {
-  const navigate = useNavigate();
+  const [, navigate] = useLocation();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [serviceWorkerStatus, setServiceWorkerStatus] = useState<ServiceStatus>(ServiceStatus.UNREGISTERED);

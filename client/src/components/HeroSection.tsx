@@ -2,7 +2,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Link } from "wouter";
 import { Rocket, Bitcoin, Globe } from "lucide-react";
 
 const HeroSection = () => {
