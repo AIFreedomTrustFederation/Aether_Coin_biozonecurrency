@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollText, ArrowRight, Code, Server, CloudLightning } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link } from "wouter";
 
 const ScrollKeeperHighlight = () => {
   return (

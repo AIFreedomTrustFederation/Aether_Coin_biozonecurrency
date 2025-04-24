@@ -4,7 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Switch, Route } from "wouter";
 import { QuantumDomainProvider } from "./contexts/QuantumDomainContext";
 import { ZeroTrustProvider } from "./contexts/ZeroTrustContext";
 import { QuantumLoader } from "@/components/ui/quantum-loader";
@@ -74,7 +74,7 @@ const AIFreedomTrustRedirect = () => {
   );
 };
 
-// Original App structure with updated Enumerator page
+// App structure with Wouter for routing
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -82,41 +82,39 @@ const App = () => (
       <Sonner />
       <ZeroTrustProvider>
         <QuantumDomainProvider>
-          <BrowserRouter>
-            <Suspense fallback={<QuantumPageLoader />}>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/tokenomics" element={<Tokenomics />} />
-                <Route path="/aicon" element={<Aicon />} />
-                <Route path="/wallet" element={<Wallet />} />
-                <Route path="/dapp" element={<DApp />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/domains" element={<Domains />} />
-                <Route path="/achievements" element={<Achievements />} />
-                <Route path="/terms-of-service" element={<TermsOfService />} />
-                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-                <Route path="/api" element={<Api />} />
-                <Route path="/aethercore-trust" element={<AetherCoreTrust />} />
-                <Route path="/aethercore-browser" element={<AetherCoreBrowser />} />
-                <Route path="/node-marketplace" element={<NodeMarketplace />} />
-                <Route path="/dns-manager" element={<DnsManager />} />
-                <Route path="/codestar" element={<CodeStarPage />} />
-                <Route path="/scroll-keeper" element={<ScrollKeeperPage />} />
-                
-                {/* Route to simplified Enumerator page */}
-                <Route path="/enumerator" element={<EnumeratorPage />} />
-                
-                {/* Route to Bot Simulation Dashboard */}
-                <Route path="/bot-simulation" element={<BotSimulationPage />} />
-                
-                {/* Route to AI Freedom Trust landing page */}
-                <Route path="/aifreedomtrust" element={<AIFreedomTrustRedirect />} />
-                
-                {/* Catch-all route for 404 */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
-          </BrowserRouter>
+          <Suspense fallback={<QuantumPageLoader />}>
+            <Switch>
+              <Route path="/" component={Index} />
+              <Route path="/tokenomics" component={Tokenomics} />
+              <Route path="/aicon" component={Aicon} />
+              <Route path="/wallet" component={Wallet} />
+              <Route path="/dapp" component={DApp} />
+              <Route path="/about" component={About} />
+              <Route path="/domains" component={Domains} />
+              <Route path="/achievements" component={Achievements} />
+              <Route path="/terms-of-service" component={TermsOfService} />
+              <Route path="/privacy-policy" component={PrivacyPolicy} />
+              <Route path="/api" component={Api} />
+              <Route path="/aethercore-trust" component={AetherCoreTrust} />
+              <Route path="/aethercore-browser" component={AetherCoreBrowser} />
+              <Route path="/node-marketplace" component={NodeMarketplace} />
+              <Route path="/dns-manager" component={DnsManager} />
+              <Route path="/codestar" component={CodeStarPage} />
+              <Route path="/scroll-keeper" component={ScrollKeeperPage} />
+              
+              {/* Route to simplified Enumerator page */}
+              <Route path="/enumerator" component={EnumeratorPage} />
+              
+              {/* Route to Bot Simulation Dashboard */}
+              <Route path="/bot-simulation" component={BotSimulationPage} />
+              
+              {/* Route to AI Freedom Trust landing page */}
+              <Route path="/aifreedomtrust" component={AIFreedomTrustRedirect} />
+              
+              {/* Catch-all route for 404 */}
+              <Route component={NotFound} />
+            </Switch>
+          </Suspense>
         </QuantumDomainProvider>
       </ZeroTrustProvider>
     </TooltipProvider>

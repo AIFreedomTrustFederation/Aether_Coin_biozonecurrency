@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { QuantumLoader } from "@/components/ui/quantum-loader";
 import { useToast } from "@/components/ui/use-toast";
-import { Link } from "react-router-dom";
+import { Link } from "wouter";
 import { 
   Code,
   FileCode,

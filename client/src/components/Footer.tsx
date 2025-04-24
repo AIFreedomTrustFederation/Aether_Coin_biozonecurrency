@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Leaf, ExternalLink } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link } from "wouter";
 
 const Footer = () => {
   return (

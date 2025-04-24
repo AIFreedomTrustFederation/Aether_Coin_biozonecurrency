@@ -1,5 +1,5 @@
 import React, { useState, useEffect, Suspense } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useRoute, useLocation } from 'wouter';
 import { AppRegistry, AppConfig } from '../../registry/AppRegistry';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
@@ -13,8 +13,9 @@ import { cn } from "@/lib/utils";
  * navigation, settings, and shared UI elements.
  */
 export const AppShell: React.FC = () => {
-  const { appId } = useParams<{ appId: string }>();
-  const navigate = useNavigate();
+  const [, params] = useRoute('/:appId');
+  const appId = params?.appId;
+  const [, setLocation] = useLocation();
   const [currentApp, setCurrentApp] = useState<AppConfig | undefined>();
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
@@ -31,10 +32,10 @@ export const AppShell: React.FC = () => {
         document.title = `Aetherion | ${app.name}`;
       } else {
         // Redirect to dashboard if app not found
-        navigate('/dashboard');
+        setLocation('/dashboard');
       }
     }
-  }, [appId, navigate]);
+  }, [appId, setLocation]);
   
   // Handle app navigation
   const navigateToApp = (targetAppId: string) => {

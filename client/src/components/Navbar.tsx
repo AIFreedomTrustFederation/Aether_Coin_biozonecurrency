@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger } from "@/components/ui/navigation-menu";
 import { Leaf, Wallet, ExternalLink, Globe, Shield, Award, Menu, X, Server, LayoutGrid, Bot, ScrollText, Code } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link } from "wouter";
 import { toast } from "sonner";
 import { Sheet, SheetClose, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 

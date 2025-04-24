@@ -9,6 +9,8 @@ import { createProxyMiddleware } from 'http-proxy-middleware';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
+import { WebSocketServer } from 'ws';
+import http from 'http';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -21,6 +23,33 @@ const CLIENT_DIR = path.join(__dirname, 'client');
 console.log(`Starting Aetherion Proxy Service (Biozone Harmony Boost Integration)`);
 console.log(`Proxying port ${PORT} to ${TARGET_URL}`);
 
+// Create HTTP server
+const httpServer = http.createServer(app);
+
+// Create WebSocket server on the same server but a different path
+const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+
+wss.on('connection', function connection(ws) {
+  console.log('Client connected to WebSocket');
+  
+  ws.on('message', function incoming(message) {
+    console.log('Received message:', message.toString());
+    
+    // Simple WebSocket echo server for now
+    // This can be expanded for real-time collaboration features
+    if (message.toString() === 'subscribe') {
+      ws.send(JSON.stringify({
+        type: 'welcome',
+        message: 'Connected to Scroll Keeper WebSocket Server'
+      }));
+    }
+  });
+  
+  ws.on('close', () => {
+    console.log('Client disconnected from WebSocket');
+  });
+});
+
 // Add a simple health check endpoint
 app.get('/health', (req, res) => {
   res.json({
@@ -29,6 +58,16 @@ app.get('/health', (req, res) => {
     environment: process.env.NODE_ENV || 'development',
     timestamp: new Date().toISOString(),
     uptime: process.uptime()
+  });
+});
+
+// Simple API endpoint for Scroll Keeper status
+app.get('/api', (req, res) => {
+  res.json({
+    service: 'Scroll Keeper API',
+    status: 'operational',
+    version: '1.0.0',
+    timestamp: new Date().toISOString()
   });
 });
 
@@ -73,6 +112,8 @@ app.get('/debug-info', (req, res) => {
         <ul>
           <li><a href="/">Home</a></li>
           <li><a href="/health">Health Check</a></li>
+          <li><a href="/codestar">CodeStar IDE</a></li>
+          <li><a href="/scroll-keeper">Scroll Keeper Dashboard</a></li>
         </ul>
       </body>
     </html>
@@ -177,17 +218,27 @@ app.get('/', (req, res) => {
   viteProxyMiddleware(req, res);
 });
 
-// Define React SPA routes based on biozone-harmony-boost App.tsx
+// Define React SPA routes based on updated App.tsx
 const CLIENT_ROUTES = [
   '/tokenomics',
   '/aicon',
   '/wallet',
   '/dapp',
+  '/about',
+  '/domains',
+  '/achievements',
   '/terms-of-service',
   '/privacy-policy',
   '/api',
+  '/aethercore-trust',
+  '/aethercore-browser',
+  '/node-marketplace',
+  '/dns-manager',
   '/codestar',
-  '/scroll-keeper'
+  '/scroll-keeper',
+  '/enumerator',
+  '/bot-simulation',
+  '/aifreedomtrust'
 ];
 
 // Handle SPA routes
@@ -221,9 +272,8 @@ app.use('*', (req, res) => {
 });
 
 // Start the server - bind to 0.0.0.0 for Replit
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Proxy server running on port ${PORT}`);
-  console.log(`All requests will be proxied to ${TARGET_URL}`);
-  console.log(`Static assets served from ${path.join(CLIENT_DIR, 'public')}`);
-  console.log(`SPA routes configured: ${CLIENT_ROUTES.join(', ')}`);
+httpServer.listen(PORT, '0.0.0.0', () => {
+  console.log(`✓ Scroll Keeper minimal server running on port ${PORT}`);
+  console.log(`✓ API available at http://0.0.0.0:${PORT}/api`);
+  console.log(`✓ WebSocket server available at ws://0.0.0.0:${PORT}/ws`);
 });

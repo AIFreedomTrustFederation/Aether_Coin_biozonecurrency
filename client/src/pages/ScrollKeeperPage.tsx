@@ -3,7 +3,7 @@ import { ScrollText, ArrowUpRight, ArrowRight, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { QuantumLoader } from "@/components/ui/quantum-loader";
-import { Link } from "react-router-dom";
+import { Link } from "wouter";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
