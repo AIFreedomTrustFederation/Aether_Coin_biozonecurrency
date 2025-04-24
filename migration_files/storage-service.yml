@@ -1,0 +1,135 @@
+name: Storage Service CI/CD
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'storage-service/**'
+      - 'server/storage.ts'
+      - 'shared/schema.ts'
+      - '.github/workflows/storage-service.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'storage-service/**'
+      - 'server/storage.ts'
+      - 'shared/schema.ts'
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: testdb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: storage-service/package-lock.json
+      
+      - name: Install dependencies
+        working-directory: ./storage-service
+        run: npm ci
+      
+      - name: Run database migrations
+        working-directory: ./storage-service
+        run: npm run db:push
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/testdb
+      
+      - name: Run tests
+        working-directory: ./storage-service
+        run: npm test
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/testdb
+  
+  build:
+    name: Build
+    needs: test
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: storage-service/package-lock.json
+      
+      - name: Install dependencies
+        working-directory: ./storage-service
+        run: npm ci
+      
+      - name: Build
+        working-directory: ./storage-service
+        run: npm run build
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
+      
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./storage-service
+          push: true
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/scroll-keeper-storage-service:${{ github.sha }},${{ secrets.DOCKER_HUB_USERNAME }}/scroll-keeper-storage-service:latest
+  
+  deploy:
+    name: Deploy
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+    
+    steps:
+      - name: Backup Production Database
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USERNAME }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            cd ${{ secrets.DEPLOY_PATH }}
+            docker-compose exec -T db pg_dump -U postgres -d scrollkeeper > backup_$(date +%Y%m%d%H%M%S).sql
+      
+      - name: Deploy to Production
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USERNAME }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            cd ${{ secrets.DEPLOY_PATH }}
+            docker-compose pull storage-service
+            docker-compose up -d storage-service
+            sleep 10
+            docker-compose exec -T storage-service npm run db:push
+            docker system prune -af

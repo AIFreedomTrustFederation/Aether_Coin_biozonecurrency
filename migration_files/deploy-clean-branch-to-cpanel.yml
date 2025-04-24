@@ -1,0 +1,247 @@
+name: Deploy Clean Branch to CPanel
+
+on:
+  push:
+    branches: [ clean_fixes_20250410_163230 ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+        - production
+        - staging
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          ref: clean_fixes_20250410_163230
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build project
+        run: npm run build
+      
+      - name: Set up environment variables for API
+        run: |
+          mkdir -p dist/server
+          cat > dist/server/.env.production << EOF
+          # Database Configuration
+          DB_HOST=localhost
+          DB_USER=${{ secrets.CPANEL_DB_USER }}
+          DB_PASS=${{ secrets.CPANEL_DB_PASS }}
+          DB_NAME=${{ secrets.CPANEL_DB_NAME }}
+          DB_PREFIX=atc_
+          
+          # Security
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          SESSION_SECRET=${{ secrets.SESSION_SECRET }}
+          
+          # Application Settings
+          APP_ENV=production
+          APP_NAME=Aetherion
+          APP_VERSION=1.0.0
+          APP_URL=https://atc.aifreedomtrust.com/wallet
+          API_BASE_URL=/wallet/api
+          EOF
+      
+      - name: Create .htaccess file
+        run: |
+          cat > dist/.htaccess << EOF
+          <IfModule mod_rewrite.c>
+            RewriteEngine On
+            RewriteBase /wallet/
+            
+            # Handle Front Controller Pattern (SPA routing)
+            RewriteCond %{REQUEST_FILENAME} !-f
+            RewriteCond %{REQUEST_FILENAME} !-d
+            RewriteRule ^(.*)$ index.html [QSA,L]
+            
+            # API requests should be directed to the PHP API
+            RewriteRule ^api/(.*)$ server/api/$1 [QSA,L]
+            
+            # Force HTTPS
+            RewriteCond %{HTTPS} off
+            RewriteRule (.*) https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+          </IfModule>
+          
+          # Set cache control for static assets
+          <IfModule mod_expires.c>
+            ExpiresActive On
+            # Set default expiry to 1 month
+            ExpiresDefault "access plus 1 month"
+            # CSS and JS files - 1 week
+            ExpiresByType text/css "access plus 1 week"
+            ExpiresByType application/javascript "access plus 1 week"
+            # Images - 3 months
+            ExpiresByType image/jpg "access plus 3 months"
+            ExpiresByType image/jpeg "access plus 3 months"
+            ExpiresByType image/gif "access plus 3 months"
+            ExpiresByType image/png "access plus 3 months"
+            ExpiresByType image/svg+xml "access plus 3 months"
+          </IfModule>
+          
+          # Disable directory browsing
+          Options -Indexes
+          EOF
+      
+      - name: Prepare server files
+        run: |
+          mkdir -p dist/server/api
+          cp server/cpanel-db-adapter.php dist/server/
+          cp server/api/wallet.php dist/server/api/
+          cp server/api/node-marketplace.php dist/server/api/
+          cp server/api/index.php dist/server/api/
+          cp server/api/.htaccess dist/server/api/
+      
+      - name: Create database setup script
+        run: |
+          cat > dist/db_setup.php << 'EOF'
+          <?php
+          // Database setup helper for Aetherion
+          // Run this script once to create the necessary tables
+          // Delete it immediately after successful execution
+          
+          // Display errors for debugging
+          ini_set('display_errors', 1);
+          ini_set('display_startup_errors', 1);
+          error_reporting(E_ALL);
+          
+          // MySQL Connection Settings
+          // Edit these with your CPanel database credentials
+          $servername = "localhost";
+          $username = "cpanel_db_username"; // Will be replaced during deployment
+          $password = "your_db_password";   // Will be replaced during deployment
+          $dbname = "aetherion_db";         // Will be replaced during deployment
+          
+          try {
+              $conn = new PDO("mysql:host=$servername", $username, $password);
+              $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+              
+              // Create database if it doesn't exist
+              $stmt = $conn->prepare("CREATE DATABASE IF NOT EXISTS $dbname");
+              $stmt->execute();
+              echo "Database created or already exists<br>";
+              
+              // Use the database
+              $conn->exec("USE $dbname");
+              
+              // Create your tables
+              $sql = "
+              CREATE TABLE IF NOT EXISTS atc_users (
+                  id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                  username VARCHAR(255) NOT NULL UNIQUE,
+                  password_hash VARCHAR(255) NOT NULL,
+                  wallet_address VARCHAR(255),
+                  email VARCHAR(255),
+                  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+              );
+              
+              CREATE TABLE IF NOT EXISTS atc_wallet_transactions (
+                  id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                  user_id INT NOT NULL,
+                  transaction_hash VARCHAR(255) NOT NULL,
+                  amount DECIMAL(18, 8) NOT NULL,
+                  transaction_type ENUM('deposit', 'withdrawal', 'transfer') NOT NULL,
+                  status ENUM('pending', 'completed', 'failed') NOT NULL DEFAULT 'pending',
+                  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                  FOREIGN KEY (user_id) REFERENCES atc_users(id) ON DELETE CASCADE
+              );
+              
+              CREATE TABLE IF NOT EXISTS atc_node_devices (
+                  id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                  user_id INT NOT NULL,
+                  device_name VARCHAR(255) NOT NULL,
+                  status ENUM('active', 'inactive', 'pending') NOT NULL DEFAULT 'pending',
+                  resource_type ENUM('storage', 'computation', 'bandwidth') NOT NULL,
+                  resource_amount INT NOT NULL,
+                  earnings_rate DECIMAL(10, 6) NOT NULL DEFAULT 0,
+                  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                  FOREIGN KEY (user_id) REFERENCES atc_users(id) ON DELETE CASCADE
+              );
+              
+              CREATE TABLE IF NOT EXISTS atc_settings (
+                  id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                  setting_key VARCHAR(255) NOT NULL UNIQUE,
+                  setting_value TEXT NOT NULL,
+                  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+              );
+              ";
+              
+              $conn->exec($sql);
+              echo "Tables created successfully<br>";
+              
+              // Insert initial settings
+              $initialSettings = "
+              INSERT INTO atc_settings (setting_key, setting_value) 
+              VALUES 
+              ('app_name', 'Aetherion'),
+              ('app_version', '1.0.0'),
+              ('maintenance_mode', 'false'),
+              ('wallet_features_enabled', 'true'),
+              ('node_marketplace_enabled', 'true'),
+              ('fractal_network_enabled', 'true'),
+              ('quantum_security_enabled', 'true'),
+              ('biozoe_integration_enabled', 'true')
+              ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)
+              ";
+              $conn->exec($initialSettings);
+              echo "Initial settings created<br>";
+              
+              echo "<h3>Setup Completed Successfully!</h3>";
+              echo "<p>Please delete this file immediately for security reasons.</p>";
+          } catch(PDOException $e) {
+              echo "Error: " . $e->getMessage();
+          }
+          $conn = null;
+          ?>
+          EOF
+      
+      - name: Update database setup script with credentials
+        run: |
+          sed -i "s/cpanel_db_username/${{ secrets.CPANEL_DB_USER }}/g" dist/db_setup.php
+          sed -i "s/your_db_password/${{ secrets.CPANEL_DB_PASS }}/g" dist/db_setup.php
+          sed -i "s/aetherion_db/${{ secrets.CPANEL_DB_NAME }}/g" dist/db_setup.php
+      
+      - name: Create deployment package
+        run: |
+          cd dist
+          zip -r ../clean-cpanel-deploy.zip .
+          cd ..
+      
+      - name: Deploy to CPanel
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ${{ secrets.CPANEL_FTP_SERVER }}
+          username: ${{ secrets.CPANEL_FTP_USERNAME }}
+          password: ${{ secrets.CPANEL_FTP_PASSWORD }}
+          local-dir: ./dist/
+          server-dir: ./public_html/wallet/
+          dangerous-clean-slate: true
+      
+      - name: Notify deployment status
+        if: always()
+        run: |
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "Clean branch deployment completed successfully!"
+            # You could add notification to Slack, Discord, etc. here
+          else
+            echo "Clean branch deployment failed!"
+            # You could add notification to Slack, Discord, etc. here
+          fi

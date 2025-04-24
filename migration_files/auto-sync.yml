@@ -1,0 +1,92 @@
+name: Auto-Sync from Replit for AetherWallet-1
+
+on:
+  workflow_dispatch:
+    # This allows manual triggering via the GitHub UI
+    # or via the API from the Replit script
+  schedule:
+    # Run every 6 hours to check for updates
+    - cron: '0 */6 * * *'
+
+jobs:
+  sync-from-replit:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      
+      - name: Set up Git
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+      
+      - name: Setup Replit Sync
+        run: |
+          # Create a script to help synchronize with Replit
+          cat > sync_replit.sh << 'EOL'
+          #!/bin/bash
+          
+          set -e
+          
+          # Clone the Replit project
+          echo "Cloning Replit project..."
+          REPLIT_PROJECT_URL="${{ secrets.REPLIT_REPO_URL }}"
+          
+          # Extract username and project name
+          REPLIT_USERNAME="aifreedomtrust"
+          REPLIT_PROJECT="AetherWallet-1"
+          
+          # Create a directory for the Replit project
+          mkdir -p replit_tmp
+          
+          # Use Replit Git URL (using GitHub token for authentication)
+          if [[ -n "${{ secrets.REPLIT_GIT_URL }}" ]]; then
+            echo "Using provided Git URL to fetch Replit project..."
+            git clone ${{ secrets.REPLIT_GIT_URL }} replit_tmp
+          else
+            echo "No Git URL provided. Using alternative methods..."
+            # Try to fetch using nix-shell or other methods in the future
+            echo "Error: Cannot fetch Replit project without Git URL"
+            exit 1
+          fi
+          
+          # Sync files from Replit to GitHub
+          echo "Syncing files..."
+          rsync -av --exclude='.git' --exclude='node_modules' --exclude='.replit' --exclude='.upm' replit_tmp/ ./
+          
+          # Clean up
+          rm -rf replit_tmp
+          
+          echo "Sync completed successfully!"
+          EOL
+          
+          chmod +x sync_replit.sh
+      
+      - name: Sync with Replit
+        run: |
+          ./sync_replit.sh
+      
+      - name: Check for changes
+        id: check_changes
+        run: |
+          if [[ -n "$(git status --porcelain)" ]]; then
+            echo "changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "changes=false" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Commit and push changes
+        if: steps.check_changes.outputs.changes == 'true'
+        run: |
+          git add .
+          git commit -m "Auto-sync from Replit AetherWallet-1 [$(date +'%Y-%m-%d %H:%M:%S')]"
+          git push origin main
+          echo "Successfully synchronized changes from Replit!"
+      
+      - name: No changes detected
+        if: steps.check_changes.outputs.changes == 'false'
+        run: |
+          echo "No changes detected. Repository is already in sync with Replit."
