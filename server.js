@@ -35,6 +35,9 @@ app.use(express.urlencoded({ extended: true }));
 // Setup static file serving
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Serve the React app
+app.use(express.static(path.join(__dirname, 'dist')));
+
 // Simple memory storage for conversations
 const conversations = new Map();
 const trainingData = new Map();
@@ -724,6 +727,17 @@ function simulateTraining() {
     }
   }, getUpdateInterval(trainingStatus.currentStep));
 }
+
+// Catch-all route to serve the React app for client-side routing
+app.get('*', (req, res) => {
+  // Skip API routes
+  if (req.path.startsWith('/api/')) {
+    return res.status(404).json({ error: 'API endpoint not found' });
+  }
+  
+  // Serve the React app's index.html for client-side routing
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+});
 
 // Start server
 httpServer.listen(PORT, '0.0.0.0', () => {

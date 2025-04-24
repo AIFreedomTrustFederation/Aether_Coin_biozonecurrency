@@ -186,7 +186,8 @@ const CLIENT_ROUTES = [
   '/terms-of-service',
   '/privacy-policy',
   '/api',
-  '/codestar'
+  '/codestar',
+  '/scroll-keeper'
 ];
 
 // Handle SPA routes
