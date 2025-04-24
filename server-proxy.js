@@ -185,7 +185,8 @@ const CLIENT_ROUTES = [
   '/dapp',
   '/terms-of-service',
   '/privacy-policy',
-  '/api'
+  '/api',
+  '/codestar'
 ];
 
 // Handle SPA routes
