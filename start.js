@@ -1,50 +1,52 @@
 /**
  * Scroll Keeper Startup Script
  * 
- * This script starts both the main server and the port proxy to ensure
+ * This script starts both the main server and the port redirector to ensure
  * compatibility with Replit workflows.
  */
 
 import { spawn } from 'child_process';
 import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
+import { dirname } from 'path';
+import path from 'path';
 
-// Get __dirname equivalent in ES modules
+// Get the directory of this script
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Start main server
-const mainServer = spawn('node', [join(__dirname, 'server.js')], {
-  stdio: 'inherit',
-  env: { ...process.env }
+// Path to the main server and redirector
+const serverPath = path.join(__dirname, 'server.js');
+const redirectorPath = path.join(__dirname, 'port-redirector.js');
+
+console.log('Starting Scroll Keeper services...');
+
+// Start the main server
+const serverProcess = spawn('node', [serverPath], {
+  stdio: 'inherit'
 });
 
-// Wait a short time to ensure the main server has started
-setTimeout(() => {
-  // Start proxy server
-  const proxyServer = spawn('node', [join(__dirname, 'port-proxy.js')], {
-    stdio: 'inherit',
-    env: { ...process.env }
-  });
+serverProcess.on('error', (error) => {
+  console.error(`Failed to start main server: ${error.message}`);
+  process.exit(1);
+});
 
-  // Handle proxy server exit
-  proxyServer.on('close', (code) => {
-    console.log(`Proxy server exited with code ${code}`);
-    // If proxy exits, kill main server too
-    mainServer.kill();
-    process.exit(code);
+// Give the main server a moment to start
+setTimeout(() => {
+  // Start the redirector
+  const redirectorProcess = spawn('node', [redirectorPath], {
+    stdio: 'inherit'
+  });
+  
+  redirectorProcess.on('error', (error) => {
+    console.error(`Failed to start redirector: ${error.message}`);
+    // Don't exit, as the main server is still running
+  });
+  
+  // Handle process termination
+  process.on('SIGINT', () => {
+    console.log('Shutting down Scroll Keeper services...');
+    redirectorProcess.kill();
+    serverProcess.kill();
+    process.exit();
   });
 }, 2000);
-
-// Handle main server exit
-mainServer.on('close', (code) => {
-  console.log(`Main server exited with code ${code}`);
-  process.exit(code);
-});
-
-// Handle process termination
-process.on('SIGINT', () => {
-  console.log('Shutting down servers...');
-  mainServer.kill();
-  process.exit(0);
-});
