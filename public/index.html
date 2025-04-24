@@ -3,1195 +3,473 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Scroll Keeper - Knowledge Management</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/2.1.0/showdown.min.js"></script>
+  <title>Scroll Keeper</title>
   <style>
     :root {
-      --primary: #4F46E5;
-      --primary-light: #6366F1;
-      --primary-dark: #4338CA;
-      --secondary: #0EA5E9;
-      --success: #16A34A;
-      --danger: #DC2626;
-      --warning: #F59E0B;
-      --info: #06B6D4;
-      --background: #F9FAFB;
-      --surface: #FFFFFF;
-      --surface-hover: #F3F4F6;
-      --text: #1F2937;
-      --text-secondary: #6B7280;
-      --border: #E5E7EB;
-      --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-      --radius: 0.5rem;
-    }
-
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --primary: #6366F1;
-        --primary-light: #818CF8;
-        --primary-dark: #4F46E5;
-        --background: #111827;
-        --surface: #1F2937;
-        --surface-hover: #374151;
-        --text: #F9FAFB;
-        --text-secondary: #9CA3AF;
-        --border: #374151;
-        --shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
-      }
-    }
-
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: 'Inter', system-ui, sans-serif;
-      background-color: var(--background);
-      color: var(--text);
-      line-height: 1.5;
-    }
-
-    a {
-      color: var(--primary);
-      text-decoration: none;
-    }
-
-    a:hover {
-      text-decoration: underline;
-    }
-
-    button, .button {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 500;
-      border-radius: var(--radius);
-      padding: 0.5rem 1rem;
-      background-color: var(--primary);
-      color: white;
-      border: none;
-      cursor: pointer;
-      transition: background-color 0.2s, transform 0.1s;
-      gap: 0.5rem;
-    }
-
-    button:hover, .button:hover {
-      background-color: var(--primary-light);
-      text-decoration: none;
-    }
-
-    button:active, .button:active {
-      transform: translateY(1px);
-      background-color: var(--primary-dark);
+      --primary-color: #3498db;
+      --primary-dark: #2980b9;
+      --secondary-color: #2c3e50;
+      --success-color: #2ecc71;
+      --error-color: #e74c3c;
+      --warning-color: #f39c12;
+      --light-bg: #f5f5f5;
+      --card-bg: #ffffff;
+      --border-color: #ddd;
+      --text-color: #333;
+      --light-text: #7f8c8d;
+      --radius: 6px;
+      --shadow: 0 2px 10px rgba(0,0,0,0.1);
     }
     
-    button.secondary, .button.secondary {
-      background-color: transparent;
-      color: var(--primary);
-      border: 1px solid var(--primary);
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: var(--light-bg);
+      color: var(--text-color);
+      line-height: 1.6;
     }
-
-    button.secondary:hover, .button.secondary:hover {
-      background-color: rgba(99, 102, 241, 0.1);
-    }
-
-    input, textarea {
-      width: 100%;
-      padding: 0.75rem;
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      background: var(--surface);
-      color: var(--text);
-    }
-
-    input:focus, textarea:focus {
-      outline: 2px solid var(--primary);
-      border-color: var(--primary);
-    }
-
+    
     .container {
       max-width: 1200px;
       margin: 0 auto;
-      padding: 0 1rem;
-    }
-
-    header {
-      background-color: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 1rem 0;
+      background-color: var(--card-bg);
+      padding: 30px;
+      border-radius: 8px;
       box-shadow: var(--shadow);
-      position: sticky;
-      top: 0;
-      z-index: 10;
     }
-
-    header .container {
+    
+    h1, h2 {
+      color: var(--secondary-color);
+    }
+    
+    h1 {
+      border-bottom: 2px solid var(--primary-color);
+      padding-bottom: 15px;
+      margin-bottom: 30px;
+      font-size: 28px;
+      font-weight: 600;
+    }
+    
+    h2 {
+      margin-top: 30px;
+      padding-bottom: 8px;
+      font-size: 20px;
       display: flex;
-      justify-content: space-between;
       align-items: center;
+      color: var(--primary-color);
     }
-
-    .logo {
-      display: flex;
-      align-items: center;
-      font-weight: 700;
-      font-size: 1.5rem;
-      color: var(--text);
-      gap: 0.5rem;
-    }
-
-    .logo svg {
-      color: var(--primary);
-    }
-
-    nav {
-      display: flex;
-      gap: 1.5rem;
-    }
-
-    nav a {
-      color: var(--text-secondary);
-      font-weight: 500;
-    }
-
-    nav a:hover, nav a.active {
-      color: var(--primary);
-      text-decoration: none;
-    }
-
-    main {
-      padding: 2rem 0;
-    }
-
-    .hero {
-      padding: 3rem 0;
-      text-align: center;
-    }
-
-    .hero h1 {
-      font-size: 2.5rem;
-      font-weight: 800;
-      margin-bottom: 1rem;
-      line-height: 1.2;
-    }
-
-    .hero p {
-      font-size: 1.25rem;
-      color: var(--text-secondary);
-      max-width: 36rem;
-      margin: 0 auto 2rem;
-    }
-
-    .section-title {
-      font-size: 1.5rem;
-      font-weight: 700;
-      margin-bottom: 1rem;
-      padding-bottom: 0.5rem;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .card {
-      background-color: var(--surface);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding: 1.5rem;
-      margin-bottom: 1.5rem;
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-
-    .card:hover {
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-lg);
-    }
-
-    .card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 1rem;
-    }
-
-    .card-title {
-      font-weight: 700;
-      font-size: 1.25rem;
-    }
-
-    .card-meta {
-      font-size: 0.875rem;
-      color: var(--text-secondary);
-    }
-
-    .card-content {
-      color: var(--text-secondary);
-      margin-bottom: 1rem;
-    }
-
-    .card-footer {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 1rem;
-    }
-
-    .tag {
+    
+    h2::before {
+      content: "";
       display: inline-block;
-      background-color: rgba(99, 102, 241, 0.1);
-      color: var(--primary);
-      padding: 0.25rem 0.75rem;
-      border-radius: 9999px;
-      font-size: 0.75rem;
-      font-weight: 500;
-      margin-right: 0.5rem;
+      width: 5px;
+      height: 20px;
+      background-color: var(--primary-color);
+      margin-right: 10px;
+      border-radius: 3px;
     }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 1.5rem;
+    
+    p {
+      color: var(--light-text);
+      margin-bottom: 15px;
+      font-size: 15px;
     }
-
-    .form-group {
-      margin-bottom: 1.5rem;
+    
+    pre {
+      background-color: #f4f6f8;
+      padding: 15px;
+      border-radius: 4px;
+      overflow: auto;
+      border-left: 4px solid var(--primary-color);
+      margin: 0;
+      font-family: "Cascadia Code", "Fira Code", Consolas, monospace;
+      font-size: 14px;
     }
-
-    .form-group label {
-      display: block;
-      margin-bottom: 0.5rem;
-      font-weight: 500;
-    }
-
-    .form-row {
-      display: flex;
-      gap: 1rem;
-      margin-bottom: 1.5rem;
-    }
-
-    .form-row > * {
-      flex: 1;
-    }
-
-    .error {
-      color: var(--danger);
-      background-color: rgba(220, 38, 38, 0.1);
-      padding: 0.75rem;
+    
+    .logs {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
       border-radius: var(--radius);
-      margin-bottom: 1rem;
-      font-size: 0.875rem;
+      padding: 12px;
+      margin-top: 12px;
+      max-height: 200px;
+      overflow-y: auto;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
-
-    .success {
-      color: var(--success);
-      background-color: rgba(22, 163, 74, 0.1);
-      padding: 0.75rem;
-      border-radius: var(--radius);
-      margin-bottom: 1rem;
-      font-size: 0.875rem;
-    }
-
-    .loading {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 2rem;
-      color: var(--text-secondary);
-    }
-
-    .spinner {
-      border: 3px solid rgba(0, 0, 0, 0.1);
-      border-radius: 50%;
-      border-top: 3px solid var(--primary);
-      width: 24px;
-      height: 24px;
-      animation: spin 1s linear infinite;
-      margin-right: 0.5rem;
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
-    .tabs {
-      display: flex;
-      border-bottom: 1px solid var(--border);
-      margin-bottom: 1.5rem;
-    }
-
-    .tab {
-      padding: 0.75rem 1.5rem;
-      cursor: pointer;
+    
+    .status {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 14px;
+      margin-right: 12px;
       font-weight: 500;
-      color: var(--text-secondary);
-      border-bottom: 2px solid transparent;
+      text-shadow: 0 1px 1px rgba(0,0,0,0.1);
     }
-
-    .tab:hover {
-      color: var(--primary);
-    }
-
-    .tab.active {
-      color: var(--primary);
-      border-bottom-color: var(--primary);
-    }
-
-    .scroll-view {
-      background-color: var(--surface);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding: 2rem;
-      margin-bottom: 2rem;
-    }
-
-    .conversation {
-      padding: 1.5rem 0;
-    }
-
-    .message {
-      margin-bottom: 1.5rem;
-      animation: fadeIn 0.3s ease-in-out;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .message-header {
-      display: flex;
-      align-items: center;
-      margin-bottom: 0.5rem;
-      gap: 0.5rem;
-    }
-
-    .message-avatar {
-      width: 2rem;
-      height: 2rem;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 700;
+    
+    .connected {
+      background-color: var(--success-color);
       color: white;
     }
-
-    .user-avatar {
-      background-color: var(--secondary);
+    
+    .disconnected {
+      background-color: var(--error-color);
+      color: white;
     }
-
-    .assistant-avatar {
-      background-color: var(--primary);
-    }
-
-    .system-avatar {
-      background-color: var(--info);
-    }
-
-    .message-name {
-      font-weight: 600;
-    }
-
-    .message-content {
-      padding-left: 2.5rem;
-      line-height: 1.6;
-    }
-
-    .message-content p {
-      margin-bottom: 1rem;
-    }
-
-    .message-content pre {
-      background-color: #1E293B;
+    
+    button {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 9px 18px;
       border-radius: var(--radius);
-      padding: 1rem;
-      overflow-x: auto;
-      margin-bottom: 1rem;
+      cursor: pointer;
+      font-size: 14px;
+      margin-right: 8px;
+      font-weight: 500;
+      transition: all 0.2s ease;
     }
-
-    .message-content code {
-      font-family: monospace;
+    
+    button:hover {
+      background-color: var(--primary-dark);
+      transform: translateY(-1px);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
-
-    .message-content img {
-      max-width: 100%;
+    
+    button:active {
+      transform: translateY(0);
+    }
+    
+    button:disabled {
+      background-color: #95a5a6;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+    
+    input[type="text"] {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid var(--border-color);
       border-radius: var(--radius);
+      font-size: 14px;
+      transition: border-color 0.2s ease;
     }
-
-    .message-content ul, .message-content ol {
-      margin-bottom: 1rem;
-      padding-left: 1.5rem;
+    
+    input[type="text"]:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
     }
-
-    .error-message {
-      border-left: 4px solid var(--danger);
-      padding-left: 1rem;
-      color: var(--danger);
-    }
-
-    .modal {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: rgba(0, 0, 0, 0.5);
+    
+    .url-input {
       display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 100;
-      padding: 1rem;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.2s;
+      margin-bottom: 15px;
+      gap: 10px;
     }
-
-    .modal.open {
-      opacity: 1;
-      pointer-events: auto;
-    }
-
-    .modal-content {
-      background-color: var(--surface);
+    
+    .card {
+      background-color: var(--card-bg);
       border-radius: var(--radius);
-      box-shadow: var(--shadow-lg);
-      max-width: 32rem;
+      padding: 20px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow);
+      border-top: 3px solid var(--primary-color);
+    }
+    
+    .interceptor-controls, .training-controls, .training-prep-controls {
+      display: flex;
+      margin: 15px 0;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    select {
+      padding: 9px 12px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      font-size: 14px;
+      background-color: white;
+    }
+    
+    select:focus {
+      outline: none;
+      border-color: var(--primary-color);
+    }
+    
+    .progress-bar-container {
       width: 100%;
-      max-height: 90vh;
-      overflow-y: auto;
-      animation: modalIn 0.3s forwards;
+      height: 20px;
+      background-color: #ecf0f1;
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 15px 0;
     }
-
-    @keyframes modalIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
+    
+    #progressBar {
+      height: 100%;
+      border-radius: 10px;
+      background-color: var(--primary-color);
+      transition: width 0.3s ease;
     }
-
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 1rem 1.5rem;
-      border-bottom: 1px solid var(--border);
+    
+    .progress-label {
+      font-weight: bold;
+      margin-bottom: 5px;
     }
-
-    .modal-title {
-      font-weight: 600;
-      font-size: 1.25rem;
-    }
-
-    .modal-close {
-      background: none;
-      border: none;
-      color: var(--text-secondary);
-      cursor: pointer;
-    }
-
-    .modal-body {
-      padding: 1.5rem;
-    }
-
-    .modal-footer {
-      display: flex;
-      justify-content: flex-end;
-      gap: 0.75rem;
-      padding: 1rem 1.5rem;
-      border-top: 1px solid var(--border);
-    }
-
-    .search-bar {
-      display: flex;
-      margin-bottom: 2rem;
-    }
-
-    .search-bar input {
-      border-top-right-radius: 0;
-      border-bottom-right-radius: 0;
-      border-right: none;
-    }
-
-    .search-bar button {
-      border-top-left-radius: 0;
-      border-bottom-left-radius: 0;
-    }
-
-    .empty-state {
-      text-align: center;
-      padding: 3rem;
-      color: var(--text-secondary);
-    }
-
-    .empty-state svg {
-      color: var(--text-secondary);
-      margin-bottom: 1rem;
-      opacity: 0.5;
-    }
-
-    .empty-state h3 {
-      font-size: 1.25rem;
-      margin-bottom: 0.5rem;
-    }
-
-    .empty-state p {
-      margin-bottom: 1.5rem;
-    }
-
-    footer {
-      text-align: center;
-      padding: 2rem 0;
-      color: var(--text-secondary);
-      font-size: 0.875rem;
-      border-top: 1px solid var(--border);
-      margin-top: 3rem;
-    }
-
-    #dashboard, #extractForm, #scrollView, #searchResults {
-      display: none;
-    }
-
-    /* Notification system */
-    .notification {
-      position: fixed;
-      bottom: 1.5rem;
-      right: 1.5rem;
-      background-color: var(--surface);
+    
+    .training-progress {
+      background-color: #f8f9fa;
       border-radius: var(--radius);
-      box-shadow: var(--shadow-lg);
-      padding: 1rem;
-      z-index: 1000;
-      transform: translateX(100%);
-      transition: transform 0.3s ease-out;
-      max-width: 24rem;
-      border-left: 4px solid var(--primary);
+      padding: 15px;
+      margin-top: 15px;
     }
     
-    .notification.show {
-      transform: translateX(0);
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 15px;
     }
     
-    .notification.info {
-      border-left-color: var(--info);
+    .stats div {
+      background-color: white;
+      padding: 10px;
+      border-radius: var(--radius);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      font-size: 14px;
     }
     
-    .notification.success {
-      border-left-color: var(--success);
-    }
-    
-    .notification.warning {
-      border-left-color: var(--warning);
-    }
-    
-    .notification.error {
-      border-left-color: var(--danger);
-    }
-    
-    .notification-content {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    
-    .notification-close {
-      background: none;
-      border: none;
-      color: var(--text-secondary);
-      font-size: 1.25rem;
-      cursor: pointer;
-      padding: 0.25rem;
-      margin-left: 1rem;
-    }
-    
-    /* Small screens */
-    @media (max-width: 640px) {
-      .header .container {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 1rem;
-      }
-
-      nav {
-        width: 100%;
-        justify-content: space-between;
-      }
-
-      .grid {
-        grid-template-columns: 1fr;
-      }
-
-      .form-row {
-        flex-direction: column;
-      }
-
-      .hero h1 {
-        font-size: 2rem;
-      }
-
-      .hero p {
-        font-size: 1rem;
-      }
-      
-      .notification {
-        left: 1rem;
-        right: 1rem;
-        max-width: none;
-      }
+    .stats span {
+      font-weight: bold;
+      color: var(--primary-color);
     }
   </style>
 </head>
 <body>
-  <header>
-    <div class="container">
-      <div class="logo">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 5H3a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2Z"></path>
-          <path d="M9 21h6"></path>
-          <path d="M12 17v4"></path>
-          <path d="m3 5 2-1h14l2 1"></path>
-        </svg>
-        Scroll Keeper
-      </div>
-      <nav>
-        <a href="#" class="active" id="navHome">Home</a>
-        <a href="#" id="navScrolls">Scrolls</a>
-        <a href="#" id="navExtract">Extract</a>
-        <a href="#" id="navSettings">Settings</a>
-      </nav>
+  <div class="container">
+    <h1>Scroll Keeper Dashboard</h1>
+    
+    <div>
+      <span id="connectionStatus" class="status disconnected">Disconnected</span>
+      <button id="connectBtn">Connect</button>
+      <button id="disconnectBtn">Disconnect</button>
+      <button id="clearLogsBtn">Clear Logs</button>
     </div>
-  </header>
-
-  <main class="container">
-    <section id="welcome" class="hero">
-      <h1>Knowledge Extraction & Management</h1>
-      <p>Scroll Keeper helps you extract, process, and utilize knowledge from your AI conversations for long-term reference and learning.</p>
-      <div>
-        <button id="startExploring">Start Exploring</button>
-        <button class="secondary" id="extractNew">Extract New Conversation</button>
+    
+    <h2>WebSocket Communication</h2>
+    <div class="logs" id="wsLogs">
+      <pre>Waiting for connection...</pre>
+    </div>
+    
+    <h2>Extract Conversation</h2>
+    <div class="card">
+      <div class="url-input">
+        <input type="text" id="shareUrl" placeholder="Enter ChatGPT share URL (e.g., https://chat.openai.com/share/abc123...)">
+        <button id="extractBtn">Extract</button>
       </div>
-    </section>
-
-    <section id="dashboard">
-      <h2 class="section-title">Your Knowledge Dashboard</h2>
-      <div class="grid" id="scrollsGrid">
-        <div class="loading">
-          <div class="spinner"></div>
-          <span>Loading your scrolls...</span>
+      <div class="logs" id="extractionLogs">
+        <pre>No extraction activity yet.</pre>
+      </div>
+    </div>
+    
+    <h2>OpenAI API Interceptor</h2>
+    <div class="card">
+      <p>Intercept OpenAI API conversations for LLM training:</p>
+      <div class="interceptor-controls">
+        <button id="simulateApiBtn">Simulate OpenAI API Call</button>
+      </div>
+      <div class="logs" id="interceptorLogs">
+        <pre>No API interceptions yet.</pre>
+      </div>
+    </div>
+    
+    <h2>Training Data Preparation</h2>
+    <div class="card">
+      <p>Prepare training data for LLM fine-tuning:</p>
+      <div class="training-prep-controls">
+        <select id="formatSelect">
+          <option value="instruction">Instruction format</option>
+          <option value="chat">Chat format</option>
+          <option value="completion">Completion format</option>
+        </select>
+        <button id="prepareTrainingBtn">Prepare Training Data</button>
+      </div>
+      <div class="logs" id="prepLogs">
+        <pre>No training data prepared yet.</pre>
+      </div>
+    </div>
+    
+    <h2>LLM Training with Langs</h2>
+    <div class="card">
+      <p>Train LLM using Langs billion-parameter models:</p>
+      <div class="training-controls">
+        <button id="startTrainingBtn" disabled>Start Training</button>
+        <button id="checkStatusBtn">Check Training Status</button>
+      </div>
+      <div class="logs" id="trainingLogs">
+        <pre>No training status available.</pre>
+      </div>
+      <div class="training-progress" style="display: none;">
+        <div class="progress-label">Training Progress: <span id="progressPercent">0%</span></div>
+        <div class="progress-bar-container">
+          <div id="progressBar" style="width: 0%;"></div>
         </div>
-      </div>
-    </section>
-
-    <section id="extractForm">
-      <h2 class="section-title">Extract Conversation</h2>
-      <div class="card">
-        <div class="form-group">
-          <label for="chatUrl">ChatGPT Public URL</label>
-          <input type="url" id="chatUrl" placeholder="https://chat.openai.com/share/..." required>
+        <div class="stats">
+          <div>Current Step: <span id="currentStep">0</span>/<span id="totalSteps">0</span></div>
+          <div>Loss: <span id="lossValue">-</span></div>
+          <div>Model: <span id="modelName">-</span></div>
         </div>
-        <div id="extractError" class="error" style="display: none;"></div>
-        <div id="extractSuccess" class="success" style="display: none;"></div>
-        <div id="extractLoading" class="loading" style="display: none;">
-          <div class="spinner"></div>
-          <span>Extracting conversation content...</span>
-        </div>
-        <button id="submitExtract">Extract Conversation</button>
-      </div>
-    </section>
-
-    <section id="scrollView">
-      <div class="card-header" style="margin-bottom: 2rem;">
-        <div>
-          <h2 class="section-title" id="scrollTitle">Conversation Title</h2>
-          <div class="card-meta" id="scrollMeta">Extracted on</div>
-        </div>
-        <a href="#" class="button secondary" id="backToScrolls">Back to Scrolls</a>
-      </div>
-      
-      <div class="scroll-view">
-        <div class="conversation" id="conversationContent">
-          <!-- Message content will be populated here -->
-        </div>
-      </div>
-    </section>
-
-    <section id="searchResults">
-      <div class="card-header" style="margin-bottom: 1rem;">
-        <h2 class="section-title">Search Results</h2>
-        <a href="#" class="button secondary" id="backFromSearch">Back</a>
-      </div>
-      
-      <div id="resultsGrid" class="grid">
-        <!-- Search results will be populated here -->
-      </div>
-    </section>
-  </main>
-
-  <div class="modal" id="extractModal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3 class="modal-title">Extraction Complete</h3>
-        <button class="modal-close" id="closeExtractModal">×</button>
-      </div>
-      <div class="modal-body">
-        <p>The conversation has been successfully extracted and added to your scrolls.</p>
-        <div class="form-group">
-          <label>Title</label>
-          <p id="extractedTitle">Title will appear here</p>
-        </div>
-        <div class="form-group">
-          <label>Messages</label>
-          <p id="extractedMessages">0 messages</p>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="secondary" id="viewMore">View More</button>
-        <button id="extractAnother">Extract Another</button>
       </div>
     </div>
   </div>
 
-  <footer>
-    <div class="container">
-      <p>Scroll Keeper - Part of the AI Freedom Trust Framework © 2025</p>
-    </div>
-  </footer>
-
   <script>
     // DOM Elements
-    const elements = {
-      welcome: document.getElementById('welcome'),
-      dashboard: document.getElementById('dashboard'),
-      extractForm: document.getElementById('extractForm'),
-      scrollView: document.getElementById('scrollView'),
-      searchResults: document.getElementById('searchResults'),
-      scrollsGrid: document.getElementById('scrollsGrid'),
-      scrollTitle: document.getElementById('scrollTitle'),
-      scrollMeta: document.getElementById('scrollMeta'),
-      conversationContent: document.getElementById('conversationContent'),
-      chatUrl: document.getElementById('chatUrl'),
-      extractError: document.getElementById('extractError'),
-      extractSuccess: document.getElementById('extractSuccess'),
-      extractLoading: document.getElementById('extractLoading'),
-      extractModal: document.getElementById('extractModal'),
-      extractedTitle: document.getElementById('extractedTitle'),
-      extractedMessages: document.getElementById('extractedMessages'),
-      navHome: document.getElementById('navHome'),
-      navScrolls: document.getElementById('navScrolls'),
-      navExtract: document.getElementById('navExtract'),
-      navSettings: document.getElementById('navSettings'),
-    };
+    const connectBtn = document.getElementById('connectBtn');
+    const disconnectBtn = document.getElementById('disconnectBtn');
+    const connectionStatus = document.getElementById('connectionStatus');
+    const wsLogs = document.getElementById('wsLogs');
+    const clearLogsBtn = document.getElementById('clearLogsBtn');
+    const shareUrl = document.getElementById('shareUrl');
+    const extractBtn = document.getElementById('extractBtn');
+    const extractionLogs = document.getElementById('extractionLogs');
+    const checkStatusBtn = document.getElementById('checkStatusBtn');
+    const trainingLogs = document.getElementById('trainingLogs');
+    
+    // New UI elements
+    const simulateApiBtn = document.getElementById('simulateApiBtn');
+    const interceptorLogs = document.getElementById('interceptorLogs');
+    const formatSelect = document.getElementById('formatSelect');
+    const prepareTrainingBtn = document.getElementById('prepareTrainingBtn');
+    const prepLogs = document.getElementById('prepLogs');
+    const startTrainingBtn = document.getElementById('startTrainingBtn');
+    const trainingProgress = document.querySelector('.training-progress');
+    const progressBar = document.getElementById('progressBar');
+    const progressPercent = document.getElementById('progressPercent');
+    const currentStep = document.getElementById('currentStep');
+    const totalSteps = document.getElementById('totalSteps');
+    const lossValue = document.getElementById('lossValue');
+    const modelName = document.getElementById('modelName');
+    
+    // State variables
+    let trainingDataId = null;
     
     // WebSocket connection
     let socket = null;
-    let socketReconnectAttempts = 0;
-    const MAX_RECONNECT_ATTEMPTS = 5;
     
-    // Initialize WebSocket connection
-    function initWebSocket() {
-      // Close existing socket if it exists
+    // Log messages
+    function log(logElement, message, isError = false) {
+      const logMsg = document.createElement('pre');
+      logMsg.textContent = `${new Date().toLocaleTimeString()} - ${message}`;
+      
+      if (isError) {
+        logMsg.style.color = '#e74c3c';
+      }
+      
+      logElement.appendChild(logMsg);
+      logElement.scrollTop = logElement.scrollHeight;
+    }
+    
+    // Connect to WebSocket
+    function connectWebSocket() {
+      try {
+        // Build WebSocket URL based on current location
+        const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+        const wsUrl = `${protocol}//${window.location.host}/ws`;
+        
+        log(wsLogs, `Connecting to WebSocket at: ${wsUrl}`);
+        
+        socket = new WebSocket(wsUrl);
+        
+        socket.onopen = () => {
+          connectionStatus.textContent = 'Connected';
+          connectionStatus.className = 'status connected';
+          log(wsLogs, 'Connected to WebSocket server');
+          
+          // Subscribe to topics
+          socket.send(JSON.stringify({
+            type: 'subscribe',
+            topics: ['training', 'conversations', 'system']
+          }));
+        };
+        
+        socket.onmessage = (event) => {
+          try {
+            const message = JSON.parse(event.data);
+            
+            if (message.type === 'welcome') {
+              log(wsLogs, `WebSocket welcome message: "${message.message}"`);
+            } else if (message.type === 'training_update') {
+              // Update training logs and progress UI
+              log(trainingLogs, `Training update: Step ${message.data.currentStep}/${message.data.totalSteps}, Loss: ${message.data.loss?.toFixed(4) || 'N/A'}`);
+              
+              // Show progress UI if hidden
+              if (trainingProgress.style.display === 'none') {
+                trainingProgress.style.display = 'block';
+              }
+              
+              // Update progress elements
+              if (message.data.totalSteps > 0) {
+                const percent = Math.floor((message.data.currentStep / message.data.totalSteps) * 100);
+                progressBar.style.width = `${percent}%`;
+                progressPercent.textContent = `${percent}%`;
+                currentStep.textContent = message.data.currentStep;
+                totalSteps.textContent = message.data.totalSteps;
+                
+                if (message.data.loss !== null) {
+                  lossValue.textContent = message.data.loss.toFixed(4);
+                }
+                
+                modelName.textContent = message.data.currentModel || '-';
+              }
+            } else if (message.type === 'training_complete') {
+              log(trainingLogs, `Training complete! Model: ${message.data.currentModel}`, false);
+              log(trainingLogs, `Final loss: ${message.data.loss?.toFixed(4) || 'N/A'}`, false);
+              log(trainingLogs, message.data.message || 'Training has finished successfully.', false);
+              
+              // Reset button state
+              startTrainingBtn.disabled = false;
+              startTrainingBtn.textContent = 'Start New Training';
+            } else if (message.type === 'conversation_update') {
+              log(interceptorLogs, `New conversation intercepted: ${message.data.id} (${message.data.source}) with ${message.data.messageCount} messages`);
+            } else {
+              log(wsLogs, `Message received: ${JSON.stringify(message)}`);
+            }
+          } catch (error) {
+            log(wsLogs, `Error parsing message: ${error.message}`, true);
+          }
+        };
+        
+        socket.onclose = () => {
+          connectionStatus.textContent = 'Disconnected';
+          connectionStatus.className = 'status disconnected';
+          log(wsLogs, 'Disconnected from WebSocket server');
+          socket = null;
+        };
+        
+        socket.onerror = (error) => {
+          log(wsLogs, `WebSocket error: ${error.message || 'Unknown error'}`, true);
+        };
+      } catch (error) {
+        log(wsLogs, `Connection error: ${error.message}`, true);
+      }
+    }
+    
+    // Disconnect WebSocket
+    function disconnectWebSocket() {
       if (socket) {
         socket.close();
+        socket = null;
       }
-      
-      // Create new WebSocket connection - platform-agnostic approach
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      
-      // Dynamic host detection with fallback - works in any environment
-      // This approach allows the application to work seamlessly across
-      // FractalCoin, AICoin AetherCore services, or any other hosting platforms
-      const host = window.location.host || 'localhost:5000';
-      const wsUrl = `${protocol}//${host}/ws`;
-      
-      console.log('Connecting to WebSocket at:', wsUrl);
-      socket = new WebSocket(wsUrl);
-      
-      // Connection opened
-      socket.addEventListener('open', () => {
-        console.log('Connected to WebSocket server');
-        socketReconnectAttempts = 0;
-        
-        // Subscribe to scroll updates
-        socket.send(JSON.stringify({
-          type: 'subscribe',
-          channel: 'scrolls'
-        }));
-      });
-      
-      // Listen for messages
-      socket.addEventListener('message', (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          
-          switch (data.type) {
-            case 'welcome':
-              console.log('WebSocket welcome message:', data.message);
-              break;
-              
-            case 'scroll:created':
-            case 'scroll:updated':
-            case 'scroll:deleted':
-              // Refresh scrolls if we're on the dashboard
-              if (elements.dashboard.style.display === 'block') {
-                fetchScrolls();
-              }
-              break;
-              
-            case 'extraction:complete':
-              // Show notification if a background extraction completes
-              if (data.scrollId && data.scrollId !== elements.extractModal.dataset.scrollId) {
-                showNotification(`Extraction complete: ${data.title || 'New scroll'}`);
-              }
-              break;
-          }
-        } catch (error) {
-          console.error('Error parsing WebSocket message:', error);
-        }
-      });
-      
-      // Connection closed
-      socket.addEventListener('close', () => {
-        console.log('WebSocket connection closed');
-        
-        // Attempt to reconnect after delay
-        if (socketReconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
-          socketReconnectAttempts++;
-          const delay = Math.min(1000 * socketReconnectAttempts, 5000);
-          
-          console.log(`Attempting to reconnect in ${delay}ms (attempt ${socketReconnectAttempts})`);
-          setTimeout(initWebSocket, delay);
-        }
-      });
-      
-      // Connection error
-      socket.addEventListener('error', (error) => {
-        console.error('WebSocket error:', error);
-      });
     }
     
-    // Show a notification
-    function showNotification(message, type = 'info') {
-      // Create notification element
-      const notification = document.createElement('div');
-      notification.className = `notification ${type}`;
-      notification.innerHTML = `
-        <div class="notification-content">
-          <span>${message}</span>
-          <button class="notification-close">&times;</button>
-        </div>
-      `;
-      
-      // Add to body
-      document.body.appendChild(notification);
-      
-      // Add slide-in animation
-      setTimeout(() => {
-        notification.classList.add('show');
-      }, 10);
-      
-      // Remove after 5 seconds
-      setTimeout(() => {
-        notification.classList.remove('show');
-        setTimeout(() => {
-          document.body.removeChild(notification);
-        }, 300);
-      }, 5000);
-      
-      // Close button handler
-      notification.querySelector('.notification-close').addEventListener('click', () => {
-        notification.classList.remove('show');
-        setTimeout(() => {
-          document.body.removeChild(notification);
-        }, 300);
-      });
-    }
-    
-    // Initialize WebSocket when page loads
-    document.addEventListener('DOMContentLoaded', initWebSocket);
-
-    // Navigation handlers
-    document.getElementById('startExploring').addEventListener('click', showDashboard);
-    document.getElementById('extractNew').addEventListener('click', showExtractForm);
-    document.getElementById('submitExtract').addEventListener('click', extractConversation);
-    document.getElementById('backToScrolls').addEventListener('click', showDashboard);
-    document.getElementById('closeExtractModal').addEventListener('click', closeModal);
-    document.getElementById('extractAnother').addEventListener('click', () => {
-      closeModal();
-      showExtractForm();
-    });
-    document.getElementById('viewMore').addEventListener('click', () => {
-      const scrollId = document.getElementById('extractModal').dataset.scrollId;
-      if (scrollId) {
-        closeModal();
-        viewScroll(scrollId);
-      }
-    });
-    document.getElementById('navHome').addEventListener('click', (e) => {
-      e.preventDefault();
-      showWelcome();
-    });
-    document.getElementById('navScrolls').addEventListener('click', (e) => {
-      e.preventDefault();
-      showDashboard();
-    });
-    document.getElementById('navExtract').addEventListener('click', (e) => {
-      e.preventDefault();
-      showExtractForm();
-    });
-    document.getElementById('navSettings').addEventListener('click', (e) => {
-      e.preventDefault();
-      // Show settings (not implemented yet)
-    });
-
-    // Show only welcome section on page load
-    document.addEventListener('DOMContentLoaded', () => {
-      fetchScrolls();
-    });
-
-    // Navigation functions
-    function showWelcome() {
-      hideAllSections();
-      elements.welcome.style.display = 'block';
-      setActiveNav(elements.navHome);
-    }
-
-    function showDashboard() {
-      hideAllSections();
-      elements.dashboard.style.display = 'block';
-      setActiveNav(elements.navScrolls);
-      fetchScrolls();
-    }
-
-    function showExtractForm() {
-      hideAllSections();
-      elements.extractForm.style.display = 'block';
-      setActiveNav(elements.navExtract);
-      elements.chatUrl.focus();
-    }
-
-    function hideAllSections() {
-      elements.welcome.style.display = 'none';
-      elements.dashboard.style.display = 'none';
-      elements.extractForm.style.display = 'none';
-      elements.scrollView.style.display = 'none';
-      elements.searchResults.style.display = 'none';
-    }
-
-    function setActiveNav(activeElement) {
-      // Remove active class from all nav items
-      document.querySelectorAll('nav a').forEach(link => {
-        link.classList.remove('active');
-      });
-      // Add active class to current nav item
-      activeElement.classList.add('active');
-    }
-
-    // API Interaction Functions
-    async function fetchScrolls() {
+    // Extract conversation
+    async function extractConversation(url) {
       try {
-        elements.scrollsGrid.innerHTML = `
-          <div class="loading">
-            <div class="spinner"></div>
-            <span>Loading your scrolls...</span>
-          </div>
-        `;
+        log(extractionLogs, `Extracting conversation from: ${url}`);
         
-        const response = await fetch('/api/scrollkeeper/scrolls');
-        const data = await response.json();
-        
-        if (data.scrolls && data.scrolls.length > 0) {
-          renderScrolls(data.scrolls);
-        } else {
-          elements.scrollsGrid.innerHTML = `
-            <div class="empty-state">
-              <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 5H3a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2Z"></path>
-                <path d="M9 21h6"></path>
-                <path d="M12 17v4"></path>
-              </svg>
-              <h3>No scrolls yet</h3>
-              <p>Extract your first conversation to get started.</p>
-              <button id="emptyStateExtract">Extract Conversation</button>
-            </div>
-          `;
-          document.getElementById('emptyStateExtract').addEventListener('click', showExtractForm);
-        }
-      } catch (error) {
-        console.error('Error fetching scrolls:', error);
-        elements.scrollsGrid.innerHTML = `
-          <div class="error">
-            <p>Error loading scrolls. Please try again later.</p>
-            <button onclick="fetchScrolls()">Retry</button>
-          </div>
-        `;
-      }
-    }
-
-    function renderScrolls(scrolls) {
-      elements.scrollsGrid.innerHTML = '';
-      
-      scrolls.forEach(scroll => {
-        const card = document.createElement('div');
-        card.className = 'card';
-        
-        // Format date
-        const date = new Date(scroll.createdAt);
-        const formattedDate = date.toLocaleDateString() + ' at ' + date.toLocaleTimeString();
-        
-        card.innerHTML = `
-          <div class="card-header">
-            <h3 class="card-title">${scroll.title}</h3>
-            <div class="card-meta">${formattedDate}</div>
-          </div>
-          <div class="card-content">
-            <p>Click to view the extracted conversation.</p>
-          </div>
-          <div class="card-footer">
-            <div>
-              <span class="tag">ChatGPT</span>
-            </div>
-            <button class="view-scroll" data-id="${scroll.id}">View</button>
-          </div>
-        `;
-        
-        elements.scrollsGrid.appendChild(card);
-        
-        // Add event listener to view button
-        card.querySelector('.view-scroll').addEventListener('click', function() {
-          viewScroll(this.dataset.id);
-        });
-      });
-    }
-
-    async function viewScroll(id) {
-      hideAllSections();
-      elements.scrollView.style.display = 'block';
-      
-      try {
-        elements.conversationContent.innerHTML = `
-          <div class="loading">
-            <div class="spinner"></div>
-            <span>Loading conversation...</span>
-          </div>
-        `;
-        
-        const response = await fetch(`/api/scrollkeeper/scrolls/${id}`);
-        const scroll = await response.json();
-        
-        elements.scrollTitle.textContent = scroll.title;
-        
-        const date = new Date(scroll.createdAt);
-        elements.scrollMeta.textContent = `Extracted on ${date.toLocaleDateString()} at ${date.toLocaleTimeString()}`;
-        
-        renderConversation(scroll);
-      } catch (error) {
-        console.error('Error fetching scroll:', error);
-        elements.conversationContent.innerHTML = `
-          <div class="error">
-            <p>Error loading conversation. Please try again later.</p>
-            <button onclick="viewScroll('${id}')">Retry</button>
-          </div>
-        `;
-      }
-    }
-
-    function renderConversation(scroll) {
-      elements.conversationContent.innerHTML = '';
-      
-      if (scroll.content) {
-        // Initialize markdown converter
-        const converter = new showdown.Converter({
-          tables: true,
-          tasklists: true,
-          strikethrough: true,
-          ghCodeBlocks: true
-        });
-        
-        // If we have structured messages, render them nicely
-        if (scroll.messages && scroll.messages.length > 0) {
-          scroll.messages.forEach(message => {
-            const messageEl = document.createElement('div');
-            messageEl.className = 'message';
-            
-            const role = message.role === 'assistant' ? 'ChatGPT' : 
-                        message.role === 'user' ? 'You' : 'System';
-            
-            const avatarClass = message.role === 'assistant' ? 'assistant-avatar' : 
-                              message.role === 'user' ? 'user-avatar' : 'system-avatar';
-            
-            const avatarText = message.role === 'assistant' ? 'AI' : 
-                             message.role === 'user' ? 'U' : 'S';
-            
-            // Convert markdown content to HTML
-            const htmlContent = converter.makeHtml(message.content);
-            
-            messageEl.innerHTML = `
-              <div class="message-header">
-                <div class="message-avatar ${avatarClass}">${avatarText}</div>
-                <div class="message-name">${role}</div>
-              </div>
-              <div class="message-content">${htmlContent}</div>
-            `;
-            
-            elements.conversationContent.appendChild(messageEl);
-          });
-          
-          // Apply syntax highlighting to code blocks
-          document.querySelectorAll('pre code').forEach((block) => {
-            hljs.highlightElement(block);
-          });
-        } 
-        // Detect if the content is formatted as markdown conversation
-        else if (scroll.content.includes('### ChatGPT') || scroll.content.includes('### You') || scroll.content.includes('### System')) {
-          // Convert markdown content to HTML
-          const html = converter.makeHtml(scroll.content);
-          elements.conversationContent.innerHTML = html;
-          
-          // Apply syntax highlighting to code blocks
-          document.querySelectorAll('pre code').forEach((block) => {
-            hljs.highlightElement(block);
-          });
-        } else {
-          // Fallback to display the content as markdown
-          const html = converter.makeHtml(scroll.content);
-          elements.conversationContent.innerHTML = `<div class="message-content">${html}</div>`;
-          
-          // Apply syntax highlighting to code blocks
-          document.querySelectorAll('pre code').forEach((block) => {
-            hljs.highlightElement(block);
-          });
-        }
-      } else {
-        elements.conversationContent.innerHTML = `
-          <div class="empty-state">
-            <p>No content available for this scroll.</p>
-          </div>
-        `;
-      }
-    }
-
-    async function extractConversation() {
-      const url = elements.chatUrl.value.trim();
-      
-      if (!url) {
-        showExtractError('Please enter a ChatGPT conversation URL');
-        return;
-      }
-      
-      if (!url.includes('chat.openai.com/share/') && !url.includes('chatgpt.com/share/')) {
-        showExtractError('Invalid URL format. Please enter a valid ChatGPT sharing URL (e.g., https://chat.openai.com/share/...)');
-        return;
-      }
-      
-      showExtractLoading(true);
-      hideExtractMessages();
-      
-      try {
-        const response = await fetch('/api/scrollkeeper/extract', {
+        const response = await fetch('/api/extract/conversation', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -1199,74 +477,222 @@
           body: JSON.stringify({ url })
         });
         
-        const result = await response.json();
+        const data = await response.json();
         
-        if (response.ok) {
-          showExtractSuccess('Conversation extracted successfully!');
-          
-          // Get the scroll details for the modal
-          const scrollResponse = await fetch(`/api/scrollkeeper/scrolls/${result.scrollId}`);
-          const scroll = await scrollResponse.json();
-          
-          // Show extraction completion modal
-          showExtractionModal(scroll, result.scrollId);
-        } else {
-          showExtractError(result.message || 'Error extracting conversation');
+        if (!response.ok) {
+          throw new Error(data.error || 'Extraction failed');
         }
+        
+        log(extractionLogs, `Extraction successful! Conversation "${data.conversation.title}" with ${data.conversation.messages.length} messages`);
+        log(extractionLogs, `First message: "${data.conversation.messages[0]?.content?.substring(0, 100)}..."`);
+        
+        return data.conversation;
       } catch (error) {
-        console.error('Error during extraction:', error);
-        showExtractError('Error connecting to the server. Please try again later.');
-      } finally {
-        showExtractLoading(false);
+        log(extractionLogs, `Extraction error: ${error.message}`, true);
+        return null;
+      }
+    }
+    
+    // Check training status
+    async function checkTrainingStatus() {
+      try {
+        log(trainingLogs, 'Checking training status...');
+        
+        const response = await fetch('/api/training/status');
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to get status');
+        }
+        
+        if (data.isTraining) {
+          log(trainingLogs, `Training in progress: Step ${data.currentStep}/${data.totalSteps}, Loss: ${data.loss?.toFixed(4) || 'N/A'}`);
+        } else {
+          log(trainingLogs, `No active training. Last model: ${data.currentModel || 'None'}`);
+        }
+        
+        return data;
+      } catch (error) {
+        log(trainingLogs, `Status check error: ${error.message}`, true);
+        return null;
+      }
+    }
+    
+    // Simulate OpenAI API call
+    async function simulateApiCall() {
+      try {
+        log(interceptorLogs, 'Simulating OpenAI API call...');
+        
+        const response = await fetch('/api/intercept/openai', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            endpoint: 'chat/completions',
+            request: {
+              model: 'gpt-4o',
+              messages: [
+                { role: 'system', content: 'You are a helpful AI assistant with expertise in LLM training.' },
+                { role: 'user', content: 'What are the key aspects of fine-tuning an LLM model?' }
+              ]
+            },
+            response: {
+              model: 'gpt-4o',
+              choices: [
+                {
+                  message: {
+                    role: 'assistant',
+                    content: 'Fine-tuning an LLM (Large Language Model) involves several key aspects:\n\n1. **High-Quality Data**: Curating a relevant, diverse, and high-quality dataset is crucial. The quality of your training data directly impacts the model\'s performance.\n\n2. **Task Alignment**: Ensuring your data represents the specific task or domain you want the model to excel at.\n\n3. **Hyperparameter Optimization**: Finding the optimal learning rate, batch size, number of epochs, etc., for your specific use case.\n\n4. **Compute Resources**: Having sufficient computational power, including GPUs or TPUs, for efficient training.\n\n5. **Overfitting Prevention**: Implementing techniques like early stopping, proper validation splits, and regularization to prevent the model from memorizing training data.\n\n6. **Evaluation Metrics**: Defining appropriate metrics to measure success based on your specific application.\n\n7. **Prompt Engineering**: Designing effective prompts that elicit the desired responses from the model.\n\n8. **Continued Pretraining**: Sometimes it\'s beneficial to continue pretraining on domain-specific data before fine-tuning for specific tasks.\n\n9. **Ethical Considerations**: Ensuring the model doesn\'t amplify biases, produce harmful content, or violate privacy.\n\n10. **Iterative Improvement**: Fine-tuning is rarely perfect on the first attempt; it typically requires multiple iterations and refinements.\n\nThe optimal approach depends on your specific goals, available resources, and the base model you\'re working with. Advanced techniques like parameter-efficient fine-tuning methods (LoRA, adapters, etc.) can also be considered to reduce computational requirements while maintaining performance.'
+                  }
+                }
+              ]
+            }
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.error || 'API interception failed');
+        }
+        
+        log(interceptorLogs, `API interception successful! Conversation ID: ${data.conversationId}`);
+        
+        return data;
+      } catch (error) {
+        log(interceptorLogs, `API interception error: ${error.message}`, true);
+        return null;
+      }
+    }
+    
+    // Prepare training data
+    async function prepareTrainingData() {
+      try {
+        const format = formatSelect.value;
+        log(prepLogs, `Preparing training data in ${format} format...`);
+        
+        const response = await fetch('/api/training/prepare', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ format })
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.error || 'Training preparation failed');
+        }
+        
+        // Store the training data ID for later use
+        trainingDataId = data.trainingDataId;
+        
+        // Enable training button
+        startTrainingBtn.disabled = false;
+        
+        log(prepLogs, `Training data prepared successfully! ID: ${data.trainingDataId}`);
+        log(prepLogs, `Stats: ${data.stats.totalExamples} examples (${data.stats.trainingExamples} training, ${data.stats.validationExamples} validation)`);
+        log(prepLogs, `From ${data.stats.conversationsUsed} conversations`);
+        
+        return data;
+      } catch (error) {
+        log(prepLogs, `Training preparation error: ${error.message}`, true);
+        return null;
+      }
+    }
+    
+    // Start LLM training
+    async function startTraining() {
+      try {
+        if (!trainingDataId) {
+          log(trainingLogs, 'No training data prepared. Please prepare training data first.', true);
+          return null;
+        }
+        
+        log(trainingLogs, `Starting LLM training with data ID: ${trainingDataId}...`);
+        
+        const response = await fetch('/api/training/start', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            trainingDataId,
+            baseModel: 'langs/dolma-7b',
+            hyperparams: {
+              epochs: 3,
+              batchSize: 8,
+              learningRate: 2e-5
+            }
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.error || 'Training failed to start');
+        }
+        
+        // Update UI
+        startTrainingBtn.disabled = true;
+        startTrainingBtn.textContent = 'Training in Progress...';
+        trainingProgress.style.display = 'block';
+        
+        // Update progress elements with initial data
+        if (data.trainingStatus) {
+          const status = data.trainingStatus;
+          currentStep.textContent = status.currentStep;
+          totalSteps.textContent = status.totalSteps;
+          modelName.textContent = status.currentModel;
+          
+          if (status.totalSteps > 0) {
+            const percent = Math.floor((status.currentStep / status.totalSteps) * 100);
+            progressBar.style.width = `${percent}%`;
+            progressPercent.textContent = `${percent}%`;
+          }
+        }
+        
+        log(trainingLogs, `Training started! Job ID: ${data.jobId}`);
+        
+        return data;
+      } catch (error) {
+        log(trainingLogs, `Training error: ${error.message}`, true);
+        return null;
       }
     }
 
-    function showExtractionModal(scroll, scrollId) {
-      elements.extractedTitle.textContent = scroll.title;
-      elements.extractedMessages.textContent = `${scroll.messages?.length || 0} messages extracted`;
-      elements.extractModal.dataset.scrollId = scrollId;
-      elements.extractModal.classList.add('open');
+    // Clear various logs
+    function clearAllLogs() {
+      wsLogs.innerHTML = '<pre>Logs cleared.</pre>';
+      extractionLogs.innerHTML = '<pre>Logs cleared.</pre>';
+      trainingLogs.innerHTML = '<pre>Logs cleared.</pre>';
+      interceptorLogs.innerHTML = '<pre>Logs cleared.</pre>';
+      prepLogs.innerHTML = '<pre>Logs cleared.</pre>';
     }
-
-    function closeModal() {
-      elements.extractModal.classList.remove('open');
-    }
-
-    function showExtractError(message) {
-      elements.extractError.textContent = message;
-      elements.extractError.style.display = 'block';
-      elements.extractSuccess.style.display = 'none';
-    }
-
-    function showExtractSuccess(message) {
-      elements.extractSuccess.textContent = message;
-      elements.extractSuccess.style.display = 'block';
-      elements.extractError.style.display = 'none';
-    }
-
-    function hideExtractMessages() {
-      elements.extractError.style.display = 'none';
-      elements.extractSuccess.style.display = 'none';
-    }
-
-    function showExtractLoading(show) {
-      elements.extractLoading.style.display = show ? 'flex' : 'none';
-      document.getElementById('submitExtract').disabled = show;
-    }
-
-    // Handle ESC key to close modals
-    document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape') {
-        closeModal();
+    
+    // Event Listeners
+    connectBtn.addEventListener('click', connectWebSocket);
+    disconnectBtn.addEventListener('click', disconnectWebSocket);
+    clearLogsBtn.addEventListener('click', clearAllLogs);
+    
+    extractBtn.addEventListener('click', () => {
+      const url = shareUrl.value.trim();
+      if (url) {
+        extractConversation(url);
+      } else {
+        log(extractionLogs, 'Please enter a valid ChatGPT share URL', true);
       }
     });
-
-    // Close modal when clicking outside content
-    elements.extractModal.addEventListener('click', function(e) {
-      if (e.target === elements.extractModal) {
-        closeModal();
-      }
-    });
+    
+    simulateApiBtn.addEventListener('click', simulateApiCall);
+    prepareTrainingBtn.addEventListener('click', prepareTrainingData);
+    startTrainingBtn.addEventListener('click', startTraining);
+    checkStatusBtn.addEventListener('click', checkTrainingStatus);
+    
+    // Auto-connect on page load
+    window.addEventListener('load', connectWebSocket);
   </script>
 </body>
 </html>
