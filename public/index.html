@@ -244,6 +244,154 @@
       font-weight: bold;
       color: var(--primary-color);
     }
+    
+    /* Chat interface styles */
+    .api-key-section {
+      background-color: #f8f9fa;
+      border-radius: var(--radius);
+      padding: 15px;
+      margin-bottom: 15px;
+    }
+    
+    .api-key-input {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    
+    .api-key-input input {
+      flex: 1;
+    }
+    
+    .api-key-message {
+      font-size: 12px;
+      color: var(--light-text);
+      margin-top: 5px;
+    }
+    
+    .chat-container {
+      display: flex;
+      flex-direction: column;
+      height: 500px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    
+    .chat-messages {
+      flex: 1;
+      padding: 15px;
+      overflow-y: auto;
+      background-color: #f8f9fa;
+    }
+    
+    .message {
+      margin-bottom: 15px;
+      max-width: 80%;
+      padding: 10px 15px;
+      border-radius: 18px;
+      line-height: 1.5;
+    }
+    
+    .message.user {
+      background-color: var(--primary-color);
+      color: white;
+      align-self: flex-end;
+      margin-left: auto;
+      border-bottom-right-radius: 4px;
+    }
+    
+    .message.assistant {
+      background-color: white;
+      border: 1px solid var(--border-color);
+      align-self: flex-start;
+      margin-right: auto;
+      border-bottom-left-radius: 4px;
+    }
+    
+    .message.system {
+      background-color: #f0f4f8;
+      border: 1px dashed var(--border-color);
+      align-self: center;
+      margin: 10px auto;
+      font-style: italic;
+      border-radius: 8px;
+      width: 100%;
+    }
+    
+    .chat-input-container {
+      display: flex;
+      padding: 10px;
+      background-color: white;
+      border-top: 1px solid var(--border-color);
+      gap: 10px;
+    }
+    
+    .chat-input-container textarea {
+      flex: 1;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      padding: 10px;
+      resize: none;
+      font-family: inherit;
+      font-size: 14px;
+    }
+    
+    .chat-input-container textarea:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+    }
+    
+    .chat-options {
+      display: flex;
+      padding: 10px;
+      background-color: #f8f9fa;
+      border-top: 1px solid var(--border-color);
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .chat-options label {
+      font-size: 14px;
+      margin-right: 5px;
+    }
+    
+    .chat-options select {
+      margin-right: 15px;
+    }
+    
+    .typing-indicator {
+      display: inline-block;
+      padding: 15px 20px;
+      background-color: #f0f0f0;
+      border-radius: 18px;
+      margin-bottom: 15px;
+    }
+    
+    .typing-indicator span {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      margin-right: 5px;
+      background-color: #999;
+      border-radius: 50%;
+      animation: typing 1.4s infinite both;
+    }
+    
+    .typing-indicator span:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+    
+    .typing-indicator span:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+    
+    @keyframes typing {
+      0% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
+      100% { transform: translateY(0); }
+    }
   </style>
 </head>
 <body>
@@ -273,11 +421,37 @@
       </div>
     </div>
     
-    <h2>OpenAI API Interceptor</h2>
+    <h2>ChatGPT Interface</h2>
     <div class="card">
-      <p>Intercept OpenAI API conversations for LLM training:</p>
-      <div class="interceptor-controls">
-        <button id="simulateApiBtn">Simulate OpenAI API Call</button>
+      <p>Chat with OpenAI and automatically capture conversations for Mysterion training:</p>
+      <div class="api-key-section" id="apiKeySection">
+        <div class="api-key-input">
+          <input type="password" id="apiKeyInput" placeholder="Enter your OpenAI API key...">
+          <button id="saveApiKeyBtn">Save API Key</button>
+        </div>
+        <p class="api-key-message">Your API key will be stored locally on your device and not sent to any servers.</p>
+      </div>
+      <div class="chat-container" id="chatContainer" style="display: none;">
+        <div class="chat-messages" id="chatMessages">
+          <div class="message system">
+            <div class="message-content">
+              Hello! I'm Mysterion's ChatGPT interface. Ask me anything and our conversations will be used to train Mysterion's own LLM.
+            </div>
+          </div>
+        </div>
+        <div class="chat-input-container">
+          <textarea id="chatInput" rows="3" placeholder="Type your message here..."></textarea>
+          <button id="sendMessageBtn">Send</button>
+        </div>
+        <div class="chat-options">
+          <label for="modelSelect">Model:</label>
+          <select id="modelSelect">
+            <option value="gpt-4o">GPT-4o (newest)</option>
+            <option value="gpt-4">GPT-4</option>
+            <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+          </select>
+          <button id="clearChatBtn">Clear Chat</button>
+        </div>
       </div>
       <div class="logs" id="interceptorLogs">
         <pre>No API interceptions yet.</pre>
@@ -338,8 +512,19 @@
     const trainingLogs = document.getElementById('trainingLogs');
     
     // New UI elements
-    const simulateApiBtn = document.getElementById('simulateApiBtn');
     const interceptorLogs = document.getElementById('interceptorLogs');
+    // Note: simulateApiBtn has been removed from the UI
+    
+    // Chat interface elements
+    const apiKeySection = document.getElementById('apiKeySection');
+    const apiKeyInput = document.getElementById('apiKeyInput');
+    const saveApiKeyBtn = document.getElementById('saveApiKeyBtn');
+    const chatContainer = document.getElementById('chatContainer');
+    const chatMessages = document.getElementById('chatMessages');
+    const chatInput = document.getElementById('chatInput');
+    const sendMessageBtn = document.getElementById('sendMessageBtn');
+    const modelSelect = document.getElementById('modelSelect');
+    const clearChatBtn = document.getElementById('clearChatBtn');
     const formatSelect = document.getElementById('formatSelect');
     const prepareTrainingBtn = document.getElementById('prepareTrainingBtn');
     const prepLogs = document.getElementById('prepLogs');
@@ -686,7 +871,200 @@
       }
     });
     
-    simulateApiBtn.addEventListener('click', simulateApiCall);
+    // We've removed the simulateApiBtn from the UI, so no need to reference it
+    
+    // Chat interface functionality
+    saveApiKeyBtn.addEventListener('click', saveApiKey);
+    sendMessageBtn.addEventListener('click', sendChatMessage);
+    clearChatBtn.addEventListener('click', clearChat);
+    
+    // Allow sending message with Enter key
+    chatInput.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        sendChatMessage();
+      }
+    });
+    
+    // API Key Management Functions
+    async function checkStoredApiKey() {
+      try {
+        const response = await fetch('/api/keys/check/openai');
+        const data = await response.json();
+        
+        if (data.hasKey) {
+          // Show chat interface if we have a key
+          apiKeySection.style.display = 'none';
+          chatContainer.style.display = 'flex';
+          log(interceptorLogs, 'Using stored OpenAI API key');
+        }
+      } catch (error) {
+        console.error('Error checking API key:', error);
+      }
+    }
+    
+    async function saveApiKey() {
+      const apiKey = apiKeyInput.value.trim();
+      
+      if (!apiKey) {
+        alert('Please enter your OpenAI API key');
+        return;
+      }
+      
+      try {
+        const response = await fetch('/api/keys/store', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            service: 'openai',
+            apiKey
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to store API key');
+        }
+        
+        // Show success message
+        log(interceptorLogs, 'API key stored successfully');
+        
+        // Hide API key section and show chat
+        apiKeySection.style.display = 'none';
+        chatContainer.style.display = 'flex';
+        
+        // Clear input
+        apiKeyInput.value = '';
+      } catch (error) {
+        alert(`Error saving API key: ${error.message}`);
+        console.error('API key storage error:', error);
+      }
+    }
+    
+    // Chat Interface Functions
+    async function sendChatMessage() {
+      const message = chatInput.value.trim();
+      
+      if (!message) {
+        return;
+      }
+      
+      // Get the current conversation from chat window
+      const messages = [];
+      const messageElements = chatMessages.querySelectorAll('.message');
+      
+      messageElements.forEach(element => {
+        const role = element.classList.contains('user') 
+          ? 'user' 
+          : element.classList.contains('assistant') 
+            ? 'assistant' 
+            : element.classList.contains('system') 
+              ? 'system' 
+              : null;
+        
+        if (role) {
+          const content = element.querySelector('.message-content').textContent.trim();
+          messages.push({ role, content });
+        }
+      });
+      
+      // Add the new user message
+      messages.push({ role: 'user', content: message });
+      
+      // Display user message in the chat
+      appendMessage('user', message);
+      
+      // Clear input
+      chatInput.value = '';
+      
+      // Add typing indicator
+      const typingIndicator = document.createElement('div');
+      typingIndicator.className = 'typing-indicator';
+      typingIndicator.innerHTML = '<span></span><span></span><span></span>';
+      chatMessages.appendChild(typingIndicator);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+      
+      try {
+        // Get selected model
+        const model = modelSelect.value;
+        
+        // Call API
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            messages,
+            model,
+            temperature: 0.7
+          })
+        });
+        
+        const data = await response.json();
+        
+        // Remove typing indicator
+        typingIndicator.remove();
+        
+        if (!response.ok) {
+          if (data.needsKey) {
+            // Show API key section if we need a key
+            apiKeySection.style.display = 'block';
+            chatContainer.style.display = 'none';
+            appendMessage('system', 'OpenAI API key is required. Please enter your API key above.');
+          } else {
+            throw new Error(data.error || 'Chat request failed');
+          }
+        } else if (data.choices && data.choices.length > 0) {
+          // Display assistant message
+          const assistantMessage = data.choices[0].message.content;
+          appendMessage('assistant', assistantMessage);
+          
+          // Log the conversation capture
+          log(interceptorLogs, `Conversation captured for training: ${data.id || 'unknown'}`);
+        }
+      } catch (error) {
+        // Remove typing indicator
+        if (typingIndicator.parentNode) {
+          typingIndicator.remove();
+        }
+        
+        // Show error
+        appendMessage('system', `Error: ${error.message}`);
+        console.error('Chat error:', error);
+      }
+    }
+    
+    function appendMessage(role, content) {
+      const messageElement = document.createElement('div');
+      messageElement.className = `message ${role}`;
+      
+      const contentElement = document.createElement('div');
+      contentElement.className = 'message-content';
+      contentElement.textContent = content;
+      
+      messageElement.appendChild(contentElement);
+      chatMessages.appendChild(messageElement);
+      
+      // Scroll to bottom
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+    
+    function clearChat() {
+      chatMessages.innerHTML = `
+        <div class="message system">
+          <div class="message-content">
+            Chat cleared. Your conversation history has been reset.
+          </div>
+        </div>
+      `;
+    }
+    
+    // Check for stored API key on page load
+    checkStoredApiKey();
     prepareTrainingBtn.addEventListener('click', prepareTrainingData);
     startTrainingBtn.addEventListener('click', startTraining);
     checkStatusBtn.addEventListener('click', checkTrainingStatus);

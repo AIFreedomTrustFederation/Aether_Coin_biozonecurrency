@@ -12,6 +12,9 @@ import path from 'path';
 import { WebSocketServer } from 'ws';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import OpenAI from 'openai';
+import KeyStorage from './server/services/auth/key-storage.js';
+import OpenAIClient from './server/services/api-clients/openai-client.js';
 
 // Get __dirname equivalent in ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -74,6 +77,154 @@ wss.on('connection', (ws) => {
 // API routes
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
+});
+
+// Initialize key storage
+const keyStorage = new KeyStorage();
+
+// API Key management routes
+app.post('/api/keys/store', (req, res) => {
+  try {
+    const { service, apiKey } = req.body;
+    
+    if (!service || !apiKey) {
+      return res.status(400).json({ error: 'Service and API key are required' });
+    }
+    
+    const success = keyStorage.storeKey(service, apiKey);
+    
+    if (!success) {
+      return res.status(500).json({ error: 'Failed to store API key' });
+    }
+    
+    return res.json({ success: true });
+  } catch (error) {
+    console.error('Key storage error:', error);
+    res.status(500).json({ error: 'Failed to store API key: ' + error.message });
+  }
+});
+
+app.get('/api/keys/check/:service', (req, res) => {
+  try {
+    const { service } = req.params;
+    
+    if (!service) {
+      return res.status(400).json({ error: 'Service is required' });
+    }
+    
+    const hasKey = keyStorage.hasKey(service);
+    
+    return res.json({ 
+      service,
+      hasKey
+    });
+  } catch (error) {
+    console.error('Key check error:', error);
+    res.status(500).json({ error: 'Failed to check API key: ' + error.message });
+  }
+});
+
+app.delete('/api/keys/:service', (req, res) => {
+  try {
+    const { service } = req.params;
+    
+    if (!service) {
+      return res.status(400).json({ error: 'Service is required' });
+    }
+    
+    const success = keyStorage.deleteKey(service);
+    
+    return res.json({ 
+      success,
+      service
+    });
+  } catch (error) {
+    console.error('Key deletion error:', error);
+    res.status(500).json({ error: 'Failed to delete API key: ' + error.message });
+  }
+});
+
+// Chat interface endpoint
+app.post('/api/chat', async (req, res) => {
+  try {
+    const { messages, model, temperature } = req.body;
+    
+    if (!messages || !Array.isArray(messages) || messages.length === 0) {
+      return res.status(400).json({ error: 'Valid messages array is required' });
+    }
+    
+    // Check if we have a stored OpenAI API key
+    let apiKey = keyStorage.retrieveKey('openai');
+    
+    // If no stored key, check environment variable
+    if (!apiKey) {
+      apiKey = process.env.OPENAI_API_KEY;
+    }
+    
+    // If still no key, return error
+    if (!apiKey) {
+      return res.status(401).json({ 
+        error: 'OpenAI API key is required. Please provide a key.',
+        needsKey: true
+      });
+    }
+    
+    // Create OpenAI client
+    const openaiClient = new OpenAIClient({ apiKey });
+    
+    // Set intercept callback to capture conversation for training
+    openaiClient.setInterceptCallback((endpoint, request, response) => {
+      // Store in the conversation store
+      const parsedConversation = {
+        id: `chat-${Date.now()}`,
+        source: 'chat-direct',
+        timestamp: new Date().toISOString(),
+        model: response.model || model || 'unknown',
+        messages: [...messages],
+        metadata: {
+          usage: response.usage || {},
+          requestedAt: new Date().toISOString()
+        }
+      };
+      
+      // Add the response to the conversation
+      if (response.choices && response.choices.length > 0) {
+        parsedConversation.messages.push({
+          role: response.choices[0].message.role,
+          content: response.choices[0].message.content
+        });
+      }
+      
+      // Store the conversation
+      conversations.set(parsedConversation.id, parsedConversation);
+      
+      // Broadcast to clients
+      wss.clients.forEach((client) => {
+        if (client.readyState === 1) { // WebSocket.OPEN
+          client.send(JSON.stringify({
+            type: 'conversation_update',
+            data: {
+              id: parsedConversation.id,
+              source: parsedConversation.source,
+              messageCount: parsedConversation.messages.length
+            }
+          }));
+        }
+      });
+    });
+    
+    // Call OpenAI
+    const completion = await openaiClient.createChatCompletion({
+      messages,
+      model: model || 'gpt-4o',
+      temperature: temperature || 0.7
+    });
+    
+    return res.json(completion);
+  } catch (error) {
+    console.error('Chat error:', error);
+    res.status(500).json({ error: 'Chat request failed: ' + error.message });
+  }
 });
 
 // Conversation extraction endpoint
@@ -487,17 +638,51 @@ function simulateTraining() {
   if (!trainingStatus.isTraining) return;
   
   const totalSteps = trainingStatus.totalSteps;
-  const updateInterval = 1000; // 1 second between updates
-  const stepIncrement = Math.max(1, Math.floor(totalSteps / 100)); // Complete in ~100 updates
+  
+  // Dynamic update interval - faster at beginning, slower as training progresses
+  const getUpdateInterval = (step) => {
+    const progressRatio = step / totalSteps;
+    return 500 + Math.floor(progressRatio * 1500); // 500ms at start, up to 2000ms near end
+  };
+  
+  // Dynamic step increment - larger jumps at beginning, smaller precise steps at end
+  const getStepIncrement = (step) => {
+    const remainingSteps = totalSteps - step;
+    const baseIncrement = Math.max(1, Math.floor(totalSteps / 120)); // Complete in ~120 updates
+    
+    if (remainingSteps < totalSteps * 0.1) {
+      // Slow down near the end for more precision
+      return Math.max(1, Math.floor(baseIncrement / 2));
+    }
+    
+    // Add some randomness
+    return baseIncrement + Math.floor(Math.random() * 3);
+  };
   
   // Schedule next update
   setTimeout(() => {
-    // Update training progress
+    // Calculate step increment for this update
+    const stepIncrement = getStepIncrement(trainingStatus.currentStep);
+    
+    // Update training progress with the calculated increment
     trainingStatus.currentStep += stepIncrement;
     trainingStatus.currentStep = Math.min(trainingStatus.currentStep, totalSteps);
     
-    // Simulate decreasing loss
-    trainingStatus.loss = 2.5 * Math.exp(-trainingStatus.currentStep / (totalSteps * 0.3));
+    // Calculate progress percentage
+    const progress = trainingStatus.currentStep / totalSteps;
+    
+    // Simulate realistic decreasing loss with noise
+    // Start high, quick initial drop, then gradual improvement with occasional spikes
+    const baseLoss = 5.0 * Math.exp(-progress * 3.5) + 0.8;
+    const noise = (Math.random() - 0.5) * 0.3 * (1 - progress);
+    trainingStatus.loss = baseLoss + noise;
+    
+    // Occasional plateaus and spikes to simulate real training behavior
+    if (Math.random() < 0.05) {
+      // Small chance of a loss spike
+      trainingStatus.loss *= 1.2;
+    }
+    
     trainingStatus.lastUpdated = new Date().toISOString();
     
     // Broadcast update
@@ -510,11 +695,16 @@ function simulateTraining() {
       }
     });
     
+    // Log to console occasionally (every ~10% progress)
+    if (trainingStatus.currentStep % Math.floor(totalSteps / 10) < stepIncrement) {
+      console.log(`Training progress: ${Math.floor(progress * 100)}%, Loss: ${trainingStatus.loss.toFixed(4)}`);
+    }
+    
     // If training is complete
     if (trainingStatus.currentStep >= totalSteps) {
       trainingStatus.isTraining = false;
       trainingStatus.endTime = new Date().toISOString();
-      console.log('Training complete!');
+      console.log('Training complete! Final loss:', trainingStatus.loss.toFixed(4));
       
       // Broadcast completion
       wss.clients.forEach((client) => {
@@ -523,16 +713,16 @@ function simulateTraining() {
             type: 'training_complete',
             data: {
               ...trainingStatus,
-              message: 'LLM training complete!'
+              message: `LLM training complete with final loss of ${trainingStatus.loss.toFixed(4)}!`
             }
           }));
         }
       });
     } else {
-      // Continue simulation
+      // Continue simulation with dynamic update interval
       simulateTraining();
     }
-  }, updateInterval);
+  }, getUpdateInterval(trainingStatus.currentStep));
 }
 
 // Start server
