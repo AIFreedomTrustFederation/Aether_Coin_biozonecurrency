@@ -13,8 +13,8 @@ import { cn } from "@/lib/utils";
  * navigation, settings, and shared UI elements.
  */
 export const AppShell: React.FC = () => {
-  const [, params] = useRoute('/:appId');
-  const appId = params?.appId;
+  const [matched, params] = useRoute<{ appId: string }>('/:appId');
+  const appId = matched && params ? params.appId : '';
   const [, setLocation] = useLocation();
   const [currentApp, setCurrentApp] = useState<AppConfig | undefined>();
   const [isSidebarOpen, setSidebarOpen] = useState(true);
@@ -43,7 +43,7 @@ export const AppShell: React.FC = () => {
       setIsLoading(true);
       // Small delay to show loading state
       setTimeout(() => {
-        navigate(`/${targetAppId}`);
+        setLocation(`/${targetAppId}`);
         setIsLoading(false);
       }, 300);
     }

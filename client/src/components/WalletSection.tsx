@@ -7,7 +7,7 @@ import {
   Wallet, ArrowRight, Clock, BarChart3, Send, Plus, Download, 
   Shield, Lock, CheckCircle, XCircle, AlertCircle
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link } from "wouter";
 import { useZeroTrust } from "@/contexts/ZeroTrustContext";
 import { QuantumLoader } from "@/components/ui/quantum-loader";
 import { toast } from "sonner";
