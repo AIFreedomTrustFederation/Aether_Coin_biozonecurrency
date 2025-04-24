@@ -1,8 +1,8 @@
 /**
- * Scroll Keeper Server Implementation
+ * Aetherion Server Implementation
  * 
- * Integrated server that handles both API and UI for the Aetherion/Scroll Keeper system
- * Designed for Replit compatibility with proper handling of port forwarding
+ * Integrated server that handles both API and UI using Express and Vite
+ * Designed for Replit compatibility with proper handling of WebSockets and hot module reload
  */
 
 import express from 'express';
@@ -13,6 +13,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { spawn } from 'child_process';
 import fs from 'fs';
+import cors from 'cors';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -23,16 +24,8 @@ const PORT = process.env.PORT || 5000;
 const VITE_PORT = 5173;
 const TARGET_URL = `http://localhost:${VITE_PORT}`;
 
-// Add CORS middleware for all routes
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-  next();
-});
+// Enable CORS for all routes using the cors package
+app.use(cors());
 
 console.log(`Starting Aetherion Integrated Server`);
 console.log(`Main server on port ${PORT} proxying to Vite on port ${VITE_PORT}`);
@@ -152,17 +145,23 @@ const startViteServer = () => {
     server: {
       port: ${VITE_PORT},
       host: '0.0.0.0',
+      strictPort: true,
       hmr: {
         // Enable HMR with Replit compatibility
         clientPort: ${PORT},
-        port: ${VITE_PORT},
-        host: 'localhost'
+        host: 'localhost',
+        protocol: 'ws',
+        timeout: 120000,
+        overlay: true,
       },
       watch: {
         usePolling: true,
         interval: 1000,
       }
     },
+    optimizeDeps: {
+      force: true
+    }
   });
   `;
   
@@ -196,6 +195,14 @@ const proxyOptions = {
   changeOrigin: true,
   ws: true,
   logLevel: 'warn',
+  // Add websocket specific handling
+  websocket: true,
+  // Additional configuration for WebSockets
+  secure: false,
+  // Special handling for WebSockets
+  onProxyReqWs: (proxyReq, req, socket, options, head) => {
+    console.log(`Proxying WebSocket: ${req.url}`);
+  },
   onProxyReq: (proxyReq, req, res) => {
     // Log only for non-asset requests to reduce noise
     if (!req.url.match(/\.(js|css|png|jpg|svg|ico|woff|woff2|ttf)$/)) {
@@ -232,6 +239,12 @@ const proxyOptions = {
 
 // Create proxy middleware
 const viteProxyMiddleware = createProxyMiddleware(proxyOptions);
+
+// Create specialized route for WebSocket connections
+app.use(['/@vite/client', '/@vite/hmr'], (req, res, next) => {
+  console.log(`[WebSocket] Handling special Vite connection: ${req.url}`);
+  viteProxyMiddleware(req, res, next);
+});
 
 // Handle all frontend routes
 app.use('/', viteProxyMiddleware);

@@ -26,16 +26,22 @@
     server: {
       port: 5173,
       host: '0.0.0.0',
+      strictPort: true,
       hmr: {
         // Enable HMR with Replit compatibility
         clientPort: 5000,
-        port: 5173,
-        host: 'localhost'
+        host: 'localhost',
+        protocol: 'ws',
+        timeout: 120000,
+        overlay: true,
       },
       watch: {
         usePolling: true,
         interval: 1000,
       }
     },
+    optimizeDeps: {
+      force: true
+    }
   });
   

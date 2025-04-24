@@ -15,7 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { certificateService, Certificate } from '../../services/security/certificateService';
-import { fractalDNSService, DNSResolutionResult } from '../../services/dns/fractalDnsService';
+import { fractalDnsService, DNSResolutionResult } from '../../services/dns/fractalDnsService';
 
 // Tab interface
 interface BrowserTab {
@@ -139,8 +139,8 @@ const AetherCoreBrowser: React.FC<AetherCoreBrowserProps> = ({ initialUrl = 'htt
       } else {
         // Check if domain is registered in FractalDNS
         const domainToCheck = url.startsWith('www.') ? url : `www.${url}`;
-        const isDomainInFractalDNS = fractalDNSService.isDomainRegistered(domainToCheck) || 
-                                    fractalDNSService.isDomainRegistered(url);
+        const isDomainInFractalDNS = fractalDnsService.isDomainRegistered(domainToCheck) || 
+                                    fractalDnsService.isDomainRegistered(url);
         
         // Try to determine if it's HTTQS or HTTPS
         if (url.includes('AetherCore.trust') || 
@@ -186,7 +186,7 @@ const AetherCoreBrowser: React.FC<AetherCoreBrowserProps> = ({ initialUrl = 'htt
       // If it's a HTTQS domain, resolve it using FractalDNS
       let dnsResolution: DNSResolutionResult | null = null;
       if (formattedUrl.startsWith('httqs://')) {
-        dnsResolution = await fractalDNSService.resolveDomain(domain);
+        dnsResolution = await fractalDnsService.resolveDomain(domain);
         
         // If domain resolution failed, show error
         if (!dnsResolution.success) {
@@ -311,7 +311,7 @@ const AetherCoreBrowser: React.FC<AetherCoreBrowserProps> = ({ initialUrl = 'htt
       const domain = urlObj.hostname;
       
       // Check if domain is in FractalDNS
-      const isDomainInFractalDNS = fractalDNSService.isDomainRegistered(domain);
+      const isDomainInFractalDNS = fractalDnsService.isDomainRegistered(domain);
       
       // Check protocol
       if (protocol === 'httqs:') {
