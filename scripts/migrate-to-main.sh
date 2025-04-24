@@ -47,6 +47,8 @@ copy_files_to_main() {
     # Copy the necessary files to the temporary directory
     echo "Copying files to temporary location..."
     cp -r client/src/pages/CodeStarPage.tsx $TEMP_DIR/
+    cp -r client/src/pages/ScrollKeeperPage.tsx $TEMP_DIR/ScrollKeeperPage.tsx
+    cp -r client/src/components/ScrollKeeperHighlight.tsx $TEMP_DIR/ScrollKeeperHighlight.tsx
     cp -r client/src/features/code-editor/components/CodeEditor.tsx $TEMP_DIR/
     cp -r client/src/App.tsx $TEMP_DIR/
     cp -r server-proxy.js $TEMP_DIR/
@@ -67,12 +69,15 @@ copy_files_to_main() {
     # Create necessary directories if they don't exist
     echo "Creating necessary directories..."
     mkdir -p client/src/pages/
+    mkdir -p client/src/components/
     mkdir -p client/src/features/code-editor/components/
     mkdir -p .github/workflows/
     
     # Copy files from temp directory to main branch
     echo "Copying files to main branch..."
     cp $TEMP_DIR/CodeStarPage.tsx client/src/pages/
+    cp $TEMP_DIR/ScrollKeeperPage.tsx client/src/pages/
+    cp $TEMP_DIR/ScrollKeeperHighlight.tsx client/src/components/
     cp $TEMP_DIR/CodeEditor.tsx client/src/features/code-editor/components/
     cp $TEMP_DIR/App.tsx client/src/
     cp $TEMP_DIR/server-proxy.js ./
