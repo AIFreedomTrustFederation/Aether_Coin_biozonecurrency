@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { QuantumLoader } from "@/components/ui/quantum-loader";
 import { useToast } from "@/components/ui/use-toast";
+import { Link } from "react-router-dom";
 import { 
   Code,
   FileCode,
@@ -16,7 +17,8 @@ import {
   Braces,
   Layers,
   GitBranch,
-  TerminalSquare
+  TerminalSquare,
+  Home
 } from "lucide-react";
 
 // Featured code languages
@@ -115,6 +117,19 @@ const CodeStarPage = () => {
       <Navbar />
       
       <main className="flex-grow container py-8">
+        <div className="w-full flex justify-start mb-2">
+          <Button 
+            asChild
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <Link to="/">
+              <Home className="h-4 w-4" />
+              <span>Return to Homepage</span>
+            </Link>
+          </Button>
+        </div>
+        
         {/* Hero Section */}
         <section className="py-12 md:py-20">
           <div className="flex flex-col md:flex-row gap-12 items-center">

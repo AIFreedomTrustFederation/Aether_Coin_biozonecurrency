@@ -26,6 +26,7 @@ const AetherCoreBrowser = lazy(() => import("./pages/AetherCoreBrowser"));
 const NodeMarketplace = lazy(() => import("./pages/NodeMarketplace"));
 const DnsManager = lazy(() => import("./pages/DnsManager"));
 const CodeStarPage = lazy(() => import("./pages/CodeStarPage"));
+const ScrollKeeperPage = lazy(() => import("./pages/ScrollKeeperPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -100,6 +101,7 @@ const App = () => (
                 <Route path="/node-marketplace" element={<NodeMarketplace />} />
                 <Route path="/dns-manager" element={<DnsManager />} />
                 <Route path="/codestar" element={<CodeStarPage />} />
+                <Route path="/scroll-keeper" element={<ScrollKeeperPage />} />
                 
                 {/* Route to simplified Enumerator page */}
                 <Route path="/enumerator" element={<EnumeratorPage />} />

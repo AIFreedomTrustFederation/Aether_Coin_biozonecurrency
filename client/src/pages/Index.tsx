@@ -16,6 +16,7 @@ import QuantumLoaderShowcase from "@/components/QuantumLoaderShowcase";
 import QuantumLoadingDemo from "@/components/QuantumLoadingDemo";
 import AetherSphereSection from "@/components/AetherSphereSection";
 import Web3Visualizer from "@/components/Web3Visualizer";
+import ScrollKeeperHighlight from "@/components/ScrollKeeperHighlight";
 import Footer from "@/components/Footer";
 
 const Index = () => {
@@ -31,6 +32,7 @@ const Index = () => {
         <BioZoeSection />
         <SacredGeometrySection />
         <DashboardSection />
+        <ScrollKeeperHighlight />
         <QuantumLoaderShowcase />
         <QuantumLoadingDemo />
         <AetherSphereSection />
