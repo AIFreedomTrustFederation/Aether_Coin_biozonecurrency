@@ -46,6 +46,8 @@ const AdminPortal = lazy(() => import("./pages/AdminPortal"));
 const LazyAetherCoinPage = lazy(() => import("./pages/LazyAetherCoinPage"));
 const NetworkDetailsPage = lazy(() => import("./pages/NetworkDetailsPage"));
 const Portal = lazy(() => import("./pages/Portal"));
+const CodesterPage = lazy(() => import("./pages/CodesterPage"));
+const CodesterPage = lazy(() => import("./pages/CodesterPage"));
 
 // Lazy load new personalization pages
 const DashboardPage = lazy(() => import("./pages/DashboardPage"));
@@ -95,6 +97,8 @@ const navigationItems = [
   { name: "Dashboard", path: "/dashboard", icon: <Layout className="h-5 w-5" /> },
   { name: "Wallet", path: "/wallet", icon: <Wallet className="h-5 w-5" /> },
   { name: "FractalCoin Portal", path: "/portal", icon: <Database className="h-5 w-5" /> },
+  { name: "Codester IDE", path: "/codester", icon: <Code className="h-5 w-5" /> },
+  { name: "Codester IDE", path: "/codester", icon: <Code className="h-5 w-5" /> },
   { name: "Payment", path: "/payment", icon: <CreditCard className="h-5 w-5" /> },
   { name: "Quantum Payment", path: "/quantum-secure-payment", icon: <Shield className="h-5 w-5" /> },
   { name: "Transactions", path: "/transactions", icon: <BarChart3 className="h-5 w-5" /> },
@@ -664,6 +668,16 @@ function App() {
             <Route path="/test">
               <Suspense fallback={<LoadingScreen message="Loading test page..." />}>
                 <TestPage />
+              </Suspense>
+            </Route>
+            <Route path="/codester">
+              <Suspense fallback={<LoadingScreen message="Loading Codester IDE..." />}>
+                <CodesterPage />
+              </Suspense>
+            </Route>
+            <Route path="/codester">
+              <Suspense fallback={<LoadingScreen message="Loading Codester IDE..." />}>
+                <CodesterPage />
               </Suspense>
             </Route>
             <Route path="/code-editor">

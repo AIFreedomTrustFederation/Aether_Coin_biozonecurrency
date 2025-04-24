@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
-import { Lightbulb, Database, Wallet } from 'lucide-react';
+import { Lightbulb, Database, Wallet, Code, Code } from 'lucide-react';
 // Use lightweight logo for fast initial rendering
 import LightweightLogo from '@/components/common/LightweightLogo';
 // Import the SimpleChatInterface component
@@ -132,6 +132,18 @@ const LandingPage: React.FC = () => {
           Pioneering the Quantum-Resistant Blockchain Ecosystem
         </p>
         <div className="flex flex-wrap justify-center gap-4 mb-16">
+          <Link href="/codester">
+            <Button className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-md text-lg flex items-center neon-button-advanced animate-pulse">
+              <Code className="mr-2 h-5 w-5" />
+              Try Codester IDE
+            </Button>
+          </Link>
+          <Link href="/codester">
+            <Button className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-md text-lg flex items-center neon-button-advanced animate-pulse">
+              <Code className="mr-2 h-5 w-5" />
+              Try Codester IDE
+            </Button>
+          </Link>
           <Link href="/ai-assistant-onboarding">
             <Button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-md text-lg flex items-center neon-button-advanced">
               <Lightbulb className="mr-2 h-5 w-5" />
@@ -188,6 +200,90 @@ const LandingPage: React.FC = () => {
             </div>
             <h3 className="text-xl font-semibold mb-2">Open-Source Notifications</h3>
             <p className="text-gray-400">Secure communication through Matrix integration keeps you informed of important activity.</p>
+          </div>
+        </div>
+        
+        {/* Codester Feature Highlight */}
+        <div className="w-full max-w-6xl mb-16 bg-gradient-to-r from-purple-900/30 to-blue-900/30 p-8 rounded-lg border border-purple-500/20 backdrop-blur-sm">
+          <div className="flex flex-col md:flex-row items-center gap-8">
+            <div className="md:w-1/2">
+              <div className="inline-flex items-center justify-center p-2 bg-purple-500/20 rounded-full mb-4">
+                <Code className="h-5 w-5 text-purple-400 mr-2" />
+                <span className="font-medium text-purple-400">NEW</span>
+              </div>
+              <h2 className="text-3xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-blue-400">
+                Introducing Codester
+              </h2>
+              <p className="text-gray-300 mb-6">
+                A Web3-native collaborative IDE for the next generation of blockchain developers. Write, collaborate, and deploy code with AI assistance and blockchain integration.
+              </p>
+              <div className="flex flex-wrap gap-4">
+                <Link href="/codester">
+                  <Button className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-md text-lg flex items-center neon-button-advanced">
+                    <Code className="mr-2 h-5 w-5" />
+                    Try Codester Now
+                  </Button>
+                </Link>
+              </div>
+            </div>
+            <div className="md:w-1/2 rounded-lg overflow-hidden border border-purple-500/20">
+              <div className="bg-black/50 p-2 flex items-center gap-2">
+                <div className="flex gap-1.5">
+                  <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                  <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                  <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                </div>
+                <div className="text-xs text-gray-400">SmartContract.sol</div>
+              </div>
+              <div className="bg-black/70 p-4 h-[200px] flex items-center justify-center">
+                <div className="text-center">
+                  <Code className="h-12 w-12 text-purple-400 mx-auto mb-4" />
+                  <p className="text-gray-300">Web3-Native Collaborative IDE</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Codester Feature Highlight */}
+        <div className="w-full max-w-6xl mb-16 bg-gradient-to-r from-purple-900/30 to-blue-900/30 p-8 rounded-lg border border-purple-500/20 backdrop-blur-sm">
+          <div className="flex flex-col md:flex-row items-center gap-8">
+            <div className="md:w-1/2">
+              <div className="inline-flex items-center justify-center p-2 bg-purple-500/20 rounded-full mb-4">
+                <Code className="h-5 w-5 text-purple-400 mr-2" />
+                <span className="font-medium text-purple-400">NEW</span>
+              </div>
+              <h2 className="text-3xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-blue-400">
+                Introducing Codester
+              </h2>
+              <p className="text-gray-300 mb-6">
+                A Web3-native collaborative IDE for the next generation of blockchain developers. Write, collaborate, and deploy code with AI assistance and blockchain integration.
+              </p>
+              <div className="flex flex-wrap gap-4">
+                <Link href="/codester">
+                  <Button className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-md text-lg flex items-center neon-button-advanced">
+                    <Code className="mr-2 h-5 w-5" />
+                    Try Codester Now
+                  </Button>
+                </Link>
+              </div>
+            </div>
+            <div className="md:w-1/2 rounded-lg overflow-hidden border border-purple-500/20">
+              <div className="bg-black/50 p-2 flex items-center gap-2">
+                <div className="flex gap-1.5">
+                  <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                  <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                  <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                </div>
+                <div className="text-xs text-gray-400">SmartContract.sol</div>
+              </div>
+              <div className="bg-black/70 p-4 h-[200px] flex items-center justify-center">
+                <div className="text-center">
+                  <Code className="h-12 w-12 text-purple-400 mx-auto mb-4" />
+                  <p className="text-gray-300">Web3-Native Collaborative IDE</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
         

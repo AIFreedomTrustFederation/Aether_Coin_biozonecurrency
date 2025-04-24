@@ -66,7 +66,7 @@ For more documentation, visit the Aetherion documentation at https://docs.aether
 };
 
 // VS Code-like editor interface for smart contract and DApp development
-const CodeEditor = () => {
+const CodeEditor: React.FC: React.FC = () => {
   const [theme, setTheme] = useState(darkTheme);
   const [language, setLanguage] = useState('sol');
   const [files, setFiles] = useState(initialFiles);
