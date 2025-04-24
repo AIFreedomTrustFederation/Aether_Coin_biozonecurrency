@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
-import { Lightbulb, Database, Wallet, Code, Code } from 'lucide-react';
+import { Lightbulb, Database, Wallet, Code } from 'lucide-react';
 // Use lightweight logo for fast initial rendering
 import LightweightLogo from '@/components/common/LightweightLogo';
 // Import the SimpleChatInterface component

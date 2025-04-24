@@ -47,7 +47,6 @@ const LazyAetherCoinPage = lazy(() => import("./pages/LazyAetherCoinPage"));
 const NetworkDetailsPage = lazy(() => import("./pages/NetworkDetailsPage"));
 const Portal = lazy(() => import("./pages/Portal"));
 const CodesterPage = lazy(() => import("./pages/CodesterPage"));
-const CodesterPage = lazy(() => import("./pages/CodesterPage"));
 
 // Lazy load new personalization pages
 const DashboardPage = lazy(() => import("./pages/DashboardPage"));
