@@ -39,13 +39,13 @@ export function PaymentProcessor({
       
       const response = await apiRequest('/api/payments/stripe/create-intent', {
         method: 'POST',
-        data: {
+        body: JSON.stringify({
           amount,
           currency,
           description,
           walletId,
           metadata,
-        },
+        }),
       });
       
       return response;
