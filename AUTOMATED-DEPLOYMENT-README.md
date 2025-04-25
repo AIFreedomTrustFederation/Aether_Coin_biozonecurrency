@@ -1,6 +1,6 @@
 # Automated Deployment for Aetherion SaaS App
 
-This guide explains how to use the all-in-one deployment scripts to fully deploy your Aetherion SaaS application to atc.aifreedomtrust.com.
+This guide explains how to use the deployment scripts to fully deploy your Aetherion SaaS application to atc.aifreedomtrust.com.
 
 ## Overview
 
@@ -28,17 +28,32 @@ Before running the deployment scripts, ensure you have:
 
 ## Deployment Options
 
-### Option 1: Using Bash Script (Linux/macOS/WSL)
+### Option 1: Simplified Deployment (Recommended)
+
+We've created simplified deployment scripts that use the existing `deploy-to-aifreedomtrust-full.js` script:
+
+#### For Windows (Advanced Deployment)
+
+```powershell
+# Run the simplified PowerShell script
+.\deploy-simple.ps1
+```
+
+#### For Linux/macOS/WSL
 
 ```bash
 # Make the script executable
-chmod +x deploy-all-in-one.sh
+chmod +x deploy-simple.sh
 
 # Run the script
-./deploy-all-in-one.sh
+./deploy-simple.sh
 ```
 
-### Option 2: Using PowerShell Script (Windows)
+### Option 2: Advanced Deployment
+
+For more control over the deployment process, you can use the comprehensive deployment scripts:
+
+#### For Windows
 
 ```powershell
 # Ensure execution policy allows running scripts
@@ -57,11 +72,12 @@ When you run the script:
 3. It will package and upload the application to your server
 4. It will configure the server, Nginx, and SSL certificates
 5. It will verify the deployment and send notifications
-6. Upon completion, your application will be available at https://atc.aifreedomtrust.com/dapp
+6. Upon completion, your application will be available at <https://atc.aifreedomtrust.com/dapp>
 
 ## Credentials Storage
 
 The script offers to save your deployment credentials for future use. These are stored in:
+
 - Bash script: `.deploy-credentials` file
 - PowerShell script: `.deploy-credentials.json` file
 
@@ -82,7 +98,7 @@ If the deployment fails, check:
 
 After deployment, you can manually verify:
 
-1. Visit https://atc.aifreedomtrust.com/dapp in your browser
+1. Visit <https://atc.aifreedomtrust.com/dapp> in your browser
 2. Check if all features are working correctly
 3. Verify SSL certificate is valid (check the lock icon in your browser)
 

@@ -74,7 +74,7 @@ function Write-Success {
 }
 
 # Function to print warning message
-function Write-Warning {
+function Write-WarningMessage {
     param (
         [string]$Message
     )
@@ -89,7 +89,7 @@ function Test-Command {
         [string]$Command
     )
     
-    return (Get-Command $Command -ErrorAction SilentlyContinue) -ne $null
+    return $null -ne (Get-Command $Command -ErrorAction SilentlyContinue)
 }
 
 # Function to prompt for input with default value
@@ -105,13 +105,13 @@ function Read-UserInput {
     }
     
     if ($Secure) {
-        $input = Read-Host -Prompt $Message -AsSecureString
-        $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($input)
+        $userInput = Read-Host -Prompt $Message -AsSecureString
+        $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($userInput)
         $result = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
         [System.Runtime.InteropServices.Marshal]::ZeroFreeBSTR($BSTR)
     } else {
-        $input = Read-Host -Prompt $Message
-        $result = $input
+        $userInput = Read-Host -Prompt $Message
+        $result = $userInput
     }
     
     if ([string]::IsNullOrEmpty($result) -and $Default) {
@@ -218,7 +218,7 @@ function Test-Prerequisites {
 NODE_ENV=production
 PORT=3000
 "@ | Set-Content -Path $ENV_FILE
-            Write-Warning "Created minimal .env file. You may need to add more variables."
+            Write-WarningMessage "Created minimal .env file. You may need to add more variables."
         }
     }
     
@@ -232,7 +232,7 @@ function Get-DeploymentCredentials {
     # Try to load saved credentials first
     $credentials = Get-SavedCredentials
     if ($credentials) {
-        $useSaved = Read-UserInput "Found saved credentials. Do you want to use them? (y/n)"
+        $useSaved = Read-UserInput -Message "Found saved credentials. Do you want to use them? (y/n)"
         if ($useSaved -match "^[Yy]$") {
             Write-Success "Using saved credentials"
             return $credentials
@@ -241,16 +241,16 @@ function Get-DeploymentCredentials {
     
     # Collect new credentials
     $credentials = [PSCustomObject]@{
-        SSH_USER = Read-UserInput "Enter your SSH Username"
-        SSH_HOST = Read-UserInput "Enter your SSH Host" $DOMAIN
-        SSH_PORT = Read-UserInput "Enter your SSH Port" "22"
-        ADMIN_EMAIL = Read-UserInput "Enter your email for SSL certificates"
-        SLACK_WEBHOOK_URL = Read-UserInput "Enter your Slack Webhook URL (optional, press enter to skip)"
-        DISCORD_WEBHOOK_URL = Read-UserInput "Enter your Discord Webhook URL (optional, press enter to skip)"
+        SSH_USER = Read-UserInput -Message "Enter your SSH Username"
+        SSH_HOST = Read-UserInput -Message "Enter your SSH Host" -Default $DOMAIN
+        SSH_PORT = Read-UserInput -Message "Enter your SSH Port" -Default "22"
+        ADMIN_EMAIL = Read-UserInput -Message "Enter your email for SSL certificates"
+        SLACK_WEBHOOK_URL = Read-UserInput -Message "Enter your Slack Webhook URL (optional, press enter to skip)"
+        DISCORD_WEBHOOK_URL = Read-UserInput -Message "Enter your Discord Webhook URL (optional, press enter to skip)"
     }
     
     # Ask if user wants to save credentials
-    $saveCreds = Read-UserInput "Do you want to save these credentials for future deployments? (y/n)"
+    $saveCreds = Read-UserInput -Message "Do you want to save these credentials for future deployments? (y/n)"
     if ($saveCreds -match "^[Yy]$") {
         Save-Credentials $credentials
         Write-Success "Credentials saved"
@@ -282,7 +282,7 @@ function Set-SshKey {
         }
     } else {
         # Ask for SSH key path
-        $sshKeyPath = Read-UserInput "Enter path to your SSH private key" "~/.ssh/id_rsa"
+        $sshKeyPath = Read-UserInput -Message "Enter path to your SSH private key" -Default "~/.ssh/id_rsa"
         $sshKeyPath = $sshKeyPath -replace "~", $HOME
         
         if (-not (Test-Path $sshKeyPath)) {
@@ -323,13 +323,13 @@ function Install-Dependencies {
     if (Test-Path (Join-Path $SCRIPT_DIR "install-deployment-deps.ps1")) {
         & (Join-Path $SCRIPT_DIR "install-deployment-deps.ps1")
         if ($LASTEXITCODE -ne 0) {
-            Write-Warning "Deployment dependencies installation script returned non-zero exit code"
+            Write-WarningMessage "Deployment dependencies installation script returned non-zero exit code"
         }
     } else {
         # Install common deployment dependencies
         npm install --no-fund --no-audit web3.storage @web3-storage/w3up-client ethers
         if ($LASTEXITCODE -ne 0) {
-            Write-Warning "Failed to install some deployment dependencies"
+            Write-WarningMessage "Failed to install some deployment dependencies"
         }
     }
     
@@ -337,7 +337,7 @@ function Install-Dependencies {
 }
 
 # Function to build all components
-function Build-AllComponents {
+function Invoke-AllComponentsBuild {
     Write-Section "Building All Components"
     
     # Clean previous builds
@@ -421,7 +421,7 @@ function Build-AllComponents {
 }
 
 # Function to deploy to Web3.Storage (IPFS/Filecoin)
-function Deploy-ToWeb3Storage {
+function Publish-ToWeb3Storage {
     Write-Section "Deploying to Web3.Storage (IPFS/Filecoin)"
     
     # Check if Web3.Storage token is set
@@ -722,8 +722,8 @@ server {
     add_header Referrer-Policy "strict-origin-when-cross-origin" always;
 
     # Primary application path
-    location $DEPLOY_PATH {
-        proxy_pass http://localhost:$APP_PORT$DEPLOY_PATH;
+    location __DEPLOY_PATH__ {
+        proxy_pass http://localhost:$APP_PORT__DEPLOY_PATH__;
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -759,7 +759,7 @@ server {
 
     # Redirect root to app path
     location = / {
-        return 301 $DEPLOY_PATH;
+        return 301 __DEPLOY_PATH__;
     }
 }
 NGINX
@@ -951,8 +951,8 @@ function Start-Deployment {
     $credentials = Get-DeploymentCredentials
     $sshKeyPath = Set-SshKey $credentials
     Install-Dependencies
-    Build-AllComponents
-    Deploy-ToWeb3Storage # Continue even if this fails
+    Invoke-AllComponentsBuild
+    Publish-ToWeb3Storage # Continue even if this fails
     Set-FilecoinBridge   # Continue even if this fails
     $packagePath = New-DeploymentPackage
     Send-PackageToServer $credentials $sshKeyPath $packagePath
