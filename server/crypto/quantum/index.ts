@@ -15,11 +15,7 @@ import crypto from 'crypto';
 import { v4 as uuidv4 } from 'uuid';
 
 // Import sub-modules
-import { kyber } from './kyber';
-import { dilithium } from './dilithium';
-import { sphincsPlus } from './sphincs';
-import { hybridCrypto } from './hybrid';
-
+import { kyber, dilithium, sphincs } from './';
 /**
  * Quantum Security Levels
  * 
@@ -77,7 +73,7 @@ export async function generateQuantumSignature(
     case PostQuantumAlgorithm.DILITHIUM:
       return dilithium.sign(dataBuffer, privateKey);
     case PostQuantumAlgorithm.SPHINCS_PLUS:
-      return sphincsPlus.sign(dataBuffer, privateKey);
+      return sphincs.sign(dataBuffer, privateKey);
     case PostQuantumAlgorithm.HYBRID_ECDSA_DILITHIUM:
       return hybridCrypto.signEcdsaDilithium(dataBuffer, privateKey);
     default:
@@ -106,7 +102,7 @@ export async function verifyQuantumSignature(
     case PostQuantumAlgorithm.DILITHIUM:
       return dilithium.verify(dataBuffer, signature, publicKey);
     case PostQuantumAlgorithm.SPHINCS_PLUS:
-      return sphincsPlus.verify(dataBuffer, signature, publicKey);
+      return sphincs.verify(dataBuffer, signature, publicKey);
     case PostQuantumAlgorithm.HYBRID_ECDSA_DILITHIUM:
       return hybridCrypto.verifyEcdsaDilithium(dataBuffer, signature, publicKey);
     default:
@@ -129,7 +125,7 @@ export async function generateQuantumKeyPair(
     case PostQuantumAlgorithm.DILITHIUM:
       return dilithium.generateKeyPair();
     case PostQuantumAlgorithm.SPHINCS_PLUS:
-      return sphincsPlus.generateKeyPair();
+      return sphincs.generateKeyPair();
     case PostQuantumAlgorithm.HYBRID_RSA_KYBER:
       return hybridCrypto.generateRsaKyberKeyPair();
     case PostQuantumAlgorithm.HYBRID_ECDSA_DILITHIUM:
@@ -337,6 +333,31 @@ export const quantumSecurity = {
   verifyPasswordQuantum,
   kyber,
   dilithium,
-  sphincsPlus,
-  hybridCrypto
+  sphincs
 };
+
+// Import current quantum-resistant strategies
+import { dilithium, kyber, sphincs } from './';
+
+// Assuming you have a function to choose appropriate algorithms
+function getQuantumSecureAlgorithm() {
+  // Priority and checks for selecting algorithms
+  if (kyber.isAvailable) {
+    return kyber;
+  } else if (sphincs.isAvailable) {
+    return sphincs;
+  } else {
+    throw new Error("No quantum-resistant algorithms are available.");
+  }
+}
+
+// Example function using quantum-resistant algorithms
+export function encryptData(data: string): string {
+  const algorithm = getQuantumSecureAlgorithm();
+  return algorithm.encrypt(data);
+}
+
+export function decryptData(encrypted: string): string {
+  const algorithm = getQuantumSecureAlgorithm();
+  return algorithm.decrypt(encrypted);
+}

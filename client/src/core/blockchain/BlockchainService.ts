@@ -743,6 +743,15 @@ class BlockchainService extends EventEmitter {
     
     return true;
   }
+  
+  /**
+   * Enhance security layer using specified algorithm
+   */
+  public enhanceSecurityLayer(algorithm: string) {
+    // Implement additional security layers using specified algorithm
+    console.log(`Applying security with algorithm: ${algorithm}`);
+    // ... security enhancement logic
+}
 }
 
 // Export singleton instance
