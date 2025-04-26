@@ -40,6 +40,7 @@ import apiKeyRoutes from "./routes/api-key-routes";
 import fractalNetworkRoutes from "./routes/fractal-network-routes";
 import laoRoutes from "./routes/lao";
 import insuranceRoutes from "./routes/insurance";
+import productivityRoutes from "./routes/productivity-routes";
 import { openSourcePaymentService } from "./services/openSourcePayment";
 
 /**
@@ -187,6 +188,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Mount Insurance System routes
   app.use('/api', insuranceRoutes);
+  
+  // Mount Developer Productivity Dashboard routes
+  app.use('/api/productivity', productivityRoutes);
   
   // Register quantum secure payment routes
   registerQuantumSecurePaymentRoutes(app);

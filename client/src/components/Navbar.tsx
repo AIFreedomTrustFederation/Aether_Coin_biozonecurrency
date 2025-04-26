@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger } from "@/components/ui/navigation-menu";
-import { Leaf, Wallet, ExternalLink, Globe, Shield, Award, Menu, X, Server, LayoutGrid, Bot, ScrollText, Code, BarChart, Smile } from "lucide-react";
+import { Leaf, Wallet, ExternalLink, Globe, Shield, Award, Menu, X, Server, LayoutGrid, Bot, ScrollText, Code, BarChart, BarChart2, LineChart, Smile } from "lucide-react";
 import { Link } from "wouter";
 import { toast } from "sonner";
 import { Sheet, SheetClose, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -25,6 +25,7 @@ const navItems = [
   { href: "/scroll-keeper", label: "Scroll Keeper Dashboard", icon: <ScrollText className="mr-2 h-5 w-5 text-blue-600" /> },
   { href: "/codestar", label: "CodeStar IDE", icon: <Code className="mr-2 h-5 w-5 text-cyan-600" /> },
   { href: "/code-mood-meter", label: "Code Mood Meter", icon: <BarChart className="mr-2 h-5 w-5 text-orange-600" /> },
+  { href: "/productivity", label: "Developer Productivity", icon: <LineChart className="mr-2 h-5 w-5 text-purple-500" /> },
 ];
 
 // Legal items

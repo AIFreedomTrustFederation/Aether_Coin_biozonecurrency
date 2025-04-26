@@ -116,7 +116,7 @@ const App = () => (
               <Route path="/code-mood-meter" component={CodeMoodMeterPage} />
               
               {/* Route to Developer Productivity Dashboard */}
-              <Route path="/productivity-dashboard" component={ProductivityDashboard} />
+              <Route path="/productivity" component={ProductivityDashboard} />
               
               {/* Route to AI Freedom Trust landing page */}
               <Route path="/aifreedomtrust" component={AIFreedomTrustRedirect} />

@@ -75,12 +75,171 @@ export interface IStorage {
   getTrainingDataFragment: (id: number) => Promise<schema.TrainingDataFragment | null>;
   updateFragmentStorage: (id: number, filecoinCid: string, fractalShardIds: string[]) => Promise<schema.TrainingDataFragment | null>;
   listTrainingDataFragments: (datasetId: number) => Promise<schema.TrainingDataFragment[]>;
+
+  // Developer Productivity Dashboard
+  getDeveloperActivitiesByUserId: (userId: number) => Promise<schema.DeveloperActivity[] | undefined>;
+  createDeveloperActivity: (data: schema.InsertDeveloperActivity) => Promise<schema.DeveloperActivity>;
+  
+  getDeveloperGoalsByUserId: (userId: number, status?: string) => Promise<schema.DeveloperGoal[] | undefined>;
+  createDeveloperGoal: (data: schema.InsertDeveloperGoal) => Promise<schema.DeveloperGoal>;
+  updateDeveloperGoal: (id: number, data: {progress?: number, status?: string}) => Promise<schema.DeveloperGoal | undefined>;
+  
+  getTimeBlocksByUserIdAndDate: (userId: number, date?: string) => Promise<schema.TimeBlock[] | undefined>;
+  createTimeBlock: (data: schema.InsertTimeBlock) => Promise<schema.TimeBlock>;
+  updateTimeBlock: (id: number, data: {status?: string, endTime?: Date, interruptions?: number, productivity?: number, notes?: string}) => Promise<schema.TimeBlock | undefined>;
+  
+  getProductivityMetricsByDateRange: (userId: number, startDate?: string, endDate?: string) => Promise<schema.ProductivityMetric[] | undefined>;
+  
+  getProductivityInsightsByUserId: (userId: number) => Promise<schema.ProductivityInsight[] | undefined>;
+  markProductivityInsightAsRead: (id: number) => Promise<schema.ProductivityInsight | undefined>;
 }
 
 /**
  * Implementation of the Storage interface using PostgreSQL and Drizzle ORM
  */
 export class PostgresStorage implements IStorage {
+  // Developer Productivity Dashboard methods
+  async getDeveloperActivitiesByUserId(userId: number): Promise<schema.DeveloperActivity[] | undefined> {
+    try {
+      const activities = await db.select().from(schema.developerActivity)
+        .where(eq(schema.developerActivity.userId, userId))
+        .orderBy(desc(schema.developerActivity.date));
+      return activities;
+    } catch (error) {
+      console.error("Error fetching developer activities:", error);
+      return undefined;
+    }
+  }
+
+  async createDeveloperActivity(data: schema.InsertDeveloperActivity): Promise<schema.DeveloperActivity> {
+    const result = await db.insert(schema.developerActivity).values(data).returning();
+    return result[0];
+  }
+
+  async getDeveloperGoalsByUserId(userId: number, status?: string): Promise<schema.DeveloperGoal[] | undefined> {
+    try {
+      let query = db.select().from(schema.developerGoal)
+        .where(eq(schema.developerGoal.userId, userId));
+      
+      if (status) {
+        query = query.where(eq(schema.developerGoal.status, status));
+      }
+      
+      const goals = await query.orderBy(desc(schema.developerGoal.targetDate));
+      return goals;
+    } catch (error) {
+      console.error("Error fetching developer goals:", error);
+      return undefined;
+    }
+  }
+
+  async createDeveloperGoal(data: schema.InsertDeveloperGoal): Promise<schema.DeveloperGoal> {
+    const result = await db.insert(schema.developerGoal).values(data).returning();
+    return result[0];
+  }
+
+  async updateDeveloperGoal(id: number, data: {progress?: number, status?: string}): Promise<schema.DeveloperGoal | undefined> {
+    try {
+      const result = await db.update(schema.developerGoal)
+        .set(data)
+        .where(eq(schema.developerGoal.id, id))
+        .returning();
+      
+      return result.length ? result[0] : undefined;
+    } catch (error) {
+      console.error("Error updating developer goal:", error);
+      return undefined;
+    }
+  }
+
+  async getTimeBlocksByUserIdAndDate(userId: number, date?: string): Promise<schema.TimeBlock[] | undefined> {
+    try {
+      let query = db.select().from(schema.timeBlock)
+        .where(eq(schema.timeBlock.userId, userId));
+      
+      if (date) {
+        // If a specific date is provided, convert to Date object for comparison
+        const targetDate = new Date(date);
+        // Simple date matching for demo purposes - in production, would use appropriate date filtering
+        query = query.where(sql`DATE(${schema.timeBlock.startTime}) = DATE(${targetDate})`);
+      }
+      
+      const timeBlocks = await query.orderBy(schema.timeBlock.startTime);
+      return timeBlocks;
+    } catch (error) {
+      console.error("Error fetching time blocks:", error);
+      return undefined;
+    }
+  }
+
+  async createTimeBlock(data: schema.InsertTimeBlock): Promise<schema.TimeBlock> {
+    const result = await db.insert(schema.timeBlock).values(data).returning();
+    return result[0];
+  }
+
+  async updateTimeBlock(id: number, data: {status?: string, endTime?: Date, interruptions?: number, productivity?: number, notes?: string}): Promise<schema.TimeBlock | undefined> {
+    try {
+      const result = await db.update(schema.timeBlock)
+        .set(data)
+        .where(eq(schema.timeBlock.id, id))
+        .returning();
+      
+      return result.length ? result[0] : undefined;
+    } catch (error) {
+      console.error("Error updating time block:", error);
+      return undefined;
+    }
+  }
+
+  async getProductivityMetricsByDateRange(userId: number, startDate?: string, endDate?: string): Promise<schema.ProductivityMetric[] | undefined> {
+    try {
+      let query = db.select().from(schema.productivityMetric)
+        .where(eq(schema.productivityMetric.userId, userId));
+      
+      if (startDate) {
+        const start = new Date(startDate);
+        query = query.where(sql`${schema.productivityMetric.date} >= ${start}`);
+      }
+      
+      if (endDate) {
+        const end = new Date(endDate);
+        query = query.where(sql`${schema.productivityMetric.date} <= ${end}`);
+      }
+      
+      const metrics = await query.orderBy(desc(schema.productivityMetric.date));
+      return metrics;
+    } catch (error) {
+      console.error("Error fetching productivity metrics:", error);
+      return undefined;
+    }
+  }
+
+  async getProductivityInsightsByUserId(userId: number): Promise<schema.ProductivityInsight[] | undefined> {
+    try {
+      const insights = await db.select().from(schema.productivityInsight)
+        .where(eq(schema.productivityInsight.userId, userId))
+        .orderBy(desc(schema.productivityInsight.createdAt));
+      
+      return insights;
+    } catch (error) {
+      console.error("Error fetching productivity insights:", error);
+      return undefined;
+    }
+  }
+
+  async markProductivityInsightAsRead(id: number): Promise<schema.ProductivityInsight | undefined> {
+    try {
+      const result = await db.update(schema.productivityInsight)
+        .set({ isRead: true })
+        .where(eq(schema.productivityInsight.id, id))
+        .returning();
+      
+      return result.length ? result[0] : undefined;
+    } catch (error) {
+      console.error("Error marking insight as read:", error);
+      return undefined;
+    }
+  }
   // Mysterion Knowledge System
   async createKnowledgeNode(data: schema.InsertMysterionKnowledgeNode): Promise<schema.MysterionKnowledgeNode> {
     const result = await db.insert(schema.mysterionKnowledgeNode).values(data).returning();
@@ -479,6 +638,174 @@ export class PostgresStorage implements IStorage {
       .from(schema.trainingDataFragment)
       .where(eq(schema.trainingDataFragment.datasetId, datasetId))
       .orderBy(schema.trainingDataFragment.fragmentIndex);
+  }
+}
+
+  // ===================== Developer Productivity Dashboard Methods =====================
+  
+  // Developer Activities
+  async getDeveloperActivitiesByUserId(userId: number): Promise<schema.DeveloperActivity[] | undefined> {
+    try {
+      return await db.select()
+        .from(schema.developerActivity)
+        .where(eq(schema.developerActivity.userId, userId))
+        .orderBy(desc(schema.developerActivity.timestamp));
+    } catch (error) {
+      console.error('Error fetching developer activities:', error);
+      return undefined;
+    }
+  }
+  
+  async createDeveloperActivity(data: schema.InsertDeveloperActivity): Promise<schema.DeveloperActivity> {
+    const [result] = await db.insert(schema.developerActivity)
+      .values(data)
+      .returning();
+    return result;
+  }
+  
+  // Developer Goals
+  async getDeveloperGoalsByUserId(userId: number, status?: string): Promise<schema.DeveloperGoal[] | undefined> {
+    try {
+      let query = db.select()
+        .from(schema.developerGoal)
+        .where(eq(schema.developerGoal.userId, userId));
+      
+      if (status) {
+        query = query.where(eq(schema.developerGoal.status, status));
+      }
+      
+      return await query.orderBy(desc(schema.developerGoal.priority));
+    } catch (error) {
+      console.error('Error fetching developer goals:', error);
+      return undefined;
+    }
+  }
+  
+  async createDeveloperGoal(data: schema.InsertDeveloperGoal): Promise<schema.DeveloperGoal> {
+    const [result] = await db.insert(schema.developerGoal)
+      .values(data)
+      .returning();
+    return result;
+  }
+  
+  async updateDeveloperGoal(id: number, data: {progress?: number, status?: string}): Promise<schema.DeveloperGoal | undefined> {
+    try {
+      const updateData: any = { updatedAt: new Date() };
+      
+      if (data.progress !== undefined) {
+        updateData.currentValue = data.progress;
+      }
+      
+      if (data.status) {
+        updateData.status = data.status;
+      }
+      
+      const [updated] = await db.update(schema.developerGoal)
+        .set(updateData)
+        .where(eq(schema.developerGoal.id, id))
+        .returning();
+        
+      return updated;
+    } catch (error) {
+      console.error('Error updating developer goal:', error);
+      return undefined;
+    }
+  }
+  
+  // Time Blocks
+  async getTimeBlocksByUserIdAndDate(userId: number, date?: string): Promise<schema.TimeBlock[] | undefined> {
+    try {
+      let query = db.select()
+        .from(schema.timeBlock)
+        .where(eq(schema.timeBlock.userId, userId));
+      
+      if (date) {
+        const startOfDay = new Date(date);
+        startOfDay.setHours(0, 0, 0, 0);
+        
+        const endOfDay = new Date(date);
+        endOfDay.setHours(23, 59, 59, 999);
+        
+        query = query.where(sql`${schema.timeBlock.startTime} BETWEEN ${startOfDay} AND ${endOfDay}`);
+      }
+      
+      return await query.orderBy(schema.timeBlock.startTime);
+    } catch (error) {
+      console.error('Error fetching time blocks:', error);
+      return undefined;
+    }
+  }
+  
+  async createTimeBlock(data: schema.InsertTimeBlock): Promise<schema.TimeBlock> {
+    const [result] = await db.insert(schema.timeBlock)
+      .values(data)
+      .returning();
+    return result;
+  }
+  
+  async updateTimeBlock(id: number, data: {status?: string, endTime?: Date, interruptions?: number, productivity?: number, notes?: string}): Promise<schema.TimeBlock | undefined> {
+    try {
+      const [updated] = await db.update(schema.timeBlock)
+        .set(data)
+        .where(eq(schema.timeBlock.id, id))
+        .returning();
+        
+      return updated;
+    } catch (error) {
+      console.error('Error updating time block:', error);
+      return undefined;
+    }
+  }
+  
+  // Productivity Metrics
+  async getProductivityMetricsByDateRange(userId: number, startDate?: string, endDate?: string): Promise<schema.ProductivityMetric[] | undefined> {
+    try {
+      let query = db.select()
+        .from(schema.productivityMetric)
+        .where(eq(schema.productivityMetric.userId, userId));
+      
+      if (startDate && endDate) {
+        query = query.where(
+          sql`${schema.productivityMetric.date} BETWEEN ${new Date(startDate)} AND ${new Date(endDate)}`
+        );
+      } else if (startDate) {
+        query = query.where(sql`${schema.productivityMetric.date} >= ${new Date(startDate)}`);
+      } else if (endDate) {
+        query = query.where(sql`${schema.productivityMetric.date} <= ${new Date(endDate)}`);
+      }
+      
+      return await query.orderBy(schema.productivityMetric.date);
+    } catch (error) {
+      console.error('Error fetching productivity metrics:', error);
+      return undefined;
+    }
+  }
+  
+  // Productivity Insights
+  async getProductivityInsightsByUserId(userId: number): Promise<schema.ProductivityInsight[] | undefined> {
+    try {
+      return await db.select()
+        .from(schema.productivityInsight)
+        .where(eq(schema.productivityInsight.userId, userId))
+        .orderBy([desc(schema.productivityInsight.score), desc(schema.productivityInsight.date)]);
+    } catch (error) {
+      console.error('Error fetching productivity insights:', error);
+      return undefined;
+    }
+  }
+  
+  async markProductivityInsightAsRead(id: number): Promise<schema.ProductivityInsight | undefined> {
+    try {
+      const [updated] = await db.update(schema.productivityInsight)
+        .set({ isRead: true })
+        .where(eq(schema.productivityInsight.id, id))
+        .returning();
+        
+      return updated;
+    } catch (error) {
+      console.error('Error marking productivity insight as read:', error);
+      return undefined;
+    }
   }
 }
 

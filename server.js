@@ -307,7 +307,8 @@ const CLIENT_ROUTES = [
   '/enumerator',
   '/bot-simulation',
   '/aifreedomtrust',
-  '/code-mood-meter'
+  '/code-mood-meter',
+  '/productivity'
 ];
 
 // Handle SPA routes
