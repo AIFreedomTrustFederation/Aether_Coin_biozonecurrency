@@ -52,6 +52,9 @@ const EnumeratorPage = lazy(() => import("./pages/Enumerator"));
 // Import Bot Simulation page
 const BotSimulationPage = lazy(() => import("./pages/BotSimulation"));
 
+// Import Code Complexity Mood Meter page
+const CodeMoodMeterPage = lazy(() => import("./pages/CodeMoodMeter"));
+
 // Create a simple landing page component for AI Freedom Trust
 const AIFreedomTrustRedirect = () => {
   // Simple component that immediately redirects via meta refresh
@@ -107,6 +110,9 @@ const App = () => (
               
               {/* Route to Bot Simulation Dashboard */}
               <Route path="/bot-simulation" component={BotSimulationPage} />
+              
+              {/* Route to Code Complexity Mood Meter */}
+              <Route path="/code-mood-meter" component={CodeMoodMeterPage} />
               
               {/* Route to AI Freedom Trust landing page */}
               <Route path="/aifreedomtrust" component={AIFreedomTrustRedirect} />
