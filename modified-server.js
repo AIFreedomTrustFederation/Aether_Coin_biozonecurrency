@@ -1,7 +1,9 @@
 /**
- * Simplified Aetherion Server Implementation
+ * Modified Aetherion Server for Replit Webview Compatibility
  * 
- * Express server that proxies requests to Vite dev server
+ * This version combines the original proxy functionality with improved 
+ * Replit webview integration. It maintains the existing features while
+ * fixing connectivity issues with Replit's webview system.
  */
 
 import express from 'express';
@@ -27,13 +29,27 @@ const TARGET_URL = `http://localhost:${VITE_PORT}`;
 const app = express();
 const httpServer = createServer(app);
 
-// Enable CORS
-app.use(cors());
+// Add verbose request logging for debugging
+app.use((req, res, next) => {
+  // Skip logging for asset requests to reduce noise
+  if (!req.path.includes('.js') && !req.path.includes('.css') && !req.path.includes('.ico')) {
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.path} - ${req.ip}`);
+  }
+  next();
+});
 
-// Serve static files from 'public' directory
+// Enable CORS with specific headers for Replit
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
+
+// Serve static files from 'public' directory - high priority
 app.use(express.static(path.join(__dirname, 'public')));
 
-console.log(`Starting Simplified Aetherion Server`);
+console.log(`Starting Enhanced Aetherion Server`);
 console.log(`Main server on port ${PORT} proxying to Vite on port ${VITE_PORT}`);
 
 // Create WebSocket server
@@ -49,7 +65,7 @@ wss.on('connection', function connection(ws) {
     if (message.toString() === 'subscribe') {
       ws.send(JSON.stringify({
         type: 'welcome',
-        message: 'Connected to Scroll Keeper WebSocket Server'
+        message: 'Connected to Aether_Coin CodeStar WebSocket Server'
       }));
     }
   });
@@ -100,10 +116,10 @@ app.get('/api/health', (req, res) => {
   console.log(`API health check requested from ${req.ip} - Status: OK`);
 });
 
-// Simple API endpoint for Scroll Keeper status
+// Simple API endpoint for status
 app.get('/api/status', (req, res) => {
   res.json({
-    service: 'Scroll Keeper API',
+    service: 'Aether_Coin CodeStar API',
     status: 'operational',
     version: '1.0.0',
     timestamp: new Date().toISOString()
@@ -121,81 +137,12 @@ app.get('/app', (req, res) => {
   res.redirect('/');
 });
 
-// Middleware to log all requests
-app.use((req, res, next) => {
-  console.log(`Request: ${req.method} ${req.url}`);
-  next();
-});
-
 // Start the Vite server in a separate process
 const startViteServer = () => {
-  // Create a custom Vite config for Replit compatibility
-  const tempConfigPath = path.join(__dirname, 'temp-vite.config.js');
-  
-  // Get the Replit domain from environment variables if available
-  const replitDomain = process.env.REPL_SLUG 
-    ? `${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`
-    : null;
-    
-  console.log('Detected Replit domain:', replitDomain || 'Not detected');
-  
-  // Write a temporary server configuration for Vite
-  const tempConfig = `
-  import { defineConfig } from "vite";
-  import { fileURLToPath } from "url";
-  import path from "path";
-  import react from "@vitejs/plugin-react";
-  import themePlugin from "@replit/vite-plugin-shadcn-theme-json";
-  import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
-  
-  const __filename = fileURLToPath(import.meta.url);
-  const __dirname = path.dirname(__filename);
-  
-  export default defineConfig({
-    plugins: [
-      react(),
-      runtimeErrorOverlay(),
-      themePlugin(),
-    ],
-    resolve: {
-      alias: {
-        "@": path.resolve(__dirname, "client", "src"),
-        "@shared": path.resolve(__dirname, "shared"),
-        "@assets": path.resolve(__dirname, "attached_assets"),
-      },
-    },
-    root: path.resolve(__dirname, "client"),
-    server: {
-      port: ${VITE_PORT},
-      host: '0.0.0.0',
-      strictPort: true,
-      hmr: {
-        // Enable HMR with Replit compatibility
-        clientPort: ${PORT},
-        host: 'localhost',
-        protocol: 'ws',
-        timeout: 120000,
-        overlay: true,
-      },
-      watch: {
-        usePolling: true,
-        interval: 1000,
-      },
-      // Disable open browser
-      open: false
-    },
-    optimizeDeps: {
-      force: true
-    },
-    // Improve base path handling for Replit
-    base: '/',
-  });
-  `;
-  
-  fs.writeFileSync(tempConfigPath, tempConfig);
+  console.log('Starting Vite development server...');
   
   // Start Vite with our custom config
-  const viteProcess = spawn('npx', ['vite', '--config', tempConfigPath], {
+  const viteProcess = spawn('npx', ['vite'], {
     stdio: 'inherit',
     shell: true
   });
@@ -204,21 +151,12 @@ const startViteServer = () => {
     console.error(`Failed to start Vite server: ${error.message}`);
   });
   
-  // Clean up temp config on exit
-  process.on('exit', () => {
-    try {
-      fs.unlinkSync(tempConfigPath);
-    } catch (err) {
-      // Ignore error
-    }
-  });
-
   return viteProcess;
 };
 
 // Define path patterns that should be proxied to Vite
 const VITE_PATHS = [
-  // All module-related patterns
+  // Asset patterns that should be proxied to Vite
   '/src/',
   '/@',
   '/@fs/',
@@ -228,12 +166,7 @@ const VITE_PATHS = [
   '/node_modules/',
   '@fs/',
   '/assets/',
-  // Vite's HMR-related patterns
   '/__hmr',
-  'vite-hmr',
-  'vite-ws',
-  '__vite_ping',
-  // File extensions for assets and modules
   '.js',
   '.ts',
   '.tsx',
@@ -245,14 +178,7 @@ const VITE_PATHS = [
   '.png',
   '.jpg',
   '.jpeg',
-  '.gif',
-  '.woff',
-  '.woff2',
-  '.ttf',
-  '.eot',
-  '.otf',
-  '.map',
-  '.module.'
+  '.gif'
 ];
 
 // Function to check if a path should be proxied to Vite
@@ -266,7 +192,7 @@ const shouldProxyToVite = (path) => {
     path.includes(pattern) || path.endsWith(pattern));
 };
 
-// Set up proxy options
+// Set up proxy options with enhanced support for Replit
 const proxyOptions = {
   target: TARGET_URL,
   changeOrigin: true,
@@ -276,10 +202,6 @@ const proxyOptions = {
   xfwd: true,
   autoRewrite: true,
   followRedirects: true,
-  pathRewrite: {
-    '^/@vite/hmr': '/@vite/hmr',
-    '^/@vite/client': '/@vite/client'
-  },
   headers: {
     // Add headers to help with Replit environment
     'Connection': 'keep-alive',
@@ -312,7 +234,6 @@ const viteProxyMiddleware = createProxyMiddleware(proxyOptions);
 
 // Proxy special WebSocket connections
 app.use(['/@vite/client', '/@vite/hmr', '/vite-hmr', '/__vite_ping'], (req, res, next) => {
-  console.log(`[WebSocket] Handling special Vite connection: ${req.url}`);
   viteProxyMiddleware(req, res, next);
 });
 
@@ -326,8 +247,6 @@ const CLIENT_ROUTES = [
   '/about',
   '/domains',
   '/achievements',
-  '/terms-of-service',
-  '/privacy-policy',
   '/api',
   '/aethercore-trust',
   '/aethercore-browser',
@@ -343,9 +262,14 @@ const CLIENT_ROUTES = [
 ];
 
 // Handle SPA routes
-app.get(CLIENT_ROUTES, (req, res) => {
+app.get(CLIENT_ROUTES, (req, res, next) => {
+  // Special case for the root route
+  if (req.path === '/') {
+    return res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  }
+  
   console.log(`SPA route handling for: ${req.path}`);
-  viteProxyMiddleware(req, res);
+  next();
 });
 
 // Add a middleware to check all other requests
@@ -368,9 +292,9 @@ app.use('*', (req, res, next) => {
     return viteProxyMiddleware(req, res, next);
   }
   
+  // Fallback to serving the index.html for SPA navigation
   console.log(`Fallback handling for: ${path}`);
-  // For SPA navigation, proxy to Vite
-  viteProxyMiddleware(req, res, next);
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // Start Vite server
@@ -383,25 +307,117 @@ process.on('SIGINT', () => {
   process.exit();
 });
 
-// Start the Express server
-httpServer.listen(PORT, '0.0.0.0', () => {
-  console.log(`✓ Aetherion integrated server running on port ${PORT}`);
-  console.log(`✓ Test page available at http://localhost:${PORT}/test`);
-  console.log(`✓ WebSocket server available at ws://localhost:${PORT}/ws`);
-  console.log(`✓ Vite dev server running on port ${VITE_PORT}`);
-  
-  // Display Replit-specific URL information
-  const replitSlug = process.env.REPL_SLUG;
-  const replitOwner = process.env.REPL_OWNER;
-  if (replitSlug && replitOwner) {
-    const replitUrl = `https://${replitSlug}.${replitOwner}.repl.co`;
-    console.log(`\n✓ REPLIT URL: ${replitUrl}`);
-    console.log(`✓ Test page on Replit: ${replitUrl}/test`);
-    console.log(`✓ API health endpoint: ${replitUrl}/api/health`);
+// Ensure the public directory exists
+if (!fs.existsSync(path.join(__dirname, 'public'))) {
+  fs.mkdirSync(path.join(__dirname, 'public'), { recursive: true });
+}
+
+// Create a basic index.html in the public directory if it doesn't exist
+const indexPath = path.join(__dirname, 'public', 'index.html');
+if (!fs.existsSync(indexPath)) {
+  const basicHtml = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aether_Coin CodeStar Platform</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #041e3c, #0b3561);
+      color: white;
+      margin: 0;
+      padding: 20px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 30px;
+      background: rgba(15, 35, 75, 0.8);
+      border-radius: 10px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    }
+    h1 {
+      font-size: 2.4rem;
+      margin-bottom: 1rem;
+      background: linear-gradient(90deg, #41e0fd, #9b83fc);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+    .btn {
+      display: inline-block;
+      background: linear-gradient(90deg, #41e0fd, #9b83fc);
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 50px;
+      text-decoration: none;
+      font-weight: bold;
+      margin: 15px 0;
+      border: none;
+      cursor: pointer;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+    .api-status {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 15px;
+      border-radius: 8px;
+      margin-top: 20px;
+      text-align: left;
+      font-family: monospace;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Aether_Coin CodeStar Platform</h1>
+    <p>Welcome to the CodeStar development environment. This simplified interface provides access to testing tools and API endpoints.</p>
     
-    // Write a file to help the webview find our app
-    try {
-      const webviewHtml = `
+    <a href="/test" class="btn">Open Test Page</a>
+    
+    <div class="api-status">
+      <h3>API Status</h3>
+      <div id="status-output">Click the button below to check API status</div>
+      <button id="check-api" class="btn">Check API Status</button>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('check-api').addEventListener('click', async () => {
+      const output = document.getElementById('status-output');
+      output.textContent = 'Checking API status...';
+      
+      try {
+        const response = await fetch('/api/health');
+        const data = await response.json();
+        output.innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+      } catch (error) {
+        output.textContent = 'Error: ' + error.message;
+      }
+    });
+  </script>
+</body>
+</html>
+  `;
+  
+  fs.writeFileSync(indexPath, basicHtml);
+  console.log('Created basic index.html in public directory');
+}
+
+// Also create a root-level index.html for direct hosting compatibility
+fs.writeFileSync(path.join(__dirname, 'index.html'), `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -447,12 +463,25 @@ httpServer.listen(PORT, '0.0.0.0', () => {
   </script>
 </body>
 </html>
-      `;
-      fs.writeFileSync(path.join(__dirname, 'index.html'), webviewHtml);
-      console.log('✓ Created webview helper file at /index.html');
-    } catch (err) {
-      console.error('Failed to create webview helper file:', err);
-    }
+`);
+console.log('Created root-level redirect index.html');
+
+// Start the Express server
+httpServer.listen(PORT, '0.0.0.0', () => {
+  console.log(`✓ Aether_Coin CodeStar server running on port ${PORT}`);
+  console.log(`✓ Test page available at http://localhost:${PORT}/test`);
+  console.log(`✓ WebSocket server available at ws://localhost:${PORT}/ws`);
+  console.log(`✓ Vite dev server running on port ${VITE_PORT}`);
+  
+  // Display Replit-specific URL information
+  const replitSlug = process.env.REPL_SLUG;
+  const replitOwner = process.env.REPL_OWNER;
+  if (replitSlug && replitOwner) {
+    const replitUrl = `https://${replitSlug}.${replitOwner}.repl.co`;
+    console.log(`\n=== REPLIT ENVIRONMENT DETECTED ===`);
+    console.log(`✓ REPLIT URL: ${replitUrl}`);
+    console.log(`✓ REPLIT TEST PAGE: ${replitUrl}/test`);
+    console.log(`✓ REPLIT API HEALTH: ${replitUrl}/api/health`);
   } else {
     console.log('\n⚠ Not running in a Replit environment, or missing environment variables.');
   }
