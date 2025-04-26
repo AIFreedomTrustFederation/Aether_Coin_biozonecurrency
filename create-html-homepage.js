@@ -1,4 +1,18 @@
-<!DOCTYPE html>
+/**
+ * This script creates a simple landing page for the Replit webview that will
+ * redirect users to the appropriate location for our app.
+ */
+
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Convert ESM __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Create the HTML content with information and redirections
+const htmlContent = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -167,4 +181,21 @@
     });
   </script>
 </body>
-</html>
+</html>`;
+
+// Write file to root directory and public directory
+try {
+  // Ensure public directory exists
+  if (!fs.existsSync(path.join(__dirname, 'public'))) {
+    fs.mkdirSync(path.join(__dirname, 'public'), { recursive: true });
+  }
+  
+  // Write to both locations for maximum compatibility
+  fs.writeFileSync(path.join(__dirname, 'index.html'), htmlContent);
+  fs.writeFileSync(path.join(__dirname, 'public', 'index.html'), htmlContent);
+  
+  console.log('✓ Created index.html in root directory');
+  console.log('✓ Created index.html in public directory');
+} catch (error) {
+  console.error('Error creating HTML files:', error);
+}
