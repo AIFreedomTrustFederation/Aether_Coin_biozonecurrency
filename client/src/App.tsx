@@ -27,6 +27,7 @@ const NodeMarketplace = lazy(() => import("./pages/NodeMarketplace"));
 const DnsManager = lazy(() => import("./pages/DnsManager"));
 const CodeStarPage = lazy(() => import("./pages/CodeStarPage"));
 const ScrollKeeperPage = lazy(() => import("./pages/ScrollKeeperPage"));
+const ProductivityDashboard = lazy(() => import("./pages/ProductivityDashboardDetailed"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -113,6 +114,9 @@ const App = () => (
               
               {/* Route to Code Complexity Mood Meter */}
               <Route path="/code-mood-meter" component={CodeMoodMeterPage} />
+              
+              {/* Route to Developer Productivity Dashboard */}
+              <Route path="/productivity-dashboard" component={ProductivityDashboard} />
               
               {/* Route to AI Freedom Trust landing page */}
               <Route path="/aifreedomtrust" component={AIFreedomTrustRedirect} />

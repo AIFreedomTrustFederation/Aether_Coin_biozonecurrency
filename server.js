@@ -101,6 +101,13 @@ const startViteServer = () => {
   // Create a custom Vite config for Replit compatibility
   const tempConfigPath = path.join(__dirname, 'temp-vite.config.js');
   
+  // Get the Replit domain from environment variables if available
+  const replitDomain = process.env.REPL_SLUG 
+    ? `${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`
+    : null;
+    
+  console.log('Detected Replit domain:', replitDomain || 'Not detected');
+  
   // Write a temporary server configuration for Vite
   const tempConfig = `
   import { defineConfig } from "vite";
@@ -142,11 +149,15 @@ const startViteServer = () => {
       watch: {
         usePolling: true,
         interval: 1000,
-      }
+      },
+      // Disable open browser
+      open: false
     },
     optimizeDeps: {
       force: true
-    }
+    },
+    // Improve base path handling for Replit
+    base: '/',
   });
   `;
   
@@ -230,14 +241,27 @@ const proxyOptions = {
   changeOrigin: true,
   ws: true,
   logLevel: 'info',
+  secure: false,
+  xfwd: true,
+  autoRewrite: true,
+  followRedirects: true,
   pathRewrite: {
     '^/@vite/hmr': '/@vite/hmr',
     '^/@vite/client': '/@vite/client'
+  },
+  headers: {
+    // Add headers to help with Replit environment
+    'Connection': 'keep-alive',
+    'X-Forwarded-Host': process.env.REPL_SLUG ? `${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co` : undefined,
+    'X-Forwarded-Proto': 'https'
   },
   onProxyReq: (proxyReq, req, res) => {
     if (!req.url.match(/\.(js|css|png|jpg|svg|ico|woff|woff2|ttf)$/)) {
       console.log(`[PROXY] ${req.method} ${req.url} -> ${TARGET_URL}`);
     }
+    
+    // Add origin header for CORS
+    proxyReq.setHeader('Origin', TARGET_URL);
   },
   onError: (err, req, res) => {
     console.error(`[PROXY ERROR] ${err.message}`);
@@ -247,6 +271,7 @@ const proxyOptions = {
       <p>Could not connect to Vite server at ${TARGET_URL}</p>
       <p>Error: ${err.message}</p>
       <p><a href="/test">Check server status</a></p>
+      <p><a href="/">Try Home Page</a> | <a href="/code-mood-meter">Try Code Mood Meter</a></p>
     `);
   }
 };
@@ -281,7 +306,8 @@ const CLIENT_ROUTES = [
   '/scroll-keeper',
   '/enumerator',
   '/bot-simulation',
-  '/aifreedomtrust'
+  '/aifreedomtrust',
+  '/code-mood-meter'
 ];
 
 // Handle SPA routes

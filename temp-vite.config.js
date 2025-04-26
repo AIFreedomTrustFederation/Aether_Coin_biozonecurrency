@@ -38,10 +38,14 @@
       watch: {
         usePolling: true,
         interval: 1000,
-      }
+      },
+      // Disable open browser
+      open: false
     },
     optimizeDeps: {
       force: true
-    }
+    },
+    // Improve base path handling for Replit
+    base: '/',
   });
   

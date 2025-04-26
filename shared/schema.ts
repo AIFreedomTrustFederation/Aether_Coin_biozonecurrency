@@ -5,7 +5,7 @@
 
 import { z } from 'zod';
 import { createInsertSchema } from 'drizzle-zod';
-import { integer, pgTable, serial, text, timestamp, boolean, jsonb, real } from 'drizzle-orm/pg-core';
+import { integer, pgTable, serial, text, timestamp, boolean, jsonb, real, date } from 'drizzle-orm/pg-core';
 
 // ==================== MYSTERION INTELLIGENCE SYSTEM ====================
 
@@ -148,6 +148,99 @@ export const trainingDataFragment = pgTable('training_data_fragment', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
+// ==================== DEVELOPER PRODUCTIVITY DASHBOARD ====================
+
+export const developerActivity = pgTable('developer_activity', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').notNull(),
+  activityType: text('activity_type').notNull(), // 'coding', 'review', 'testing', 'documentation', 'planning'
+  projectId: integer('project_id'),
+  description: text('description').notNull(),
+  timeSpent: integer('time_spent').notNull(), // in minutes
+  codeLines: integer('code_lines'), // number of lines added/modified
+  complexity: integer('complexity'), // complexity score if applicable
+  date: date('date').notNull(),
+  timestamp: timestamp('timestamp').defaultNow().notNull(),
+  metadata: jsonb('metadata'),
+});
+
+export const productivityMetric = pgTable('productivity_metric', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').notNull(),
+  date: date('date').notNull(),
+  totalTimeSpent: integer('total_time_spent').notNull(), // in minutes
+  totalCodeLines: integer('total_code_lines'),
+  focusScore: real('focus_score'), // 0-100 score for focus quality
+  efficiencyRating: real('efficiency_rating'), // efficiency rating 0-100
+  qualityScore: real('quality_score'), // code quality score 0-100
+  tasksCompleted: integer('tasks_completed'),
+  blockers: integer('blockers'), // number of blockers encountered
+  metadata: jsonb('metadata'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const developerGoal = pgTable('developer_goal', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').notNull(),
+  title: text('title').notNull(),
+  description: text('description'),
+  targetValue: real('target_value'),
+  currentValue: real('current_value').default(0),
+  metricType: text('metric_type').notNull(), // 'time', 'code_lines', 'tasks', 'focus_score', 'efficiency'
+  timeframe: text('timeframe').notNull(), // 'daily', 'weekly', 'monthly', 'quarterly'
+  startDate: date('start_date').notNull(),
+  endDate: date('end_date'),
+  status: text('status').default('active').notNull(), // 'active', 'completed', 'abandoned'
+  priority: integer('priority').default(1).notNull(), // 1-5 scale
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const productivityInsight = pgTable('productivity_insight', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').notNull(),
+  insightType: text('insight_type').notNull(), // 'pattern', 'suggestion', 'achievement', 'warning'
+  title: text('title').notNull(),
+  description: text('description').notNull(),
+  score: real('score'), // relevance/importance score
+  date: date('date').notNull(),
+  isRead: boolean('is_read').default(false).notNull(),
+  metadata: jsonb('metadata'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const timeBlock = pgTable('time_block', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').notNull(),
+  title: text('title').notNull(),
+  description: text('description'),
+  startTime: timestamp('start_time').notNull(),
+  endTime: timestamp('end_time'),
+  status: text('status').default('scheduled').notNull(), // 'scheduled', 'in_progress', 'completed', 'canceled'
+  category: text('category').notNull(), // 'deep_work', 'meeting', 'learning', 'admin', 'break'
+  interruptions: integer('interruptions').default(0),
+  productivity: real('productivity'), // self-rated productivity 0-100
+  notes: text('notes'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const codeQualityMetric = pgTable('code_quality_metric', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').notNull(),
+  projectId: integer('project_id'),
+  commitId: text('commit_id'),
+  date: date('date').notNull(),
+  linesOfCode: integer('lines_of_code'),
+  cyclomaticComplexity: real('cyclomatic_complexity'),
+  commentRatio: real('comment_ratio'),
+  testCoverage: real('test_coverage'),
+  bugsFixed: integer('bugs_fixed'),
+  bugsIntroduced: integer('bugs_introduced'),
+  qualityScore: real('quality_score'), // overall quality score 0-100
+  metadata: jsonb('metadata'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
 // Create Zod schemas for data validation
 
 // Mysterion Intelligence
@@ -197,3 +290,26 @@ export type InsertRewardDistribution = z.infer<typeof insertRewardDistributionSc
 
 export type InsertTrainingDataset = z.infer<typeof insertTrainingDatasetSchema>;
 export type InsertTrainingDataFragment = z.infer<typeof insertTrainingDataFragmentSchema>;
+
+// Developer Productivity Dashboard
+export const insertDeveloperActivitySchema = createInsertSchema(developerActivity).omit({ id: true });
+export const insertProductivityMetricSchema = createInsertSchema(productivityMetric).omit({ id: true });
+export const insertDeveloperGoalSchema = createInsertSchema(developerGoal).omit({ id: true, updatedAt: true });
+export const insertProductivityInsightSchema = createInsertSchema(productivityInsight).omit({ id: true });
+export const insertTimeBlockSchema = createInsertSchema(timeBlock).omit({ id: true, endTime: true });
+export const insertCodeQualityMetricSchema = createInsertSchema(codeQualityMetric).omit({ id: true });
+
+// Developer Productivity Dashboard Types
+export type DeveloperActivity = typeof developerActivity.$inferSelect;
+export type ProductivityMetric = typeof productivityMetric.$inferSelect;
+export type DeveloperGoal = typeof developerGoal.$inferSelect;
+export type ProductivityInsight = typeof productivityInsight.$inferSelect;
+export type TimeBlock = typeof timeBlock.$inferSelect;
+export type CodeQualityMetric = typeof codeQualityMetric.$inferSelect;
+
+export type InsertDeveloperActivity = z.infer<typeof insertDeveloperActivitySchema>;
+export type InsertProductivityMetric = z.infer<typeof insertProductivityMetricSchema>;
+export type InsertDeveloperGoal = z.infer<typeof insertDeveloperGoalSchema>;
+export type InsertProductivityInsight = z.infer<typeof insertProductivityInsightSchema>;
+export type InsertTimeBlock = z.infer<typeof insertTimeBlockSchema>;
+export type InsertCodeQualityMetric = z.infer<typeof insertCodeQualityMetricSchema>;
