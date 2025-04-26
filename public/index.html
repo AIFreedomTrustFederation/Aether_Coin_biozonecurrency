@@ -3,1795 +3,218 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Scroll Keeper</title>
+  <title>Aether_Coin - CodeStar Platform</title>
   <style>
-    :root {
-      /* Default theme - Blue */
-      --primary-color: #3498db;
-      --primary-dark: #2980b9;
-      --secondary-color: #2c3e50;
-      --success-color: #2ecc71;
-      --error-color: #e74c3c;
-      --warning-color: #f39c12;
-      --light-bg: #f5f5f5;
-      --card-bg: #ffffff;
-      --border-color: #ddd;
-      --text-color: #333;
-      --light-text: #7f8c8d;
-      --input-bg: #fff;
-      --radius: 6px;
-      --shadow: 0 2px 10px rgba(0,0,0,0.1);
-    }
-    
-    /* Dark Theme */
-    [data-theme="dark"] {
-      --primary-color: #4ea8de;
-      --primary-dark: #3a86c4;
-      --secondary-color: #566573;
-      --light-bg: #1e272e;
-      --card-bg: #2c3e50;
-      --border-color: #444;
-      --text-color: #eee;
-      --light-text: #bdc3c7;
-      --input-bg: #34495e;
-      --shadow: 0 2px 10px rgba(0,0,0,0.3);
-    }
-    
-    /* Purple Theme */
-    [data-theme="purple"] {
-      --primary-color: #9b59b6;
-      --primary-dark: #8e44ad;
-      --secondary-color: #4a235a;
-      --light-bg: #f5f0fa;
-      --card-bg: #ffffff;
-      --border-color: #e5d8ed;
-      --text-color: #333;
-      --light-text: #7f8c8d;
-      --input-bg: #fff;
-    }
-    
-    /* Green Theme */
-    [data-theme="green"] {
-      --primary-color: #2ecc71;
-      --primary-dark: #27ae60;
-      --secondary-color: #145a32;
-      --light-bg: #e8f8f5;
-      --card-bg: #ffffff;
-      --border-color: #d5f5e3;
-      --text-color: #333;
-      --light-text: #7f8c8d;
-      --input-bg: #fff;
-    }
-    
-    /* Amber Theme */
-    [data-theme="amber"] {
-      --primary-color: #f39c12;
-      --primary-dark: #d35400;
-      --secondary-color: #784212;
-      --light-bg: #fef5e7;
-      --card-bg: #ffffff;
-      --border-color: #fad7a0;
-      --text-color: #333;
-      --light-text: #7f8c8d;
-      --input-bg: #fff;
-    }
-    
     body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      background: linear-gradient(135deg, #041e3c, #0b3561);
+      color: #f0f0f0;
       margin: 0;
-      padding: 20px;
-      background-color: var(--light-bg);
-      color: var(--text-color);
-      line-height: 1.6;
-    }
-    
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      background-color: var(--card-bg);
-      padding: 30px;
-      border-radius: 8px;
-      box-shadow: var(--shadow);
-    }
-    
-    /* Responsive design for mobile */
-    @media (max-width: 768px) {
-      body {
-        padding: 0;
-      }
-      
-      .container {
-        padding: 15px 10px;
-        margin: 0;
-        border-radius: 0;
-        box-shadow: none;
-        max-width: 100%;
-      }
-      
-      h1 {
-        font-size: 22px;
-        text-align: center;
-        margin-bottom: 20px;
-        padding-bottom: 10px;
-      }
-      
-      h2 {
-        font-size: 18px;
-        margin-top: 20px;
-      }
-      
-      .card {
-        padding: 12px;
-        margin-bottom: 15px;
-        border-radius: 8px;
-      }
-      
-      button {
-        padding: 8px 12px;
-        font-size: 13px;
-        margin-right: 5px;
-        margin-bottom: 5px;
-      }
-      
-      .logs {
-        max-height: 150px;
-      }
-      
-      /* Improve chat interface on mobile */
-      .chat-container {
-        height: 400px;
-      }
-      
-      .url-input {
-        flex-direction: column;
-      }
-      
-      .url-input input, 
-      .url-input button {
-        width: 100%;
-      }
-      
-      .api-key-input {
-        flex-direction: column;
-      }
-      
-      .api-key-input input,
-      .api-key-input button {
-        width: 100%;
-      }
-      
-      .chat-options {
-        flex-wrap: wrap;
-      }
-      
-      .status {
-        display: block;
-        margin-bottom: 10px;
-        text-align: center;
-        width: 100%;
-      }
-      
-      /* Simplified connection controls for mobile */
-      .connection-controls {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        margin-bottom: 15px;
-      }
-      
-      .stats {
-        grid-template-columns: 1fr;
-      }
-      
-      .interceptor-controls, 
-      .training-controls, 
-      .training-prep-controls {
-        flex-direction: column;
-        align-items: stretch;
-      }
-      
-      /* Fixed floating chat button for mobile */
-      .mobile-chat-toggle {
-        display: block;
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        background-color: var(--primary-color);
-        color: white;
-        box-shadow: 0 3px 10px rgba(0,0,0,0.2);
-        z-index: 100;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 24px;
-        cursor: pointer;
-      }
-    }
-    
-    h1, h2 {
-      color: var(--secondary-color);
-    }
-    
-    h1 {
-      border-bottom: 2px solid var(--primary-color);
-      padding-bottom: 15px;
-      margin-bottom: 30px;
-      font-size: 28px;
-      font-weight: 600;
-    }
-    
-    h2 {
-      margin-top: 30px;
-      padding-bottom: 8px;
-      font-size: 20px;
-      display: flex;
-      align-items: center;
-      color: var(--primary-color);
-    }
-    
-    h2::before {
-      content: "";
-      display: inline-block;
-      width: 5px;
-      height: 20px;
-      background-color: var(--primary-color);
-      margin-right: 10px;
-      border-radius: 3px;
-    }
-    
-    p {
-      color: var(--light-text);
-      margin-bottom: 15px;
-      font-size: 15px;
-    }
-    
-    pre {
-      background-color: #f4f6f8;
-      padding: 15px;
-      border-radius: 4px;
-      overflow: auto;
-      border-left: 4px solid var(--primary-color);
-      margin: 0;
-      font-family: "Cascadia Code", "Fira Code", Consolas, monospace;
-      font-size: 14px;
-    }
-    
-    .logs {
-      background-color: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius);
-      padding: 12px;
-      margin-top: 12px;
-      max-height: 200px;
-      overflow-y: auto;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    }
-    
-    .status {
-      display: inline-block;
-      padding: 6px 12px;
-      border-radius: 20px;
-      font-size: 14px;
-      margin-right: 12px;
-      font-weight: 500;
-      text-shadow: 0 1px 1px rgba(0,0,0,0.1);
-    }
-    
-    .connected {
-      background-color: var(--success-color);
-      color: white;
-    }
-    
-    .disconnected {
-      background-color: var(--error-color);
-      color: white;
-    }
-    
-    button {
-      background-color: var(--primary-color);
-      color: white;
-      border: none;
-      padding: 9px 18px;
-      border-radius: var(--radius);
-      cursor: pointer;
-      font-size: 14px;
-      margin-right: 8px;
-      font-weight: 500;
-      transition: all 0.2s ease;
-    }
-    
-    button:hover {
-      background-color: var(--primary-dark);
-      transform: translateY(-1px);
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-    
-    button:active {
-      transform: translateY(0);
-    }
-    
-    button:disabled {
-      background-color: #95a5a6;
-      cursor: not-allowed;
-      box-shadow: none;
-    }
-    
-    input[type="text"] {
-      flex: 1;
-      padding: 10px;
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius);
-      font-size: 14px;
-      transition: border-color 0.2s ease;
-    }
-    
-    input[type="text"]:focus {
-      outline: none;
-      border-color: var(--primary-color);
-      box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
-    }
-    
-    .url-input {
-      display: flex;
-      margin-bottom: 15px;
-      gap: 10px;
-    }
-    
-    .card {
-      background-color: var(--card-bg);
-      border-radius: var(--radius);
-      padding: 20px;
-      margin-bottom: 24px;
-      box-shadow: var(--shadow);
-      border-top: 3px solid var(--primary-color);
-    }
-    
-    .interceptor-controls, .training-controls, .training-prep-controls {
-      display: flex;
-      margin: 15px 0;
-      align-items: center;
-      gap: 10px;
-    }
-    
-    select {
-      padding: 9px 12px;
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius);
-      font-size: 14px;
-      background-color: white;
-    }
-    
-    select:focus {
-      outline: none;
-      border-color: var(--primary-color);
-    }
-    
-    .progress-bar-container {
-      width: 100%;
-      height: 20px;
-      background-color: #ecf0f1;
-      border-radius: 10px;
-      overflow: hidden;
-      margin: 15px 0;
-    }
-    
-    #progressBar {
-      height: 100%;
-      border-radius: 10px;
-      background-color: var(--primary-color);
-      transition: width 0.3s ease;
-    }
-    
-    .progress-label {
-      font-weight: bold;
-      margin-bottom: 5px;
-    }
-    
-    .training-progress {
-      background-color: #f8f9fa;
-      border-radius: var(--radius);
-      padding: 15px;
-      margin-top: 15px;
-    }
-    
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      margin-top: 15px;
-    }
-    
-    .stats div {
-      background-color: white;
-      padding: 10px;
-      border-radius: var(--radius);
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-      font-size: 14px;
-    }
-    
-    .stats span {
-      font-weight: bold;
-      color: var(--primary-color);
-    }
-    
-    /* Chat interface styles */
-    .api-key-section {
-      background-color: #f8f9fa;
-      border-radius: var(--radius);
-      padding: 15px;
-      margin-bottom: 15px;
-    }
-    
-    .api-key-input {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 10px;
-    }
-    
-    .api-key-input input {
-      flex: 1;
-    }
-    
-    .api-key-instructions {
-      margin-bottom: 20px;
-      background-color: rgba(52, 152, 219, 0.1);
-      padding: 15px;
-      border-radius: var(--radius);
-      border-left: 4px solid var(--primary-color);
-    }
-    
-    .api-key-instructions h3 {
-      margin-top: 0;
-      margin-bottom: 10px;
-      color: var(--primary-color);
-      font-size: 18px;
-    }
-    
-    .api-key-instructions ol {
-      margin: 15px 0;
-      padding-left: 25px;
-    }
-    
-    .api-key-instructions li {
-      margin-bottom: 8px;
-      color: var(--text-color);
-    }
-    
-    .api-key-instructions a {
-      color: var(--primary-color);
-      text-decoration: none;
-      font-weight: 500;
-    }
-    
-    .api-key-instructions a:hover {
-      text-decoration: underline;
-    }
-    
-    .key-note {
-      font-size: 13px;
-      color: var(--light-text);
-      margin-top: 12px;
-      padding: 8px;
-      background-color: rgba(0,0,0,0.03);
-      border-radius: 4px;
-    }
-    
-    .alternative-key-option {
-      font-size: 13px;
-      color: var(--light-text);
-      margin-top: 12px;
-      text-align: center;
-      padding-top: 10px;
-      border-top: 1px dashed var(--border-color);
-    }
-    
-    .api-key-message {
-      font-size: 12px;
-      color: var(--light-text);
-      margin-top: 5px;
-    }
-    
-    .chat-container {
+      padding: 0;
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
-      height: 500px;
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius);
-      overflow: hidden;
+      align-items: center;
     }
-    
-    .chat-messages {
-      flex: 1;
-      padding: 15px;
-      overflow-y: auto;
-      background-color: #f8f9fa;
-    }
-    
-    .message {
-      margin-bottom: 15px;
-      max-width: 80%;
-      padding: 10px 15px;
-      border-radius: 18px;
-      line-height: 1.5;
-    }
-    
-    .message.user {
-      background-color: var(--primary-color);
-      color: white;
-      align-self: flex-end;
-      margin-left: auto;
-      border-bottom-right-radius: 4px;
-    }
-    
-    .message.assistant {
-      background-color: white;
-      border: 1px solid var(--border-color);
-      align-self: flex-start;
-      margin-right: auto;
-      border-bottom-left-radius: 4px;
-    }
-    
-    .message.system {
-      background-color: #f0f4f8;
-      border: 1px dashed var(--border-color);
-      align-self: center;
-      margin: 10px auto;
-      font-style: italic;
+    .container {
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 2rem;
+      background: rgba(15, 35, 75, 0.8);
       border-radius: 8px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      backdrop-filter: blur(10px);
+    }
+    header {
       width: 100%;
+      padding: 1rem;
+      background: rgba(10, 25, 55, 0.9);
+      text-align: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     }
-    
-    .chat-input-container {
-      display: flex;
-      padding: 10px;
-      background-color: white;
-      border-top: 1px solid var(--border-color);
-      gap: 10px;
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(90deg, #41e0fd, #9b83fc);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
     }
-    
-    .chat-input-container textarea {
-      flex: 1;
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius);
-      padding: 10px;
-      resize: none;
-      font-family: inherit;
-      font-size: 14px;
+    h2 {
+      font-size: 1.75rem;
+      margin-top: 2rem;
+      color: #41e0fd;
     }
-    
-    .chat-input-container textarea:focus {
-      outline: none;
-      border-color: var(--primary-color);
-      box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+    p {
+      line-height: 1.6;
+      margin-bottom: 1rem;
     }
-    
-    .chat-options {
-      display: flex;
-      padding: 10px;
-      background-color: #f8f9fa;
-      border-top: 1px solid var(--border-color);
-      align-items: center;
-      gap: 10px;
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 2rem;
+      margin: 2rem 0;
     }
-    
-    .chat-options label {
-      font-size: 14px;
-      margin-right: 5px;
-    }
-    
-    .chat-options select {
-      margin-right: 15px;
-    }
-    
-    .typing-indicator {
-      display: inline-block;
-      padding: 15px 20px;
-      background-color: #f0f0f0;
-      border-radius: 18px;
-      margin-bottom: 15px;
-    }
-    
-    .typing-indicator span {
-      display: inline-block;
-      width: 8px;
-      height: 8px;
-      margin-right: 5px;
-      background-color: #999;
-      border-radius: 50%;
-      animation: typing 1.4s infinite both;
-    }
-    
-    .typing-indicator span:nth-child(2) {
-      animation-delay: 0.2s;
-    }
-    
-    .typing-indicator span:nth-child(3) {
-      animation-delay: 0.4s;
-    }
-    
-    @keyframes typing {
-      0% { transform: translateY(0); }
-      50% { transform: translateY(-5px); }
-      100% { transform: translateY(0); }
-    }
-    
-    /* API Key Status */
-    .dashboard-header {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-    }
-    
-    .api-key-status {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    
-    .api-status {
-      display: inline-block;
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-size: 0.9em;
-      font-weight: 500;
-    }
-    
-    .api-status.active {
-      background-color: #2ecc71;
-      color: #fff;
-    }
-    
-    .api-status.missing {
-      background-color: #e74c3c;
-      color: #fff;
-    }
-    
-    .api-status.expired {
-      background-color: #f39c12;
-      color: #fff;
-    }
-    
-    /* API Key Modal */
-    .api-key-modal {
-      display: none;
-      position: fixed;
-      z-index: 1000;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0, 0, 0, 0.5);
-    }
-    
-    .api-key-modal-content {
-      background-color: var(--card-bg);
+    .feature {
+      padding: 1.5rem;
+      background: rgba(255, 255, 255, 0.05);
       border-radius: 8px;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-      max-width: 500px;
-      width: 90%;
-      margin: 10% auto;
-      padding: 25px;
-      position: relative;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
-    
-    .api-key-modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-      border-bottom: 1px solid var(--border-color);
-      padding-bottom: 10px;
+    .feature:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
     }
-    
-    .api-key-modal-header h3 {
-      margin: 0;
+    .feature h3 {
+      color: #9b83fc;
+      margin-top: 0;
     }
-    
-    .close-modal {
-      cursor: pointer;
-      font-size: 24px;
-      background: none;
+    .btn {
+      display: inline-block;
+      background: linear-gradient(90deg, #41e0fd, #9b83fc);
+      color: #fff;
+      padding: 0.75rem 1.5rem;
+      border-radius: 50px;
+      text-decoration: none;
+      font-weight: bold;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      margin-right: 1rem;
+      margin-bottom: 1rem;
       border: none;
-      color: var(--text-color);
-    }
-    
-    .api-key-input-group {
-      margin-bottom: 15px;
-    }
-    
-    .api-key-input-group label {
-      display: block;
-      margin-bottom: 5px;
-      font-weight: 500;
-    }
-    
-    .api-key-input-group input {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid var(--border-color);
-      border-radius: 4px;
-      background-color: var(--input-bg);
-      color: var(--text-color);
-    }
-    
-    .api-key-modal-footer {
-      margin-top: 20px;
-      display: flex;
-      justify-content: flex-end;
-      gap: 10px;
-    }
-    
-    /* Theme Selector */
-    .theme-selector {
-      display: flex;
-      align-items: center;
-      margin-left: auto;
-      gap: 10px;
-    }
-    
-    .theme-selector label {
-      font-size: 14px;
-      color: var(--light-text);
-      margin-right: 5px;
-    }
-    
-    .theme-selector .select-wrapper {
-      position: relative;
-      display: inline-block;
-      min-width: 140px;
-    }
-    
-    .theme-selector select {
-      width: 100%;
-      padding: 8px 30px 8px 12px;
-      border-radius: var(--radius);
-      border: 1px solid var(--border-color);
-      background-color: var(--input-bg);
-      color: var(--text-color);
       cursor: pointer;
-      appearance: none;
-      -webkit-appearance: none;
-      -moz-appearance: none;
-      background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 8px center;
-      background-size: 16px;
     }
-    
-    .theme-selector select:focus {
-      outline: none;
-      border-color: var(--primary-color);
-      box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
     }
-    
-    .color-blue { background-color: #3498db; }
-    .color-dark { background-color: #2c3e50; }
-    .color-purple { background-color: #9b59b6; }
-    .color-green { background-color: #2ecc71; }
-    .color-amber { background-color: #f39c12; }
-    
-    /* Mobile responsiveness - API Key Status and Theme */
-    @media (max-width: 768px) {
-      .dashboard-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 15px;
-      }
-      
-      .api-key-status, .theme-selector {
-        width: 100%;
-        justify-content: space-between;
-      }
-      
-      .api-key-modal-content {
-        width: 95%;
-        margin: 5% auto;
-      }
-      
-      .theme-selector {
-        margin-left: 0;
-        margin-top: 10px;
-        padding-top: 10px;
-        border-top: 1px solid var(--border-color);
-      }
+    .api-response {
+      background-color: rgba(0, 0, 0, 0.3);
+      padding: 1rem;
+      border-radius: 5px;
+      font-family: monospace;
+      white-space: pre;
+      overflow-x: auto;
+      margin-top: 1rem;
+    }
+    footer {
+      margin-top: auto;
+      width: 100%;
+      text-align: center;
+      padding: 1rem;
+      background: rgba(10, 25, 55, 0.9);
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255,255,255,.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 1s ease-in-out infinite;
+      margin-left: 10px;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
     }
   </style>
 </head>
 <body>
+  <header>
+    <h1>Aether_Coin CodeStar Platform</h1>
+    <p>A dynamic WebSocket-powered AI-enhanced development platform.</p>
+  </header>
+
   <div class="container">
-    <h1>Scroll Keeper Dashboard</h1>
-    <!-- Mobile chat toggle button -->
-    <div class="mobile-chat-toggle" id="mobileChatToggle" style="display: none;">💬</div>
-    
-    <div class="dashboard-header">
-      <div class="connection-controls">
-        <span id="connectionStatus" class="status disconnected">Disconnected</span>
-        <button id="connectBtn">Connect</button>
-        <button id="disconnectBtn">Disconnect</button>
-        <button id="clearLogsBtn">Clear Logs</button>
+    <h2>Welcome to the Aether_Coin Development Environment</h2>
+    <p>
+      This platform revolutionizes collaborative coding through intelligent, interactive tools and real-time
+      experience optimization.
+    </p>
+
+    <div class="features">
+      <div class="feature">
+        <h3>Code Mood Meter</h3>
+        <p>Analyze your code's complexity and quality with our AI-powered mood meter.</p>
+        <a href="/code-mood-meter" class="btn">Try It</a>
       </div>
-      <div class="api-key-status">
-        <span id="openaiKeyStatus" class="api-status missing">OpenAI API Key: Missing</span>
-        <button id="manageApiKeysBtn">Manage API Keys</button>
+      <div class="feature">
+        <h3>Productivity Dashboard</h3>
+        <p>Track your coding productivity and set meaningful development goals.</p>
+        <a href="/productivity" class="btn">Open Dashboard</a>
       </div>
-      <div class="theme-selector">
-        <label for="themeSelect">Theme:</label>
-        <div class="select-wrapper">
-          <select id="themeSelect">
-            <option value="default">Default Blue</option>
-            <option value="dark">Dark Mode</option>
-            <option value="purple">Royal Purple</option>
-            <option value="green">Emerald Green</option>
-            <option value="amber">Amber Gold</option>
-          </select>
-        </div>
+      <div class="feature">
+        <h3>Scroll Keeper</h3>
+        <p>Intelligent conversation tracking and management for your development team.</p>
+        <a href="/scroll-keeper" class="btn">Explore</a>
       </div>
     </div>
-    
-    <h2>WebSocket Communication</h2>
-    <div class="logs" id="wsLogs">
-      <pre>Waiting for connection...</pre>
-    </div>
-    
-    <h2>Extract Conversation</h2>
-    <div class="card">
-      <div class="url-input">
-        <input type="text" id="shareUrl" placeholder="Enter ChatGPT share URL (e.g., https://chat.openai.com/share/abc123...)">
-        <button id="extractBtn">Extract</button>
-      </div>
-      <div class="logs" id="extractionLogs">
-        <pre>No extraction activity yet.</pre>
-      </div>
-    </div>
-    
-    <h2>ChatGPT Interface</h2>
-    <div class="card">
-      <p>Chat with OpenAI and automatically capture conversations for Mysterion training:</p>
-      <div class="api-key-section" id="apiKeySection">
-        <div class="api-key-instructions">
-          <h3>🔑 API Key Required</h3>
-          <p>To access the chat interface, please provide your OpenAI API key:</p>
-          <ol>
-            <li>Visit <a href="https://platform.openai.com/api-keys" target="_blank">OpenAI API Keys</a> (requires an OpenAI account)</li>
-            <li>Create a new secret key and copy it</li>
-            <li>Paste the key in the field below and click "Save API Key"</li>
-          </ol>
-          <div class="key-note">
-            <strong>Note:</strong> Your API key will be stored locally in your browser and is never sent to our servers. API usage charges apply based on your OpenAI account.
-          </div>
-        </div>
-        <div class="api-key-input">
-          <input type="password" id="apiKeyInput" placeholder="Enter your OpenAI API key (starts with 'sk-')">
-          <button id="saveApiKeyBtn">Save API Key</button>
-        </div>
-        <p class="alternative-key-option">
-          You can also click <strong>"Manage API Keys"</strong> in the dashboard header to add both OpenAI and HuggingFace API keys.
-        </p>
-      </div>
-      <div class="chat-container" id="chatContainer" style="display: none;">
-        <div class="chat-messages" id="chatMessages">
-          <div class="message system">
-            <div class="message-content">
-              Hello! I'm Mysterion's ChatGPT interface. Ask me anything and our conversations will be used to train Mysterion's own LLM.
-            </div>
-          </div>
-        </div>
-        <div class="chat-input-container">
-          <textarea id="chatInput" rows="3" placeholder="Type your message here..."></textarea>
-          <button id="sendMessageBtn">Send</button>
-        </div>
-        <div class="chat-options">
-          <label for="modelSelect">Model:</label>
-          <select id="modelSelect">
-            <option value="gpt-4o">GPT-4o (newest)</option>
-            <option value="gpt-4">GPT-4</option>
-            <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-          </select>
-          <button id="clearChatBtn">Clear Chat</button>
-        </div>
-      </div>
-      <div class="logs" id="interceptorLogs">
-        <pre>No API interceptions yet.</pre>
-      </div>
-    </div>
-    
-    <h2>Training Data Preparation</h2>
-    <div class="card">
-      <p>Prepare training data for LLM fine-tuning:</p>
-      <div class="training-prep-controls">
-        <select id="formatSelect">
-          <option value="instruction">Instruction format</option>
-          <option value="chat">Chat format</option>
-          <option value="completion">Completion format</option>
-        </select>
-        <button id="prepareTrainingBtn">Prepare Training Data</button>
-      </div>
-      <div class="logs" id="prepLogs">
-        <pre>No training data prepared yet.</pre>
-      </div>
-    </div>
-    
-    <h2>LLM Training with Langs</h2>
-    <div class="card">
-      <p>Train LLM using Langs billion-parameter models:</p>
-      <div class="training-controls">
-        <button id="startTrainingBtn" disabled>Start Training</button>
-        <button id="checkStatusBtn">Check Training Status</button>
-      </div>
-      <div class="logs" id="trainingLogs">
-        <pre>No training status available.</pre>
-      </div>
-      <div class="training-progress" style="display: none;">
-        <div class="progress-label">Training Progress: <span id="progressPercent">0%</span></div>
-        <div class="progress-bar-container">
-          <div id="progressBar" style="width: 0%;"></div>
-        </div>
-        <div class="stats">
-          <div>Current Step: <span id="currentStep">0</span>/<span id="totalSteps">0</span></div>
-          <div>Loss: <span id="lossValue">-</span></div>
-          <div>Model: <span id="modelName">-</span></div>
-        </div>
-      </div>
-    </div>
+
+    <h2>API Status</h2>
+    <button id="check-api" class="btn">Check API Status</button>
+    <div id="api-status" class="api-response">Checking API status...</div>
+
+    <h2>WebSocket Connection</h2>
+    <button id="connect-ws" class="btn">Connect to WebSocket</button>
+    <div id="ws-status" class="api-response">Click to connect to WebSocket...</div>
   </div>
 
-  <!-- API Key Modal -->
-  <div class="api-key-modal" id="apiKeyModal">
-    <div class="api-key-modal-content">
-      <div class="api-key-modal-header">
-        <h3>Manage API Keys</h3>
-        <button class="close-modal" id="closeApiKeyModal">×</button>
-      </div>
-      <div class="api-key-modal-body">
-        <div class="api-key-input-group">
-          <label for="openaiApiKeyInput">OpenAI API Key</label>
-          <input 
-            type="password" 
-            id="openaiApiKeyInput" 
-            placeholder="Enter your OpenAI API key..."
-          >
-        </div>
-        <div class="api-key-input-group">
-          <label for="huggingfaceApiKeyInput">Hugging Face API Key</label>
-          <input 
-            type="password" 
-            id="huggingfaceApiKeyInput" 
-            placeholder="Enter your Hugging Face API key..."
-          >
-        </div>
-        <p class="api-key-message">Your API keys will be stored locally on your device and not sent to any servers.</p>
-      </div>
-      <div class="api-key-modal-footer">
-        <button id="cancelApiKeyBtn">Cancel</button>
-        <button id="saveApiKeysBtn">Save Keys</button>
-      </div>
-    </div>
-  </div>
+  <footer>
+    <p>&copy; 2025 Aether_Coin | CodeStar Platform</p>
+  </footer>
 
   <script>
-    // DOM Elements
-    const connectBtn = document.getElementById('connectBtn');
-    const disconnectBtn = document.getElementById('disconnectBtn');
-    const connectionStatus = document.getElementById('connectionStatus');
-    const wsLogs = document.getElementById('wsLogs');
-    const clearLogsBtn = document.getElementById('clearLogsBtn');
-    const shareUrl = document.getElementById('shareUrl');
-    const extractBtn = document.getElementById('extractBtn');
-    const extractionLogs = document.getElementById('extractionLogs');
-    const checkStatusBtn = document.getElementById('checkStatusBtn');
-    const trainingLogs = document.getElementById('trainingLogs');
-    
-    // New UI elements
-    const interceptorLogs = document.getElementById('interceptorLogs');
-    // Note: simulateApiBtn has been removed from the UI
-    
-    // Chat interface elements
-    const apiKeySection = document.getElementById('apiKeySection');
-    const apiKeyInput = document.getElementById('apiKeyInput');
-    const saveApiKeyBtn = document.getElementById('saveApiKeyBtn');
-    const chatContainer = document.getElementById('chatContainer');
-    const chatMessages = document.getElementById('chatMessages');
-    const chatInput = document.getElementById('chatInput');
-    const sendMessageBtn = document.getElementById('sendMessageBtn');
-    const modelSelect = document.getElementById('modelSelect');
-    const clearChatBtn = document.getElementById('clearChatBtn');
-    const formatSelect = document.getElementById('formatSelect');
-    const prepareTrainingBtn = document.getElementById('prepareTrainingBtn');
-    const prepLogs = document.getElementById('prepLogs');
-    const startTrainingBtn = document.getElementById('startTrainingBtn');
-    const trainingProgress = document.querySelector('.training-progress');
-    const progressBar = document.getElementById('progressBar');
-    const progressPercent = document.getElementById('progressPercent');
-    const currentStep = document.getElementById('currentStep');
-    const totalSteps = document.getElementById('totalSteps');
-    const lossValue = document.getElementById('lossValue');
-    const modelName = document.getElementById('modelName');
-    
-    // State variables
-    let trainingDataId = null;
-    
-    // WebSocket connection
-    let socket = null;
-    
-    // Log messages
-    function log(logElement, message, isError = false) {
-      const logMsg = document.createElement('pre');
-      logMsg.textContent = `${new Date().toLocaleTimeString()} - ${message}`;
+    document.addEventListener('DOMContentLoaded', () => {
+      const apiStatus = document.getElementById('api-status');
+      const wsStatus = document.getElementById('ws-status');
       
-      if (isError) {
-        logMsg.style.color = '#e74c3c';
-      }
-      
-      logElement.appendChild(logMsg);
-      logElement.scrollTop = logElement.scrollHeight;
-    }
-    
-    // Connect to WebSocket
-    function connectWebSocket() {
-      try {
-        // Build WebSocket URL based on current location
-        const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-        const wsUrl = `${protocol}//${window.location.host}/ws`;
-        
-        log(wsLogs, `Connecting to WebSocket at: ${wsUrl}`);
-        
-        socket = new WebSocket(wsUrl);
-        
-        socket.onopen = () => {
-          connectionStatus.textContent = 'Connected';
-          connectionStatus.className = 'status connected';
-          log(wsLogs, 'Connected to WebSocket server');
-          
-          // Subscribe to topics
-          socket.send(JSON.stringify({
-            type: 'subscribe',
-            topics: ['training', 'conversations', 'system']
-          }));
-        };
-        
-        socket.onmessage = (event) => {
-          try {
-            const message = JSON.parse(event.data);
-            
-            if (message.type === 'welcome') {
-              log(wsLogs, `WebSocket welcome message: "${message.message}"`);
-            } else if (message.type === 'training_update') {
-              // Update training logs and progress UI
-              log(trainingLogs, `Training update: Step ${message.data.currentStep}/${message.data.totalSteps}, Loss: ${message.data.loss?.toFixed(4) || 'N/A'}`);
-              
-              // Show progress UI if hidden
-              if (trainingProgress.style.display === 'none') {
-                trainingProgress.style.display = 'block';
-              }
-              
-              // Update progress elements
-              if (message.data.totalSteps > 0) {
-                const percent = Math.floor((message.data.currentStep / message.data.totalSteps) * 100);
-                progressBar.style.width = `${percent}%`;
-                progressPercent.textContent = `${percent}%`;
-                currentStep.textContent = message.data.currentStep;
-                totalSteps.textContent = message.data.totalSteps;
-                
-                if (message.data.loss !== null) {
-                  lossValue.textContent = message.data.loss.toFixed(4);
-                }
-                
-                modelName.textContent = message.data.currentModel || '-';
-              }
-            } else if (message.type === 'training_complete') {
-              log(trainingLogs, `Training complete! Model: ${message.data.currentModel}`, false);
-              log(trainingLogs, `Final loss: ${message.data.loss?.toFixed(4) || 'N/A'}`, false);
-              log(trainingLogs, message.data.message || 'Training has finished successfully.', false);
-              
-              // Reset button state
-              startTrainingBtn.disabled = false;
-              startTrainingBtn.textContent = 'Start New Training';
-            } else if (message.type === 'conversation_update') {
-              log(interceptorLogs, `New conversation intercepted: ${message.data.id} (${message.data.source}) with ${message.data.messageCount} messages`);
-            } else {
-              log(wsLogs, `Message received: ${JSON.stringify(message)}`);
-            }
-          } catch (error) {
-            log(wsLogs, `Error parsing message: ${error.message}`, true);
-          }
-        };
-        
-        socket.onclose = () => {
-          connectionStatus.textContent = 'Disconnected';
-          connectionStatus.className = 'status disconnected';
-          log(wsLogs, 'Disconnected from WebSocket server');
-          socket = null;
-        };
-        
-        socket.onerror = (error) => {
-          log(wsLogs, `WebSocket error: ${error.message || 'Unknown error'}`, true);
-        };
-      } catch (error) {
-        log(wsLogs, `Connection error: ${error.message}`, true);
-      }
-    }
-    
-    // Disconnect WebSocket
-    function disconnectWebSocket() {
-      if (socket) {
-        socket.close();
-        socket = null;
-      }
-    }
-    
-    // Extract conversation
-    async function extractConversation(url) {
-      try {
-        log(extractionLogs, `Extracting conversation from: ${url}`);
-        
-        const response = await fetch('/api/extract/conversation', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ url })
-        });
-        
-        const data = await response.json();
-        
-        if (!response.ok) {
-          throw new Error(data.error || 'Extraction failed');
+      // Check API health
+      document.getElementById('check-api').addEventListener('click', async () => {
+        apiStatus.innerHTML = 'Checking API status... <div class="loading"></div>';
+        try {
+          console.log("Server connectivity confirmed: Direct HTML page loaded successfully");
+          const response = await fetch('/api/health');
+          const data = await response.json();
+          apiStatus.textContent = JSON.stringify(data, null, 2);
+          console.log("API connectivity successful:", data);
+        } catch (error) {
+          apiStatus.textContent = `Error connecting to API: ${error.message}`;
+          console.error("API connectivity issue:", error);
         }
-        
-        log(extractionLogs, `Extraction successful! Conversation "${data.conversation.title}" with ${data.conversation.messages.length} messages`);
-        log(extractionLogs, `First message: "${data.conversation.messages[0]?.content?.substring(0, 100)}..."`);
-        
-        return data.conversation;
-      } catch (error) {
-        log(extractionLogs, `Extraction error: ${error.message}`, true);
-        return null;
-      }
-    }
-    
-    // Check training status
-    async function checkTrainingStatus() {
-      try {
-        log(trainingLogs, 'Checking training status...');
-        
-        const response = await fetch('/api/training/status');
-        const data = await response.json();
-        
-        if (!response.ok) {
-          throw new Error(data.error || 'Failed to get status');
-        }
-        
-        if (data.isTraining) {
-          log(trainingLogs, `Training in progress: Step ${data.currentStep}/${data.totalSteps}, Loss: ${data.loss?.toFixed(4) || 'N/A'}`);
-        } else {
-          log(trainingLogs, `No active training. Last model: ${data.currentModel || 'None'}`);
-        }
-        
-        return data;
-      } catch (error) {
-        log(trainingLogs, `Status check error: ${error.message}`, true);
-        return null;
-      }
-    }
-    
-    // Simulate OpenAI API call
-    async function simulateApiCall() {
-      try {
-        log(interceptorLogs, 'Simulating OpenAI API call...');
-        
-        const response = await fetch('/api/intercept/openai', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            endpoint: 'chat/completions',
-            request: {
-              model: 'gpt-4o',
-              messages: [
-                { role: 'system', content: 'You are a helpful AI assistant with expertise in LLM training.' },
-                { role: 'user', content: 'What are the key aspects of fine-tuning an LLM model?' }
-              ]
-            },
-            response: {
-              model: 'gpt-4o',
-              choices: [
-                {
-                  message: {
-                    role: 'assistant',
-                    content: 'Fine-tuning an LLM (Large Language Model) involves several key aspects:\n\n1. **High-Quality Data**: Curating a relevant, diverse, and high-quality dataset is crucial. The quality of your training data directly impacts the model\'s performance.\n\n2. **Task Alignment**: Ensuring your data represents the specific task or domain you want the model to excel at.\n\n3. **Hyperparameter Optimization**: Finding the optimal learning rate, batch size, number of epochs, etc., for your specific use case.\n\n4. **Compute Resources**: Having sufficient computational power, including GPUs or TPUs, for efficient training.\n\n5. **Overfitting Prevention**: Implementing techniques like early stopping, proper validation splits, and regularization to prevent the model from memorizing training data.\n\n6. **Evaluation Metrics**: Defining appropriate metrics to measure success based on your specific application.\n\n7. **Prompt Engineering**: Designing effective prompts that elicit the desired responses from the model.\n\n8. **Continued Pretraining**: Sometimes it\'s beneficial to continue pretraining on domain-specific data before fine-tuning for specific tasks.\n\n9. **Ethical Considerations**: Ensuring the model doesn\'t amplify biases, produce harmful content, or violate privacy.\n\n10. **Iterative Improvement**: Fine-tuning is rarely perfect on the first attempt; it typically requires multiple iterations and refinements.\n\nThe optimal approach depends on your specific goals, available resources, and the base model you\'re working with. Advanced techniques like parameter-efficient fine-tuning methods (LoRA, adapters, etc.) can also be considered to reduce computational requirements while maintaining performance.'
-                  }
-                }
-              ]
-            }
-          })
-        });
-        
-        const data = await response.json();
-        
-        if (!response.ok) {
-          throw new Error(data.error || 'API interception failed');
-        }
-        
-        log(interceptorLogs, `API interception successful! Conversation ID: ${data.conversationId}`);
-        
-        return data;
-      } catch (error) {
-        log(interceptorLogs, `API interception error: ${error.message}`, true);
-        return null;
-      }
-    }
-    
-    // Prepare training data
-    async function prepareTrainingData() {
-      try {
-        const format = formatSelect.value;
-        log(prepLogs, `Preparing training data in ${format} format...`);
-        
-        const response = await fetch('/api/training/prepare', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ format })
-        });
-        
-        const data = await response.json();
-        
-        if (!response.ok) {
-          throw new Error(data.error || 'Training preparation failed');
-        }
-        
-        // Store the training data ID for later use
-        trainingDataId = data.trainingDataId;
-        
-        // Enable training button
-        startTrainingBtn.disabled = false;
-        
-        log(prepLogs, `Training data prepared successfully! ID: ${data.trainingDataId}`);
-        log(prepLogs, `Stats: ${data.stats.totalExamples} examples (${data.stats.trainingExamples} training, ${data.stats.validationExamples} validation)`);
-        log(prepLogs, `From ${data.stats.conversationsUsed} conversations`);
-        
-        return data;
-      } catch (error) {
-        log(prepLogs, `Training preparation error: ${error.message}`, true);
-        return null;
-      }
-    }
-    
-    // Start LLM training
-    async function startTraining() {
-      try {
-        if (!trainingDataId) {
-          log(trainingLogs, 'No training data prepared. Please prepare training data first.', true);
-          return null;
-        }
-        
-        log(trainingLogs, `Starting LLM training with data ID: ${trainingDataId}...`);
-        
-        const response = await fetch('/api/training/start', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            trainingDataId,
-            baseModel: 'langs/dolma-7b',
-            hyperparams: {
-              epochs: 3,
-              batchSize: 8,
-              learningRate: 2e-5
-            }
-          })
-        });
-        
-        const data = await response.json();
-        
-        if (!response.ok) {
-          throw new Error(data.error || 'Training failed to start');
-        }
-        
-        // Update UI
-        startTrainingBtn.disabled = true;
-        startTrainingBtn.textContent = 'Training in Progress...';
-        trainingProgress.style.display = 'block';
-        
-        // Update progress elements with initial data
-        if (data.trainingStatus) {
-          const status = data.trainingStatus;
-          currentStep.textContent = status.currentStep;
-          totalSteps.textContent = status.totalSteps;
-          modelName.textContent = status.currentModel;
-          
-          if (status.totalSteps > 0) {
-            const percent = Math.floor((status.currentStep / status.totalSteps) * 100);
-            progressBar.style.width = `${percent}%`;
-            progressPercent.textContent = `${percent}%`;
-          }
-        }
-        
-        log(trainingLogs, `Training started! Job ID: ${data.jobId}`);
-        
-        return data;
-      } catch (error) {
-        log(trainingLogs, `Training error: ${error.message}`, true);
-        return null;
-      }
-    }
+      });
 
-    // Clear various logs
-    function clearAllLogs() {
-      wsLogs.innerHTML = '<pre>Logs cleared.</pre>';
-      extractionLogs.innerHTML = '<pre>Logs cleared.</pre>';
-      trainingLogs.innerHTML = '<pre>Logs cleared.</pre>';
-      interceptorLogs.innerHTML = '<pre>Logs cleared.</pre>';
-      prepLogs.innerHTML = '<pre>Logs cleared.</pre>';
-    }
-    
-    // Event Listeners
-    connectBtn.addEventListener('click', connectWebSocket);
-    disconnectBtn.addEventListener('click', disconnectWebSocket);
-    clearLogsBtn.addEventListener('click', clearAllLogs);
-    
-    extractBtn.addEventListener('click', () => {
-      const url = shareUrl.value.trim();
-      if (url) {
-        extractConversation(url);
-      } else {
-        log(extractionLogs, 'Please enter a valid ChatGPT share URL', true);
-      }
-    });
-    
-    // We've removed the simulateApiBtn from the UI, so no need to reference it
-    
-    // Chat interface functionality
-    saveApiKeyBtn.addEventListener('click', saveApiKey);
-    sendMessageBtn.addEventListener('click', sendChatMessage);
-    clearChatBtn.addEventListener('click', clearChat);
-    
-    // Allow sending message with Enter key
-    chatInput.addEventListener('keydown', (event) => {
-      if (event.key === 'Enter' && !event.shiftKey) {
-        event.preventDefault();
-        sendChatMessage();
-      }
-    });
-    
-    // API Key Management Functions
-    async function checkStoredApiKey() {
-      try {
-        const response = await fetch('/api/keys/check/openai');
-        const data = await response.json();
-        
-        // Update key status indicator
-        if (data.hasKey) {
-          // Show chat interface if we have a key
-          apiKeySection.style.display = 'none';
-          chatContainer.style.display = 'flex';
-          
-          // Update status indicator
-          openaiKeyStatus.textContent = 'OpenAI API Key: Active';
-          openaiKeyStatus.className = 'api-status active';
-          
-          log(interceptorLogs, 'Using stored OpenAI API key');
-        } else {
-          // No key found
-          openaiKeyStatus.textContent = 'OpenAI API Key: Missing';
-          openaiKeyStatus.className = 'api-status missing';
-          
-          // Make sure API key section is shown
-          apiKeySection.style.display = 'block';
-          chatContainer.style.display = 'none';
-        }
-      } catch (error) {
-        console.error('Error checking API key:', error);
-        
-        // Set status to error state
-        openaiKeyStatus.textContent = 'OpenAI API Key: Error';
-        openaiKeyStatus.className = 'api-status missing';
-      }
-      
-      // Also check for Hugging Face API key
-      try {
-        const response = await fetch('/api/keys/check/huggingface');
-        const data = await response.json();
-        
-        if (data.hasKey) {
-          log(interceptorLogs, 'Using stored Hugging Face API key');
-        }
-      } catch (error) {
-        console.error('Error checking Hugging Face API key:', error);
-      }
-    }
-    
-    async function saveApiKey() {
-      const apiKey = apiKeyInput.value.trim();
-      
-      if (!apiKey) {
-        alert('Please enter your OpenAI API key');
-        return;
-      }
-      
-      try {
-        const response = await fetch('/api/keys/store', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            service: 'openai',
-            apiKey
-          })
-        });
-        
-        const data = await response.json();
-        
-        if (!response.ok) {
-          throw new Error(data.error || 'Failed to store API key');
-        }
-        
-        // Show success message
-        log(interceptorLogs, 'API key stored successfully');
-        
-        // Hide API key section and show chat
-        apiKeySection.style.display = 'none';
-        chatContainer.style.display = 'flex';
-        
-        // Update key status indicator
-        openaiKeyStatus.textContent = 'OpenAI API Key: Active';
-        openaiKeyStatus.className = 'api-status active';
-        
-        // Clear input
-        apiKeyInput.value = '';
-      } catch (error) {
-        alert(`Error saving API key: ${error.message}`);
-        console.error('API key storage error:', error);
-      }
-    }
-    
-    // Chat Interface Functions
-    async function sendChatMessage() {
-      const message = chatInput.value.trim();
-      
-      if (!message) {
-        return;
-      }
-      
-      // Get the current conversation from chat window
-      const messages = [];
-      const messageElements = chatMessages.querySelectorAll('.message');
-      
-      messageElements.forEach(element => {
-        const role = element.classList.contains('user') 
-          ? 'user' 
-          : element.classList.contains('assistant') 
-            ? 'assistant' 
-            : element.classList.contains('system') 
-              ? 'system' 
-              : null;
-        
-        if (role) {
-          const content = element.querySelector('.message-content').textContent.trim();
-          messages.push({ role, content });
-        }
-      });
-      
-      // Add the new user message
-      messages.push({ role: 'user', content: message });
-      
-      // Display user message in the chat
-      appendMessage('user', message);
-      
-      // Clear input
-      chatInput.value = '';
-      
-      // Add typing indicator
-      const typingIndicator = document.createElement('div');
-      typingIndicator.className = 'typing-indicator';
-      typingIndicator.innerHTML = '<span></span><span></span><span></span>';
-      chatMessages.appendChild(typingIndicator);
-      chatMessages.scrollTop = chatMessages.scrollHeight;
-      
-      try {
-        // Get selected model
-        const model = modelSelect.value;
-        
-        // Call API
-        const response = await fetch('/api/chat', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            messages,
-            model,
-            temperature: 0.7
-          })
-        });
-        
-        const data = await response.json();
-        
-        // Remove typing indicator
-        typingIndicator.remove();
-        
-        if (!response.ok) {
-          if (data.needsKey) {
-            // Show API key section if we need a key
-            apiKeySection.style.display = 'block';
-            chatContainer.style.display = 'none';
-            appendMessage('system', 'OpenAI API key is required. Please enter your API key above.');
-          } else {
-            throw new Error(data.error || 'Chat request failed');
-          }
-        } else if (data.choices && data.choices.length > 0) {
-          // Display assistant message
-          const assistantMessage = data.choices[0].message.content;
-          appendMessage('assistant', assistantMessage);
-          
-          // Log the conversation capture
-          log(interceptorLogs, `Conversation captured for training: ${data.id || 'unknown'}`);
-        }
-      } catch (error) {
-        // Remove typing indicator
-        if (typingIndicator.parentNode) {
-          typingIndicator.remove();
-        }
-        
-        // Show error
-        appendMessage('system', `Error: ${error.message}`);
-        console.error('Chat error:', error);
-      }
-    }
-    
-    function appendMessage(role, content) {
-      const messageElement = document.createElement('div');
-      messageElement.className = `message ${role}`;
-      
-      const contentElement = document.createElement('div');
-      contentElement.className = 'message-content';
-      contentElement.textContent = content;
-      
-      messageElement.appendChild(contentElement);
-      chatMessages.appendChild(messageElement);
-      
-      // Scroll to bottom
-      chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
-    
-    function clearChat() {
-      chatMessages.innerHTML = `
-        <div class="message system">
-          <div class="message-content">
-            Chat cleared. Your conversation history has been reset.
-          </div>
-        </div>
-      `;
-    }
-    
-    // API Key Modal elements
-    const openaiKeyStatus = document.getElementById('openaiKeyStatus');
-    const manageApiKeysBtn = document.getElementById('manageApiKeysBtn');
-    const apiKeyModal = document.getElementById('apiKeyModal');
-    const closeApiKeyModal = document.getElementById('closeApiKeyModal');
-    const cancelApiKeyBtn = document.getElementById('cancelApiKeyBtn');
-    const saveApiKeysBtn = document.getElementById('saveApiKeysBtn');
-    const openaiApiKeyInput = document.getElementById('openaiApiKeyInput');
-    const huggingfaceApiKeyInput = document.getElementById('huggingfaceApiKeyInput');
-    
-    // Theme selector elements
-    const themeSelect = document.getElementById('themeSelect');
-    
-    // API Key Modal Functions
-    function openApiKeyModalFn() {
-      // Populate form with existing values
-      const storedOpenaiKey = localStorage.getItem('openai_api_key');
-      const storedHuggingfaceKey = localStorage.getItem('huggingface_api_key');
-      
-      if (storedOpenaiKey) {
-        openaiApiKeyInput.value = storedOpenaiKey;
-      }
-      
-      if (storedHuggingfaceKey) {
-        huggingfaceApiKeyInput.value = storedHuggingfaceKey;
-      }
-      
-      // Show modal
-      apiKeyModal.style.display = 'block';
-    }
-    
-    function closeApiKeyModalFn() {
-      apiKeyModal.style.display = 'none';
-    }
-    
-    async function saveApiKeysFromModal() {
-      const openaiKey = openaiApiKeyInput.value.trim();
-      const huggingfaceKey = huggingfaceApiKeyInput.value.trim();
-      
-      let hasChanges = false;
-      
-      // Store OpenAI Key
-      if (openaiKey) {
+      // WebSocket connection
+      document.getElementById('connect-ws').addEventListener('click', () => {
+        wsStatus.innerHTML = 'Connecting to WebSocket... <div class="loading"></div>';
         try {
-          const response = await fetch('/api/keys/store', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              service: 'openai',
-              apiKey: openaiKey
-            })
-          });
+          const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+          const wsUrl = `${protocol}//${window.location.host}/ws`;
           
-          const data = await response.json();
+          const socket = new WebSocket(wsUrl);
           
-          if (!response.ok) {
-            throw new Error(data.error || 'Failed to store API key');
-          }
+          socket.onopen = () => {
+            wsStatus.textContent = 'Connected to WebSocket server!';
+            socket.send('subscribe');
+          };
           
-          // Also store in localStorage for form persistence
-          localStorage.setItem('openai_api_key', openaiKey);
+          socket.onmessage = (event) => {
+            const message = JSON.parse(event.data);
+            wsStatus.textContent = `Received message: ${JSON.stringify(message, null, 2)}`;
+          };
           
-          // Update key status indicator
-          openaiKeyStatus.textContent = 'OpenAI API Key: Active';
-          openaiKeyStatus.className = 'api-status active';
+          socket.onerror = (error) => {
+            wsStatus.textContent = `WebSocket error: ${error.message || 'Unknown error'}`;
+          };
           
-          // Also update apiKeyInput for consistency
-          apiKeyInput.value = openaiKey;
-          
-          // Show chat interface
-          apiKeySection.style.display = 'none';
-          chatContainer.style.display = 'flex';
-          
-          log(interceptorLogs, 'OpenAI API key saved successfully');
-          hasChanges = true;
+          socket.onclose = () => {
+            wsStatus.textContent = 'WebSocket connection closed.';
+          };
         } catch (error) {
-          alert(`Error saving OpenAI API key: ${error.message}`);
-          console.error('API key storage error:', error);
-        }
-      }
-      
-      // Store Hugging Face Key
-      if (huggingfaceKey) {
-        try {
-          const response = await fetch('/api/keys/store', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              service: 'huggingface',
-              apiKey: huggingfaceKey
-            })
-          });
-          
-          const data = await response.json();
-          
-          if (!response.ok) {
-            throw new Error(data.error || 'Failed to store Hugging Face API key');
-          }
-          
-          // Also store in localStorage for form persistence
-          localStorage.setItem('huggingface_api_key', huggingfaceKey);
-          
-          log(interceptorLogs, 'Hugging Face API key saved successfully');
-          hasChanges = true;
-        } catch (error) {
-          alert(`Error saving Hugging Face API key: ${error.message}`);
-          console.error('API key storage error:', error);
-        }
-      }
-      
-      if (hasChanges) {
-        closeApiKeyModalFn();
-      } else if (!openaiKey && !huggingfaceKey) {
-        alert('Please enter at least one API key');
-      }
-    }
-    
-    // Add event listeners for API Key Modal
-    manageApiKeysBtn.addEventListener('click', openApiKeyModalFn);
-    closeApiKeyModal.addEventListener('click', closeApiKeyModalFn);
-    cancelApiKeyBtn.addEventListener('click', closeApiKeyModalFn);
-    saveApiKeysBtn.addEventListener('click', saveApiKeysFromModal);
-    
-    // Check for stored API key on page load
-    checkStoredApiKey();
-    prepareTrainingBtn.addEventListener('click', prepareTrainingData);
-    startTrainingBtn.addEventListener('click', startTraining);
-    checkStatusBtn.addEventListener('click', checkTrainingStatus);
-    
-    // Mobile chat toggle functionality
-    const mobileChatToggle = document.getElementById('mobileChatToggle');
-    if (mobileChatToggle) {
-      // Show/hide mobile chat toggle based on screen size
-      function updateMobileUI() {
-        if (window.innerWidth <= 768) {
-          mobileChatToggle.style.display = 'flex';
-          
-          // On mobile, we want to use shorter logs
-          const allLogs = document.querySelectorAll('.logs');
-          allLogs.forEach(log => {
-            log.style.maxHeight = '150px';
-          });
-        } else {
-          mobileChatToggle.style.display = 'none';
-          
-          // Reset logs height on desktop
-          const allLogs = document.querySelectorAll('.logs');
-          allLogs.forEach(log => {
-            log.style.maxHeight = '200px';
-          });
-        }
-      }
-      
-      // Focus on chat section
-      mobileChatToggle.addEventListener('click', () => {
-        // Find the chat section by its heading text
-        const headings = Array.from(document.querySelectorAll('h2'));
-        const chatSection = headings.find(h2 => h2.textContent.includes('ChatGPT Interface'));
-        
-        if (chatSection) {
-          chatSection.scrollIntoView({ behavior: 'smooth' });
-          setTimeout(() => {
-            if (chatContainer.style.display !== 'none') {
-              chatInput.focus();
-            } else {
-              apiKeyInput.focus();
-            }
-          }, 500);
+          wsStatus.textContent = `Error creating WebSocket: ${error.message}`;
         }
       });
-      
-      // Update on page load and resize
-      window.addEventListener('resize', updateMobileUI);
-      updateMobileUI();
-    }
-    
-    // Theme management functions
-    function setTheme(themeName) {
-      // Remove any existing theme
-      document.documentElement.removeAttribute('data-theme');
-      
-      // If not default theme, apply the new theme
-      if (themeName !== 'default') {
-        document.documentElement.setAttribute('data-theme', themeName);
-      }
-      
-      // Save user preference
-      localStorage.setItem('scroll_keeper_theme', themeName);
-      
-      // Update select element
-      if (themeSelect) {
-        themeSelect.value = themeName;
-      }
-      
-      log(wsLogs, `Theme changed to: ${themeName}`);
-    }
-    
-    function loadSavedTheme() {
-      const savedTheme = localStorage.getItem('scroll_keeper_theme');
-      if (savedTheme) {
-        setTheme(savedTheme);
-      }
-    }
-    
-    // Add event listener for theme selector
-    if (themeSelect) {
-      themeSelect.addEventListener('change', (e) => {
-        setTheme(e.target.value);
-      });
-    }
-    
-    // Load saved theme on page load
-    loadSavedTheme();
-    
-    // Auto-connect on page load
-    window.addEventListener('load', connectWebSocket);
+    });
   </script>
 </body>
 </html>

@@ -30,6 +30,9 @@ const httpServer = createServer(app);
 // Enable CORS
 app.use(cors());
 
+// Serve static files from 'public' directory
+app.use(express.static(path.join(__dirname, 'public')));
+
 console.log(`Starting Simplified Aetherion Server`);
 console.log(`Main server on port ${PORT} proxying to Vite on port ${VITE_PORT}`);
 
@@ -75,6 +78,28 @@ app.get('/health', (req, res) => {
   console.log(`Health check requested from ${req.ip} - Status: OK`);
 });
 
+// Add API health check endpoint (explicitly mounted at /api/health)
+app.get('/api/health', (req, res) => {
+  // Add CORS headers for the API health check endpoint
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type');
+  
+  res.json({
+    status: 'ok',
+    api_version: '1.0.0',
+    environment: process.env.NODE_ENV || 'development',
+    timestamp: new Date().toISOString(),
+    features: {
+      productivity: true,
+      codeMoodMeter: true,
+      webSocket: true
+    }
+  });
+  
+  console.log(`API health check requested from ${req.ip} - Status: OK`);
+});
+
 // Simple API endpoint for Scroll Keeper status
 app.get('/api/status', (req, res) => {
   res.json({
@@ -88,6 +113,12 @@ app.get('/api/status', (req, res) => {
 // Serve a simple HTML page for direct testing
 app.get('/test', (req, res) => {
   res.sendFile(path.join(__dirname, 'test.html'));
+});
+
+// Add app route to redirect to the SPA
+app.get('/app', (req, res) => {
+  console.log('Redirecting to SPA from /app route');
+  res.redirect('/');
 });
 
 // Middleware to log all requests
@@ -320,6 +351,16 @@ app.get(CLIENT_ROUTES, (req, res) => {
 // Add a middleware to check all other requests
 app.use('*', (req, res, next) => {
   const path = req.originalUrl;
+  
+  // Explicitly handle API requests
+  if (path.startsWith('/api/')) {
+    // If we reached here, there's no explicit handler for this API route
+    console.log(`API endpoint not found: ${path}`);
+    return res.status(404).json({
+      error: 'API endpoint not found',
+      path: path
+    });
+  }
   
   // Check if the request is for a Vite module or asset
   if (shouldProxyToVite(path)) {

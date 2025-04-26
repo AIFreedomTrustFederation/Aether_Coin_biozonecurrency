@@ -1,205 +1,213 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Aetherion Server Test</title>
-  <style>
-    body {
-      font-family: system-ui, -apple-system, sans-serif;
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 20px;
-      line-height: 1.5;
-    }
-    h1 {
-      color: #3050C0;
-    }
-    .card {
-      background: #f4f8ff;
-      border: 1px solid #d0d8e8;
-      border-radius: 8px;
-      padding: 15px;
-      margin-bottom: 20px;
-    }
-    .success {
-      color: #22cc77;
-      font-weight: bold;
-    }
-    .error {
-      color: #e74c3c;
-      font-weight: bold;
-    }
-    button {
-      background: #3050C0;
-      color: white;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 14px;
-      margin-top: 10px;
-    }
-    button:hover {
-      background: #4060D0;
-    }
-    pre {
-      background: #f4f4f4;
-      padding: 10px;
-      border-radius: 4px;
-      overflow-x: auto;
-    }
-    #results {
-      margin-top: 20px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aether_Coin CodeStar Server Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            background: linear-gradient(135deg, #041e3c, #0b3561);
+            color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(15, 35, 75, 0.8);
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+        h1 {
+            color: #41e0fd;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        h2 {
+            color: #9b83fc;
+            margin-top: 30px;
+        }
+        .status {
+            padding: 15px;
+            border-radius: 5px;
+            background: rgba(0, 0, 0, 0.2);
+            margin-bottom: 15px;
+        }
+        .status-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #41e0fd;
+        }
+        .server-status {
+            color: #4caf50;
+        }
+        .btn {
+            display: inline-block;
+            background: linear-gradient(90deg, #41e0fd, #9b83fc);
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: bold;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        a {
+            color: #41e0fd;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        pre {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-left: 10px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
 </head>
 <body>
-  <h1>Aetherion Server Test</h1>
-  <div class="card">
-    <h2>Server Status</h2>
-    <p id="serverStatus">Checking server status...</p>
-  </div>
-
-  <div class="card">
-    <h2>Vite Development Server</h2>
-    <p id="viteStatus">Checking Vite status...</p>
-  </div>
-
-  <div class="card">
-    <h2>WebSocket Connection</h2>
-    <p id="wsStatus">Checking WebSocket status...</p>
-    <button id="testWs">Test WebSocket</button>
-  </div>
-
-  <div class="card">
-    <h2>Route Testing</h2>
-    <button id="testHome">Test Home Page</button>
-    <button id="testCodeMoodMeter">Test Code Mood Meter</button>
-  </div>
-
-  <div id="results">
-    <h2>Test Results</h2>
-    <pre id="resultLog">Click a test button to see results...</pre>
-  </div>
-
-  <script>
-    // Helper to log results
-    function log(message) {
-      const resultLog = document.getElementById('resultLog');
-      resultLog.textContent += new Date().toLocaleTimeString() + ': ' + message + '\n';
-    }
-
-    // Check server status
-    fetch('/health')
-      .then(response => response.json())
-      .then(data => {
-        document.getElementById('serverStatus').innerHTML = 
-          `<span class="success">✓ Server is running</span><br>` +
-          `Version: ${data.version || 'N/A'}<br>` +
-          `Environment: ${data.environment || 'development'}<br>` +
-          `Uptime: ${Math.floor(data.uptime || 0)} seconds`;
-        log('Server health check successful');
-      })
-      .catch(error => {
-        document.getElementById('serverStatus').innerHTML = 
-          `<span class="error">✗ Server error</span><br>` +
-          `Error: ${error.message}`;
-        log('Server health check failed: ' + error.message);
-      });
-
-    // Check if Vite dev server is accessible
-    fetch('/@vite/client', { method: 'HEAD' })
-      .then(response => {
-        document.getElementById('viteStatus').innerHTML = 
-          `<span class="success">✓ Vite server is running</span><br>` +
-          `Proxy is correctly forwarding Vite requests`;
-        log('Vite check successful');
-      })
-      .catch(error => {
-        document.getElementById('viteStatus').innerHTML = 
-          `<span class="error">✗ Vite server error</span><br>` +
-          `Error: ${error.message}`;
-        log('Vite check failed: ' + error.message);
-      });
-
-    // WebSocket test
-    document.getElementById('testWs').addEventListener('click', () => {
-      const wsStatus = document.getElementById('wsStatus');
-      wsStatus.textContent = 'Connecting to WebSocket...';
-      
-      try {
-        const ws = new WebSocket(`ws://${window.location.host}/ws`);
+    <div class="container">
+        <h1>Aether_Coin CodeStar Server Test</h1>
         
-        ws.onopen = () => {
-          wsStatus.innerHTML = '<span class="success">✓ WebSocket connected</span>';
-          log('WebSocket connected successfully');
-          ws.send('subscribe');
-        };
-        
-        ws.onmessage = (event) => {
-          try {
-            const data = JSON.parse(event.data);
-            wsStatus.innerHTML = 
-              `<span class="success">✓ WebSocket connected</span><br>` +
-              `Message received: ${data.message || 'No message'}`;
-            log('WebSocket message received: ' + event.data);
-          } catch (e) {
-            wsStatus.innerHTML = 
-              `<span class="success">✓ WebSocket connected</span><br>` +
-              `Raw message received: ${event.data}`;
-            log('WebSocket raw message: ' + event.data);
-          }
-        };
-        
-        ws.onerror = (error) => {
-          wsStatus.innerHTML = `<span class="error">✗ WebSocket error</span>`;
-          log('WebSocket error occurred');
-        };
-        
-        ws.onclose = () => {
-          wsStatus.innerHTML += '<br>Connection closed';
-          log('WebSocket connection closed');
-        };
-      } catch (error) {
-        wsStatus.innerHTML = 
-          `<span class="error">✗ WebSocket error</span><br>` +
-          `Error: ${error.message}`;
-        log('WebSocket connection failed: ' + error.message);
-      }
-    });
+        <div class="status">
+            <div class="status-title">Server Status:</div>
+            <div class="server-status">✓ Server is running successfully</div>
+        </div>
 
-    // Test Home page
-    document.getElementById('testHome').addEventListener('click', () => {
-      log('Testing Home page route...');
-      fetch('/')
-        .then(response => {
-          if (response.ok) {
-            log('Home page route is working (status ' + response.status + ')');
-          } else {
-            log('Home page route returned status ' + response.status);
-          }
-        })
-        .catch(error => {
-          log('Error accessing Home page: ' + error.message);
+        <h2>Server Information</h2>
+        <div id="server-info"></div>
+        
+        <h2>API Tests</h2>
+        <button id="check-api" class="btn">Check API Health</button>
+        <button id="check-api-status" class="btn">Check API Status</button>
+        <button id="check-ws" class="btn">Test WebSocket</button>
+        
+        <div id="api-response" style="margin-top: 15px;"></div>
+        
+        <h2>Navigation</h2>
+        <p>
+            <a href="/" class="btn">Homepage</a>
+            <a href="/code-mood-meter" class="btn">Code Mood Meter</a>
+            <a href="/productivity" class="btn">Productivity Dashboard</a>
+            <a href="/app" class="btn">Main Application</a>
+        </p>
+        
+        <h2>Environment Information</h2>
+        <pre id="env-info">
+User Agent: <script>document.write(navigator.userAgent)</script>
+Time: <script>document.write(new Date().toLocaleString())</script>
+        </pre>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Server Info
+            fetch('/health')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('server-info').innerHTML = `
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                })
+                .catch(error => {
+                    document.getElementById('server-info').innerHTML = `
+                        <div style="color: #f44336;">Error fetching server info: ${error.message}</div>
+                    `;
+                });
+
+            // API Health Check
+            document.getElementById('check-api').addEventListener('click', function() {
+                const output = document.getElementById('api-response');
+                output.innerHTML = 'Checking API health... <div class="loading"></div>';
+                
+                fetch('/api/health')
+                    .then(response => response.json())
+                    .then(data => {
+                        output.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+                    })
+                    .catch(error => {
+                        output.innerHTML = `<div style="color: #f44336;">API Health Error: ${error.message}</div>`;
+                    });
+            });
+
+            // API Status Check
+            document.getElementById('check-api-status').addEventListener('click', function() {
+                const output = document.getElementById('api-response');
+                output.innerHTML = 'Checking API status... <div class="loading"></div>';
+                
+                fetch('/api/status')
+                    .then(response => response.json())
+                    .then(data => {
+                        output.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+                    })
+                    .catch(error => {
+                        output.innerHTML = `<div style="color: #f44336;">API Status Error: ${error.message}</div>`;
+                    });
+            });
+
+            // WebSocket Test
+            document.getElementById('check-ws').addEventListener('click', function() {
+                const output = document.getElementById('api-response');
+                output.innerHTML = 'Testing WebSocket connection... <div class="loading"></div>';
+                
+                try {
+                    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                    const wsUrl = `${protocol}//${window.location.host}/ws`;
+                    const socket = new WebSocket(wsUrl);
+                    
+                    socket.onopen = function() {
+                        output.innerHTML = '<div style="color: #4caf50;">WebSocket connection established!</div>';
+                        socket.send('subscribe');
+                    };
+                    
+                    socket.onmessage = function(event) {
+                        try {
+                            const message = JSON.parse(event.data);
+                            output.innerHTML += `<pre>${JSON.stringify(message, null, 2)}</pre>`;
+                        } catch (e) {
+                            output.innerHTML += `<pre>${event.data}</pre>`;
+                        }
+                    };
+                    
+                    socket.onerror = function(error) {
+                        output.innerHTML = `<div style="color: #f44336;">WebSocket Error: ${error.message || 'Unknown error'}</div>`;
+                    };
+                    
+                    socket.onclose = function() {
+                        output.innerHTML += '<div>WebSocket connection closed</div>';
+                    };
+                } catch (error) {
+                    output.innerHTML = `<div style="color: #f44336;">WebSocket Creation Error: ${error.message}</div>`;
+                }
+            });
         });
-    });
-
-    // Test Code Mood Meter page
-    document.getElementById('testCodeMoodMeter').addEventListener('click', () => {
-      log('Testing Code Mood Meter route...');
-      fetch('/code-mood-meter')
-        .then(response => {
-          if (response.ok) {
-            log('Code Mood Meter route is working (status ' + response.status + ')');
-          } else {
-            log('Code Mood Meter route returned status ' + response.status);
-          }
-        })
-        .catch(error => {
-          log('Error accessing Code Mood Meter: ' + error.message);
-        });
-    });
-  </script>
+    </script>
 </body>
 </html>
