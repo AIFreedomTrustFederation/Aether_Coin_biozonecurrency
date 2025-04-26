@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Aetherion Server Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+      line-height: 1.6;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1 { color: #333; }
+    button {
+      background: #4CAF50;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-right: 10px;
+      margin-bottom: 10px;
+    }
+    button:hover {
+      background: #45a049;
+    }
+    pre {
+      background: #f4f4f4;
+      padding: 15px;
+      border-radius: 5px;
+      overflow: auto;
+    }
+    .error {
+      color: #cc0000;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>Aetherion Server Test Page</h1>
+  <p>This page tests connectivity to the Aetherion server.</p>
+
+  <div>
+    <h2>Test Basic Connectivity</h2>
+    <button onclick="testHealth()">Test Health Endpoint</button>
+    <button onclick="testMainPage()">Test Main Page</button>
+    <button onclick="testAPI()">Test API Endpoint</button>
+  </div>
+
+  <div id="results">
+    <h2>Results:</h2>
+    <pre id="output">No tests run yet.</pre>
+  </div>
+
+  <script>
+    const output = document.getElementById('output');
+
+    function appendResult(text, isError = false) {
+      const now = new Date().toLocaleTimeString();
+      if (isError) {
+        output.innerHTML += `<div class="error">[${now}] ❌ ${text}</div>`;
+      } else {
+        output.innerHTML += `<div>[${now}] ✅ ${text}</div>`;
+      }
+    }
+
+    async function testHealth() {
+      appendResult('Testing health endpoint...');
+      try {
+        const response = await fetch('/health');
+        if (response.ok) {
+          const data = await response.json();
+          appendResult(`Health endpoint working: ${JSON.stringify(data)}`);
+        } else {
+          appendResult(`Health endpoint returned status: ${response.status}`, true);
+        }
+      } catch (error) {
+        appendResult(`Error connecting to health endpoint: ${error.message}`, true);
+      }
+    }
+
+    async function testMainPage() {
+      appendResult('Testing main page...');
+      try {
+        const response = await fetch('/');
+        if (response.ok) {
+          const text = await response.text();
+          const size = new TextEncoder().encode(text).length;
+          appendResult(`Main page loaded successfully (${size} bytes)`);
+        } else {
+          appendResult(`Main page returned status: ${response.status}`, true);
+        }
+      } catch (error) {
+        appendResult(`Error connecting to main page: ${error.message}`, true);
+      }
+    }
+
+    async function testAPI() {
+      appendResult('Testing API endpoint...');
+      try {
+        const response = await fetch('/api/status');
+        if (response.ok) {
+          const data = await response.json();
+          appendResult(`API endpoint working: ${JSON.stringify(data)}`);
+        } else {
+          appendResult(`API endpoint returned status: ${response.status}`, true);
+        }
+      } catch (error) {
+        appendResult(`Error connecting to API endpoint: ${error.message}`, true);
+      }
+    }
+  </script>
+</body>
+</html>

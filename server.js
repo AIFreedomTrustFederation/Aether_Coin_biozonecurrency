@@ -1,33 +1,36 @@
 /**
- * Aetherion Server Implementation
+ * Simplified Aetherion Server Implementation
  * 
- * Integrated server that handles both API and UI using Express and Vite
- * Designed for Replit compatibility with proper handling of WebSockets and hot module reload
+ * Express server that proxies requests to Vite dev server
  */
 
 import express from 'express';
 import { createServer } from 'http';
-import { WebSocketServer } from 'ws';
 import { createProxyMiddleware } from 'http-proxy-middleware';
+import { spawn } from 'child_process';
+import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { spawn } from 'child_process';
 import fs from 'fs';
-import cors from 'cors';
+import { WebSocketServer } from 'ws';
 
+// Convert ESM __dirname
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const app = express();
-const httpServer = createServer(app);
-const PORT = process.env.PORT || 5000;
+// Server configuration
+const PORT = process.env.PORT || 5000; 
 const VITE_PORT = 5173;
 const TARGET_URL = `http://localhost:${VITE_PORT}`;
 
-// Enable CORS for all routes using the cors package
+// Create Express app and HTTP server
+const app = express();
+const httpServer = createServer(app);
+
+// Enable CORS
 app.use(cors());
 
-console.log(`Starting Aetherion Integrated Server`);
+console.log(`Starting Simplified Aetherion Server`);
 console.log(`Main server on port ${PORT} proxying to Vite on port ${VITE_PORT}`);
 
 // Create WebSocket server
@@ -84,25 +87,7 @@ app.get('/api/status', (req, res) => {
 
 // Serve a simple HTML page for direct testing
 app.get('/test', (req, res) => {
-  res.send(`
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <title>Aetherion Server Test</title>
-        <style>
-          body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }
-          h1 { color: #333; }
-        </style>
-      </head>
-      <body>
-        <h1>Aetherion Server is Running</h1>
-        <p>This test page confirms that the Express server is operational.</p>
-        <p>Status: <strong style="color: green;">Online</strong></p>
-        <p>Server time: ${new Date().toLocaleString()}</p>
-        <p><a href="/">Go to Main Application</a></p>
-      </body>
-    </html>
-  `);
+  res.sendFile(path.join(__dirname, 'test.html'));
 });
 
 // Middleware to log all requests
@@ -189,50 +174,79 @@ const startViteServer = () => {
   return viteProcess;
 };
 
+// Define path patterns that should be proxied to Vite
+const VITE_PATHS = [
+  // All module-related patterns
+  '/src/',
+  '/@',
+  '/@fs/',
+  '/@id/',
+  '/@vite/',
+  '/.vite/',
+  '/node_modules/',
+  '@fs/',
+  '/assets/',
+  // Vite's HMR-related patterns
+  '/__hmr',
+  'vite-hmr',
+  'vite-ws',
+  '__vite_ping',
+  // File extensions for assets and modules
+  '.js',
+  '.ts',
+  '.tsx',
+  '.jsx',
+  '.css',
+  '.json',
+  '.svg',
+  '.ico',
+  '.png',
+  '.jpg',
+  '.jpeg',
+  '.gif',
+  '.woff',
+  '.woff2',
+  '.ttf',
+  '.eot',
+  '.otf',
+  '.map',
+  '.module.'
+];
+
+// Function to check if a path should be proxied to Vite
+const shouldProxyToVite = (path) => {
+  // Always proxy Hot Module Replacement (HMR) requests
+  if (path.includes('vite-hmr') || path.includes('__vite_ping') || path.includes('vite-ws')) {
+    return true;
+  }
+  
+  return VITE_PATHS.some(pattern => 
+    path.includes(pattern) || path.endsWith(pattern));
+};
+
 // Set up proxy options
 const proxyOptions = {
   target: TARGET_URL,
   changeOrigin: true,
   ws: true,
-  logLevel: 'warn',
-  // Add websocket specific handling
-  websocket: true,
-  // Additional configuration for WebSockets
-  secure: false,
-  // Special handling for WebSockets
-  onProxyReqWs: (proxyReq, req, socket, options, head) => {
-    console.log(`Proxying WebSocket: ${req.url}`);
+  logLevel: 'info',
+  pathRewrite: {
+    '^/@vite/hmr': '/@vite/hmr',
+    '^/@vite/client': '/@vite/client'
   },
   onProxyReq: (proxyReq, req, res) => {
-    // Log only for non-asset requests to reduce noise
     if (!req.url.match(/\.(js|css|png|jpg|svg|ico|woff|woff2|ttf)$/)) {
-      console.log(`Proxying ${req.method} ${req.url} to Vite`);
+      console.log(`[PROXY] ${req.method} ${req.url} -> ${TARGET_URL}`);
     }
   },
   onError: (err, req, res) => {
-    console.error(`Proxy error: ${err.message}`);
-    
-    // Provide a helpful error page
-    res.writeHead(500, { 'Content-Type': 'text/html' });
+    console.error(`[PROXY ERROR] ${err.message}`);
+    res.writeHead(502, { 'Content-Type': 'text/html' });
     res.end(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Aetherion Server Error</title>
-          <style>
-            body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }
-            h1 { color: #c00; }
-            pre { background: #f4f4f4; padding: 15px; border-radius: 5px; overflow: auto; }
-          </style>
-        </head>
-        <body>
-          <h1>Proxy Error</h1>
-          <p>The server encountered an error while connecting to the Vite development server:</p>
-          <pre>${err.message}</pre>
-          <p>Please check that the Vite server is running properly on port ${VITE_PORT}.</p>
-          <p><a href="/test">Check Express Server Status</a></p>
-        </body>
-      </html>
+      <h1>Proxy Error</h1>
+      <p>Could not connect to Vite server at ${TARGET_URL}</p>
+      <p>Error: ${err.message}</p>
+      <p><a href="/test">Check server status</a></p>
     `);
   }
 };
@@ -240,14 +254,56 @@ const proxyOptions = {
 // Create proxy middleware
 const viteProxyMiddleware = createProxyMiddleware(proxyOptions);
 
-// Create specialized route for WebSocket connections
-app.use(['/@vite/client', '/@vite/hmr'], (req, res, next) => {
+// Proxy special WebSocket connections
+app.use(['/@vite/client', '/@vite/hmr', '/vite-hmr', '/__vite_ping'], (req, res, next) => {
   console.log(`[WebSocket] Handling special Vite connection: ${req.url}`);
   viteProxyMiddleware(req, res, next);
 });
 
-// Handle all frontend routes
-app.use('/', viteProxyMiddleware);
+// Define React SPA routes
+const CLIENT_ROUTES = [
+  '/',
+  '/tokenomics',
+  '/aicon',
+  '/wallet',
+  '/dapp',
+  '/about',
+  '/domains',
+  '/achievements',
+  '/terms-of-service',
+  '/privacy-policy',
+  '/api',
+  '/aethercore-trust',
+  '/aethercore-browser',
+  '/node-marketplace',
+  '/dns-manager',
+  '/codestar',
+  '/scroll-keeper',
+  '/enumerator',
+  '/bot-simulation',
+  '/aifreedomtrust'
+];
+
+// Handle SPA routes
+app.get(CLIENT_ROUTES, (req, res) => {
+  console.log(`SPA route handling for: ${req.path}`);
+  viteProxyMiddleware(req, res);
+});
+
+// Add a middleware to check all other requests
+app.use('*', (req, res, next) => {
+  const path = req.originalUrl;
+  
+  // Check if the request is for a Vite module or asset
+  if (shouldProxyToVite(path)) {
+    console.log(`Proxying Vite resource: ${path}`);
+    return viteProxyMiddleware(req, res, next);
+  }
+  
+  console.log(`Fallback handling for: ${path}`);
+  // For SPA navigation, proxy to Vite
+  viteProxyMiddleware(req, res, next);
+});
 
 // Start Vite server
 const viteProcess = startViteServer();

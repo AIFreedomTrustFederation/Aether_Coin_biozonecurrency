@@ -289,6 +289,41 @@ export class FractalDnsService {
       normalizedDomain.endsWith('.' + d)
     );
   }
+  
+  /**
+   * Resolve a domain using FractalDNS
+   * @param domain Domain to resolve
+   * @returns Promise with resolution results
+   */
+  async resolveDomain(domain: string): Promise<DNSResolutionResult> {
+    try {
+      // Simulate DNS resolution - in a real implementation, this would use the FractalDNS API
+      if (this.isDomainRegistered(domain)) {
+        return {
+          success: true,
+          domain: domain,
+          resolvedAddress: '198.51.100.' + Math.floor(Math.random() * 255),
+          quantumSecure: domain.includes('aethercore') || domain.includes('fractalcoin') || domain.includes('aifreedomtrust'),
+          timestamp: new Date().toISOString()
+        };
+      } else {
+        return {
+          success: false,
+          domain: domain,
+          errors: ['Domain not found in FractalDNS'],
+          timestamp: new Date().toISOString()
+        };
+      }
+    } catch (error) {
+      console.error(`Failed to resolve domain: ${domain}`, error);
+      return {
+        success: false,
+        domain: domain,
+        errors: ['DNS resolution failed'],
+        timestamp: new Date().toISOString()
+      };
+    }
+  }
 }
 
 // DNS Resolution result interface
@@ -299,37 +334,6 @@ export interface DNSResolutionResult {
   quantumSecure?: boolean;
   errors?: string[];
   timestamp?: string;
-}
-
-// Add resolve domain method to the FractalDnsService prototype
-FractalDnsService.prototype.resolveDomain = async function(domain: string): Promise<DNSResolutionResult> {
-  try {
-    // Simulate DNS resolution - in a real implementation, this would use the FractalDNS API
-    if (this.isDomainRegistered(domain)) {
-      return {
-        success: true,
-        domain: domain,
-        resolvedAddress: '198.51.100.' + Math.floor(Math.random() * 255),
-        quantumSecure: domain.includes('aethercore') || domain.includes('fractalcoin') || domain.includes('aifreedomtrust'),
-        timestamp: new Date().toISOString()
-      };
-    } else {
-      return {
-        success: false,
-        domain: domain,
-        errors: ['Domain not found in FractalDNS'],
-        timestamp: new Date().toISOString()
-      };
-    }
-  } catch (error) {
-    console.error(`Failed to resolve domain: ${domain}`, error);
-    return {
-      success: false,
-      domain: domain,
-      errors: ['DNS resolution failed'],
-      timestamp: new Date().toISOString()
-    };
-  }
 };
 
 // Create singleton instance
