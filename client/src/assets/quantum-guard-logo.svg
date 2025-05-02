@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="150" height="150" viewBox="0 0 150 150" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="guardGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#000428;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#004e92;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background Circle -->
+  <circle cx="75" cy="75" r="70" fill="url(#guardGrad)" />
+  
+  <!-- Shield Outline -->
+  <path d="M75,25 L35,40 C35,95 50,115 75,130 C100,115 115,95 115,40 L75,25 Z" 
+        fill="none" stroke="white" stroke-width="3.5" />
+  
+  <!-- Inner Shield Elements -->
+  <g fill="none" stroke="white" stroke-width="2">
+    <!-- Scan Lines -->
+    <line x1="45" y1="50" x2="105" y2="50" stroke-dasharray="2" />
+    <line x1="45" y1="65" x2="105" y2="65" stroke-dasharray="2" />
+    <line x1="45" y1="80" x2="105" y2="80" stroke-dasharray="2" />
+    <line x1="45" y1="95" x2="105" y2="95" stroke-dasharray="2" />
+    <line x1="45" y1="110" x2="105" y2="110" stroke-dasharray="2" />
+    
+    <!-- Vertical Scan Lines -->
+    <line x1="60" y1="40" x2="60" y2="120" stroke-dasharray="2" />
+    <line x1="75" y1="40" x2="75" y2="120" stroke-dasharray="2" />
+    <line x1="90" y1="40" x2="90" y2="120" stroke-dasharray="2" />
+  </g>
+  
+  <!-- Security Elements -->
+  <g>
+    <!-- Central Eye -->
+    <circle cx="75" cy="75" r="15" fill="white" opacity="0.8" />
+    <circle cx="75" cy="75" r="7" fill="url(#guardGrad)" />
+    
+    <!-- Scanning Beams -->
+    <path d="M75,60 Q55,75 75,90 Q95,75 75,60" fill="none" stroke="white" stroke-width="1.5" />
+    <path d="M60,75 Q75,55 90,75 Q75,95 60,75" fill="none" stroke="white" stroke-width="1.5" />
+    
+    <!-- Detection Points -->
+    <circle cx="45" cy="55" r="3" fill="white" />
+    <circle cx="105" cy="55" r="3" fill="white" />
+    <circle cx="45" cy="95" r="3" fill="white" />
+    <circle cx="105" cy="95" r="3" fill="white" />
+    
+    <!-- Binary Data Visualization -->
+    <g fill="white" font-family="monospace" font-size="6">
+      <text x="42" y="50" opacity="0.7">01</text>
+      <text x="100" y="50" opacity="0.7">10</text>
+      <text x="42" y="100" opacity="0.7">10</text>
+      <text x="100" y="100" opacity="0.7">01</text>
+    </g>
+  </g>
+  
+  <!-- Quantum Entanglement Lines -->
+  <g stroke="white" stroke-width="1" opacity="0.6">
+    <line x1="45" y1="55" x2="105" y2="95" />
+    <line x1="45" y1="95" x2="105" y2="55" />
+    <line x1="75" y1="40" x2="75" y2="110" />
+    <line x1="45" y1="75" x2="105" y2="75" />
+  </g>
+  
+  <!-- Lock Icon -->
+  <g transform="translate(65, 115) scale(0.5)">
+    <rect x="5" y="10" width="20" height="15" rx="2" ry="2" fill="white" />
+    <path d="M8,10 L8,6 C8,3 22,3 22,6 L22,10" stroke="white" stroke-width="2" fill="none" />
+  </g>
+</svg>

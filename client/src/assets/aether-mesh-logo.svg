@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="150" height="150" viewBox="0 0 150 150" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="aetherGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#603813;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#b29f94;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background Circle -->
+  <circle cx="75" cy="75" r="70" fill="url(#aetherGrad)" />
+  
+  <!-- Mesh Network Visualization -->
+  <g fill="none" stroke="white" stroke-width="2.5">
+    <!-- Main Hexagon -->
+    <polygon points="75,30 105,45 105,75 75,90 45,75 45,45" stroke-width="3" opacity="0.8" />
+    
+    <!-- Inner Connections -->
+    <line x1="75" y1="30" x2="75" y2="90" stroke-dasharray="2" />
+    <line x1="45" y1="45" x2="105" y2="75" stroke-dasharray="2" />
+    <line x1="45" y1="75" x2="105" y2="45" stroke-dasharray="2" />
+    
+    <!-- Outer Connections -->
+    <line x1="75" y1="30" x2="75" y2="15" />
+    <line x1="105" y1="45" x2="120" y2="45" />
+    <line x1="105" y1="75" x2="120" y2="75" />
+    <line x1="75" y1="90" x2="75" y2="105" />
+    <line x1="45" y1="75" x2="30" y2="75" />
+    <line x1="45" y1="45" x2="30" y2="45" />
+    
+    <!-- Outer Nodes -->
+    <circle cx="75" cy="15" r="4" fill="white" />
+    <circle cx="120" cy="45" r="4" fill="white" />
+    <circle cx="120" cy="75" r="4" fill="white" />
+    <circle cx="75" cy="105" r="4" fill="white" />
+    <circle cx="30" cy="75" r="4" fill="white" />
+    <circle cx="30" cy="45" r="4" fill="white" />
+    
+    <!-- Inner Nodes -->
+    <circle cx="75" cy="30" r="4" fill="white" />
+    <circle cx="105" cy="45" r="4" fill="white" />
+    <circle cx="105" cy="75" r="4" fill="white" />
+    <circle cx="75" cy="90" r="4" fill="white" />
+    <circle cx="45" cy="75" r="4" fill="white" />
+    <circle cx="45" cy="45" r="4" fill="white" />
+    
+    <!-- IoT Device Icons -->
+    <circle cx="75" cy="60" r="12" fill="rgba(255,255,255,0.2)" stroke="white" />
+    <circle cx="60" cy="50" r="8" fill="rgba(255,255,255,0.2)" stroke="white" />
+    <circle cx="90" cy="50" r="8" fill="rgba(255,255,255,0.2)" stroke="white" />
+    <circle cx="60" cy="70" r="8" fill="rgba(255,255,255,0.2)" stroke="white" />
+    <circle cx="90" cy="70" r="8" fill="rgba(255,255,255,0.2)" stroke="white" />
+  </g>
+</svg>

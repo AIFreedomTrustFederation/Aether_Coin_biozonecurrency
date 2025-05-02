@@ -29,6 +29,7 @@ const CodeStarPage = lazy(() => import("./pages/CodeStarPage"));
 const ScrollKeeperPage = lazy(() => import("./pages/ScrollKeeperPage"));
 const ProductivityDashboard = lazy(() => import("./pages/ProductivityDashboardDetailed"));
 const BrandShowcasePage = lazy(() => import("./pages/BrandShowcasePage"));
+const BrandDetailPage = lazy(() => import("./pages/BrandDetailPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -124,7 +125,7 @@ const App = () => (
               
               {/* Brand Showcase Routes */}
               <Route path="/brands" component={BrandShowcasePage} />
-              <Route path="/brands/:slug" component={BrandShowcasePage} />
+              <Route path="/brands/:slug" component={BrandDetailPage} />
               
               {/* Catch-all route for 404 */}
               <Route component={NotFound} />
