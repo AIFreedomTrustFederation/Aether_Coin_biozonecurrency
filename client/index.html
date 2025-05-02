@@ -1,22 +1,132 @@
-
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AI Freedom Trust | Brand Showcase</title>
-    <meta name="description" content="AI Freedom Trust Brand Showcase - Explore our innovative brands and technologies" />
-    <meta name="author" content="AI Freedom Trust" />
-
-    <meta property="og:title" content="AI Freedom Trust | Brand Showcase" />
-    <meta property="og:description" content="Explore our innovative brands and technologies within the Freedom Trust ecosystem" />
-    <meta property="og:type" content="website" />
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Freedom Trust Brand Showcase</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #041e3c, #0b3561);
+      color: white;
+      margin: 0;
+      padding: 20px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .container {
+      max-width: 800px;
+      padding: 2rem;
+      background: rgba(15, 35, 75, 0.8);
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      backdrop-filter: blur(10px);
+      text-align: center;
+    }
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      background: linear-gradient(90deg, #41e0fd, #9b83fc);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+    .brand-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1rem;
+      margin: 2rem 0;
+    }
+    .brand-card {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+      padding: 1.5rem;
+      transition: all 0.3s ease;
+      text-align: left;
+    }
+    .brand-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    }
+    .brand-card h3 {
+      color: #9b83fc;
+      margin-top: 0;
+    }
+    #brandList {
+      margin-top: 30px;
+    }
+    .btn {
+      background: linear-gradient(90deg, #41e0fd, #9b83fc);
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 50px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+    .api-status {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 1rem;
+      border-radius: 8px;
+      font-family: monospace;
+      margin-top: 1.5rem;
+      text-align: left;
+      min-height: 80px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>AI Freedom Trust Brand Showcase</h1>
+    <p>Welcome to the AI Freedom Trust ecosystem. Explore our innovative brands and technologies.</p>
     
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@500;600;700&display=swap">
-  </head>
+    <button id="loadBrands" class="btn">Load Brands</button>
+    
+    <div id="brandList" class="brand-container"></div>
+    
+    <div class="api-status" id="apiStatus">API status will appear here...</div>
+  </div>
 
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+  <script>
+    document.getElementById('loadBrands').addEventListener('click', async () => {
+      const statusDiv = document.getElementById('apiStatus');
+      const brandListDiv = document.getElementById('brandList');
+      
+      statusDiv.innerHTML = 'Fetching brands...';
+      brandListDiv.innerHTML = '';
+      
+      try {
+        const response = await fetch('/api/brands');
+        const brands = await response.json();
+        
+        statusDiv.innerHTML = `Successfully loaded ${brands.length} brands.`;
+        
+        brands.forEach(brand => {
+          const brandCard = document.createElement('div');
+          brandCard.className = 'brand-card';
+          brandCard.innerHTML = `
+            <h3>${brand.name}</h3>
+            <p>${brand.description}</p>
+            <p><strong>Technologies:</strong> ${brand.technologies.join(', ')}</p>
+          `;
+          brandListDiv.appendChild(brandCard);
+        });
+      } catch (error) {
+        statusDiv.innerHTML = `Error: ${error.message}`;
+        console.error('Error fetching brands:', error);
+      }
+    });
+  </script>
+</body>
 </html>
