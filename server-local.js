@@ -1,6 +1,6 @@
 /**
  * Aetherion Server - Local Environment Configuration
- * Uses a modular API approach with routes-simple.js
+ * Uses a modular API approach with api-modules.js
  */
 
 import express from 'express';
@@ -70,16 +70,15 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Import our API routes - using the existing modular approach
-import { registerRoutes } from './routes-simple.js';
+// Import our API modules from the unified api-modules.js
+import { registerApiModules } from './api-modules.js';
 
-// Register our API routes
+// Register our API modules
 (async () => {
   try {
-    await registerRoutes(app);
-    console.log('✓ API routes registered successfully');
+    await registerApiModules(app);
   } catch (error) {
-    console.error('Error registering API routes:', error);
+    console.error('Error registering API modules:', error);
   }
 })();
 

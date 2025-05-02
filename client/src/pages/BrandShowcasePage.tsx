@@ -8,6 +8,8 @@ import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "wouter";
 import MainLayout from "@/components/MainLayout";
+import { brandsApi } from "@/services/api";
+import type { Brand } from "@/services/api/brandsApi";
 
 // Import SVG assets
 import quantumDomainLogo from "@/assets/quantum-domain-logo.svg";
@@ -17,46 +19,12 @@ import aetherMeshLogo from "@/assets/aether-mesh-logo.svg";
 import fractalVaultLogo from "@/assets/fractal-vault-logo.svg";
 import quantumGuardLogo from "@/assets/quantum-guard-logo.svg";
 
-interface Brand {
-  id: number;
-  name: string;
-  slug: string;
-  description: string;
-  logoUrl: string;
-  primaryColor: string;
-  secondaryColor: string;
-  website: string;
-  technologies: string[];
-  sampleProducts: string[];
-  features: string[];
-}
-
-const fetchBrands = async (): Promise<Brand[]> => {
-  const API_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
-  console.log("Fetching brands from:", `${API_URL}/brands`);
-  
-  try {
-    const response = await fetch(`${API_URL}/brands`);
-    
-    if (!response.ok) {
-      throw new Error(`Failed to fetch brands: ${response.status} ${response.statusText}`);
-    }
-    
-    const data = await response.json();
-    console.log("Brands data received:", data);
-    return data;
-  } catch (error) {
-    console.error("Error fetching brands:", error);
-    throw error;
-  }
-};
-
 const BrandShowcasePage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   
   const { data: brands, isLoading, error } = useQuery({
     queryKey: ["brands"],
-    queryFn: fetchBrands,
+    queryFn: () => brandsApi.getAllBrands(),
   });
 
   const filteredBrands = brands?.filter(brand => 

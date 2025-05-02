@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import MainLayout from "@/components/MainLayout";
+import { brandsApi } from "@/services/api";
+import type { Brand } from "@/services/api/brandsApi";
 
 // Import SVG assets
 import quantumDomainLogo from "@/assets/quantum-domain-logo.svg";
@@ -17,47 +19,13 @@ import aetherMeshLogo from "@/assets/aether-mesh-logo.svg";
 import fractalVaultLogo from "@/assets/fractal-vault-logo.svg";
 import quantumGuardLogo from "@/assets/quantum-guard-logo.svg";
 
-interface Brand {
-  id: number;
-  name: string;
-  slug: string;
-  description: string;
-  logoUrl: string;
-  primaryColor: string;
-  secondaryColor: string;
-  website: string;
-  technologies: string[];
-  sampleProducts: string[];
-  features: string[];
-}
-
-const fetchBrandBySlug = async (slug: string): Promise<Brand> => {
-  const API_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
-  console.log("Fetching brand details from:", `${API_URL}/brands/${slug}`);
-  
-  try {
-    const response = await fetch(`${API_URL}/brands/${slug}`);
-    
-    if (!response.ok) {
-      throw new Error(`Failed to fetch brand details: ${response.status} ${response.statusText}`);
-    }
-    
-    const data = await response.json();
-    console.log("Brand details received:", data);
-    return data;
-  } catch (error) {
-    console.error("Error fetching brand details:", error);
-    throw error;
-  }
-};
-
 const BrandDetailPage = () => {
   const [match, params] = useRoute<{ slug: string }>("/brands/:slug");
   const slug = params?.slug || "";
 
   const { data: brand, isLoading, error } = useQuery({
     queryKey: ["brand", slug],
-    queryFn: () => fetchBrandBySlug(slug),
+    queryFn: () => brandsApi.getBrandBySlug(slug),
     enabled: !!slug,
   });
 
