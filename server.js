@@ -123,9 +123,22 @@ import { registerRoutes } from './routes-simple.js';
   }
 })();
 
-// Serve a simple HTML page for direct testing
+// Serve our landing page at both the root and test paths
+app.get('/', (req, res, next) => {
+  // Check if the request has vite-related headers or is a resource request
+  if (req.headers['accept'] && 
+      (req.headers['accept'].includes('text/html') || 
+       req.url === '/' || 
+       req.url.startsWith('/?'))) {
+    res.sendFile(path.join(__dirname, 'landing.html'));
+  } else {
+    // For non-HTML requests or resource requests, continue to the next middleware
+    next();
+  }
+});
+
 app.get('/test', (req, res) => {
-  res.sendFile(path.join(__dirname, 'test.html'));
+  res.sendFile(path.join(__dirname, 'landing.html'));
 });
 
 // Add app route to redirect to the SPA
@@ -315,7 +328,7 @@ const proxyOptions = {
       <p>Could not connect to Vite server at ${TARGET_URL}</p>
       <p>Error: ${err.message}</p>
       <p><a href="/test">Check server status</a></p>
-      <p><a href="/">Try Home Page</a> | <a href="/code-mood-meter">Try Code Mood Meter</a></p>
+      <p><a href="/">Try Landing Page</a> | <a href="/brands">Try Brand Showcase</a> | <a href="/code-mood-meter">Try Code Mood Meter</a></p>
     `);
   }
 };
@@ -332,6 +345,7 @@ app.use(['/@vite/client', '/@vite/hmr', '/vite-hmr', '/__vite_ping'], (req, res,
 // Define React SPA routes
 const CLIENT_ROUTES = [
   '/',
+  '/dashboard',
   '/tokenomics',
   '/aicon',
   '/wallet',
@@ -402,6 +416,7 @@ process.on('SIGINT', () => {
 httpServer.listen(PORT, '0.0.0.0', () => {
   console.log(`✓ Aetherion integrated server running on port ${PORT}`);
   console.log(`✓ Test page available at http://localhost:${PORT}/test`);
+  console.log(`✓ Landing page available at http://localhost:${PORT}/`);
   console.log(`✓ WebSocket server available at ws://localhost:${PORT}/ws`);
   console.log(`✓ Vite dev server running on port ${VITE_PORT}`);
   
@@ -411,7 +426,7 @@ httpServer.listen(PORT, '0.0.0.0', () => {
   if (replitSlug && replitOwner) {
     const replitUrl = `https://${replitSlug}.${replitOwner}.repl.co`;
     console.log(`\n✓ REPLIT URL: ${replitUrl}`);
-    console.log(`✓ Test page on Replit: ${replitUrl}/test`);
+    console.log(`✓ Landing page on Replit: ${replitUrl}/`);
     console.log(`✓ API health endpoint: ${replitUrl}/api/health`);
     
     // Write a file to help the webview find our app

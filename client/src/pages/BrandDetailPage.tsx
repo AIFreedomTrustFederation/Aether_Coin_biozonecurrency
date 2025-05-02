@@ -119,7 +119,11 @@ const BrandDetailPage = () => {
     <MainLayout>
       <div className="container mx-auto py-8 px-4">
         <div className="mb-6">
-          <Button asChild variant="outline">
+          <Button 
+            asChild 
+            variant="outline"
+            className="bg-[#0a1a35] border-[#1a2a45] text-[#41e0fd] hover:bg-[#1a2a45]"
+          >
             <Link to="/brands" className="flex items-center">
               <ArrowLeft className="h-4 w-4 mr-2" /> Back to All Brands
             </Link>
@@ -138,13 +142,14 @@ const BrandDetailPage = () => {
                   {brand.description}
                 </CardDescription>
               </CardHeader>
-              <CardContent className="pt-6">
+              <CardContent className="pt-6 bg-[#0a1a35]">
                 <div className="flex flex-wrap gap-2 mb-6">
                   {brand.technologies.map((tech, index) => (
                     <Badge 
                       key={index} 
                       variant="outline"
                       style={{borderColor: brand.primaryColor, color: brand.primaryColor}}
+                      className="bg-[#1a2a45] border-opacity-50"
                     >
                       {tech}
                     </Badge>
@@ -185,61 +190,61 @@ const BrandDetailPage = () => {
           </div>
 
           <div>
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
+            <Card className="bg-[#0a1a35] border-[#1a2a45]">
+              <CardHeader className="border-b border-[#1a2a45]">
+                <CardTitle className="flex items-center text-[#41e0fd]">
                   <Box className="h-5 w-5 mr-2" style={{color: brand.primaryColor}} />
                   Products & Solutions
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-gray-300">
                   Featured offerings from {brand.name}
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-6">
                 <ul className="space-y-4">
                   {brand.sampleProducts.map((product, index) => (
                     <li key={index} className="border-l-2 pl-4 py-2" style={{borderColor: brand.primaryColor}}>
-                      <h4 className="font-medium">{product}</h4>
-                      <p className="text-sm text-muted-foreground mt-1">
+                      <h4 className="font-medium text-gray-200">{product}</h4>
+                      <p className="text-sm text-gray-400 mt-1">
                         Enterprise-grade solution with integrated AI capabilities.
                       </p>
                     </li>
                   ))}
                 </ul>
                 
-                <div className="mt-6 p-4 bg-muted rounded-lg">
-                  <h4 className="font-medium mb-2">Integration Options</h4>
-                  <p className="text-sm text-muted-foreground">
+                <div className="mt-6 p-4 bg-[#1a2a45] rounded-lg">
+                  <h4 className="font-medium mb-2 text-[#41e0fd]">Integration Options</h4>
+                  <p className="text-sm text-gray-300">
                     All {brand.name} products can be integrated with existing systems through our open API platform.
                   </p>
                 </div>
               </CardContent>
             </Card>
             
-            <Card className="mt-6">
-              <CardHeader>
-                <CardTitle className="flex items-center">
+            <Card className="mt-6 bg-[#0a1a35] border-[#1a2a45]">
+              <CardHeader className="border-b border-[#1a2a45]">
+                <CardTitle className="flex items-center text-[#41e0fd]">
                   <Tag className="h-5 w-5 mr-2" style={{color: brand.primaryColor}} />
                   Technical Specifications
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-6">
                 <div className="space-y-4">
                   <div>
-                    <h4 className="text-sm font-medium">Architecture</h4>
-                    <p className="text-sm text-muted-foreground">Microservices-based with containerized deployment</p>
+                    <h4 className="text-sm font-medium text-gray-200">Architecture</h4>
+                    <p className="text-sm text-gray-400">Microservices-based with containerized deployment</p>
                   </div>
                   <div>
-                    <h4 className="text-sm font-medium">API Support</h4>
-                    <p className="text-sm text-muted-foreground">REST, GraphQL, WebSockets</p>
+                    <h4 className="text-sm font-medium text-gray-200">API Support</h4>
+                    <p className="text-sm text-gray-400">REST, GraphQL, WebSockets</p>
                   </div>
                   <div>
-                    <h4 className="text-sm font-medium">Security Compliance</h4>
-                    <p className="text-sm text-muted-foreground">GDPR, SOC2, ISO 27001</p>
+                    <h4 className="text-sm font-medium text-gray-200">Security Compliance</h4>
+                    <p className="text-sm text-gray-400">GDPR, SOC2, ISO 27001</p>
                   </div>
                   <div>
-                    <h4 className="text-sm font-medium">Deployment Options</h4>
-                    <p className="text-sm text-muted-foreground">Cloud, On-premise, Hybrid</p>
+                    <h4 className="text-sm font-medium text-gray-200">Deployment Options</h4>
+                    <p className="text-sm text-gray-400">Cloud, On-premise, Hybrid</p>
                   </div>
                 </div>
               </CardContent>

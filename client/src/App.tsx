@@ -11,6 +11,7 @@ import { QuantumLoader } from "@/components/ui/quantum-loader";
 
 // Lazy load pages
 const Index = lazy(() => import("./pages/Index"));
+const LandingPage = lazy(() => import("./pages/LandingPage"));
 const Tokenomics = lazy(() => import("./pages/Tokenomics"));
 const Aicon = lazy(() => import("./pages/Aicon"));
 const Wallet = lazy(() => import("./pages/Wallet"));
@@ -90,7 +91,11 @@ const App = () => (
         <QuantumDomainProvider>
           <Suspense fallback={<QuantumPageLoader />}>
             <Switch>
-              <Route path="/" component={Index} />
+              {/* Make the landing page the default route */}
+              <Route path="/" component={LandingPage} />
+              
+              {/* Move the original index to a different route */}
+              <Route path="/dashboard" component={Index} />
               <Route path="/tokenomics" component={Tokenomics} />
               <Route path="/aicon" component={Aicon} />
               <Route path="/wallet" component={Wallet} />

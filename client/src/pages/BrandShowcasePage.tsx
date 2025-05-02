@@ -72,43 +72,44 @@ const BrandShowcasePage = () => {
     <MainLayout>
       <div className="container mx-auto py-8 px-4">
         <header className="mb-8 text-center">
-          <div className="flex items-center justify-center mb-4">
-            <Server className="h-10 w-10 mr-2" />
-            <h1 className="text-3xl md:text-4xl font-bold">AI Freedom Trust Brands</h1>
+          <div className="flex flex-col items-center justify-center mb-6">
+            <h1 className="text-3xl md:text-5xl font-bold bg-gradient-to-r from-[#41e0fd] to-[#9b83fc] bg-clip-text text-transparent mb-4">
+              Aether_Coin Brands
+            </h1>
+            <p className="text-gray-300 text-lg max-w-2xl">
+              Explore our innovative brands and technologies powered by Aether_Coin blockchain technology
+            </p>
           </div>
-          <p className="text-muted-foreground text-lg mb-6">
-            Explore our innovative brands and technologies
-          </p>
           
           <div className="max-w-md mx-auto">
             <Input
               placeholder="Search brands..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="mb-6"
+              className="mb-6 bg-[#0a1a35] border-[#1a2a45] text-gray-200"
             />
           </div>
         </header>
 
         {isLoading && (
           <div className="flex justify-center my-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#41e0fd]"></div>
           </div>
         )}
 
         {error && (
-          <Alert variant="destructive" className="my-4">
-            <AlertTitle>Error</AlertTitle>
-            <AlertDescription>
+          <Alert variant="destructive" className="my-4 bg-[#1f1a2e] border-[#41e0fd] border-opacity-30">
+            <AlertTitle className="text-[#41e0fd]">Error</AlertTitle>
+            <AlertDescription className="text-gray-300">
               Failed to load brands. Please try again later.
             </AlertDescription>
           </Alert>
         )}
 
         {!isLoading && !error && filteredBrands?.length === 0 && (
-          <Alert className="my-4">
-            <AlertTitle>No brands found</AlertTitle>
-            <AlertDescription>
+          <Alert className="my-4 bg-[#1a2a45] border-[#41e0fd] border-opacity-30">
+            <AlertTitle className="text-[#41e0fd]">No brands found</AlertTitle>
+            <AlertDescription className="text-gray-300">
               No brands match your search criteria.
             </AlertDescription>
           </Alert>
@@ -144,7 +145,7 @@ const BrandShowcasePage = () => {
             }
             
             return (
-              <Card key={brand.id} className="flex flex-col h-full overflow-hidden">
+              <Card key={brand.id} className="flex flex-col h-full overflow-hidden bg-[#0a1a35] border-[#1a2a45]">
                 <CardHeader style={styles.header} className="relative">
                   {logoImg}
                   <CardTitle className="text-xl text-white">{brand.name}</CardTitle>
@@ -159,6 +160,7 @@ const BrandShowcasePage = () => {
                         key={index} 
                         variant="outline"
                         style={{borderColor: brand.primaryColor, color: brand.primaryColor}}
+                        className="bg-[#1a2a45] border-opacity-50"
                       >
                         {tech}
                       </Badge>
@@ -167,6 +169,7 @@ const BrandShowcasePage = () => {
                       <Badge 
                         variant="outline"
                         style={{borderColor: brand.primaryColor, color: brand.primaryColor}}
+                        className="bg-[#1a2a45] border-opacity-50"
                       >
                         +{brand.technologies.length - 3} more
                       </Badge>
@@ -174,8 +177,8 @@ const BrandShowcasePage = () => {
                   </div>
                   
                   <div className="mt-4">
-                    <h4 className="text-sm font-medium mb-2">Featured Products:</h4>
-                    <ul className="text-sm text-muted-foreground space-y-1">
+                    <h4 className="text-sm font-medium mb-2 text-gray-200">Featured Products:</h4>
+                    <ul className="text-sm text-gray-400 space-y-1">
                       {brand.sampleProducts.slice(0, 3).map((product, index) => (
                         <li key={index} className="flex items-center">
                           <Box className="h-4 w-4 mr-2 flex-shrink-0" style={{color: brand.primaryColor}} />
@@ -185,11 +188,12 @@ const BrandShowcasePage = () => {
                     </ul>
                   </div>
                 </CardContent>
-                <CardFooter className="flex items-center justify-between pt-2 border-t">
+                <CardFooter className="flex items-center justify-between pt-2 border-t border-[#1a2a45]">
                   <Button 
                     variant="outline" 
                     size="sm"
                     asChild
+                    className="bg-[#1a2a45] border-[#2a3a55] text-[#41e0fd] hover:bg-[#2a3a55]"
                   >
                     <Link to={`/brands/${brand.slug}`} className="flex items-center">
                       <Code className="h-4 w-4 mr-2" /> View Details
@@ -200,6 +204,7 @@ const BrandShowcasePage = () => {
                     variant="ghost" 
                     size="sm"
                     asChild
+                    className="text-[#41e0fd] hover:bg-[#1a2a45]"
                   >
                     <a href={brand.website} target="_blank" rel="noopener noreferrer" className="flex items-center">
                       <ExternalLink className="h-4 w-4 mr-2" /> Website

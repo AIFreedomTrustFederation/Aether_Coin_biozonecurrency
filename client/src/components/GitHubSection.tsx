@@ -9,8 +9,8 @@ import { Loader2, Star, GitFork, AlertCircle, Users } from "lucide-react";
 
 const GitHubSection = () => {
   const [repoDetails, setRepoDetails] = useState({
-    owner: "facebook", // Default value, using a popular public repo
-    repo: "react"      // Default value, using a popular public repo
+    owner: "aifreedomtrust", // Default owner
+    repo: "quantum-portal"   // Default to an existing repository, not aetherion-wallet which returns 404
   });
   const [inputValues, setInputValues] = useState(repoDetails);
   
@@ -76,12 +76,16 @@ const GitHubSection = () => {
               <Loader2 className="h-8 w-8 text-forest-600 animate-spin" />
             </div>
           ) : repoError ? (
-            <Card className="border-red-200">
+            <Card className="border-red-200 bg-[#1a0e15]">
               <CardHeader>
-                <CardTitle className="text-red-600">Error Loading Repository</CardTitle>
+                <CardTitle className="text-red-500">Error Loading Repository</CardTitle>
               </CardHeader>
               <CardContent>
-                <p>Could not load repository details. Please check the owner and repository names.</p>
+                <p className="text-gray-300">Could not load repository details. Please check the owner and repository names.</p>
+                <p className="text-sm text-gray-400 mt-2">
+                  If you're trying to access a private repository or one that doesn't exist, you'll receive a 404 error.
+                  Try searching for "aifreedomtrust/quantum-portal" instead.
+                </p>
               </CardContent>
             </Card>
           ) : repository ? (
