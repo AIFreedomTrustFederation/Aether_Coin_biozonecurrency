@@ -13,6 +13,25 @@ export interface Brand {
   technologies: string[];
   sampleProducts: string[];
   features: string[];
+  enhancedDescription?: string;
+}
+
+// For technology trends API response
+export interface TechnologyTrend {
+  title: string;
+  description: string;
+}
+
+export interface TrendsResponse {
+  brand: Brand;
+  trends: TechnologyTrend[];
+}
+
+// For feature recommendations API response
+export interface FeatureRecommendation {
+  name: string;
+  description: string;
+  businessImpact: string;
 }
 
 /**
@@ -61,6 +80,36 @@ class BrandsApi {
       params: filters
     });
     return response.data;
+  }
+  
+  /**
+   * Get enhanced description for a brand using AI
+   */
+  async getEnhancedBrand(slug: string): Promise<Brand> {
+    try {
+      const response = await this.apiClient.client.get(`/brands/${slug}/enhanced`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching enhanced brand description:', error);
+      // Fallback to regular brand data if AI enhancement fails
+      const fallbackResponse = await this.apiClient.client.get(`/brands/${slug}`);
+      return fallbackResponse.data;
+    }
+  }
+  
+  /**
+   * Get technology trends for a brand using AI
+   */
+  async getBrandTrends(slug: string): Promise<TrendsResponse> {
+    const response = await this.apiClient.client.get(`/brands/${slug}/trends`);
+    return response.data;
+  }
+  
+  /**
+   * Get subdomain URL for a specific brand
+   */
+  getSubdomainUrl(slug: string): string {
+    return `https://${slug}.aifreedomtrust.com`;
   }
 }
 

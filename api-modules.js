@@ -6,6 +6,12 @@
  */
 
 import express from 'express';
+import OpenAI from 'openai';
+
+// Initialize OpenAI client
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
+});
 
 // Create the brands API router
 const brandsRouter = express.Router();
@@ -186,6 +192,105 @@ brandsRouter.get('/id/:id', async (req, res) => {
   } catch (error) {
     console.error(`Error fetching brand with id ${req.params.id}:`, error);
     res.status(500).json({ error: 'Failed to fetch brand' });
+  }
+});
+
+// GET /api/brands/:slug/enhanced - Get enhanced description for a brand using AI
+brandsRouter.get('/:slug/enhanced', async (req, res) => {
+  try {
+    const { slug } = req.params;
+    const brand = brands.find(b => b.slug === slug);
+    
+    if (!brand) {
+      return res.status(404).json({ error: 'Brand not found' });
+    }
+    
+    // Generate enhanced description using OpenAI
+    const prompt = `
+      Generate an enhanced marketing description for a technology brand called "${brand.name}".
+      The brand specializes in: ${brand.technologies.join(', ')}.
+      Their core offering is: "${brand.description}"
+      Some of their key features include: ${brand.features.join(', ')}.
+      
+      Write a compelling, professional 2-paragraph description that highlights their unique value proposition
+      and positions them as a leader in their field. Focus on business benefits and innovative aspects.
+      Keep the tone professional and avoid hyperbole.
+    `;
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+      messages: [
+        { role: "system", content: "You are a skilled technology marketing copywriter specializing in B2B SaaS products." },
+        { role: "user", content: prompt }
+      ],
+      max_tokens: 350,
+      temperature: 0.7,
+    });
+
+    const enhancedDescription = response.choices[0].message.content.trim();
+    
+    res.json({
+      ...brand,
+      enhancedDescription
+    });
+  } catch (error) {
+    console.error(`Error generating enhanced description for brand with slug ${req.params.slug}:`, error);
+    res.status(500).json({ 
+      error: 'Failed to generate enhanced description',
+      message: error.message
+    });
+  }
+});
+
+// GET /api/brands/:slug/trends - Get technology trends for a brand using AI
+brandsRouter.get('/:slug/trends', async (req, res) => {
+  try {
+    const { slug } = req.params;
+    const brand = brands.find(b => b.slug === slug);
+    
+    if (!brand) {
+      return res.status(404).json({ error: 'Brand not found' });
+    }
+    
+    // Generate technology trends using OpenAI
+    const prompt = `
+      Analyze current technology trends related to: ${brand.technologies.join(', ')}.
+      Focus on how these trends relate to: "${brand.description}"
+      
+      Provide 3 specific trends that would be relevant to ${brand.name}'s business.
+      
+      Format the response as a JSON array with objects containing:
+      - title: The name of the trend
+      - description: A brief explanation of the trend and its relevance
+      
+      Keep each description under 100 words and focus on business impact.
+    `;
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+      messages: [
+        { role: "system", content: "You are a technology analyst specializing in identifying meaningful business trends." },
+        { role: "user", content: prompt }
+      ],
+      response_format: { type: "json_object" },
+      max_tokens: 500,
+      temperature: 0.5,
+    });
+
+    // Parse the JSON response
+    const result = JSON.parse(response.choices[0].message.content);
+    const trends = result.trends || [];
+    
+    res.json({
+      brand,
+      trends
+    });
+  } catch (error) {
+    console.error(`Error generating technology trends for brand with slug ${req.params.slug}:`, error);
+    res.status(500).json({ 
+      error: 'Failed to generate technology trends',
+      message: error.message
+    });
   }
 });
 
