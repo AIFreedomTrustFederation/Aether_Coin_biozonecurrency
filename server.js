@@ -364,6 +364,12 @@ app.get('/brands', (req, res) => {
   viteProxyMiddleware(req, res);
 });
 
+// Handle root route to ensure LandingPage component is loaded
+app.get('/', (req, res) => {
+  console.log(`Root route handling - loading LandingPage component`);
+  viteProxyMiddleware(req, res);
+});
+
 // Handle SPA routes
 app.get(CLIENT_ROUTES, (req, res) => {
   console.log(`SPA route handling for: ${req.path}`);
@@ -429,7 +435,7 @@ httpServer.listen(PORT, '0.0.0.0', () => {
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="refresh" content="0;url=/test">
+  <meta http-equiv="refresh" content="0;url=/">
   <title>Aether_Coin CodeStar Platform</title>
   <style>
     body {
@@ -463,10 +469,10 @@ httpServer.listen(PORT, '0.0.0.0', () => {
   <div>
     <div class="loader"></div>
     <h2>Redirecting to Aether_Coin CodeStar Platform...</h2>
-    <p>If you are not redirected automatically, <a href="/test" style="color: #41e0fd;">click here</a>.</p>
+    <p>If you are not redirected automatically, <a href="/" style="color: #41e0fd;">click here</a>.</p>
   </div>
   <script>
-    window.location.href = '/test';
+    window.location.href = '/';
   </script>
 </body>
 </html>
