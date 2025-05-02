@@ -1,0 +1,118 @@
+/**
+ * Aetherion Server - Local Environment Configuration
+ * Uses a modular API approach with routes-simple.js
+ */
+
+import express from 'express';
+import { createServer } from 'http';
+import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { WebSocketServer } from 'ws';
+import { spawn } from 'child_process';
+
+// Convert ESM __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Server configuration
+const PORT = process.env.PORT || 5000; 
+
+// Create Express app and HTTP server
+const app = express();
+const httpServer = createServer(app);
+
+// Enable CORS
+app.use(cors());
+
+// Parse JSON body
+app.use(express.json());
+
+// Middleware to log all requests
+app.use((req, res, next) => {
+  console.log(`Request: ${req.method} ${req.url}`);
+  next();
+});
+
+// Serve static files from 'public' directory
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Create WebSocket server
+const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+
+wss.on('connection', function connection(ws) {
+  console.log('Client connected to WebSocket');
+  
+  ws.on('message', function incoming(message) {
+    console.log('Received message:', message.toString());
+    
+    // Simple WebSocket echo server for now
+    if (message.toString() === 'subscribe') {
+      ws.send(JSON.stringify({
+        type: 'welcome',
+        message: 'Connected to Scroll Keeper WebSocket Server'
+      }));
+    }
+  });
+  
+  ws.on('close', () => {
+    console.log('Client disconnected from WebSocket');
+  });
+});
+
+// Add a simple health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    version: process.env.npm_package_version || '1.0.0',
+    environment: process.env.NODE_ENV || 'development',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Import our API routes - using the existing modular approach
+import { registerRoutes } from './routes-simple.js';
+
+// Register our API routes
+(async () => {
+  try {
+    await registerRoutes(app);
+    console.log('✓ API routes registered successfully');
+  } catch (error) {
+    console.error('Error registering API routes:', error);
+  }
+})();
+
+// Serve static HTML landing page for root and /test path
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'codestar-landing.html'));
+});
+
+app.get('/test', (req, res) => {
+  res.sendFile(path.join(__dirname, 'codestar-landing.html'));
+});
+
+// Start the Vite server separately
+const clientDir = path.join(__dirname, 'client');
+const viteProcess = spawn('npm', ['run', 'dev'], {
+  stdio: 'inherit',
+  shell: true,
+  cwd: clientDir
+});
+
+console.log(`Starting Vite in directory: ${clientDir}`);
+
+// Handle cleanup
+process.on('SIGINT', () => {
+  console.log('Shutting down servers...');
+  viteProcess.kill();
+  process.exit();
+});
+
+// Start the Express server
+httpServer.listen(PORT, '0.0.0.0', () => {
+  console.log(`✓ AI Freedom Trust API server running on port ${PORT}`);
+  console.log(`✓ Main landing page available at http://localhost:${PORT}/`);
+  console.log(`✓ WebSocket server available at ws://localhost:${PORT}/ws`);
+  console.log(`✓ The React app will be available at http://localhost:5173/`);
+});
