@@ -1,70 +1,62 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg width="150" height="150" viewBox="0 0 150 150" xmlns="http://www.w3.org/2000/svg">
+<svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="guardGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#000428;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#004e92;stop-opacity:1" />
+    <linearGradient id="guard-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#000428" />
+      <stop offset="100%" stop-color="#004e92" />
     </linearGradient>
   </defs>
   
-  <!-- Background Circle -->
-  <circle cx="75" cy="75" r="70" fill="url(#guardGrad)" />
+  <!-- Shield base -->
+  <path d="M50 10L15 40V60C15 75 30 90 50 95C70 90 85 75 85 60V40L50 10Z" stroke="url(#guard-grad)" stroke-width="3" fill="none" />
   
-  <!-- Shield Outline -->
-  <path d="M75,25 L35,40 C35,95 50,115 75,130 C100,115 115,95 115,40 L75,25 Z" 
-        fill="none" stroke="white" stroke-width="3.5" />
+  <!-- Quantum detection layers -->
+  <path d="M50 20L25 42V58C25 68 35 78 50 82C65 78 75 68 75 58V42L50 20Z" stroke="url(#guard-grad)" stroke-width="2" fill="none" opacity="0.7" />
+  <path d="M50 30L35 44V56C35 61 40 66 50 68C60 66 65 61 65 56V44L50 30Z" stroke="url(#guard-grad)" stroke-width="2" fill="none" opacity="0.8" />
   
-  <!-- Inner Shield Elements -->
-  <g fill="none" stroke="white" stroke-width="2">
-    <!-- Scan Lines -->
-    <line x1="45" y1="50" x2="105" y2="50" stroke-dasharray="2" />
-    <line x1="45" y1="65" x2="105" y2="65" stroke-dasharray="2" />
-    <line x1="45" y1="80" x2="105" y2="80" stroke-dasharray="2" />
-    <line x1="45" y1="95" x2="105" y2="95" stroke-dasharray="2" />
-    <line x1="45" y1="110" x2="105" y2="110" stroke-dasharray="2" />
+  <!-- Central eye/scanner -->
+  <circle cx="50" cy="50" r="12" fill="url(#guard-grad)" />
+  <circle cx="50" cy="50" r="8" fill="white" opacity="0.3" />
+  <circle cx="50" cy="50" r="4" fill="url(#guard-grad)" />
+  
+  <!-- Scanning effects -->
+  <g opacity="0.6">
+    <!-- Horizontal scan line -->
+    <rect x="25" y="49" width="50" height="2" fill="url(#guard-grad)">
+      <animate attributeName="y" values="40;60;40" dur="3s" repeatCount="indefinite" />
+      <animate attributeName="opacity" values="0.2;0.6;0.2" dur="3s" repeatCount="indefinite" />
+    </rect>
     
-    <!-- Vertical Scan Lines -->
-    <line x1="60" y1="40" x2="60" y2="120" stroke-dasharray="2" />
-    <line x1="75" y1="40" x2="75" y2="120" stroke-dasharray="2" />
-    <line x1="90" y1="40" x2="90" y2="120" stroke-dasharray="2" />
+    <!-- Vertical scan line -->
+    <rect x="49" y="25" width="2" height="50" fill="url(#guard-grad)">
+      <animate attributeName="x" values="40;60;40" dur="3s" repeatCount="indefinite" />
+      <animate attributeName="opacity" values="0.2;0.6;0.2" dur="3s" repeatCount="indefinite" />
+    </rect>
   </g>
   
-  <!-- Security Elements -->
-  <g>
-    <!-- Central Eye -->
-    <circle cx="75" cy="75" r="15" fill="white" opacity="0.8" />
-    <circle cx="75" cy="75" r="7" fill="url(#guardGrad)" />
-    
-    <!-- Scanning Beams -->
-    <path d="M75,60 Q55,75 75,90 Q95,75 75,60" fill="none" stroke="white" stroke-width="1.5" />
-    <path d="M60,75 Q75,55 90,75 Q75,95 60,75" fill="none" stroke="white" stroke-width="1.5" />
-    
-    <!-- Detection Points -->
-    <circle cx="45" cy="55" r="3" fill="white" />
-    <circle cx="105" cy="55" r="3" fill="white" />
-    <circle cx="45" cy="95" r="3" fill="white" />
-    <circle cx="105" cy="95" r="3" fill="white" />
-    
-    <!-- Binary Data Visualization -->
-    <g fill="white" font-family="monospace" font-size="6">
-      <text x="42" y="50" opacity="0.7">01</text>
-      <text x="100" y="50" opacity="0.7">10</text>
-      <text x="42" y="100" opacity="0.7">10</text>
-      <text x="100" y="100" opacity="0.7">01</text>
-    </g>
+  <!-- Radar/detection rings -->
+  <g opacity="0.5">
+    <circle cx="50" cy="50" r="16" stroke="url(#guard-grad)" stroke-width="1" fill="none">
+      <animate attributeName="r" values="16;18;16" dur="2s" repeatCount="indefinite" />
+      <animate attributeName="opacity" values="0.5;0.8;0.5" dur="2s" repeatCount="indefinite" />
+    </circle>
+    <circle cx="50" cy="50" r="22" stroke="url(#guard-grad)" stroke-width="1" fill="none">
+      <animate attributeName="r" values="22;24;22" dur="3s" repeatCount="indefinite" />
+      <animate attributeName="opacity" values="0.4;0.7;0.4" dur="3s" repeatCount="indefinite" />
+    </circle>
+    <circle cx="50" cy="50" r="28" stroke="url(#guard-grad)" stroke-width="1" fill="none">
+      <animate attributeName="r" values="28;30;28" dur="4s" repeatCount="indefinite" />
+      <animate attributeName="opacity" values="0.3;0.6;0.3" dur="4s" repeatCount="indefinite" />
+    </circle>
   </g>
   
-  <!-- Quantum Entanglement Lines -->
-  <g stroke="white" stroke-width="1" opacity="0.6">
-    <line x1="45" y1="55" x2="105" y2="95" />
-    <line x1="45" y1="95" x2="105" y2="55" />
-    <line x1="75" y1="40" x2="75" y2="110" />
-    <line x1="45" y1="75" x2="105" y2="75" />
-  </g>
-  
-  <!-- Lock Icon -->
-  <g transform="translate(65, 115) scale(0.5)">
-    <rect x="5" y="10" width="20" height="15" rx="2" ry="2" fill="white" />
-    <path d="M8,10 L8,6 C8,3 22,3 22,6 L22,10" stroke="white" stroke-width="2" fill="none" />
+  <!-- Threat detection rays -->
+  <g opacity="0.7">
+    <path d="M50 20L30 85" stroke="url(#guard-grad)" stroke-width="1">
+      <animate attributeName="d" values="M50 20L30 85;M50 20L70 85;M50 20L30 85" dur="10s" repeatCount="indefinite" />
+    </path>
+    <path d="M50 20L70 85" stroke="url(#guard-grad)" stroke-width="1">
+      <animate attributeName="d" values="M50 20L70 85;M50 20L30 85;M50 20L70 85" dur="10s" repeatCount="indefinite" />
+    </path>
   </g>
 </svg>

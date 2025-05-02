@@ -32,13 +32,23 @@ interface Brand {
 }
 
 const fetchBrandBySlug = async (slug: string): Promise<Brand> => {
-  const response = await fetch(`/api/brands/${slug}`);
+  const API_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+  console.log("Fetching brand details from:", `${API_URL}/brands/${slug}`);
   
-  if (!response.ok) {
-    throw new Error("Failed to fetch brand details");
+  try {
+    const response = await fetch(`${API_URL}/brands/${slug}`);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch brand details: ${response.status} ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    console.log("Brand details received:", data);
+    return data;
+  } catch (error) {
+    console.error("Error fetching brand details:", error);
+    throw error;
   }
-  
-  return response.json();
 };
 
 const BrandDetailPage = () => {

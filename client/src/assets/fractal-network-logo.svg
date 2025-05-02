@@ -1,68 +1,63 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg width="150" height="150" viewBox="0 0 150 150" xmlns="http://www.w3.org/2000/svg">
+<svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="fractalGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#2E3192;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#1BFFFF;stop-opacity:1" />
+    <linearGradient id="fractal-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2E3192" />
+      <stop offset="100%" stop-color="#1BFFFF" />
     </linearGradient>
   </defs>
   
-  <!-- Background Circle -->
-  <circle cx="75" cy="75" r="70" fill="url(#fractalGrad)" />
-  
-  <!-- Fractal Network -->
-  <g stroke="white" stroke-width="2.5" fill="none">
-    <!-- Main Nodes -->
-    <circle cx="75" cy="75" r="5" fill="white" />
-    <circle cx="35" cy="55" r="5" fill="white" />
-    <circle cx="115" cy="55" r="5" fill="white" />
-    <circle cx="35" cy="95" r="5" fill="white" />
-    <circle cx="115" cy="95" r="5" fill="white" />
+  <!-- Main fractal structure -->
+  <g stroke="url(#fractal-grad)" stroke-width="2" fill="none">
+    <!-- Central node -->
+    <circle cx="50" cy="50" r="8" fill="url(#fractal-grad)" />
     
-    <!-- Level 1 Connections -->
-    <line x1="75" y1="75" x2="35" y2="55" />
-    <line x1="75" y1="75" x2="115" y2="55" />
-    <line x1="75" y1="75" x2="35" y2="95" />
-    <line x1="75" y1="75" x2="115" y2="95" />
+    <!-- Level 1 connections -->
+    <line x1="50" y1="50" x2="25" y2="25" />
+    <line x1="50" y1="50" x2="75" y2="25" />
+    <line x1="50" y1="50" x2="75" y2="75" />
+    <line x1="50" y1="50" x2="25" y2="75" />
     
-    <!-- Secondary Nodes -->
-    <circle cx="25" cy="35" r="3" fill="white" />
-    <circle cx="45" cy="35" r="3" fill="white" />
-    <circle cx="125" cy="35" r="3" fill="white" />
-    <circle cx="105" cy="35" r="3" fill="white" />
-    <circle cx="25" cy="115" r="3" fill="white" />
-    <circle cx="45" cy="115" r="3" fill="white" />
-    <circle cx="125" cy="115" r="3" fill="white" />
-    <circle cx="105" cy="115" r="3" fill="white" />
+    <!-- Level 1 nodes -->
+    <circle cx="25" cy="25" r="6" fill="url(#fractal-grad)" opacity="0.8" />
+    <circle cx="75" cy="25" r="6" fill="url(#fractal-grad)" opacity="0.8" />
+    <circle cx="75" cy="75" r="6" fill="url(#fractal-grad)" opacity="0.8" />
+    <circle cx="25" cy="75" r="6" fill="url(#fractal-grad)" opacity="0.8" />
     
-    <!-- Level 2 Connections -->
-    <line x1="35" y1="55" x2="25" y2="35" />
-    <line x1="35" y1="55" x2="45" y2="35" />
-    <line x1="115" y1="55" x2="105" y2="35" />
-    <line x1="115" y1="55" x2="125" y2="35" />
-    <line x1="35" y1="95" x2="25" y2="115" />
-    <line x1="35" y1="95" x2="45" y2="115" />
-    <line x1="115" y1="95" x2="105" y2="115" />
-    <line x1="115" y1="95" x2="125" y2="115" />
+    <!-- Level 2 connections - top left -->
+    <line x1="25" y1="25" x2="15" y2="15" />
+    <line x1="25" y1="25" x2="35" y2="15" />
     
-    <!-- Tertiary Nodes -->
-    <circle cx="15" cy="25" r="2" fill="white" />
-    <circle cx="35" cy="25" r="2" fill="white" />
-    <circle cx="115" cy="25" r="2" fill="white" />
-    <circle cx="135" cy="25" r="2" fill="white" />
-    <circle cx="15" cy="125" r="2" fill="white" />
-    <circle cx="35" cy="125" r="2" fill="white" />
-    <circle cx="115" cy="125" r="2" fill="white" />
-    <circle cx="135" cy="125" r="2" fill="white" />
+    <!-- Level 2 connections - top right -->
+    <line x1="75" y1="25" x2="65" y2="15" />
+    <line x1="75" y1="25" x2="85" y2="15" />
     
-    <!-- Level 3 Connections -->
-    <line x1="25" y1="35" x2="15" y2="25" />
-    <line x1="45" y1="35" x2="35" y2="25" />
-    <line x1="105" y1="35" x2="115" y2="25" />
-    <line x1="125" y1="35" x2="135" y2="25" />
-    <line x1="25" y1="115" x2="15" y2="125" />
-    <line x1="45" y1="115" x2="35" y2="125" />
-    <line x1="105" y1="115" x2="115" y2="125" />
-    <line x1="125" y1="115" x2="135" y2="125" />
+    <!-- Level 2 connections - bottom right -->
+    <line x1="75" y1="75" x2="65" y2="85" />
+    <line x1="75" y1="75" x2="85" y2="85" />
+    
+    <!-- Level 2 connections - bottom left -->
+    <line x1="25" y1="75" x2="15" y2="85" />
+    <line x1="25" y1="75" x2="35" y2="85" />
+    
+    <!-- Level 2 nodes -->
+    <circle cx="15" cy="15" r="4" fill="url(#fractal-grad)" opacity="0.6" />
+    <circle cx="35" cy="15" r="4" fill="url(#fractal-grad)" opacity="0.6" />
+    <circle cx="65" cy="15" r="4" fill="url(#fractal-grad)" opacity="0.6" />
+    <circle cx="85" cy="15" r="4" fill="url(#fractal-grad)" opacity="0.6" />
+    <circle cx="85" cy="85" r="4" fill="url(#fractal-grad)" opacity="0.6" />
+    <circle cx="65" cy="85" r="4" fill="url(#fractal-grad)" opacity="0.6" />
+    <circle cx="35" cy="85" r="4" fill="url(#fractal-grad)" opacity="0.6" />
+    <circle cx="15" cy="85" r="4" fill="url(#fractal-grad)" opacity="0.6" />
   </g>
+  
+  <!-- Animated healing pulse -->
+  <circle cx="50" cy="50" r="40" stroke="url(#fractal-grad)" stroke-width="1" opacity="0.3" fill="none">
+    <animate attributeName="r" values="30;45;30" dur="3s" repeatCount="indefinite" />
+    <animate attributeName="opacity" values="0.3;0.1;0.3" dur="3s" repeatCount="indefinite" />
+  </circle>
+  <circle cx="50" cy="50" r="25" stroke="url(#fractal-grad)" stroke-width="1" opacity="0.5" fill="none">
+    <animate attributeName="r" values="25;35;25" dur="3s" repeatCount="indefinite" />
+    <animate attributeName="opacity" values="0.5;0.2;0.5" dur="3s" repeatCount="indefinite" />
+  </circle>
 </svg>

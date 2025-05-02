@@ -28,7 +28,6 @@
       host: '0.0.0.0',
       strictPort: true,
       hmr: {
-        // Enable HMR with Replit compatibility
         clientPort: 5000,
         host: 'localhost',
         protocol: 'ws',
@@ -39,13 +38,11 @@
         usePolling: true,
         interval: 1000,
       },
-      // Disable open browser
       open: false
     },
     optimizeDeps: {
       force: true
     },
-    // Improve base path handling for Replit
     base: '/',
   });
   
