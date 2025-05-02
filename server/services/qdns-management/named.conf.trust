@@ -1,0 +1,94 @@
+// BIND configuration for .trust TLD
+// This is a sample configuration file for the .trust TLD nameserver
+
+options {
+    directory "/var/named";
+    version "QDNS Server 1.0";
+    listen-on port 53 { any; };
+    listen-on-v6 port 53 { any; };
+    allow-query { any; };
+    recursion no;
+    dnssec-validation auto;
+    dnssec-enable yes;
+    
+    // Quantum-resistant cryptography settings
+    // These are placeholder settings for future implementation
+    quantum-resistant yes;
+    quantum-signature-algorithm "SPHINCS+";
+    quantum-key-exchange "CRYSTALS-Kyber";
+};
+
+// Controls who can access the named-control channel
+controls {
+    inet 127.0.0.1 port 953 allow { localhost; };
+};
+
+// Logging configuration
+logging {
+    channel default_log {
+        file "/var/log/named/default.log" versions 3 size 5m;
+        severity info;
+        print-time yes;
+        print-category yes;
+        print-severity yes;
+    };
+    
+    channel security_log {
+        file "/var/log/named/security.log" versions 3 size 5m;
+        severity info;
+        print-time yes;
+        print-category yes;
+        print-severity yes;
+    };
+    
+    category default { default_log; };
+    category security { security_log; };
+};
+
+// Root zone hints
+zone "." {
+    type hint;
+    file "named.ca";
+};
+
+// .trust TLD zone
+zone "trust" {
+    type master;
+    file "/var/named/trust.zone";
+    allow-transfer { 
+        // Secondary nameservers
+        203.0.113.2;  // ns2.aethercoin.trust
+        203.0.113.3;  // ns3.aethercoin.trust
+    };
+    also-notify {
+        // Secondary nameservers
+        203.0.113.2;  // ns2.aethercoin.trust
+        203.0.113.3;  // ns3.aethercoin.trust
+    };
+    notify yes;
+    
+    // DNSSEC settings
+    auto-dnssec maintain;
+    inline-signing yes;
+    key-directory "/var/named/keys";
+    
+    // Quantum security settings
+    quantum-protected yes;
+    quantum-signature-verification yes;
+};
+
+// Reverse zones for nameservers
+zone "113.0.203.in-addr.arpa" {
+    type master;
+    file "/var/named/203.0.113.zone";
+    allow-transfer {
+        // Secondary nameservers
+        203.0.113.2;  // ns2.aethercoin.trust
+        203.0.113.3;  // ns3.aethercoin.trust
+    };
+    notify yes;
+};
+
+// Include any additional configuration files
+include "/etc/named/rndc.key";
+include "/etc/named/tsig-keys.conf";

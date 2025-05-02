@@ -1,0 +1,62 @@
+; Zone file for .trust TLD
+$TTL 86400      ; 1 day
+$ORIGIN trust.
+@       IN      SOA     ns1.aethercoin.trust. admin.aethercoin.trust. (
+                        2023121501  ; Serial
+                        3600        ; Refresh (1 hour)
+                        1800        ; Retry (30 minutes)
+                        604800      ; Expire (1 week)
+                        86400 )     ; Minimum TTL (1 day)
+
+; Nameservers
+@       IN      NS      ns1.aethercoin.trust.
+@       IN      NS      ns2.aethercoin.trust.
+@       IN      NS      ns3.aethercoin.trust.
+
+; Nameserver glue records
+ns1.aethercoin    IN      A       203.0.113.1
+ns2.aethercoin    IN      A       203.0.113.2
+ns3.aethercoin    IN      A       203.0.113.3
+
+; DNSSEC records
+@       IN      DNSKEY  257 3 13 (
+                        mdsswUyr3DPW132mOi8V9xESWE8jTo0dxCjjnopKl+GqJxpVXckHAeF+
+                        KkxLbxILfDLUT0rAK9iUzy1L53eKGQ==
+                        ) ; KSK, key id = 34983
+@       IN      DNSKEY  256 3 13 (
+                        zKz+DCWkNA/vuheiVPcGqsH40U84KZAlrMRIyozj9WHzf8PsFp/oR8Gx
+                        W3uMDBpJVlKg2QbUc/i64KDq5jDKFQ==
+                        ) ; ZSK, key id = 17185
+
+; Quantum-resistant signature (placeholder)
+@       IN      TXT     "QUANTUM-SIG=SPHINCS+-SHAKE256-128f-simple:1a2b3c4d5e6f7g8h9i0j"
+
+; Main domain
+aethercoin      IN      A       203.0.113.10
+www.aethercoin  IN      CNAME   aethercoin.trust.
+mail.aethercoin IN      A       203.0.113.11
+aethercoin      IN      MX      10 mail.aethercoin.trust.
+aethercoin      IN      TXT     "v=spf1 mx a:mail.aethercoin.trust -all"
+
+; API and services
+api.aethercoin  IN      A       203.0.113.12
+wallet.aethercoin IN    A       203.0.113.13
+cpanel.aethercoin IN    A       203.0.113.14
+dns.aethercoin  IN      A       203.0.113.15
+
+; Other domains in the .trust TLD
+example         IN      A       203.0.113.20
+www.example     IN      CNAME   example.trust.
+
+quantum         IN      A       203.0.113.30
+www.quantum     IN      CNAME   quantum.trust.
+
+fractal         IN      A       203.0.113.40
+www.fractal     IN      CNAME   fractal.trust.
+
+; WHOIS service
+whois           IN      A       203.0.113.50
+
+; Registry services
+registry        IN      A       203.0.113.60
+registrar       IN      A       203.0.113.61

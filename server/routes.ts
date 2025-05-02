@@ -39,6 +39,7 @@ import apiKeyRoutes from "./routes/api-key-routes";
 import quantumSecurityRoutes from "./routes/quantum-security-routes";
 import quantumAiMonitoringRoutes from "./routes/quantum-ai-monitoring-routes";
 import quantumAiIntegrationRoutes from "./routes/quantum-ai-integration-routes";
+import qdnsRoutes from "./routes/qdns-routes";
 import { openSourcePaymentService } from "./services/openSourcePayment";
 
 /**
@@ -183,6 +184,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Mount Quantum AI Integration routes
   app.use('/api/quantum/ai', quantumAiIntegrationRoutes);
+  
+  // Mount QDNS (Quantum DNS) routes
+  app.use('/api/qdns', qdnsRoutes);
   
   // Register quantum secure payment routes
   registerQuantumSecurePaymentRoutes(app);
