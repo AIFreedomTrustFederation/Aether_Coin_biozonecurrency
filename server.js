@@ -123,22 +123,9 @@ import { registerRoutes } from './routes-simple.js';
   }
 })();
 
-// Serve our landing page at both the root and test paths
-app.get('/', (req, res, next) => {
-  // Check if the request has vite-related headers or is a resource request
-  if (req.headers['accept'] && 
-      (req.headers['accept'].includes('text/html') || 
-       req.url === '/' || 
-       req.url.startsWith('/?'))) {
-    res.sendFile(path.join(__dirname, 'landing.html'));
-  } else {
-    // For non-HTML requests or resource requests, continue to the next middleware
-    next();
-  }
-});
-
+// Serve static HTML landing page only for /test path
 app.get('/test', (req, res) => {
-  res.sendFile(path.join(__dirname, 'landing.html'));
+  res.sendFile(path.join(__dirname, 'codestar-landing.html'));
 });
 
 // Add app route to redirect to the SPA
@@ -370,6 +357,12 @@ const CLIENT_ROUTES = [
   '/brands',
   '/brands/:slug'
 ];
+
+// Handle Brands page separately to ensure it works
+app.get('/brands', (req, res) => {
+  console.log(`Brand showcase routing for: ${req.path}`);
+  viteProxyMiddleware(req, res);
+});
 
 // Handle SPA routes
 app.get(CLIENT_ROUTES, (req, res) => {

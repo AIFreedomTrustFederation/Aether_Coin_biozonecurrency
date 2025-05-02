@@ -1,213 +1,45 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aether_Coin CodeStar Server Test</title>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-            background: linear-gradient(135deg, #041e3c, #0b3561);
-            color: #f0f0f0;
-            margin: 0;
-            padding: 20px;
-            min-height: 100vh;
-        }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: rgba(15, 35, 75, 0.8);
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-        }
-        h1 {
-            color: #41e0fd;
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        h2 {
-            color: #9b83fc;
-            margin-top: 30px;
-        }
-        .status {
-            padding: 15px;
-            border-radius: 5px;
-            background: rgba(0, 0, 0, 0.2);
-            margin-bottom: 15px;
-        }
-        .status-title {
-            font-weight: bold;
-            margin-bottom: 5px;
-            color: #41e0fd;
-        }
-        .server-status {
-            color: #4caf50;
-        }
-        .btn {
-            display: inline-block;
-            background: linear-gradient(90deg, #41e0fd, #9b83fc);
-            color: #fff;
-            padding: 10px 20px;
-            border-radius: 50px;
-            text-decoration: none;
-            font-weight: bold;
-            margin-right: 10px;
-            margin-bottom: 10px;
-            border: none;
-            cursor: pointer;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-        }
-        a {
-            color: #41e0fd;
-            text-decoration: none;
-        }
-        a:hover {
-            text-decoration: underline;
-        }
-        pre {
-            background: rgba(0, 0, 0, 0.3);
-            padding: 10px;
-            border-radius: 5px;
-            overflow-x: auto;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-        }
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255,255,255,.3);
-            border-radius: 50%;
-            border-top-color: #fff;
-            animation: spin 1s ease-in-out infinite;
-            margin-left: 10px;
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta http-equiv="refresh" content="0;url=/">
+  <title>Aether_Coin CodeStar Platform</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #041e3c, #0b3561);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+    .loader {
+      border: 5px solid rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      border-top: 5px solid #41e0fd;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 20px;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Aether_Coin CodeStar Server Test</h1>
-        
-        <div class="status">
-            <div class="status-title">Server Status:</div>
-            <div class="server-status">✓ Server is running successfully</div>
-        </div>
-
-        <h2>Server Information</h2>
-        <div id="server-info"></div>
-        
-        <h2>API Tests</h2>
-        <button id="check-api" class="btn">Check API Health</button>
-        <button id="check-api-status" class="btn">Check API Status</button>
-        <button id="check-ws" class="btn">Test WebSocket</button>
-        
-        <div id="api-response" style="margin-top: 15px;"></div>
-        
-        <h2>Navigation</h2>
-        <p>
-            <a href="/" class="btn">Homepage</a>
-            <a href="/code-mood-meter" class="btn">Code Mood Meter</a>
-            <a href="/productivity" class="btn">Productivity Dashboard</a>
-            <a href="/app" class="btn">Main Application</a>
-        </p>
-        
-        <h2>Environment Information</h2>
-        <pre id="env-info">
-User Agent: <script>document.write(navigator.userAgent)</script>
-Time: <script>document.write(new Date().toLocaleString())</script>
-        </pre>
-    </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Server Info
-            fetch('/health')
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('server-info').innerHTML = `
-                        <pre>${JSON.stringify(data, null, 2)}</pre>
-                    `;
-                })
-                .catch(error => {
-                    document.getElementById('server-info').innerHTML = `
-                        <div style="color: #f44336;">Error fetching server info: ${error.message}</div>
-                    `;
-                });
-
-            // API Health Check
-            document.getElementById('check-api').addEventListener('click', function() {
-                const output = document.getElementById('api-response');
-                output.innerHTML = 'Checking API health... <div class="loading"></div>';
-                
-                fetch('/api/health')
-                    .then(response => response.json())
-                    .then(data => {
-                        output.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
-                    })
-                    .catch(error => {
-                        output.innerHTML = `<div style="color: #f44336;">API Health Error: ${error.message}</div>`;
-                    });
-            });
-
-            // API Status Check
-            document.getElementById('check-api-status').addEventListener('click', function() {
-                const output = document.getElementById('api-response');
-                output.innerHTML = 'Checking API status... <div class="loading"></div>';
-                
-                fetch('/api/status')
-                    .then(response => response.json())
-                    .then(data => {
-                        output.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
-                    })
-                    .catch(error => {
-                        output.innerHTML = `<div style="color: #f44336;">API Status Error: ${error.message}</div>`;
-                    });
-            });
-
-            // WebSocket Test
-            document.getElementById('check-ws').addEventListener('click', function() {
-                const output = document.getElementById('api-response');
-                output.innerHTML = 'Testing WebSocket connection... <div class="loading"></div>';
-                
-                try {
-                    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-                    const wsUrl = `${protocol}//${window.location.host}/ws`;
-                    const socket = new WebSocket(wsUrl);
-                    
-                    socket.onopen = function() {
-                        output.innerHTML = '<div style="color: #4caf50;">WebSocket connection established!</div>';
-                        socket.send('subscribe');
-                    };
-                    
-                    socket.onmessage = function(event) {
-                        try {
-                            const message = JSON.parse(event.data);
-                            output.innerHTML += `<pre>${JSON.stringify(message, null, 2)}</pre>`;
-                        } catch (e) {
-                            output.innerHTML += `<pre>${event.data}</pre>`;
-                        }
-                    };
-                    
-                    socket.onerror = function(error) {
-                        output.innerHTML = `<div style="color: #f44336;">WebSocket Error: ${error.message || 'Unknown error'}</div>`;
-                    };
-                    
-                    socket.onclose = function() {
-                        output.innerHTML += '<div>WebSocket connection closed</div>';
-                    };
-                } catch (error) {
-                    output.innerHTML = `<div style="color: #f44336;">WebSocket Creation Error: ${error.message}</div>`;
-                }
-            });
-        });
-    </script>
+  <div>
+    <div class="loader"></div>
+    <h2>Redirecting to Aether_Coin CodeStar Platform...</h2>
+    <p>If you are not redirected automatically, <a href="/" style="color: #41e0fd;">click here</a>.</p>
+  </div>
+  <script>
+    window.location.href = '/';
+  </script>
 </body>
 </html>
