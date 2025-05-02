@@ -143,6 +143,48 @@ const brands = [
       "Zero-day vulnerability protection",
       "Autonomous threat response"
     ]
+  },
+  {
+    id: 7,
+    name: "Mysterion",
+    slug: "mysterion",
+    description: "Advanced AI assistant platform with multi-modal intelligence capabilities",
+    logoUrl: "/assets/brands/mysterion-logo.svg",
+    primaryColor: "#6B3FA0",
+    secondaryColor: "#C33764",
+    website: "https://mysterion.aifreedomtrust.com",
+    technologies: ["Artificial Intelligence", "Natural Language Processing", "Multi-modal Learning"],
+    sampleProducts: [
+      "Mysterion Core Intelligence",
+      "Knowledge Integration System",
+      "Contextual Understanding Engine"
+    ],
+    features: [
+      "Recursive self-improvement",
+      "Multi-modal reasoning capabilities",
+      "Advanced context preservation"
+    ]
+  },
+  {
+    id: 8,
+    name: "Fractal Chain",
+    slug: "fractal-chain",
+    description: "Scalable blockchain protocol with recursive sharding and quantum security",
+    logoUrl: "/assets/brands/fractal-chain-logo.svg",
+    primaryColor: "#1A2980",
+    secondaryColor: "#26D0CE",
+    website: "https://fractalchain.aifreedomtrust.com",
+    technologies: ["Blockchain", "Distributed Ledger", "Quantum Cryptography"],
+    sampleProducts: [
+      "Fractal Node Infrastructure",
+      "Recursive Sharding Protocol",
+      "Quantum-Secure Transaction Layer"
+    ],
+    features: [
+      "Infinite recursive scaling",
+      "Post-quantum security",
+      "Energy-efficient consensus"
+    ]
   }
 ];
 
