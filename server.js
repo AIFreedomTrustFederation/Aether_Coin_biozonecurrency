@@ -110,6 +110,19 @@ app.get('/api/status', (req, res) => {
   });
 });
 
+// Import our API routes
+import { registerRoutes } from './routes-simple.js';
+
+// Register our API routes
+(async () => {
+  try {
+    await registerRoutes(app);
+    console.log('✓ API routes registered successfully');
+  } catch (error) {
+    console.error('Error registering API routes:', error);
+  }
+})();
+
 // Serve a simple HTML page for direct testing
 app.get('/test', (req, res) => {
   res.sendFile(path.join(__dirname, 'test.html'));
@@ -339,7 +352,9 @@ const CLIENT_ROUTES = [
   '/bot-simulation',
   '/aifreedomtrust',
   '/code-mood-meter',
-  '/productivity'
+  '/productivity',
+  '/brands',
+  '/brands/:slug'
 ];
 
 // Handle SPA routes

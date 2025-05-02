@@ -41,6 +41,7 @@ import fractalNetworkRoutes from "./routes/fractal-network-routes";
 import laoRoutes from "./routes/lao";
 import insuranceRoutes from "./routes/insurance";
 import productivityRoutes from "./routes/productivity-routes";
+import brandRoutes from "./routes/brand-routes";
 import { openSourcePaymentService } from "./services/openSourcePayment";
 
 /**
@@ -191,6 +192,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Mount Developer Productivity Dashboard routes
   app.use('/api/productivity', productivityRoutes);
+
+  // Mount Brand Showcase routes
+  app.use('/api/brands', brandRoutes);
   
   // Register quantum secure payment routes
   registerQuantumSecurePaymentRoutes(app);

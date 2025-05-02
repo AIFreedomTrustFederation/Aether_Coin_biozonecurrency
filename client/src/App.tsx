@@ -28,6 +28,7 @@ const DnsManager = lazy(() => import("./pages/DnsManager"));
 const CodeStarPage = lazy(() => import("./pages/CodeStarPage"));
 const ScrollKeeperPage = lazy(() => import("./pages/ScrollKeeperPage"));
 const ProductivityDashboard = lazy(() => import("./pages/ProductivityDashboardDetailed"));
+const BrandShowcasePage = lazy(() => import("./pages/BrandShowcasePage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -120,6 +121,10 @@ const App = () => (
               
               {/* Route to AI Freedom Trust landing page */}
               <Route path="/aifreedomtrust" component={AIFreedomTrustRedirect} />
+              
+              {/* Brand Showcase Routes */}
+              <Route path="/brands" component={BrandShowcasePage} />
+              <Route path="/brands/:slug" component={BrandShowcasePage} />
               
               {/* Catch-all route for 404 */}
               <Route component={NotFound} />
