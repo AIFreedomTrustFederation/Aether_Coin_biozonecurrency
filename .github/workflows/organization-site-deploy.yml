@@ -1,0 +1,124 @@
+name: Organization Site Deployment
+
+on:
+  push:
+    branches:
+      - main  # Change this to your default branch if different
+  workflow_dispatch:  # Allow manual triggers
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          
+      - name: Create deployment directory
+        run: |
+          mkdir -p deploy
+          
+      - name: Copy landing page and brand showcase files
+        run: |
+          # Copy main landing page
+          cp index.html deploy/
+          
+          # Create CNAME file for custom domain (if not already present)
+          if [ -f "CNAME" ]; then
+            cp CNAME deploy/
+          else
+            echo "aifreedomtrust.com" > deploy/CNAME
+          fi
+          
+          # Copy other necessary static files
+          if [ -d "public" ]; then
+            cp -r public deploy/
+          fi
+          
+          if [ -d "client/public" ]; then
+            cp -r client/public/* deploy/
+          fi
+          
+          # Ensure brand assets are copied
+          if [ -d "client/public/assets/brands" ]; then
+            mkdir -p deploy/assets/brands
+            cp -r client/public/assets/brands/* deploy/assets/brands/
+          fi
+          
+          # Create a simple .nojekyll file to bypass Jekyll processing
+          touch deploy/.nojekyll
+          
+      - name: Generate brand showcase pages
+        run: |
+          # Create directories for each brand
+          mkdir -p deploy/quantum-domain
+          mkdir -p deploy/zero-trust-framework
+          mkdir -p deploy/fractal-network
+          mkdir -p deploy/aether-mesh
+          mkdir -p deploy/fractal-vault
+          mkdir -p deploy/quantum-guard
+          mkdir -p deploy/mysterion
+          mkdir -p deploy/fractal-chain
+          
+          # Create a basic redirect template for each brand subdirectory
+          for brand in quantum-domain zero-trust-framework fractal-network aether-mesh fractal-vault quantum-guard mysterion fractal-chain; do
+            cat > deploy/$brand/index.html <<EOF
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${brand} - AI Freedom Trust</title>
+    <meta http-equiv="refresh" content="0;url=https://${brand}.aifreedomtrust.com">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #041e3c, #0b3561);
+            color: white;
+            text-align: center;
+            padding: 50px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 30px;
+        }
+        a {
+            color: #9b83fc;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>${brand}</h1>
+        <p>Redirecting to <a href="https://${brand}.aifreedomtrust.com">https://${brand}.aifreedomtrust.com</a></p>
+        <p>If you are not redirected automatically, please click the link above.</p>
+    </div>
+</body>
+</html>
+EOF
+          done
+          
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: gh-pages  # The branch the action should deploy to
+          folder: deploy    # The folder the action should deploy
+          clean: true       # Automatically remove deleted files from the deploy branch
+          
+      - name: Deployment Status
+        run: |
+          echo "✅ Organization site deployment completed successfully!"
+          echo "🌐 Your site should be available at: https://aifreedomtrustfederation.github.io/"
+          echo "🔄 If you've set up a custom domain, please allow time for DNS propagation."

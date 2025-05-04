@@ -1,0 +1,65 @@
+DNS setup instructions complete!
+bash: /usr/local/lp/logs/history.log: No such file or directory
+[bixnyorn@crispr ~]$ dig +short
+a.root-servers.net.
+b.root-servers.net.
+c.root-servers.net.
+d.root-servers.net.
+e.root-servers.net.
+f.root-servers.net.
+g.root-servers.net.
+h.root-servers.net.
+i.root-servers.net.
+j.root-servers.net.
+k.root-servers.net.
+l.root-servers.net.
+m.root-servers.net.
+bash: /usr/local/lp/logs/history.log: No such file or directory
+[bixnyorn@crispr ~]$ atc.aifreedomtrust.com CNAME
+bash: atc.aifreedomtrust.com: command not found
+bash: /usr/local/lp/logs/history.log: No such file or directory
+[bixnyorn@crispr ~]$ dig atc.aifreedomtrust.com CNAME
+
+; <<>> DiG 9.11.36-RedHat-9.11.36-16.el8_10.4 <<>> atc.aifreedomtrust.com CNAME
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 14634
+;; flags: qr rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 1, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1280
+;; QUESTION SECTION:
+;atc.aifreedomtrust.com.                IN      CNAME
+
+;; AUTHORITY SECTION:
+aifreedomtrust.com.     86400   IN      SOA     ns1.fah-dc3-ds.com. dc3.fah-dc3-ds.com. 2025050437 3600 1800 1209600 86400
+
+;; Query time: 76 msec
+;; SERVER: 10.10.10.10#53(10.10.10.10)
+;; WHEN: Sun May 04 06:32:22 MDT 2025
+;; MSG SIZE  rcvd: 106
+
+bash: /usr/local/lp/logs/history.log: No such file or directory
+[bixnyorn@crispr ~]$ dig atc.aifreedomtrust.com A
+
+; <<>> DiG 9.11.36-RedHat-9.11.36-16.el8_10.4 <<>> atc.aifreedomtrust.com A
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 52521
+;; flags: qr rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 1, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1280
+;; QUESTION SECTION:
+;atc.aifreedomtrust.com.                IN      A
+
+;; AUTHORITY SECTION:
+aifreedomtrust.com.     86400   IN      SOA     ns1.fah-dc3-ds.com. dc3.fah-dc3-ds.com. 2025050437 3600 1800 1209600 86400
+
+;; Query time: 1 msec
+;; SERVER: 10.10.10.10#53(10.10.10.10)
+;; WHEN: Sun May 04 06:32:42 MDT 2025
+;; MSG SIZE  rcvd: 106
+
+bash: /usr/local/lp/logs/history.log: No such file or directory
+[bixnyorn@crispr ~]$

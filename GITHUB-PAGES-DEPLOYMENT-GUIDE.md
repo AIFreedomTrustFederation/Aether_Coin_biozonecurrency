@@ -1,108 +1,146 @@
-# Aetherion Wallet GitHub Pages Deployment Guide
+# GitHub Pages Deployment Guide for AI Freedom Trust
 
-This guide provides step-by-step instructions for setting up GitHub Pages deployment for the Aetherion Wallet. This is part of the hybrid deployment strategy that uses GitHub Pages for the frontend and CPanel for the backend API.
+This guide provides comprehensive instructions for deploying the AI Freedom Trust ecosystem to GitHub Pages with custom domain integration.
 
-## Prerequisites
+## Organization Repository Setup
 
-1. A GitHub account with access to the Aetherion repository
-2. Admin access to the GitHub repository settings
-3. A domain (atc.aifreedomtrust.com) with ability to manage DNS records
-4. SSH access to the repository (for pushing changes)
+The main organization website should be set up as follows:
 
-## Setup Process
+1. Create a repository named `AIFreedomTrustFederation.github.io`
+2. This repository will automatically be published to `https://aifreedomtrustfederation.github.io/`
 
-### 1. Repository Configuration
+## Domain Configuration
 
-Ensure your repository contains:
+### Custom Domain Setup
 
-- A `CNAME` file in the root with `atc.aifreedomtrust.com` (already added)
-- The GitHub Actions workflow file in `.github/workflows/github-pages-deploy.yml` (already added)
+1. In your GitHub repository, go to Settings > Pages
+2. Under "Custom domain", enter your domain (e.g., `aifreedomtrust.com` or `atc.aifreedomtrust.com`)
+3. Check "Enforce HTTPS" (recommended)
+4. Save the settings
 
-### 2. Enable GitHub Pages
+### DNS Configuration
 
-1. Go to your GitHub repository
-2. Navigate to Settings > Pages
-3. Under "Source," select "GitHub Actions"
-4. This will allow the deployment workflow to publish to GitHub Pages
+#### Using the Automated Script
 
-### 3. Configure DNS
+We've created a DNS automation script to simplify this process:
 
-1. Log in to your domain registrar (where atc.aifreedomtrust.com is registered)
-2. Create the following DNS records:
+```bash
+# Make the script executable
+chmod +x github-pages-dns-setup.sh
 
-   | Type  | Name                  | Value                        | TTL    |
-   |-------|----------------------|------------------------------|--------|
-   | A     | atc                  | 185.199.108.153              | 1 hour |
-   | A     | atc                  | 185.199.109.153              | 1 hour |
-   | A     | atc                  | 185.199.110.153              | 1 hour |
-   | A     | atc                  | 185.199.111.153              | 1 hour |
+# Run the script
+./github-pages-dns-setup.sh
+```
 
-   *Note: These are GitHub's IP addresses for GitHub Pages*
+The script will:
+- Prompt for cPanel credentials
+- Allow you to select which subdomain to configure
+- Automatically set up the required DNS records
+- Verify the DNS configuration
 
-3. If using Cloudflare, ensure SSL is set to "Full" or "Full (Strict)" mode
+#### Manual DNS Configuration
 
-### 4. Trigger the Deployment
+If you prefer to manually configure DNS:
 
-1. Push any commit to the `main` branch:
-   ```bash
-   git add .
-   git commit -m "Trigger GitHub Pages deployment"
-   git push origin main
-   ```
+1. Log into your cPanel account
+2. Navigate to the DNS Zone Editor
+3. For organization site (aifreedomtrust.com):
+   - Add a CNAME record with:
+     - Name: `@` or empty (for the root domain)
+     - Value: `aifreedomtrustfederation.github.io.` (note the trailing dot)
+   - Add A records with:
+     - Name: `@` or empty
+     - Values: `185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153`
 
-2. This will automatically trigger the GitHub Actions workflow
+4. For subdomains (e.g., atc.aifreedomtrust.com):
+   - Add a CNAME record with:
+     - Name: `atc`
+     - Value: `aifreedomtrustfederation.github.io.` (note the trailing dot)
 
-### 5. Verify the Deployment
+## CNAME File
 
-1. Go to your GitHub repository
-2. Navigate to Actions tab
-3. You should see the "Deploy to GitHub Pages" workflow running
-4. Once completed, visit https://atc.aifreedomtrust.com to verify deployment
+The CNAME file tells GitHub Pages which domain to use. Create a file named `CNAME` in the root of your repository with your domain:
 
-### 6. Troubleshooting
+```
+atc.aifreedomtrust.com
+```
 
-If your deployment isn't working:
+## GitHub Actions Workflow
 
-1. Check if the GitHub Pages site is published:
-   - Go to Settings > Pages
-   - Verify if it shows "Your site is published at https://atc.aifreedomtrust.com"
+We've set up a GitHub Actions workflow that automatically deploys your site to GitHub Pages whenever you push changes to the main branch:
 
-2. Check DNS propagation:
-   ```bash
-   dig atc.aifreedomtrust.com +noall +answer
-   ```
+```yaml
+# .github/workflows/ghpages-deploy.yml
+name: GitHub Pages Deployment
 
-3. Verify SSL certificate:
-   - Visit https://atc.aifreedomtrust.com and check the browser's security indicator
-   - If there's a certificate issue, wait 24 hours as GitHub Pages SSL provisioning can take time
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
 
-4. Check the GitHub Actions logs for any errors
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      # ... deployment steps
+```
 
-### 7. SSL Configuration
+## Project Repository Setup
 
-GitHub Pages automatically provisions an SSL certificate for your custom domain. This process may take up to 24 hours after DNS propagation is complete.
+For project-specific sites (e.g., Aether_Coin_biozonecurrency):
 
-1. Ensure "Enforce HTTPS" is enabled in your repository's Pages settings
-2. If the option is grayed out, wait for DNS propagation to complete
+1. Go to the repository Settings > Pages
+2. Set the Source to "GitHub Actions"
+3. Add a workflow file similar to the one above
+4. Create a CNAME file if using a custom domain
 
-## Backend Integration
+## Brand Subdomains
 
-Remember that this setup only deploys the frontend. For the complete solution:
+For each brand in your ecosystem, you can set up a separate subdomain:
 
-1. Deploy the backend API to your CPanel hosting using the `deploy-to-aifreedomtrust.sh` script
-2. Ensure the frontend is correctly configured to use the API endpoint at `https://atc.aifreedomtrust.com/api`
+1. Create the subdomain DNS records as described above
+2. In the project repository, add a CNAME file with the subdomain
+3. Configure GitHub Pages for the repository
 
-## Regular Maintenance
+## Verifying Deployment
 
-1. Each push to the `main` branch will automatically deploy changes to GitHub Pages
-2. To update only the backend, use the CPanel deployment script without updating GitHub Pages
-3. Monitor GitHub Actions for any deployment failures
+After setting up GitHub Pages, verify:
 
-## Security Considerations
+1. Visit your custom domain (e.g., `https://atc.aifreedomtrust.com`)
+2. Check that HTTPS is working correctly
+3. Verify that all assets (images, CSS, JavaScript) load properly
+4. Test navigation between pages
 
-1. GitHub Pages sites are always public, even with private repositories
-2. Do not include sensitive information in the frontend code
-3. All API calls should use HTTPS
-4. Implement proper CORS policies on the backend to prevent unauthorized access
+## Troubleshooting
 
-For additional support, contact the Aetherion development team.
+### DNS Issues
+
+- DNS changes can take 24-48 hours to propagate
+- Verify your DNS records with `dig`:
+  ```bash
+  dig atc.aifreedomtrust.com
+  ```
+
+### GitHub Pages Issues
+
+- Check the GitHub Pages settings in your repository
+- Ensure your CNAME file has the correct domain
+- Verify the GitHub Actions workflow is running successfully
+
+### HTTPS Issues
+
+- Ensure "Enforce HTTPS" is enabled in GitHub Pages settings
+- Wait for GitHub to provision your SSL certificate (can take up to 24 hours)
+
+## Best Practices
+
+1. **File Organization**: Keep your site files well-organized for easier maintenance
+2. **Minimalist Approach**: For GitHub Pages, keep the deployment minimal and focused
+3. **Custom Domain Renewal**: Ensure your domain registration is up to date
+4. **Regular Testing**: Periodically test your site to ensure it's working correctly
+
+---
+
+For additional help, refer to [GitHub's official documentation on GitHub Pages](https://docs.github.com/en/pages).

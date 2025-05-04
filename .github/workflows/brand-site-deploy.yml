@@ -1,0 +1,205 @@
+name: Brand Site Deployment
+
+on:
+  push:
+    branches:
+      - main  # Change this to your default branch if different
+  workflow_dispatch:  # Allow manual triggers
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+        
+      - name: Get repository name
+        id: repo-name
+        run: echo "::set-output name=repo::$(echo '${{ github.repository }}' | cut -d '/' -f 2)"
+      
+      - name: Determine brand name
+        id: brand-name
+        run: |
+          REPO_NAME="${{ steps.repo-name.outputs.repo }}"
+          BRAND_NAME=$(echo $REPO_NAME | tr '[:upper:]' '[:lower:]' | sed 's/_coin_biozonecurrency//' | sed 's/_/-/g')
+          echo "::set-output name=brand::$BRAND_NAME"
+          echo "Brand name determined as: $BRAND_NAME"
+          
+      - name: Create deployment directory
+        run: |
+          mkdir -p deploy
+          
+      - name: Setup brand landing page
+        run: |
+          # Determine the subdomain from repository name
+          BRAND="${{ steps.brand-name.outputs.brand }}"
+          
+          # Create a CNAME file for the subdomain
+          echo "$BRAND.aifreedomtrust.com" > deploy/CNAME
+          
+          # Create a .nojekyll file to bypass Jekyll processing
+          touch deploy/.nojekyll
+          
+          # Copy the index.html if it exists, or create a new one
+          if [ -f "index.html" ]; then
+            cp index.html deploy/
+          else
+            # Create a basic landing page with brand information
+            cat > deploy/index.html <<EOF
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${BRAND} - AI Freedom Trust</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #041e3c, #0b3561);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 50px 20px;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+        h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(90deg, #41e0fd, #9b83fc);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 20px;
+        }
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.8;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        .content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 50px;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 30px;
+            transition: transform 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .card h2 {
+            color: #9b83fc;
+            margin-top: 0;
+        }
+        .button {
+            display: inline-block;
+            background: linear-gradient(90deg, #41e0fd, #9b83fc);
+            color: white;
+            padding: 12px 25px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: bold;
+            margin-top: 20px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        footer {
+            text-align: center;
+            margin-top: 100px;
+            padding: 20px;
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>${BRAND}</h1>
+            <p class="subtitle">Part of the AI Freedom Trust Ecosystem</p>
+        </header>
+        
+        <div class="content">
+            <div class="card">
+                <h2>About ${BRAND}</h2>
+                <p>Welcome to the official page of ${BRAND}. We are part of the AI Freedom Trust ecosystem, delivering cutting-edge technology solutions.</p>
+                <p>Our platform provides innovative tools and services designed to enhance security, efficiency, and connectivity.</p>
+                <a href="#contact" class="button">Learn More</a>
+            </div>
+            
+            <div class="card">
+                <h2>Key Features</h2>
+                <ul>
+                    <li>Advanced security architecture</li>
+                    <li>Decentralized infrastructure</li>
+                    <li>Quantum-resistant cryptography</li>
+                    <li>Seamless ecosystem integration</li>
+                    <li>Enterprise-grade scalability</li>
+                </ul>
+                <a href="#features" class="button">Explore Features</a>
+            </div>
+            
+            <div class="card">
+                <h2>Get Started</h2>
+                <p>Ready to experience the benefits of ${BRAND}? Get started today and join our growing community of users.</p>
+                <p>Our documentation provides detailed guides and tutorials to help you make the most of our platform.</p>
+                <a href="#start" class="button">Get Started</a>
+            </div>
+        </div>
+        
+        <footer>
+            <p>&copy; 2025 AI Freedom Trust. All rights reserved.</p>
+            <p>Powered by Aetherion Technologies</p>
+        </footer>
+    </div>
+</body>
+</html>
+EOF
+          fi
+          
+          # Copy any static assets if available
+          if [ -d "public" ]; then
+            cp -r public/* deploy/
+          fi
+          
+          if [ -d "assets" ]; then
+            cp -r assets deploy/
+          fi
+          
+          if [ -d "docs" ]; then
+            cp -r docs deploy/
+          fi
+          
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: gh-pages  # The branch the action should deploy to
+          folder: deploy    # The folder the action should deploy
+          clean: true       # Automatically remove deleted files from the deploy branch
+          
+      - name: Deployment Status
+        run: |
+          BRAND="${{ steps.brand-name.outputs.brand }}"
+          echo "✅ Brand site deployment completed successfully!"
+          echo "🌐 Your site should be available at: https://$BRAND.aifreedomtrust.com"
+          echo "🔄 Once DNS is configured, your site will be accessible through your custom domain."

@@ -1,0 +1,77 @@
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC97gnsb46byGHa4iQ5Gp6/mx7lUWYg8x40doE+rELlwCo6EL/ikE7bInI4nr7KNoYlNXwSvKwaqpJ4qq7SxHwru2yJ7fB5nbv5Bk7oEh/aQ9CApRKQrffIb7nOtUAImN/eDnjueeW/Z81FSKIgD9yQLuMR3TWKFzSf8dxCW+73N/1ylpPJQ4sp3RDZ/19grglVOhkvwJxh87sZtX0xB+jaOdY74nuklFcFOgwl2Et7edvzppaRq9tof1COILFsJjZLn6w5JxponQDNKfFZ/wnFy2tyDTQPV9aH0N5dL7n6+13rmEFrE/GyjeHwd8w7FQeHXQOD50MxZ2aqlNx0JlFt
+bash: /usr/local/lp/logs/history.log: No such file or directory
+[bixnyorn@crispr ~]$ mkdir -p ~/.ssh
+bash: /usr/local/lp/logs/history.log: No such file or directory
+[bixnyorn@crispr ~]$ nano ~/.ssh/config
+bash: /usr/local/lp/logs/history.log: No such file or directory
+[bixnyorn@crispr ~]$ ssh -T git@github.com
+Enter passphrase for key '/home/bixnyorn/.ssh/Github_Cpanel':
+Enter passphrase for key '/home/bixnyorn/.ssh/Github_Cpanel':
+Hi AIFreedomTrustFederation! You've successfully authenticated, but GitHub does not provide shell access.
+bash: /usr/local/lp/logs/history.log: No such file or directory
+[bixnyorn@crispr ~]$ eval "$(ssh-agent -s)"
+Agent pid 412569
+bash: /usr/local/lp/logs/history.log: No such file or directory
+[bixnyorn@crispr ~]$ ssh-add ~/.ssh/Github_Cpanel
+Enter passphrase for /home/bixnyorn/.ssh/Github_Cpanel:
+Identity added: /home/bixnyorn/.ssh/Github_Cpanel (/home/bixnyorn/.ssh/Github_Cpanel)
+bash: /usr/local/lp/logs/history.log: No such file or directory
+[bixnyorn@crispr ~]$ # Create a simple DNS update script
+bash: /usr/local/lp/logs/history.log: No such file or directory
+[bixnyorn@crispr ~]$ nano update-dns.sh
+bash: /usr/local/lp/logs/history.log: No such file or directory
+[bixnyorn@crispr ~]$ chmod +x update-dns.sh
+bash: /usr/local/lp/logs/history.log: No such file or directory
+[bixnyorn@crispr ~]$ ./update-dns.sh
+Updating DNS for atc.aifreedomtrust.com to point to GitHub Pages...
+[2025-05-04 06:11:40 -0600] warn [uapi] Failed to load module “DomainDNS”: Cpanel::Exception::ModuleLoadError/(XID pfg9gw) The system failed to load the module “Cpanel::API::DomainDNS” because of an error: Can't locate Cpanel/API/DomainDNS.pm in @INC (you may need to install the Cpanel::API::DomainDNSmodule) (@INC contains: /usr/local/cpanel /usr/local/cpanel/3rdparty/perl/536/cpanel-lib/x86_64-linux /usr/local/cpanel/3rdparty/perl/536/cpanel-lib /usr/local/cpanel/3rdparty/perl/536/lib/x86_64-linux/usr/local/cpanel/3rdparty/perl/536/lib /opt/cpanel/perl5/536/site_lib/x86_64-linux /opt/cpanel/perl5/536/site_lib) at (eval 5) line 1.
+BEGIN failed--compilation aborted at (eval 5) line 1.
+
+ at /usr/local/cpanel/Cpanel/LoadModule.pm line 77.
+        Cpanel::LoadModule::load_perl_module("Cpanel::API::DomainDNS") called at /usr/local/cpanel/Cpanel/API.pm line 336
+        eval {...} called at /usr/local/cpanel/Cpanel/API.pm line 336
+        Cpanel::API::_init_execute("DomainDNS", "remove_zone_record") called at /usr/local/cpanel/Cpanel/API.pm line 180
+        Cpanel::API::execute("DomainDNS", "remove_zone_record", HASH(0x2e6e158)) called at /usr/local/cpanel/Cpanel/API.pm line 654
+        Cpanel::API::run_api_mode(HASH(0x2e6e158)) called at uapi.pl line 307
+        main::script() called at uapi.pl line 139
+
+---
+apiversion: 3
+func: remove_zone_record
+module: DomainDNS
+result:
+  data: ~
+  errors:
+    - "Failed to load module “DomainDNS”: The system failed to load the module “Cpanel::API::DomainDNS” because of an error: Can't locate Cpanel/API/DomainDNS.pm in @INC (you may need to install the Cpanel::API::DomainDNS module) (@INC contains: /usr/local/cpanel /usr/local/cpanel/3rdparty/perl/536/cpanel-lib/x86_64-linux /usr/local/cpanel/3rdparty/perl/536/cpanel-lib /usr/local/cpanel/3rdparty/perl/536/lib/x86_64-linux /usr/local/cpanel/3rdparty/perl/536/lib /opt/cpanel/perl5/536/site_lib/x86_64-linux /opt/cpanel/perl5/536/site_lib) at (eval 5) line 1.\nBEGIN failed--compilation aborted at (eval 5) line 1.\n"
+  messages: ~
+  metadata: {}
+
+  status: 0
+  warnings: ~
+[2025-05-04 06:11:40 -0600] warn [uapi] Failed to load module “DomainDNS”: Cpanel::Exception::ModuleLoadError/(XID u3udjm) The system failed to load the module “Cpanel::API::DomainDNS” because of an error: Can't locate Cpanel/API/DomainDNS.pm in @INC (you may need to install the Cpanel::API::DomainDNSmodule) (@INC contains: /usr/local/cpanel /usr/local/cpanel/3rdparty/perl/536/cpanel-lib/x86_64-linux /usr/local/cpanel/3rdparty/perl/536/cpanel-lib /usr/local/cpanel/3rdparty/perl/536/lib/x86_64-linux/usr/local/cpanel/3rdparty/perl/536/lib /opt/cpanel/perl5/536/site_lib/x86_64-linux /opt/cpanel/perl5/536/site_lib) at (eval 5) line 1.
+BEGIN failed--compilation aborted at (eval 5) line 1.
+
+ at /usr/local/cpanel/Cpanel/LoadModule.pm line 77.
+        Cpanel::LoadModule::load_perl_module("Cpanel::API::DomainDNS") called at /usr/local/cpanel/Cpanel/API.pm line 336
+        eval {...} called at /usr/local/cpanel/Cpanel/API.pm line 336
+        Cpanel::API::_init_execute("DomainDNS", "add_zone_record") called at /usr/local/cpanel/Cpanel/API.pm line 180
+        Cpanel::API::execute("DomainDNS", "add_zone_record", HASH(0x1f00158)) called at /usr/local/cpanel/Cpanel/API.pm line 654
+        Cpanel::API::run_api_mode(HASH(0x1f00158)) called at uapi.pl line 307
+        main::script() called at uapi.pl line 139
+
+---
+apiversion: 3
+func: add_zone_record
+module: DomainDNS
+result:
+  data: ~
+  errors:
+    - "Failed to load module “DomainDNS”: The system failed to load the module “Cpanel::API::DomainDNS” because of an error: Can't locate Cpanel/API/DomainDNS.pm in @INC (you may need to install the Cpanel::API::DomainDNS module) (@INC contains: /usr/local/cpanel /usr/local/cpanel/3rdparty/perl/536/cpanel-lib/x86_64-linux /usr/local/cpanel/3rdparty/perl/536/cpanel-lib /usr/local/cpanel/3rdparty/perl/536/lib/x86_64-linux /usr/local/cpanel/3rdparty/perl/536/lib /opt/cpanel/perl5/536/site_lib/x86_64-linux /opt/cpanel/perl5/536/site_lib) at (eval 5) line 1.\nBEGIN failed--compilation aborted at (eval 5) line 1.\n"
+  messages: ~
+  metadata: {}
+
+  status: 0
+  warnings: ~
+DNS update complete. It may take up to an hour for changes to propagate.
+bash: /usr/local/lp/logs/history.log: No such file or directory
+[bixnyorn@crispr ~]$
