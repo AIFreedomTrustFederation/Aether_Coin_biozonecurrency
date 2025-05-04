@@ -1,62 +1,53 @@
-# AI Freedom Trust Landing Page
+# Aetherion Brand Showcase
 
-A beautiful static landing page for the AI Freedom Trust (aifreedomtrust.com), showcasing the Aetherion Fractalchain ecosystem, Validator Evolution Hierarchy, and Recursive IUL Cascade Framework.
+This repository contains the landing page for the Aetherion technologies, part of the AI Freedom Trust ecosystem.
 
-## Overview
+## GitHub Pages Setup with Custom Domain
 
-This landing page is designed to introduce visitors to:
+This site is configured to be served from `atc.aifreedomtrust.com` using GitHub Pages.
 
-1. **The Aetherion Framework** - A breath-backed monetary system built on biozoecurrency principles
-2. **The 24 Elders and Validator Evolution Hierarchy** - The governance engine of the AetherCore Fractalchain
-3. **Recursive IUL Cascade Framework** - Self-funding wealth architecture for financial sovereignty
+### DNS Configuration
 
-## Features
+To properly connect your domain to GitHub Pages, configure the following DNS records with your domain provider:
 
-- Fully responsive design that works on mobile, tablet, and desktop
-- Rich visual elements illustrating the Torus Field and Sacred Geometry concepts
-- Clean, modern aesthetic with carefully curated green/red/blue color scheme representing the expansion/coherence/compression phases
-- Vanilla JavaScript for interactions and animations without external dependencies
-- Tailwind-style utility class system for consistent styling
+#### For the apex domain (aifreedomtrust.com)
+Add these A records pointing to GitHub's servers:
+```
+A    @    185.199.108.153
+A    @    185.199.109.153
+A    @    185.199.110.153
+A    @    185.199.111.153
+```
 
-## File Structure
+#### For the atc subdomain (atc.aifreedomtrust.com)
+Add a CNAME record:
+```
+CNAME    atc    [your-github-username].github.io
+```
 
-- `index.html` - Main HTML file
-- `styles.css` - Custom CSS with utility classes
-- `script.js` - JavaScript for interactive elements
+### Repository Configuration
 
-## Deployment Instructions
+1. The repository contains a `CNAME` file with `atc.aifreedomtrust.com`
+2. In the repository settings, under Pages, the custom domain is set to `atc.aifreedomtrust.com`
+3. HTTPS is enforced for secure connections
 
-### Option 1: GitHub Pages
+### Verification
 
-1. Push this code to a GitHub repository
-2. Go to Settings > Pages
-3. Select the main branch as the source
-4. Save to deploy the site
+After DNS propagation (which can take up to 48 hours):
+1. The site should be accessible at `https://atc.aifreedomtrust.com`
+2. GitHub Pages settings should show "Your site is published at https://atc.aifreedomtrust.com"
 
-### Option 2: Traditional Web Hosting
+## Brand Ecosystem
 
-1. Upload all files to your web hosting provider via FTP or their control panel
-2. Make sure to maintain the file structure
-3. No server-side processing required as this is a static site
+The ecosystem includes the following brands, each with their own subdomain:
 
-### Option 3: Netlify/Vercel
+- Quantum Domain: https://quantumdomain.aifreedomtrust.com
+- Zero Trust Framework: https://zerotrust.aifreedomtrust.com
+- Fractal Network: https://fractalnetwork.aifreedomtrust.com
+- AetherMesh: https://aethermesh.aifreedomtrust.com
+- Fractal Vault: https://fractalvault.aifreedomtrust.com
+- Quantum Guard: https://quantumguard.aifreedomtrust.com
+- Mysterion: https://mysterion.aifreedomtrust.com
+- Fractal Chain: https://fractalchain.aifreedomtrust.com
 
-1. Connect your repository to Netlify or Vercel
-2. Configure the build settings (not required for this static site)
-3. Deploy automatically with each push to the main branch
-
-## Customization
-
-- **Colors**: Edit the CSS variables at the top of `styles.css` to adjust the color scheme
-- **Content**: Modify the HTML directly to update text and sections
-- **Images**: Replace or add images in the appropriate sections
-
-## Credits
-
-- [Phosphor Icons](https://phosphoricons.com/) - For beautiful minimal icons
-- [Inter Font](https://fonts.google.com/specimen/Inter) - Modern, clean typography
-- AI Freedom Trust - Original concept and content
-
-## License
-
-Copyright © 2025 AI Freedom Trust. All rights reserved.
+The central brand showcase is available at https://ai.aifreedomtrust.com
