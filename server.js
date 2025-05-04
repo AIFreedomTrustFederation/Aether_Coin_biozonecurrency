@@ -139,6 +139,11 @@ app.get('/brands-showcase', (req, res) => {
   res.sendFile(path.join(__dirname, 'public/brand-showcase.html'));
 });
 
+// Additional route specifically for the Aetherion quantum-secure iframe integration
+app.get('/brand-ecosystem-showcase', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/brand-showcase.html'));
+});
+
 // Special route for feedback tool testing - simplified page that loads quickly
 app.get('/feedback-check', (req, res) => {
   res.sendFile(path.join(__dirname, 'public/feedback-check.html'));
@@ -161,10 +166,11 @@ app.use((req, res, next) => {
 });
 
 // Start the Vite server
-const viteProcess = spawn('npx', ['vite'], {
+// For the full Aetherion Wallet v1.0.0 instead of just the CodeStar platform
+const viteProcess = spawn('npx', ['vite', '--host'], {
   stdio: 'inherit',
   shell: true,
-  cwd: path.join(__dirname, 'client')
+  cwd: path.join(__dirname, 'aetherion-wallet-v1.0.0')
 });
 
 // Create proxy middleware for the Vite dev server

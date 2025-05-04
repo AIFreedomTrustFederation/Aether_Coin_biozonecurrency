@@ -30,13 +30,8 @@ const MobileMenu = ({ isOpen, onClose }: MobileMenuProps) => {
   };
 
   const handleNavigation = (path: string) => {
-    // Special handling for the brand showcase page
-    if (path === '/brands-showcase') {
-      window.location.href = path;
-      onClose();
-      return;
-    }
-    
+    // Regular navigation for all pages, including brand showcase
+    // which now uses our integrated BrandShowcaseFrame component
     setLocation(path);
     onClose();
   };
