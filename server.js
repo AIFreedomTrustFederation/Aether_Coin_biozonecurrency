@@ -129,6 +129,26 @@ app.get('/showcase', (req, res) => {
   res.sendFile(path.join(__dirname, 'app-showcase.html'));
 });
 
+// Serve our brand ecosystem showcase page
+app.get('/brands-showcase', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/brand-showcase.html'));
+});
+
+// Special route for feedback tool testing - simplified page that loads quickly
+app.get('/feedback-check', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/feedback-check.html'));
+});
+
+// Standalone brand showcase HTML page (no React dependencies, loads directly)
+app.get('/standalone-showcase', (req, res) => {
+  res.sendFile(path.join(__dirname, 'standalone-brand-showcase.html'));
+});
+
+// Absolute minimal test page - for basic connectivity testing
+app.get('/pure-test', (req, res) => {
+  res.sendFile(path.join(__dirname, 'pure-test.html'));
+});
+
 // Middleware to log all requests
 app.use((req, res, next) => {
   console.log(`Request: ${req.method} ${req.url}`);
@@ -178,6 +198,10 @@ httpServer.listen(PORT, '0.0.0.0', () => {
   console.log(`✓ Test page available at http://localhost:${PORT}/test`);
   console.log(`✓ Simple test page available at http://localhost:${PORT}/test.html`);
   console.log(`✓ App showcase available at http://localhost:${PORT}/showcase`);
+  console.log(`✓ Brand ecosystem showcase available at http://localhost:${PORT}/brands-showcase`); 
+  console.log(`✓ Standalone brand showcase available at http://localhost:${PORT}/standalone-showcase`);
+  console.log(`✓ Pure test page available at http://localhost:${PORT}/pure-test`);
+  console.log(`✓ Feedback check page available at http://localhost:${PORT}/feedback-check`);
   console.log(`✓ Landing page available at http://localhost:${PORT}/`);
   console.log(`✓ WebSocket server available at ws://localhost:${PORT}/ws`);
   console.log(`✓ Vite dev server running on port ${VITE_PORT}`);
@@ -190,6 +214,9 @@ httpServer.listen(PORT, '0.0.0.0', () => {
     console.log(`\n✓ REPLIT URL: ${replitUrl}`);
     console.log(`✓ Landing page on Replit: ${replitUrl}/`);
     console.log(`✓ Test HTML page on Replit: ${replitUrl}/test.html`);
+    console.log(`✓ Brand ecosystem showcase on Replit: ${replitUrl}/brands-showcase`);
+    console.log(`✓ Standalone brand showcase on Replit: ${replitUrl}/standalone-showcase`);
+    console.log(`✓ Feedback check page on Replit: ${replitUrl}/feedback-check`);
     console.log(`✓ API health endpoint: ${replitUrl}/api/health`);
   }
 });

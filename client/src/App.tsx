@@ -18,6 +18,7 @@ const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const Api = lazy(() => import("./pages/Api"));
 const Brands = lazy(() => import("./pages/Brands"));
 const Technology = lazy(() => import("./pages/Technology"));
+const BrandShowcase = lazy(() => import("./pages/BrandShowcase"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -47,6 +48,7 @@ const App = () => (
             <Route path="/api" element={<Api />} />
             <Route path="/brands" element={<Brands />} />
             <Route path="/technology" element={<Technology />} />
+            <Route path="/brand-showcase" element={<BrandShowcase />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

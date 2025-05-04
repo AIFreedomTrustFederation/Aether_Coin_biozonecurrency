@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Freedom Trust - Brand Ecosystem</title>
+  <style>
+    :root {
+      --color-primary: #1a6f38;
+      --color-secondary: #2563eb;
+      --color-tertiary: #7c3aed;
+      --color-quaternary: #10b981;
+      --color-background: #f9fafb;
+      --color-text: #1f2937;
+      --color-text-light: #6b7280;
+      --color-card-bg: #ffffff;
+      --radius: 8px;
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+      background-color: var(--color-background);
+      color: var(--color-text);
+      line-height: 1.6;
+      margin: 0;
+      padding: 0;
+    }
+    
+    .container {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem 1rem;
+    }
+    
+    header {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+    
+    h1 {
+      font-size: 2.5rem;
+      font-weight: bold;
+      color: var(--color-primary);
+      margin-bottom: 1rem;
+    }
+    
+    .subtitle {
+      font-size: 1.2rem;
+      color: var(--color-text-light);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 2rem;
+      margin-bottom: 3rem;
+    }
+    
+    .brand-card {
+      background-color: var(--color-card-bg);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .brand-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+    
+    .brand-header {
+      padding: 1.5rem;
+      color: white;
+    }
+    
+    .aethercoin { background-color: var(--color-primary); }
+    .fractalcoin { background-color: var(--color-secondary); }
+    .aethercore { background-color: var(--color-tertiary); }
+    .biozoe { background-color: var(--color-quaternary); }
+    
+    .brand-title {
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin: 0 0 0.5rem 0;
+    }
+    
+    .brand-subtitle {
+      font-size: 0.9rem;
+      opacity: 0.9;
+      margin: 0;
+    }
+    
+    .brand-content {
+      padding: 1.5rem;
+    }
+    
+    .brand-description {
+      margin-bottom: 1.5rem;
+    }
+    
+    .brand-link {
+      display: inline-block;
+      background-color: var(--color-primary);
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border-radius: var(--radius);
+      text-decoration: none;
+      font-weight: 500;
+      transition: background-color 0.2s ease;
+    }
+    
+    .brand-link:hover {
+      background-color: #155d30;
+    }
+    
+    .integration-section {
+      background-color: white;
+      border-radius: var(--radius);
+      padding: 2rem;
+      margin-bottom: 3rem;
+    }
+    
+    .section-title {
+      font-size: 1.5rem;
+      color: var(--color-primary);
+      margin-top: 0;
+      margin-bottom: 1rem;
+    }
+    
+    .footer {
+      text-align: center;
+      margin-top: 4rem;
+      padding-top: 2rem;
+      border-top: 1px solid #e5e7eb;
+      color: var(--color-text-light);
+      font-size: 0.9rem;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+      
+      h1 {
+        font-size: 2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>AI Freedom Trust Ecosystem</h1>
+      <p class="subtitle">
+        Explore our family of brands working together to create a quantum-resistant,
+        consciousness-aligned blockchain ecosystem
+      </p>
+    </header>
+    
+    <div class="grid">
+      <div class="brand-card">
+        <div class="brand-header aethercoin">
+          <h2 class="brand-title">Aether Coin</h2>
+          <p class="brand-subtitle">Quantum-resistant utility token</p>
+        </div>
+        <div class="brand-content">
+          <p class="brand-description">
+            A next-generation cryptocurrency built on quantum-resistant principles, ensuring
+            your digital assets remain secure even in a post-quantum computing world.
+          </p>
+          <a href="https://aethercoin.aifreedomtrust.com" class="brand-link">Visit Aether Coin</a>
+        </div>
+      </div>
+      
+      <div class="brand-card">
+        <div class="brand-header fractalcoin">
+          <h2 class="brand-title">FractalCoin</h2>
+          <p class="brand-subtitle">Fractal-based economic scaling</p>
+        </div>
+        <div class="brand-content">
+          <p class="brand-description">
+            Leveraging fractal mathematics to create a self-sustaining economic system
+            that scales organically while maintaining fairness and integrity.
+          </p>
+          <a href="https://fractalcoin.aifreedomtrust.com" class="brand-link">Visit FractalCoin</a>
+        </div>
+      </div>
+      
+      <div class="brand-card">
+        <div class="brand-header aethercore">
+          <h2 class="brand-title">AetherCore</h2>
+          <p class="brand-subtitle">Core blockchain infrastructure</p>
+        </div>
+        <div class="brand-content">
+          <p class="brand-description">
+            The foundational technology platform that powers our ecosystem, providing
+            secure, scalable blockchain services with advanced quantum protection.
+          </p>
+          <a href="https://aethercore.aifreedomtrust.com" class="brand-link">Visit AetherCore</a>
+        </div>
+      </div>
+      
+      <div class="brand-card">
+        <div class="brand-header biozoe">
+          <h2 class="brand-title">Biozoe</h2>
+          <p class="brand-subtitle">Temporal life & eternal spirit</p>
+        </div>
+        <div class="brand-content">
+          <p class="brand-description">
+            Exploring the intersection of consciousness, spirituality, and technology
+            to create meaningful digital experiences that nurture the human spirit.
+          </p>
+          <a href="https://biozoe.aifreedomtrust.com" class="brand-link">Visit Biozoe</a>
+        </div>
+      </div>
+    </div>
+    
+    <div class="integration-section">
+      <h2 class="section-title">Ecosystem Integration</h2>
+      <p>
+        Our brands work seamlessly together to provide a comprehensive solution for blockchain
+        technology, digital assets, and spiritual consciousness alignment. By integrating
+        quantum-resistant security, fractal economics, and consciousness-aware design principles,
+        we create a unified ecosystem that protects and enhances human potential.
+      </p>
+      <p>
+        Each brand in our ecosystem contributes unique value while benefiting from the
+        strengths of its counterparts, creating a harmonious balance that delivers
+        exceptional experiences for our users.
+      </p>
+    </div>
+    
+    <div class="footer">
+      <p>&copy; 2025 AI Freedom Trust. All rights reserved.</p>
+    </div>
+  </div>
+</body>
+</html>
