@@ -186,9 +186,15 @@ app.use(['/@vite/client', '/@vite/hmr', '/vite-hmr', '/__vite_ping'], (req, res,
   viteProxy(req, res, next);
 });
 
-// Serve our enhanced landing page at the root URL
+// Redirect root URL to the full Aetherion Wallet application
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'landing.html'));
+  res.redirect('/wallet');
+});
+
+// Dedicated path for the full Aetherion Wallet v1.0.0 application
+app.get('/wallet', (req, res, next) => {
+  // Pass to Vite to serve the full Aetherion Wallet
+  viteProxy(req, res, next);
 });
 
 // All other frontend routes go to Vite
@@ -211,6 +217,8 @@ process.on('SIGINT', () => {
 // Start the Express server
 httpServer.listen(PORT, '0.0.0.0', () => {
   console.log(`✓ Aetherion integrated server running on port ${PORT}`);
+  console.log(`✓ AETHERION WALLET V1.0.0 available at http://localhost:${PORT}/wallet`);
+  console.log(`✓ Root URL redirects to Aetherion Wallet at http://localhost:${PORT}/`);
   console.log(`✓ Test page available at http://localhost:${PORT}/test`);
   console.log(`✓ Simple test page available at http://localhost:${PORT}/test.html`);
   console.log(`✓ App showcase available at http://localhost:${PORT}/showcase`);
@@ -218,7 +226,6 @@ httpServer.listen(PORT, '0.0.0.0', () => {
   console.log(`✓ Standalone brand showcase available at http://localhost:${PORT}/standalone-showcase`);
   console.log(`✓ Pure test page available at http://localhost:${PORT}/pure-test`);
   console.log(`✓ Feedback check page available at http://localhost:${PORT}/feedback-check`);
-  console.log(`✓ Landing page available at http://localhost:${PORT}/`);
   console.log(`✓ WebSocket server available at ws://localhost:${PORT}/ws`);
   console.log(`✓ Vite dev server running on port ${VITE_PORT}`);
   
@@ -228,7 +235,8 @@ httpServer.listen(PORT, '0.0.0.0', () => {
   if (replitSlug && replitOwner) {
     const replitUrl = `https://${replitSlug}.${replitOwner}.repl.co`;
     console.log(`\n✓ REPLIT URL: ${replitUrl}`);
-    console.log(`✓ Landing page on Replit: ${replitUrl}/`);
+    console.log(`✓ AETHERION WALLET V1.0.0 on Replit: ${replitUrl}/wallet`);
+    console.log(`✓ Root URL redirects to Wallet: ${replitUrl}/`);
     console.log(`✓ Test HTML page on Replit: ${replitUrl}/test.html`);
     console.log(`✓ Brand ecosystem showcase on Replit: ${replitUrl}/brands-showcase`);
     console.log(`✓ Standalone brand showcase on Replit: ${replitUrl}/standalone-showcase`);
