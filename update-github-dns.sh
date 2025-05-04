@@ -12,7 +12,7 @@ echo -e "${BLUE}=== GitHub Pages DNS Setup - Simplified ===${NC}"
 
 # Define variables - modify these as needed
 DOMAIN="aifreedomtrust.com"
-SUBDOMAIN="atc.coin"
+SUBDOMAIN="atc"
 GITHUB_USER="aifreedomtrustfederation"
 GITHUB_PAGES_DOMAIN="${GITHUB_USER}.github.io"
 TTL=300

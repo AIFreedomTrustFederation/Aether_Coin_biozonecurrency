@@ -13,7 +13,7 @@ echo "This script will configure your DNS for GitHub Pages."
 
 # Define variables - modify these as needed
 DOMAIN="aifreedomtrust.com"
-SUBDOMAIN="atc.coin"
+SUBDOMAIN="atc"
 GITHUB_USER="aifreedomtrustfederation"
 GITHUB_PAGES_DOMAIN="${GITHUB_USER}.github.io"
 
