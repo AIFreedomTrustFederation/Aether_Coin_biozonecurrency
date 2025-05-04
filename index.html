@@ -5,220 +5,286 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Aetherion Ecosystem</title>
   <style>
-    body {
+    :root {
+      --primary: #1a1c3a;
+      --primary-light: #2d307b;
+      --secondary: #7857c5;
+      --accent: #4e30c5;
+      --light: #f8f9fa;
+      --dark: #121224;
+      --text: #e6e6fa;
+      --text-muted: #a4a6c5;
+      --border-radius: 0.5rem;
+    }
+    
+    * {
+      box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: 'Arial', sans-serif;
-      background: linear-gradient(135deg, #0a101f, #121a3a);
-      color: #ffffff;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--primary);
+      color: var(--text);
+      line-height: 1.6;
+    }
+    
+    .hero {
+      background: linear-gradient(135deg, var(--primary), var(--dark));
       min-height: 100vh;
       display: flex;
-      justify-content: center;
-      align-items: center;
       flex-direction: column;
-    }
-    .container {
-      width: 90%;
-      max-width: 1200px;
-      text-align: center;
-    }
-    h1 {
-      font-size: 2.5rem;
-      background: linear-gradient(90deg, #8a2be2, #4169e1);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      margin-bottom: 1rem;
-    }
-    p {
-      font-size: 1.2rem;
-      line-height: 1.6;
-      margin-bottom: 2rem;
-      opacity: 0.9;
-    }
-    .buttons {
-      display: flex;
-      justify-content: center;
-      gap: 1.5rem;
-      flex-wrap: wrap;
-    }
-    .button {
-      padding: 0.8rem 1.5rem;
-      font-size: 1rem;
-      font-weight: bold;
-      text-decoration: none;
-      border-radius: 8px;
-      transition: all 0.3s ease;
-      display: inline-flex;
       align-items: center;
       justify-content: center;
-      min-width: 200px;
-    }
-    .wallet-btn {
-      background: linear-gradient(90deg, #6a359e, #4169e1);
-      color: white;
-      border: none;
-      box-shadow: 0 4px 15px rgba(65, 105, 225, 0.3);
-    }
-    .wallet-btn:hover {
-      background: linear-gradient(90deg, #7b41b7, #517aee);
-      transform: translateY(-3px);
-      box-shadow: 0 7px 20px rgba(65, 105, 225, 0.4);
-    }
-    .showcase-btn {
-      background: transparent;
-      color: white;
-      border: 2px solid #6a359e;
-      box-shadow: 0 4px 15px rgba(106, 53, 158, 0.2);
-    }
-    .showcase-btn:hover {
-      background: rgba(106, 53, 158, 0.1);
-      transform: translateY(-3px);
-      box-shadow: 0 7px 20px rgba(106, 53, 158, 0.3);
-    }
-    .logo {
-      margin-bottom: 2rem;
-      width: 120px;
-      height: 120px;
+      padding: 2rem;
       position: relative;
+      overflow: hidden;
     }
-    .logo::before {
+    
+    .hero::before {
       content: '';
-      position: absolute;
-      width: 120px;
-      height: 120px;
-      background: linear-gradient(135deg, #8a2be2, #4169e1);
-      border-radius: 50%;
-      opacity: 0.2;
-      animation: pulse 2s infinite;
-    }
-    .logo::after {
-      content: '';
-      position: absolute;
-      width: 100px;
-      height: 100px;
-      top: 10px;
-      left: 10px;
-      background: url(./public/aetherion-logo.svg) center/contain no-repeat;
-      border-radius: 50%;
-    }
-    @keyframes pulse {
-      0% {
-        transform: scale(1);
-        opacity: 0.2;
-      }
-      50% {
-        transform: scale(1.1);
-        opacity: 0.3;
-      }
-      100% {
-        transform: scale(1);
-        opacity: 0.2;
-      }
-    }
-    .quantum-particles {
       position: absolute;
       top: 0;
       left: 0;
+      right: 0;
+      bottom: 0;
+      background: radial-gradient(circle at 30% 40%, rgba(126, 87, 197, 0.2), transparent 80%),
+                  radial-gradient(circle at 70% 60%, rgba(78, 48, 197, 0.2), transparent 80%);
+      z-index: 0;
+    }
+    
+    .container {
+      max-width: 1200px;
       width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: -1;
+      z-index: 1;
+      text-align: center;
+    }
+    
+    .logo {
+      margin-bottom: 2rem;
+    }
+    
+    .logo-image {
+      width: 120px;
+      height: 120px;
+      background: linear-gradient(45deg, var(--secondary), var(--accent));
+      border-radius: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto;
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+      position: relative;
       overflow: hidden;
+    }
+    
+    .logo-image::before {
+      content: 'A';
+      font-size: 60px;
+      font-weight: bold;
+      color: var(--light);
+    }
+    
+    .logo-image::after {
+      content: '';
+      position: absolute;
+      width: 120%;
+      height: 120%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+      transform: rotate(45deg);
+      animation: shine 3s infinite;
+    }
+    
+    @keyframes shine {
+      0% { left: -150%; }
+      100% { left: 150%; }
+    }
+    
+    h1 {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      background: linear-gradient(45deg, var(--secondary), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    
+    p {
+      font-size: 1.2rem;
+      max-width: 700px;
+      margin: 0 auto 3rem;
+      color: var(--text-muted);
+    }
+    
+    .app-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+      margin-top: 3rem;
+    }
+    
+    .app-card {
+      background-color: rgba(18, 18, 36, 0.6);
+      border: 1px solid rgba(126, 87, 197, 0.3);
+      border-radius: var(--border-radius);
+      padding: 2rem;
+      transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+      height: 100%;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .app-card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+      border-color: var(--secondary);
+    }
+    
+    .app-icon {
+      width: 80px;
+      height: 80px;
+      border-radius: 20px;
+      background: linear-gradient(45deg, var(--primary-light), var(--secondary));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+      font-size: 2rem;
+      color: var(--light);
+      box-shadow: 0 10px 15px -5px rgba(0, 0, 0, 0.3);
+    }
+    
+    .app-title {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+      color: var(--light);
+    }
+    
+    .app-description {
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+      flex-grow: 1;
+    }
+    
+    .app-link {
+      display: inline-block;
+      padding: 0.75rem 1.5rem;
+      background: linear-gradient(45deg, var(--secondary), var(--accent));
+      color: white;
+      text-decoration: none;
+      border-radius: 50px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    }
+    
+    .app-link:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 15px rgba(0, 0, 0, 0.3);
+    }
+    
+    .status-link {
+      position: absolute;
+      bottom: 2rem;
+      right: 2rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      transition: color 0.3s ease;
+    }
+    
+    .status-link::before {
+      content: '';
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background-color: #28a745;
+      margin-right: 0.5rem;
+    }
+    
+    .status-link:hover {
+      color: var(--light);
+    }
+    
+    .footer {
+      position: absolute;
+      bottom: 2rem;
+      left: 0;
+      right: 0;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    
+    @media (max-width: 768px) {
+      h1 {
+        font-size: 2.2rem;
+      }
+      
+      p {
+        font-size: 1rem;
+      }
+      
+      .app-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .status-link {
+        position: static;
+        margin-top: 3rem;
+        justify-content: center;
+      }
+      
+      .hero {
+        padding: 1.5rem;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="quantum-particles" id="particles"></div>
-  <div class="container">
-    <div class="logo"></div>
-    <h1>Welcome to the Aetherion Ecosystem</h1>
-    <p>
-      Explore the quantum-resistant blockchain ecosystem with advanced decentralized applications
-      and brand integrations. Choose your destination below.
-    </p>
-    <div class="buttons">
-      <a href="/wallet" class="button wallet-btn">Aetherion Wallet</a>
-      <a href="/brands" class="button showcase-btn">Brand Showcase</a>
+  <section class="hero">
+    <div class="container">
+      <div class="logo">
+        <div class="logo-image"></div>
+      </div>
+      
+      <h1>Aetherion Ecosystem</h1>
+      <p>Welcome to the Aetherion Ecosystem, a comprehensive platform built on quantum-resistant blockchain technology. Explore our suite of integrated applications, tools, and services.</p>
+      
+      <div class="app-grid">
+        <div class="app-card" onclick="window.location.href='/brands'">
+          <div class="app-icon">🎨</div>
+          <h3 class="app-title">Brand Showcase</h3>
+          <p class="app-description">Explore and interact with the complete suite of Biozoe and Aether brand identities, showcasing quantum-resistant blockchain technologies.</p>
+          <a href="/brands" class="app-link">Launch Showcase</a>
+        </div>
+        
+        <div class="app-card" onclick="window.location.href='/wallet'">
+          <div class="app-icon">💼</div>
+          <h3 class="app-title">Aetherion Wallet</h3>
+          <p class="app-description">Access the full Aetherion Wallet to manage your digital assets securely with quantum-resistant encryption and advanced features.</p>
+          <a href="/wallet" class="app-link">Launch Wallet</a>
+        </div>
+        
+        <div class="app-card" onclick="window.location.href='/app3'">
+          <div class="app-icon">🔌</div>
+          <h3 class="app-title">Third Application</h3>
+          <p class="app-description">A modular extension for the Aetherion Ecosystem, providing additional functionality and integration capabilities.</p>
+          <a href="/app3" class="app-link">Launch App</a>
+        </div>
+      </div>
     </div>
-  </div>
-
-  <script>
-    // Simple particle animation for quantum effect
-    document.addEventListener('DOMContentLoaded', function() {
-      const particlesContainer = document.getElementById('particles');
-      const particleCount = 50;
-      const colors = ['#8a2be2', '#4169e1', '#6a359e', '#2b5797'];
-      
-      for (let i = 0; i < particleCount; i++) {
-        createParticle();
-      }
-      
-      function createParticle() {
-        const particle = document.createElement('div');
-        
-        // Random positioning and styling
-        const size = Math.random() * 5 + 1;
-        const color = colors[Math.floor(Math.random() * colors.length)];
-        
-        particle.style.position = 'absolute';
-        particle.style.width = `${size}px`;
-        particle.style.height = `${size}px`;
-        particle.style.background = color;
-        particle.style.borderRadius = '50%';
-        particle.style.opacity = Math.random() * 0.5 + 0.2;
-        
-        // Set initial position
-        const xPos = Math.random() * 100;
-        const yPos = Math.random() * 100;
-        particle.style.left = `${xPos}%`;
-        particle.style.top = `${yPos}%`;
-        
-        // Create animation with random duration and delay
-        const duration = Math.random() * 20 + 10;
-        const delay = Math.random() * 5;
-        
-        particle.style.animation = `float ${duration}s ${delay}s infinite linear`;
-        
-        // Add animation keyframes dynamically
-        const styleSheet = document.styleSheets[0];
-        const keyframes = `
-          @keyframes float {
-            0% {
-              transform: translate(0, 0) rotate(0deg);
-              opacity: ${Math.random() * 0.5 + 0.2};
-            }
-            25% {
-              transform: translate(${Math.random() * 100 - 50}px, ${Math.random() * 100 - 50}px) rotate(${Math.random() * 360}deg);
-              opacity: ${Math.random() * 0.5 + 0.2};
-            }
-            50% {
-              transform: translate(${Math.random() * 100 - 50}px, ${Math.random() * 100 - 50}px) rotate(${Math.random() * 360}deg);
-              opacity: ${Math.random() * 0.5 + 0.2};
-            }
-            75% {
-              transform: translate(${Math.random() * 100 - 50}px, ${Math.random() * 100 - 50}px) rotate(${Math.random() * 360}deg);
-              opacity: ${Math.random() * 0.5 + 0.2};
-            }
-            100% {
-              transform: translate(0, 0) rotate(0deg);
-              opacity: ${Math.random() * 0.5 + 0.2};
-            }
-          }
-        `;
-        
-        try {
-          styleSheet.insertRule(keyframes, styleSheet.cssRules.length);
-        } catch (e) {
-          // Fallback for browser compatibility
-          const style = document.createElement('style');
-          style.innerHTML = keyframes;
-          document.head.appendChild(style);
-        }
-        
-        particlesContainer.appendChild(particle);
-      }
-    });
-  </script>
+    
+    <a href="/status" class="status-link">System Status</a>
+    
+    <div class="footer">
+      <p>Aetherion Ecosystem | &copy; 2025 AI Freedom Trust</p>
+    </div>
+  </section>
 </body>
 </html>

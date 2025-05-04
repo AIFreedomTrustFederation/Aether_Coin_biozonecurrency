@@ -19,12 +19,15 @@ import pg from 'pg';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Import centralized configuration
+import config from './config.js';
+
 // Server configuration for each application
-const MAIN_PORT = process.env.PORT || 5000;
-const BRAND_SHOWCASE_PORT = 5173;
-const WALLET_PORT = 5174;
-const THIRD_APP_PORT = 5175; // For a third application
-const WALLET_VITE_PORT = 5176; // Vite port for wallet application
+const MAIN_PORT = process.env.PORT || config.mainServer.port;
+const BRAND_SHOWCASE_PORT = config.brandShowcase.port;
+const WALLET_PORT = config.aetherionWallet.port;
+const THIRD_APP_PORT = config.thirdApp.port; // For a third application
+const WALLET_VITE_PORT = config.aetherionWallet.vitePort; // Vite port for wallet application
 
 // Target URLs for proxying
 const BRAND_SHOWCASE_URL = `http://localhost:${BRAND_SHOWCASE_PORT}`;
@@ -51,7 +54,7 @@ console.log(`- Aetherion Wallet on port ${WALLET_PORT}`);
 console.log(`- Third Application on port ${THIRD_APP_PORT}`);
 
 // Create WebSocket server for real-time communication
-const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+const wss = new WebSocketServer({ server: httpServer, path: config.websocket.path });
 
 wss.on('connection', function connection(ws) {
   console.log('Client connected to WebSocket');
@@ -74,7 +77,7 @@ wss.on('connection', function connection(ws) {
 });
 
 // Add a simple health check endpoint
-app.get('/api/health', (req, res) => {
+app.get(config.api.health, (req, res) => {
   res.json({
     status: 'ok',
     version: process.env.npm_package_version || '1.0.0',
@@ -270,19 +273,19 @@ app.get('/', (req, res) => {
 });
 
 // Aetherion Wallet route - enhanced with better handling
-app.use('/wallet', (req, res, next) => {
+app.use(config.aetherionWallet.basePath, (req, res, next) => {
   console.log(`Wallet request received: ${req.method} ${req.originalUrl}`);
   // Forward all wallet requests to the dedicated wallet server
   walletProxy(req, res, next);
 });
 
 // Brand Showcase route
-app.get('/brands', (req, res, next) => {
+app.get(config.brandShowcase.basePath, (req, res, next) => {
   brandShowcaseProxy(req, res, next);
 });
 
 // Third application route (placeholder for future)
-app.get('/app3', (req, res, next) => {
+app.get(config.thirdApp.basePath, (req, res, next) => {
   thirdAppProxy(req, res, next);
 });
 
@@ -304,7 +307,7 @@ app.get('/standalone-showcase', (req, res) => {
 });
 
 // Status check page for monitoring all services
-app.get('/status', (req, res) => {
+app.get(config.api.status, (req, res) => {
   res.sendFile(path.join(__dirname, 'public/status-check.html'));
 });
 
@@ -316,7 +319,7 @@ app.use('/', (req, res, next) => {
   }
   
   // Route to the appropriate application based on path
-  if (req.path.startsWith('/wallet') || 
+  if (req.path.startsWith(config.aetherionWallet.basePath) || 
       req.path.startsWith('/quantum-security') || 
       req.path.startsWith('/fractal-explorer') || 
       req.path.startsWith('/multi-wallet') || 
@@ -325,7 +328,7 @@ app.use('/', (req, res, next) => {
     // Forward any wallet-related paths to the wallet server
     console.log(`Forwarding wallet-related request: ${req.method} ${req.path}`);
     walletProxy(req, res, next);
-  } else if (req.path.startsWith('/app3')) {
+  } else if (req.path.startsWith(config.thirdApp.basePath)) {
     thirdAppProxy(req, res, next);
   } else {
     brandShowcaseProxy(req, res, next);
@@ -343,13 +346,13 @@ process.on('SIGINT', () => {
 
 // START THE MAIN EXPRESS SERVER
 httpServer.listen(MAIN_PORT, '0.0.0.0', () => {
-  console.log(`✓ Aetherion Ecosystem Server running on port ${MAIN_PORT}`);
-  console.log(`✓ Brand Showcase available at http://localhost:${MAIN_PORT}/brands`);
-  console.log(`✓ Aetherion Wallet available at http://localhost:${MAIN_PORT}/wallet`);
-  console.log(`✓ Wallet (Vite) available at http://localhost:${MAIN_PORT}/app3`);
-  console.log(`✓ Combined landing page at http://localhost:${MAIN_PORT}/`);
-  console.log(`✓ Status check page at http://localhost:${MAIN_PORT}/status`);
-  console.log(`✓ WebSocket server available at ws://localhost:${MAIN_PORT}/ws`);
+  console.log(`✓ ${config.mainServer.name} running on port ${MAIN_PORT}`);
+  console.log(`✓ ${config.brandShowcase.name} available at http://localhost:${MAIN_PORT}${config.brandShowcase.basePath}`);
+  console.log(`✓ ${config.aetherionWallet.name} available at http://localhost:${MAIN_PORT}${config.aetherionWallet.basePath}`);
+  console.log(`✓ ${config.thirdApp.name} available at http://localhost:${MAIN_PORT}${config.thirdApp.basePath}`);
+  console.log(`✓ Combined landing page at http://localhost:${MAIN_PORT}${config.mainServer.basePath}`);
+  console.log(`✓ Status check page at http://localhost:${MAIN_PORT}${config.api.status}`);
+  console.log(`✓ ${config.websocket.name} available at ws://localhost:${MAIN_PORT}${config.websocket.path}`);
   
   // Display Replit-specific URL information
   const replitSlug = process.env.REPL_SLUG;
@@ -357,10 +360,10 @@ httpServer.listen(MAIN_PORT, '0.0.0.0', () => {
   if (replitSlug && replitOwner) {
     const replitUrl = `https://${replitSlug}.${replitOwner}.repl.co`;
     console.log(`\n✓ REPLIT URL: ${replitUrl}`);
-    console.log(`✓ Brand Showcase on Replit: ${replitUrl}/brands`);
-    console.log(`✓ Aetherion Wallet on Replit: ${replitUrl}/wallet`);
-    console.log(`✓ Wallet (Vite) on Replit: ${replitUrl}/app3`);
-    console.log(`✓ Status check page on Replit: ${replitUrl}/status`);
-    console.log(`✓ API health endpoint: ${replitUrl}/api/health`);
+    console.log(`✓ ${config.brandShowcase.name} on Replit: ${replitUrl}${config.brandShowcase.basePath}`);
+    console.log(`✓ ${config.aetherionWallet.name} on Replit: ${replitUrl}${config.aetherionWallet.basePath}`);
+    console.log(`✓ ${config.thirdApp.name} on Replit: ${replitUrl}${config.thirdApp.basePath}`);
+    console.log(`✓ Status check page on Replit: ${replitUrl}${config.api.status}`);
+    console.log(`✓ API health endpoint: ${replitUrl}${config.api.health}`);
   }
 });

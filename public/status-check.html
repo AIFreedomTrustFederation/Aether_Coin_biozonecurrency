@@ -5,242 +5,489 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Aetherion Ecosystem Status</title>
   <style>
+    :root {
+      --primary: #1a1c3a;
+      --primary-light: #2d307b;
+      --secondary: #7857c5;
+      --accent: #4e30c5;
+      --success: #28a745;
+      --danger: #dc3545;
+      --warning: #ffc107;
+      --light: #f8f9fa;
+      --dark: #121224;
+      --text: #e6e6fa;
+      --text-muted: #a4a6c5;
+      --border-radius: 0.25rem;
+    }
+    
     body {
-      font-family: Arial, sans-serif;
-      background: #0a101f;
-      color: #fff;
-      max-width: 800px;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--primary);
+      color: var(--text);
+      margin: 0;
+      padding: 2rem;
+      transition: all 0.3s ease;
+    }
+    
+    .container {
+      max-width: 1200px;
       margin: 0 auto;
-      padding: 20px;
     }
+    
+    h1, h2, h3 {
+      color: var(--light);
+      margin-top: 0;
+    }
+    
     h1 {
-      text-align: center;
-      color: #8a2be2;
-    }
-    .status-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 20px;
-      margin-top: 20px;
-    }
-    .status-card {
-      background: rgba(20, 20, 40, 0.7);
-      border-radius: 10px;
-      padding: 15px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-    }
-    .status-header {
-      display: flex;
-      align-items: center;
-      margin-bottom: 15px;
-    }
-    .status-icon {
-      width: 40px;
-      height: 40px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 50%;
-      margin-right: 10px;
-      font-size: 20px;
-    }
-    .loading {
-      background: #666;
-    }
-    .success {
-      background: #19a74e;
-    }
-    .error {
-      background: #e53935;
-    }
-    .status-title {
-      font-size: 18px;
-      font-weight: bold;
-    }
-    .status-details {
-      margin-top: 10px;
-      font-size: 14px;
-    }
-    .status-link {
+      background: linear-gradient(45deg, var(--secondary), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-weight: 700;
+      margin-bottom: 2rem;
       display: inline-block;
-      margin-top: 10px;
-      color: #4169e1;
-      text-decoration: none;
+      font-size: 2.5rem;
     }
-    .status-link:hover {
-      text-decoration: underline;
+    
+    .card {
+      background-color: var(--dark);
+      border-radius: var(--border-radius);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
     }
-    #api-response {
-      margin-top: 20px;
-      background: rgba(20, 20, 40, 0.7);
-      border-radius: 10px;
-      padding: 15px;
-      font-family: monospace;
-      white-space: pre-wrap;
-      overflow-x: auto;
+    
+    .service-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
     }
-    .button {
-      display: block;
-      margin: 20px auto;
-      padding: 10px 20px;
-      background: linear-gradient(135deg, #6a359e, #4169e1);
+    
+    .service-card {
+      background-color: rgba(45, 48, 123, 0.4);
+      border-radius: var(--border-radius);
+      padding: 1.5rem;
+      border: 1px solid rgba(126, 87, 197, 0.3);
+      transition: all 0.3s ease;
+    }
+    
+    .service-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+      border-color: var(--secondary);
+    }
+    
+    .service-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    
+    .service-title {
+      margin: 0;
+      font-size: 1.4rem;
+    }
+    
+    .status-badge {
+      padding: 0.35rem 0.75rem;
+      border-radius: 50px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    
+    .status-running {
+      background-color: var(--success);
+      color: white;
+    }
+    
+    .status-error {
+      background-color: var(--danger);
+      color: white;
+    }
+    
+    .status-unknown, .status-unreachable {
+      background-color: var(--warning);
+      color: black;
+    }
+    
+    .details-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    
+    .details-list li {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid rgba(126, 87, 197, 0.2);
+    }
+    
+    .details-list li:last-child {
+      border-bottom: none;
+    }
+    
+    .details-label {
+      color: var(--text-muted);
+    }
+    
+    .details-value {
+      font-weight: 500;
+    }
+    
+    .system-info {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 1rem;
+    }
+    
+    .info-card {
+      background-color: rgba(45, 48, 123, 0.2);
+      border-radius: var(--border-radius);
+      padding: 1rem;
+    }
+    
+    .refresh-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
+    
+    .last-updated {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    
+    .btn {
+      background-color: var(--secondary);
       color: white;
       border: none;
-      border-radius: 5px;
+      border-radius: var(--border-radius);
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
       cursor: pointer;
-      font-size: 16px;
+      transition: background-color 0.3s ease;
     }
-    .button:hover {
-      background: linear-gradient(135deg, #7b41b7, #517aee);
+    
+    .btn:hover {
+      background-color: var(--accent);
+    }
+    
+    .links-section {
+      margin-top: 2rem;
+    }
+    
+    .links-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+    
+    .link-card {
+      background-color: rgba(45, 48, 123, 0.4);
+      border-radius: var(--border-radius);
+      padding: 1rem;
+      text-align: center;
+      border: 1px solid rgba(126, 87, 197, 0.3);
+      transition: all 0.3s ease;
+    }
+    
+    .link-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+      border-color: var(--secondary);
+    }
+    
+    .link-card a {
+      color: var(--light);
+      text-decoration: none;
+      font-weight: 500;
+      display: block;
+      padding: 0.5rem;
+    }
+    
+    .link-card a:hover {
+      color: var(--secondary);
+    }
+    
+    .loading-spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: var(--light);
+      animation: spin 1s ease-in-out infinite;
+      margin-right: 0.5rem;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .hidden {
+      display: none;
+    }
+    
+    .footer {
+      margin-top: 3rem;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    
+    @media (max-width: 768px) {
+      body {
+        padding: 1rem;
+      }
+      .service-grid {
+        grid-template-columns: 1fr;
+      }
+      .system-info {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
 <body>
-  <h1>Aetherion Ecosystem Status Check</h1>
-  
-  <div class="status-grid">
-    <div class="status-card">
-      <div class="status-header">
-        <div id="main-status-icon" class="status-icon loading">?</div>
-        <div class="status-title">Main Server</div>
-      </div>
-      <div class="status-details">
-        Port: 5000<br>
-        Status: <span id="main-status">Checking...</span>
-      </div>
-      <a href="/" class="status-link">Visit Main Landing Page</a>
+  <div class="container">
+    <h1>Aetherion Ecosystem Status</h1>
+    
+    <div class="refresh-bar">
+      <div class="last-updated">Last updated: <span id="last-updated-time">Loading...</span></div>
+      <button id="refresh-btn" class="btn">
+        <span id="loading-spinner" class="loading-spinner hidden"></span>
+        Refresh Status
+      </button>
     </div>
     
-    <div class="status-card">
-      <div class="status-header">
-        <div id="brands-status-icon" class="status-icon loading">?</div>
-        <div class="status-title">Brand Showcase</div>
+    <div class="card">
+      <h2>Service Status</h2>
+      <div id="services-container" class="service-grid">
+        <div class="service-card">
+          <div class="service-header">
+            <h3 class="service-title">Main Server</h3>
+            <span class="status-badge status-unknown">Loading...</span>
+          </div>
+          <ul class="details-list">
+            <li>
+              <span class="details-label">Port:</span>
+              <span class="details-value">5000</span>
+            </li>
+            <li>
+              <span class="details-label">Status:</span>
+              <span class="details-value">Checking...</span>
+            </li>
+          </ul>
+        </div>
+        
+        <!-- Service cards will be dynamically added here -->
       </div>
-      <div class="status-details">
-        Port: 5173<br>
-        Status: <span id="brands-status">Checking...</span>
-      </div>
-      <a href="/brands" class="status-link">Visit Brand Showcase</a>
     </div>
     
-    <div class="status-card">
-      <div class="status-header">
-        <div id="wallet-status-icon" class="status-icon loading">?</div>
-        <div class="status-title">Aetherion Wallet</div>
+    <div class="card">
+      <h2>System Information</h2>
+      <div id="system-info" class="system-info">
+        <!-- System info will be dynamically added here -->
       </div>
-      <div class="status-details">
-        Port: 5174<br>
-        Status: <span id="wallet-status">Checking...</span>
-      </div>
-      <a href="/wallet" class="status-link">Visit Aetherion Wallet</a>
     </div>
     
-    <div class="status-card">
-      <div class="status-header">
-        <div id="wallet-vite-status-icon" class="status-icon loading">?</div>
-        <div class="status-title">Wallet (Vite)</div>
+    <div class="links-section">
+      <h2>Quick Links</h2>
+      <div class="links-grid">
+        <div class="link-card">
+          <a href="/" target="_blank">Main Landing Page</a>
+        </div>
+        <div class="link-card">
+          <a href="/brands" target="_blank">Brand Showcase</a>
+        </div>
+        <div class="link-card">
+          <a href="/wallet" target="_blank">Aetherion Wallet</a>
+        </div>
+        <div class="link-card">
+          <a href="/app3" target="_blank">Third Application</a>
+        </div>
+        <div class="link-card">
+          <a href="/api/health" target="_blank">API Health Endpoint</a>
+        </div>
+        <div class="link-card">
+          <a href="/api/db/status" target="_blank">Database Status</a>
+        </div>
       </div>
-      <div class="status-details">
-        Port: 5175<br>
-        Status: <span id="wallet-vite-status">Checking...</span>
-      </div>
-      <a href="/app3" class="status-link">Visit Wallet (Vite)</a>
     </div>
     
-    <div class="status-card">
-      <div class="status-header">
-        <div id="api-status-icon" class="status-icon loading">?</div>
-        <div class="status-title">API Health</div>
-      </div>
-      <div class="status-details">
-        Endpoint: /api/health<br>
-        Status: <span id="api-status">Checking...</span>
-      </div>
-      <a href="/api/health" class="status-link">View API Health</a>
+    <div class="footer">
+      <p>Aetherion Ecosystem | &copy; 2025 AI Freedom Trust | <a href="https://aifreedomtrust.com" target="_blank" style="color: var(--secondary);">aifreedomtrust.com</a></p>
     </div>
   </div>
   
-  <div id="api-response"></div>
-  
-  <button id="refresh-btn" class="button">Refresh Status</button>
-
   <script>
-    async function checkStatus(url, statusId, iconId) {
-      try {
-        const response = await fetch(url);
-        if (response.ok) {
-          document.getElementById(statusId).textContent = "Online";
-          const icon = document.getElementById(iconId);
-          icon.className = "status-icon success";
-          icon.textContent = "✓";
-          return true;
-        } else {
-          document.getElementById(statusId).textContent = "Error: " + response.status;
-          const icon = document.getElementById(iconId);
-          icon.className = "status-icon error";
-          icon.textContent = "✗";
-          return false;
-        }
-      } catch (error) {
-        document.getElementById(statusId).textContent = "Unreachable";
-        const icon = document.getElementById(iconId);
-        icon.className = "status-icon error";
-        icon.textContent = "✗";
-        return false;
-      }
-    }
-
-    async function checkApiHealth() {
-      try {
-        const response = await fetch('/api/health');
-        const data = await response.json();
-        document.getElementById('api-status').textContent = data.status;
-        const icon = document.getElementById('api-status-icon');
-        icon.className = "status-icon success";
-        icon.textContent = "✓";
+    document.addEventListener('DOMContentLoaded', function() {
+      const refreshBtn = document.getElementById('refresh-btn');
+      const loadingSpinner = document.getElementById('loading-spinner');
+      const lastUpdatedTime = document.getElementById('last-updated-time');
+      const servicesContainer = document.getElementById('services-container');
+      const systemInfoContainer = document.getElementById('system-info');
+      
+      // Initial fetch
+      fetchStatus();
+      
+      // Setup refresh button
+      refreshBtn.addEventListener('click', fetchStatus);
+      
+      function fetchStatus() {
+        // Show loading state
+        loadingSpinner.classList.remove('hidden');
+        refreshBtn.disabled = true;
         
-        // Display the full API response
-        document.getElementById('api-response').textContent = JSON.stringify(data, null, 2);
-        return true;
-      } catch (error) {
-        document.getElementById('api-status').textContent = "Error: " + error.message;
-        const icon = document.getElementById('api-status-icon');
-        icon.className = "status-icon error";
-        icon.textContent = "✗";
-        return false;
+        fetch('/api/health')
+          .then(response => response.json())
+          .then(data => {
+            updateStatusUI(data);
+          })
+          .catch(error => {
+            console.error('Error fetching status:', error);
+            displayError();
+          })
+          .finally(() => {
+            // Hide loading state
+            loadingSpinner.classList.add('hidden');
+            refreshBtn.disabled = false;
+            
+            // Update last updated time
+            const now = new Date();
+            lastUpdatedTime.textContent = now.toLocaleTimeString();
+          });
       }
-    }
-
-    async function checkAllServices() {
-      await Promise.all([
-        checkStatus('/', 'main-status', 'main-status-icon'),
-        checkStatus('/brands', 'brands-status', 'brands-status-icon'),
-        checkStatus('/wallet', 'wallet-status', 'wallet-status-icon'),
-        checkStatus('/app3', 'wallet-vite-status', 'wallet-vite-status-icon'),
-        checkApiHealth()
-      ]);
-    }
-
-    // Check all services on page load
-    document.addEventListener('DOMContentLoaded', checkAllServices);
-    
-    // Add event listener for refresh button
-    document.getElementById('refresh-btn').addEventListener('click', () => {
-      // Reset all statuses
-      document.querySelectorAll('.status-icon').forEach(icon => {
-        icon.className = "status-icon loading";
-        icon.textContent = "?";
-      });
       
-      document.getElementById('main-status').textContent = "Checking...";
-      document.getElementById('brands-status').textContent = "Checking...";
-      document.getElementById('wallet-status').textContent = "Checking...";
-      document.getElementById('wallet-vite-status').textContent = "Checking...";
-      document.getElementById('api-status').textContent = "Checking...";
-      document.getElementById('api-response').textContent = "";
+      function updateStatusUI(data) {
+        // Clear containers
+        servicesContainer.innerHTML = '';
+        systemInfoContainer.innerHTML = '';
+        
+        // Add service cards
+        const services = data.services || {};
+        Object.entries(services).forEach(([name, status]) => {
+          const serviceCard = createServiceCard(name, status);
+          servicesContainer.appendChild(serviceCard);
+        });
+        
+        // Add system info
+        const systemInfo = data.serverInfo || {};
+        
+        // Node.js version
+        addInfoCard('Node.js Version', systemInfo.node || 'Unknown');
+        
+        // Platform
+        addInfoCard('Platform', systemInfo.platform || 'Unknown');
+        
+        // Memory usage
+        if (systemInfo.memory) {
+          const heapUsed = (systemInfo.memory.heapUsed / 1024 / 1024).toFixed(2);
+          const heapTotal = (systemInfo.memory.heapTotal / 1024 / 1024).toFixed(2);
+          addInfoCard('Memory Usage', `${heapUsed} MB / ${heapTotal} MB`);
+          
+          const rss = (systemInfo.memory.rss / 1024 / 1024).toFixed(2);
+          addInfoCard('RSS Memory', `${rss} MB`);
+        }
+        
+        // Status
+        addInfoCard('Overall Status', data.status || 'Unknown');
+        
+        // Timestamp
+        const timestamp = data.timestamp ? new Date(data.timestamp).toLocaleString() : 'Unknown';
+        addInfoCard('Server Time', timestamp);
+      }
       
-      // Check all services again
-      checkAllServices();
+      function createServiceCard(name, status) {
+        const card = document.createElement('div');
+        card.className = 'service-card';
+        
+        // Format the name
+        const formattedName = name.replace(/([A-Z])/g, ' $1')
+          .replace(/^./, str => str.toUpperCase());
+        
+        // Create service header
+        const header = document.createElement('div');
+        header.className = 'service-header';
+        
+        const title = document.createElement('h3');
+        title.className = 'service-title';
+        title.textContent = formattedName;
+        
+        const badge = document.createElement('span');
+        badge.className = `status-badge status-${status}`;
+        badge.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+        
+        header.appendChild(title);
+        header.appendChild(badge);
+        
+        // Create details list
+        const detailsList = document.createElement('ul');
+        detailsList.className = 'details-list';
+        
+        // Add port info if available
+        const portInfo = document.createElement('li');
+        let port = '5000'; // Default port for main
+        
+        if (name === 'brandShowcase') port = '5173';
+        else if (name === 'wallet') port = '5174';
+        else if (name === 'thirdApp') port = '5175';
+        
+        portInfo.innerHTML = `
+          <span class="details-label">Port:</span>
+          <span class="details-value">${port}</span>
+        `;
+        
+        // Add status info
+        const statusInfo = document.createElement('li');
+        statusInfo.innerHTML = `
+          <span class="details-label">Status:</span>
+          <span class="details-value">${status}</span>
+        `;
+        
+        detailsList.appendChild(portInfo);
+        detailsList.appendChild(statusInfo);
+        
+        // Assemble card
+        card.appendChild(header);
+        card.appendChild(detailsList);
+        
+        return card;
+      }
+      
+      function addInfoCard(title, value) {
+        const card = document.createElement('div');
+        card.className = 'info-card';
+        
+        card.innerHTML = `
+          <div class="details-label">${title}</div>
+          <div class="details-value">${value}</div>
+        `;
+        
+        systemInfoContainer.appendChild(card);
+      }
+      
+      function displayError() {
+        servicesContainer.innerHTML = `
+          <div class="service-card">
+            <div class="service-header">
+              <h3 class="service-title">Error</h3>
+              <span class="status-badge status-error">Failed</span>
+            </div>
+            <p>Could not fetch service status. Please try again later.</p>
+          </div>
+        `;
+        
+        systemInfoContainer.innerHTML = `
+          <div class="info-card">
+            <div class="details-label">Status</div>
+            <div class="details-value">Connection Error</div>
+          </div>
+        `;
+      }
     });
   </script>
 </body>
