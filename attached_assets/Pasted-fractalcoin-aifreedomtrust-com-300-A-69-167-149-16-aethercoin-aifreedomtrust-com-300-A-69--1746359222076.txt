@@ -1,0 +1,211 @@
+fractalcoin.aifreedomtrust.com.	300	A	
+69.167.149.16
+ 
+aethercoin.aifreedomtrust.com.	300	A	
+69.167.149.16
+ 
+cortex.aifreedomtrust.com.	300	A	
+69.167.149.16
+ 
+atc.aifreedomtrust.com.	300	A	
+185.199.109.153
+ 
+atc.aifreedomtrust.com.	300	A	
+185.199.110.153
+ 
+atc.aifreedomtrust.com.	300	A	
+185.199.111.153
+ 
+atc.aifreedomtrust.com.	300	A	
+185.199.108.153
+ 
+aifreedomtrust.com.	14400	A	
+69.167.149.16
+ 
+aifreedomtrust.com.	14400	MX	
+Priority: 0
+Destination: aifreedomtrust.com
+ 
+mail.aifreedomtrust.com.	14400	CNAME	
+aifreedomtrust.com
+ 
+www.aifreedomtrust.com.	14400	CNAME	
+aifreedomtrust.com
+ 
+ftp.aifreedomtrust.com.	14400	A	
+69.167.149.16
+ 
+aifreedomtrust.com.	14400	TXT	
+v=spf1 +a +mx +ip4:69.167.149.16 ~all
+ 
+cpcalendars.aifreedomtrust.com.	14400	A	
+69.167.149.16
+ 
+webdisk.aifreedomtrust.com.	14400	A	
+69.167.149.16
+ 
+cpanel.aifreedomtrust.com.	14400	A	
+69.167.149.16
+ 
+cpcontacts.aifreedomtrust.com.	14400	A	
+69.167.149.16
+ 
+webmail.aifreedomtrust.com.	14400	A	
+69.167.149.16
+ 
+whm.aifreedomtrust.com.	14400	A	
+69.167.149.16
+ 
+_dmarc.aifreedomtrust.com.	14400	TXT	
+v=DMARC1; p=none;
+ 
+default._domainkey.aifreedomtrust.com.	14400	TXT	
+v=DKIM1; k=rsa; p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzxZ90UzaiaTfEnvVtcrw5gJpuKuy3LV3ul8JZSiSs/ISshFEd/dyLd7edcVPn2wkqhW3pExf92P6uXy+e1fhjakpIPHgcnoMAFT36w5ay/OgrU9c5wcIFs/n4/slcT4fxnD1Caa5+ZAr8vHzhobKmnOLLNxjTUaS4fHwqhzuW9slDVkW684lthodLPNEcN0Je
+jbPPsJqlXeuqL8DmOmklL7qbLRp+LPFmnIjNSSTD+3IZwP9B1+dVdIbeQjni0aUlKiRpzE1FbXXV49kL1abPtwYBz1FWwlWCr4OShBXJH1mSi1e38tldAOMhJ+HbmYOPBnVILrEiWwlXl66V+tHgwIDAQAB;
+ 
+_cpanel-dcv-test-record.aifreedomtrust.com.	14400	TXT	
+_cpanel-dcv-test-record=jHUcrKBxbRY1IeLhlonOx3K8W7lkuW573iwODz_LfxrRGb6hUWs0Zgi0F8Iuzw0k
+ 
+_acme-challenge.mail.aifreedomtrust.com.	14400	TXT	
+iLsb_pc8oz-2jexiQZvfC2TRk-TH_ITOWuHT8a7M63k
+ 
+_acme-challenge.www.aifreedomtrust.com.	14400	TXT	
+vcfX8bxn2zrQsmGFolAae1tsOxie4-hGx-yzHyfYk2c
+ 
+_acme-challenge.cpcalendars.aifreedomtrust.com.	14400	TXT	
+bk2TqkvUBmrzh5xzaxP2QBwQ_nCbUzl9DzEhzrSSgJk
+ 
+_acme-challenge.cpcontacts.aifreedomtrust.com.	14400	TXT	
+xW3hwRo_VXjD-XIEswUgMVovLBQFhnRoKyfoH1kkPg8
+ 
+_acme-challenge.aifreedomtrust.com.	14400	TXT	
+WMIpTXspuwHF3tw9_xNExwv_NUReEqNnEOngQ1aPY4E
+ 
+_acme-challenge.webdisk.aifreedomtrust.com.	14400	TXT	
+UVacuHHgUqzqd2JQMccaSL-p9UZNzUtSsLVP7blGyx4
+ 
+_acme-challenge.webmail.aifreedomtrust.com.	14400	TXT	
+Gu7382ycsWbB_pvnJhxXF8kTmYIlvOXdwN8WMeGiIng
+ 
+_acme-challenge.cpanel.aifreedomtrust.com.	14400	TXT	
+GrX-n169BJR_rqFMOZTcZMiSJIgL4BOvTjYWigIPa60
+ 
+aicoin.aifreedomtrust.com.	14400	A	
+69.167.149.16
+ 
+www.aicoin.aifreedomtrust.com.	14400	A	
+69.167.149.16
+ 
+default._domainkey.aicoin.aifreedomtrust.com.	14400	TXT	
+v=DKIM1; k=rsa; p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqctQCIH8GVlQz5mWR0aeyQkp64luiL0lPx5/i6RaX9OH7JlWnQKyRD3qxbSVWKVU32MmEGff6usXdg/Nf9M+ZKJZ+cQh8XCro6y2zsW7ReAXIEaKwoKwSS0pBPKFBfUdHwYrQx9ZC2YM4jdF3OdLPdhuJcuEkPsiLmVnrGZR03+ftgvVJ0NkCp0yFOUWmDPB+
+lcv+w51reubQGcBF8deexSSXnUebwPolkGZVAarB9HoF68xx4nOKYHJ0rqrz4qSgARK5dP6YMd6pPHQFraFYeCEtmEKNEamGfH9X1IiVslTjAu7txfAIiqMKGnGSnZma4dgU/sVZNtqf8RjvVgBKwIDAQAB;
+ 
+aicoin.aifreedomtrust.com.	14400	TXT	
+v=spf1 +a +mx +ip4:69.167.149.16 ~all
+ 
+webdisk.aicoin.aifreedomtrust.com.	14400	A	
+69.167.149.16
+ 
+whm.aicoin.aifreedomtrust.com.	14400	A	
+69.167.149.16
+ 
+cpcalendars.aicoin.aifreedomtrust.com.	14400	A	
+69.167.149.16
+ 
+webmail.aicoin.aifreedomtrust.com.	14400	A	
+69.167.149.16
+ 
+cpcontacts.aicoin.aifreedomtrust.com.	14400	A	
+69.167.149.16
+ 
+cpanel.aicoin.aifreedomtrust.com.	14400	A	
+69.167.149.16
+ 
+icon.aifreedomtrust.com.	14400	A	
+69.167.149.16
+ 
+www.icon.aifreedomtrust.com.	14400	A	
+69.167.149.16
+ 
+default._domainkey.icon.aifreedomtrust.com.	14400	TXT	
+v=DKIM1; k=rsa; p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAy5j0RLfo21CHwcCZKjVjrB8iiPstBqdMfaqp3/HU/TfyALdjGs2q6UELW56grtSjNpOCfrA6GsyjqBk6a0OOnvZOVNm60dF0FHSUeSwmzSrI7uraucpz2AxT+VSskjj4wUWVwpIbsv1hESbLIim3g364EdWnJM2rq6gFgboSwJdBm+5eI4I1dHWELjOu8cQUt
+0CXZGZAG/lIBTm+QP4xXWAnae7NJeWvqzMMi7pnNxI2vGYNMy06o3fms1+MxfMCrgCJWuYlqfK/vPHKQh+nPO8p1mkuh5lyYTTtT6O0UNnhhwofSBbjRpRQkzZvY0ZeNuQ4Lk04P9OID2pzl2qygQIDAQAB;
+ 
+icon.aifreedomtrust.com.	14400	TXT	
+v=spf1 +a +mx +ip4:69.167.149.16 ~all
+ 
+cpcontacts.icon.aifreedomtrust.com.	14400	A	
+69.167.149.16
+ 
+cpanel.icon.aifreedomtrust.com.	14400	A	
+69.167.149.16
+ 
+webdisk.icon.aifreedomtrust.com.	14400	A	
+69.167.149.16
+ 
+webmail.icon.aifreedomtrust.com.	14400	A	
+69.167.149.16
+ 
+whm.icon.aifreedomtrust.com.	14400	A	
+69.167.149.16
+ 
+cpcalendars.icon.aifreedomtrust.com.	14400	A	
+69.167.149.16
+ 
+homepage.aifreedomtrust.com.	14400	A	
+69.167.149.16
+ 
+api.aifreedomtrust.com.	14400	CNAME	
+aifreedomtrust.com
+ 
+aifreedomtrust.com.	14400	A	
+69.167.149.16
+ 
+_acme-challenge.atc.aifreedomtrust.com.	14400	TXT	
+B4JVPw6t0xpr3B-jmeJ8t3C4OP4uaWWg5wcvkvj3Ri4
+ 
+_acme-challenge.aethercoin.aifreedomtrust.com.	14400	TXT	
+gnjgZhud5F03jBlWQFolg1hR8gxjjJWGcDF871pVYZQ
+ 
+_acme-challenge.cortex.aifreedomtrust.com.	14400	TXT	
+cjV9dBX2JrDP682uoRqirQg51wpO4kFRH8Rvae5ejEE
+ 
+_acme-challenge.cqpanel.aifreedomtrust.com.	14400	TXT	
+90R6CIw_Vf0wcUXQE8vBkDtj0Om8pb40_ix6Atu8SIE
+ 
+_acme-challenge.fractalcoin.aifreedomtrust.com.	14400	TXT	
+HqDmi37oeRwusyfxVip07Y1I4d7SfYcfcTymIz0X-60
+ 
+atc.coin.aifreedomtrust.com.	14400	A	
+185.199.108.153
+ 
+www.atc.coin.aifreedomtrust.com.	14400	A	
+185.199.108.153
+ 
+default._domainkey.atc.coin.aifreedomtrust.com.	14400	TXT	
+v=DKIM1; k=rsa; p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAt0fVVNVA+sZYEVWxT6MPTwZrMnCGOUqPTItZr8h/pGgb7SLh91euHctGKbm45Hnw3x16tEUqoIRxhNd0QBJAeDwgPE7fnzzOQpZLAeaPxfMSZRZwKPyBc8okHo2TpoVVHqFIKUaCV2IkdefWp24QM4g+34KPceiUJPtLVVOSpmY3gP20qe5RQ2bo8XntEYTDV
+R0fjCd9HbuEE9NLNbN2aXZPWGz7aJxLu/B6wIDfhYazAqVaRVYlFmrCBUwdyfn2h39mxHf1vOg/TnNyj2WTV4DyuIesWbxHcjxtPEZrcvF72g1sn7KAj7DKSCVW3trjezOMFb3n/0i3FPlP67koVwIDAQAB;
+ 
+atc.coin.aifreedomtrust.com.	14400	TXT	
+v=spf1 +a +mx +ip4:69.167.149.16 ~all
+ 
+webmail.atc.coin.aifreedomtrust.com.	14400	A	
+69.167.149.16
+ 
+whm.atc.coin.aifreedomtrust.com.	14400	A	
+69.167.149.16
+ 
+cpanel.atc.coin.aifreedomtrust.com.	14400	A	
+69.167.149.16
+ 
+webdisk.atc.coin.aifreedomtrust.com.	14400	A	
+69.167.149.16
+ 
+cpcalendars.atc.coin.aifreedomtrust.com.	14400	A	
+69.167.149.16
+ 
+cpcontacts.atc.coin.aifreedomtrust.com.	14400	A	
+69.167.149.16
+ 
+_acme-challenge.coin.aifreedomtrust.com.	14400	TXT	
+7z7rnVeX1T05fzhIfpbpltHFRzAkyd0y49cG21lctwA
