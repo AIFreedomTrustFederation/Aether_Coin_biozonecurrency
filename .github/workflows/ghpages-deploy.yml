@@ -1,0 +1,80 @@
+name: GitHub Pages Deployment
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      
+      - name: Setup Pages
+        uses: actions/configure-pages@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci || npm install
+      
+      - name: Build
+        run: npm run build || echo "No build script found, using source files directly"
+      
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v2
+        with:
+          path: './dist' # Change this to your build output directory if needed
+      
+      - name: AI Success Comment
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            try {
+              const latestCommit = await github.rest.repos.getCommit({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: '${{ github.sha }}'
+              });
+              
+              const commitMessage = latestCommit.data.commit.message;
+              const prNumber = commitMessage.match(/\(#(\d+)\)/);
+              
+              if (prNumber && prNumber[1]) {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: parseInt(prNumber[1]),
+                  body: '✅ **AI Assistant**: Your changes have been built and are being deployed to GitHub Pages.'
+                });
+              }
+            } catch (error) {
+              console.log("No associated PR found for this commit or error occurred: " + error);
+            }
+  
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2

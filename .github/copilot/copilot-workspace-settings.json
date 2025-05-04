@@ -1,0 +1,29 @@
+{
+  "github.copilot.advanced": {
+    "enableAutoCompletions": true,
+    "enableCodeExplanation": true,
+    "enableGeneratedCode": true,
+    "suggestCodeActions": true,
+    "automaticFixes": true
+  },
+  "github.copilot.editor.enableCodeActions": true,
+  "github.copilot.inlineSuggest.enable": true,
+  "github.copilot.maxTokens": 800,
+  "github.copilot.useDoctor": true,
+  "github.copilot.chat.enabled": true,
+  "editor.inlineSuggest.enabled": true,
+  "editor.acceptSuggestionOnEnter": "on",
+  "editor.snippetSuggestions": "inline",
+  "editor.suggest.showKeywords": true,
+  "editor.suggest.showMethods": true,
+  "editor.suggest.showProperties": true,
+  "editor.suggest.showFunctions": true,
+  "editor.suggest.preview": true,
+  "editor.wordBasedSuggestions": true,
+  "editor.suggest.showInterfaces": true,
+  "editor.suggest.showValues": true,
+  "editor.suggest.showConstants": true,
+  "github.copilot.enable": true,
+  "github.copilot.commit.enabled": true,
+  "github.copilot.verbose": true
+}

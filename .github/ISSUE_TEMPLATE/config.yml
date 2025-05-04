@@ -1,0 +1,11 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Question or Discussion
+    url: https://github.com/AIFreedomTrustFederation/Aether_Coin_biozonecurrency/discussions
+    about: Ask questions and discuss with other community members
+  - name: Feature Request
+    url: https://github.com/AIFreedomTrustFederation/Aether_Coin_biozonecurrency/issues/new?template=feature_request.md
+    about: Suggest an idea for this project
+  - name: Bug Report
+    url: https://github.com/AIFreedomTrustFederation/Aether_Coin_biozonecurrency/issues/new?template=bug_report.md
+    about: Create a report to help us improve

@@ -1,0 +1,120 @@
+name: Issue & PR Management
+
+on:
+  issues:
+    types: [opened, edited, reopened]
+  pull_request:
+    types: [opened, edited, reopened, ready_for_review]
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  auto_label:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+      
+      - name: Auto Label Issues and PRs
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const isIssue = !!context.payload.issue;
+            const isPR = !!context.payload.pull_request;
+            const number = isIssue ? context.payload.issue.number : context.payload.pull_request.number;
+            const title = isIssue ? context.payload.issue.title : context.payload.pull_request.title;
+            const body = isIssue ? context.payload.issue.body : context.payload.pull_request.body;
+            
+            // Define label patterns
+            const labelPatterns = [
+              { pattern: /\bfix\b|\bbug\b|\bissue\b|\berror\b|\bcrash\b/i, label: 'bug' },
+              { pattern: /\bfeature\b|\benhancement\b|\badd\b|\bnew\b/i, label: 'enhancement' },
+              { pattern: /\bdocs\b|\bdocumentation\b/i, label: 'documentation' },
+              { pattern: /\bquestion\b|\bhelp\b|\bsupport\b/i, label: 'question' },
+              { pattern: /\btest\b|\btesting\b/i, label: 'testing' },
+              { pattern: /\bsecurity\b|\bvulnerability\b/i, label: 'security' },
+              { pattern: /\bperformance\b|\boptimization\b|\boptimize\b/i, label: 'performance' },
+              { pattern: /\bux\b|\bui\b|\buser interface\b|\buser experience\b/i, label: 'ui/ux' },
+              { pattern: /\brefactor\b|\bcleanup\b|\bclean up\b/i, label: 'refactor' }
+            ];
+            
+            const content = `${title} ${body || ''}`;
+            const labelsToAdd = [];
+            
+            // Auto-detect labels based on content
+            for (const {pattern, label} of labelPatterns) {
+              if (pattern.test(content)) {
+                labelsToAdd.push(label);
+              }
+            }
+            
+            // Add "enhancement" as default label for PRs if no other label was detected
+            if (isPR && labelsToAdd.length === 0) {
+              labelsToAdd.push('enhancement');
+            }
+            
+            // Add "question" as default label for issues if no other label was detected
+            if (isIssue && labelsToAdd.length === 0) {
+              labelsToAdd.push('question');
+            }
+            
+            // Add the detected labels
+            if (labelsToAdd.length > 0) {
+              try {
+                if (isIssue) {
+                  await github.rest.issues.addLabels({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: number,
+                    labels: labelsToAdd
+                  });
+                } else {
+                  await github.rest.issues.addLabels({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: number,
+                    labels: labelsToAdd
+                  });
+                }
+              } catch (error) {
+                console.error(`Error adding labels: ${error}`);
+              }
+            }
+            
+            // Add "automerge" label to PRs that seem ready
+            if (isPR && !context.payload.pull_request.draft && 
+                !context.payload.pull_request.title.includes('WIP') && 
+                !context.payload.pull_request.title.includes('[WIP]')) {
+              try {
+                await github.rest.issues.addLabels({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: number,
+                  labels: ['automerge']
+                });
+              } catch (error) {
+                console.error(`Error adding automerge label: ${error}`);
+              }
+            }
+            
+            // Add comment to note the automatic labeling
+            const labelText = labelsToAdd.map(l => `\`${l}\``).join(', ');
+            if (labelsToAdd.length > 0) {
+              const comment = isIssue ? 
+                `🏷️ **AI Assistant**: I've automatically labeled this issue with ${labelText} based on its content.` :
+                `🏷️ **AI Assistant**: I've automatically labeled this PR with ${labelText} based on its content.`;
+                
+              try {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: number,
+                  body: comment
+                });
+              } catch (error) {
+                console.error(`Error creating comment: ${error}`);
+              }
+            }
