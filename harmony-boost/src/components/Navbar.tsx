@@ -12,7 +12,7 @@ const Navbar = () => {
         <div className="flex items-center gap-2 mr-8">
           <Link to="/" className="flex items-center gap-2">
             <Leaf className="h-6 w-6 text-forest-600" />
-            <span className="text-xl font-display font-semibold text-forest-800">AI Freedom Trust</span>
+            <span className="text-xl font-display font-semibold text-forest-800">Aether Coin</span>
           </Link>
         </div>
         
@@ -31,17 +31,17 @@ const Navbar = () => {
                 <div className="grid gap-3 p-4 md:w-[400px] lg:w-[500px] lg:grid-cols-2">
                   <NavigationMenuLink asChild>
                     <Link to="/tokenomics" className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground">
-                      <div className="text-sm font-medium leading-none">AI Freedom Trust Platform</div>
+                      <div className="text-sm font-medium leading-none">Aether Coin (ATC)</div>
                       <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                        Platform services for our decentralized network
+                        Rewards for providing storage resources to our decentralized network
                       </p>
                     </Link>
                   </NavigationMenuLink>
                   <NavigationMenuLink asChild>
                     <Link to="/aicon" className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground">
-                      <div className="text-sm font-medium leading-none">AI Brand Showcase</div>
+                      <div className="text-sm font-medium leading-none">AICoin (ICON)</div>
                       <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                        Explore our various AI brands and technology solutions
+                        Rewards for contributing processing power to train our AI models
                       </p>
                     </Link>
                   </NavigationMenuLink>

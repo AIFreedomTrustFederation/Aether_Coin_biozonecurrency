@@ -13,37 +13,37 @@ const HeroSection = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
           <div className="space-y-6">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold">
-              <span className="gradient-text">AI Freedom</span> Trust{" "}
-              <span className="gradient-text">Brand</span> Showcase
+              <span className="gradient-text">Biozoe</span> Currency for a{" "}
+              <span className="gradient-text">Sustainable</span> Future
             </h1>
             
             <p className="text-lg text-muted-foreground md:pr-10">
-              <Link to="/brands" className="text-forest-600 hover:underline">AI Freedom Trust</Link> presents a collection of cutting-edge AI-powered brands and solutions across various domains. Our showcase brings together the most innovative platforms developed under our ecosystem.
+              <Link to="/tokenomics" className="text-forest-600 hover:underline">Aether Coin</Link> is a revolutionary biozoecurrency designed to protect and preserve our planet's vital ecological zones. Unlike traditional eco-cryptocurrencies, our approach focuses on uniting the physical and spiritual aspects of life.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
-              <Button className="bg-forest-600 hover:bg-forest-700 text-white" size="lg" asChild>
-                <Link to="/brands">Explore Brands</Link>
+              <Button className="bg-forest-600 hover:bg-forest-700 text-white" size="lg">
+                Get Started
               </Button>
               <Button variant="outline" size="lg" className="border-forest-300 text-forest-700" asChild>
-                <Link to="/technology">View Technology</Link>
+                <Link to="/tokenomics">View Tokenomics</Link>
               </Button>
             </div>
             
             <div className="flex items-center gap-8 pt-6">
               <div className="flex flex-col">
-                <span className="text-3xl font-bold text-forest-700">15+</span>
-                <span className="text-sm text-muted-foreground">AI Brands</span>
+                <span className="text-3xl font-bold text-forest-700">5+</span>
+                <span className="text-sm text-muted-foreground">Biozone Projects</span>
               </div>
               
               <div className="flex flex-col">
-                <span className="text-3xl font-bold text-forest-700">32K+</span>
-                <span className="text-sm text-muted-foreground">Active Users</span>
+                <span className="text-3xl font-bold text-forest-700">15K+</span>
+                <span className="text-sm text-muted-foreground">Community Members</span>
               </div>
               
               <div className="flex flex-col">
-                <span className="text-3xl font-bold text-forest-700">8+</span>
-                <span className="text-sm text-muted-foreground">Technology Platforms</span>
+                <span className="text-3xl font-bold text-forest-700">3+</span>
+                <span className="text-sm text-muted-foreground">Biozoe Currencies</span>
               </div>
             </div>
           </div>
@@ -63,13 +63,13 @@ const HeroSection = () => {
               <div className="absolute bottom-6 left-6 right-6 glass-card p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs text-forest-800/80">AI Brand Showcase</p>
+                    <p className="text-xs text-forest-800/80">AetherCoin Wallet</p>
                     <p className="text-xl font-bold text-forest-800">
-                      <Link to="/brands" className="text-forest-600 hover:underline">15+ AI Brands</Link> Available
+                      <Link to="/wallet" className="text-forest-600 hover:underline">Quantum Secure</Link> Technology
                     </p>
                   </div>
                   <div className="px-3 py-1 bg-forest-100 rounded-full text-forest-800 text-sm font-medium">
-                    Explore Now
+                    Connect Wallet
                   </div>
                 </div>
               </div>

@@ -14,60 +14,60 @@ interface BrandCard {
 
 const brands: BrandCard[] = [
   {
-    name: "AI Analytics Hub",
-    description: "Advanced analytics platform powered by AI to derive insights from complex datasets",
-    subdomain: "analytics.aifreedomtrust.com",
-    technologies: ["Machine Learning", "Data Visualization", "Predictive Modeling"],
-    imageUrl: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=800&q=80"
+    name: "Aether Coin",
+    description: "A biozoecurrency designed to protect and preserve our planet's vital ecological zones through blockchain technology",
+    subdomain: "atc.aifreedomtrust.com",
+    technologies: ["Blockchain", "Quantum Resistance", "Ecological Conservation"],
+    imageUrl: "https://images.unsplash.com/photo-1516918656725-e9b3ae9ee7a4?auto=format&fit=crop&w=800&q=80"
   },
   {
-    name: "NLP Connect",
-    description: "Natural language processing services for content analysis and generation",
-    subdomain: "nlp.aifreedomtrust.com",
-    technologies: ["NLP", "Sentiment Analysis", "Text Generation"],
-    imageUrl: "https://images.unsplash.com/photo-1546146830-2cca9512c228?auto=format&fit=crop&w=800&q=80"
+    name: "Fractal Coin",
+    description: "A recursive fractal-based currency system that scales according to natural growth patterns",
+    subdomain: "fractalcoin.aifreedomtrust.com",
+    technologies: ["Fractal Economics", "Recursive Tokenomics", "Natural Scaling"],
+    imageUrl: "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&w=800&q=80"
   },
   {
-    name: "Vision AI",
-    description: "Computer vision applications for image and video analysis",
-    subdomain: "vision.aifreedomtrust.com",
-    technologies: ["Computer Vision", "Object Detection", "Image Recognition"],
-    imageUrl: "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?auto=format&fit=crop&w=800&q=80"
+    name: "Biozone Currency",
+    description: "The inverse of traditional eco-cryptocurrencies, focusing on direct ecological impact through token transactions",
+    subdomain: "biozone.aifreedomtrust.com",
+    technologies: ["Biozone Protection", "Ecological Impact", "Sustainable Finance"],
+    imageUrl: "https://images.unsplash.com/photo-1586974710160-55f48f417990?auto=format&fit=crop&w=800&q=80"
   },
   {
-    name: "Quantum Compute",
-    description: "Quantum computing simulations and algorithms for complex problem solving",
-    subdomain: "quantum.aifreedomtrust.com",
-    technologies: ["Quantum Algorithms", "Quantum Simulation", "Complex Problem Solving"],
+    name: "Aetherion Wallet",
+    description: "Quantum-resistant wallet for securely storing and managing your Aether, Fractal, and Biozone coins",
+    subdomain: "wallet.aifreedomtrust.com",
+    technologies: ["Quantum Security", "Multi-coin Support", "Decentralized Storage"],
+    imageUrl: "https://images.unsplash.com/photo-1566401920284-acd2a35ade6e?auto=format&fit=crop&w=800&q=80"
+  },
+  {
+    name: "Aetherion DApp",
+    description: "Decentralized application for interacting with the Aetherion blockchain ecosystem",
+    subdomain: "dapp.aifreedomtrust.com",
+    technologies: ["Decentralized Applications", "Smart Contracts", "Web3 Integration"],
+    imageUrl: "https://images.unsplash.com/photo-1639322537228-f710d846310a?auto=format&fit=crop&w=800&q=80"
+  },
+  {
+    name: "Quantum Validator",
+    description: "Quantum-secure validation network for the Aetherion blockchain ecosystem",
+    subdomain: "validator.aifreedomtrust.com",
+    technologies: ["Quantum Cryptography", "Validator Network", "Post-Quantum Security"],
     imageUrl: "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&w=800&q=80"
   },
   {
-    name: "Voice Assistant",
-    description: "Voice recognition and conversational AI platform",
-    subdomain: "voice.aifreedomtrust.com",
-    technologies: ["Speech Recognition", "Conversational AI", "Voice Synthesis"],
-    imageUrl: "https://images.unsplash.com/photo-1589903308904-1010c2294adc?auto=format&fit=crop&w=800&q=80"
+    name: "Fractal Reserve",
+    description: "Revolutionary backing mechanism for cryptocurrencies based on fractal mathematics and natural scaling",
+    subdomain: "reserve.aifreedomtrust.com",
+    technologies: ["Fractal Economics", "Reserve Management", "Algorithmic Stability"],
+    imageUrl: "https://images.unsplash.com/photo-1544383835-bda2bc66a55d?auto=format&fit=crop&w=800&q=80"
   },
   {
-    name: "AIoT Platform",
-    description: "AI-powered Internet of Things platform for smart devices and automation",
-    subdomain: "iot.aifreedomtrust.com",
-    technologies: ["IoT", "Edge Computing", "Smart Automation"],
-    imageUrl: "https://images.unsplash.com/photo-1558346490-a72e53ae2d4f?auto=format&fit=crop&w=800&q=80"
-  },
-  {
-    name: "Ethical AI",
-    description: "Ethical AI development framework and governance tools",
-    subdomain: "ethics.aifreedomtrust.com",
-    technologies: ["AI Ethics", "Governance", "Explainable AI"],
-    imageUrl: "https://images.unsplash.com/photo-1620330548374-5a798a9934ed?auto=format&fit=crop&w=800&q=80"
-  },
-  {
-    name: "AI Education",
-    description: "Educational platform for learning AI concepts and development",
-    subdomain: "learn.aifreedomtrust.com",
-    technologies: ["E-Learning", "Interactive Tutorials", "AI Curriculum"],
-    imageUrl: "https://images.unsplash.com/photo-1581089778245-3ce67677f718?auto=format&fit=crop&w=800&q=80"
+    name: "Harmony Boost",
+    description: "Platform for harmonizing the various technologies within the Aetherion ecosystem",
+    subdomain: "harmony.aifreedomtrust.com",
+    technologies: ["Cross-chain Integration", "Ecosystem Harmony", "Interoperability"],
+    imageUrl: "https://images.unsplash.com/photo-1511376777868-611b54f68947?auto=format&fit=crop&w=800&q=80"
   }
 ];
 
@@ -76,10 +76,10 @@ const BrandsPage = () => {
     <div className="container py-12">
       <div className="space-y-6 mb-12">
         <h1 className="text-3xl md:text-4xl font-display font-bold">
-          <span className="gradient-text">AI Freedom Trust</span> Brand Showcase
+          <span className="gradient-text">Aetherion</span> Ecosystem
         </h1>
         <p className="text-lg text-muted-foreground max-w-3xl">
-          Explore our portfolio of AI-powered brands and solutions. Each brand operates on its own subdomain and offers specialized services in various domains of artificial intelligence.
+          Explore our quantum-resistant blockchain ecosystem built around biozoecurrencies. Each platform operates on its own subdomain and provides specialized services within the Aetherion network.
         </p>
       </div>
       
@@ -136,12 +136,12 @@ const BrandsPage = () => {
       </div>
 
       <div className="mt-16 text-center">
-        <h2 className="text-2xl font-display font-bold mb-4">Looking to add your AI brand to our showcase?</h2>
+        <h2 className="text-2xl font-display font-bold mb-4">Want to participate in the Aetherion Ecosystem?</h2>
         <p className="text-muted-foreground max-w-2xl mx-auto mb-8">
-          If you have an AI-powered solution or platform that you'd like to showcase under the AI Freedom Trust umbrella, we'd love to hear from you.
+          If you're interested in becoming a validator, developer, or ecosystem partner in the Aetherion network, we'd love to hear from you.
         </p>
         <Button className="bg-forest-600 hover:bg-forest-700">
-          Contact Us
+          Join the Network
         </Button>
       </div>
     </div>

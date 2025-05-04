@@ -2,8 +2,9 @@ import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
-  Brain, Database, Network, Lock, Server, Share2, 
-  Cpu, LineChart, Mic, MessageSquare, Image as ImageIcon
+  Shield, Database, Network, Lock, Server, Share2, 
+  Cpu, LineChart, BarChart2, Layers, Fingerprint,
+  Leaf, Zap, CircleDashed
 } from "lucide-react";
 
 interface TechnologyCard {
@@ -22,82 +23,82 @@ interface TechnologyCategory {
 const technologies: TechnologyCategory[] = [
   {
     id: "core",
-    name: "Core AI Technologies",
-    description: "Fundamental AI systems powering our brands and platforms",
+    name: "Core Blockchain Technology",
+    description: "Fundamental blockchain systems powering our ecosystem",
     technologies: [
       {
-        title: "Neural Networks",
-        description: "Deep learning models inspired by the human brain, capable of learning complex patterns and relationships in data.",
-        icon: <Brain className="h-10 w-10 text-forest-600" />
+        title: "Quantum Resistance",
+        description: "Post-quantum cryptographic algorithms that secure our blockchain against quantum computing attacks.",
+        icon: <Shield className="h-10 w-10 text-forest-600" />
       },
       {
-        title: "Advanced NLP",
-        description: "Natural language processing systems that understand, interpret, and generate human language with high accuracy.",
-        icon: <MessageSquare className="h-10 w-10 text-forest-600" />
+        title: "Biozoe Validation",
+        description: "Ecological validation mechanisms that tie cryptocurrency operations to real-world environmental impact.",
+        icon: <Leaf className="h-10 w-10 text-forest-600" />
       },
       {
-        title: "Computer Vision",
-        description: "Image and video recognition systems that can identify objects, faces, activities, and scenes with human-like accuracy.",
-        icon: <ImageIcon className="h-10 w-10 text-forest-600" />
+        title: "Fractal Economics",
+        description: "Mathematical models based on fractal geometry that create natural scaling patterns for sustainable growth.",
+        icon: <CircleDashed className="h-10 w-10 text-forest-600" />
       },
       {
-        title: "Speech Recognition",
-        description: "Advanced speech-to-text systems that accurately transcribe spoken language across various accents and languages.",
-        icon: <VoiceIcon className="h-10 w-10 text-forest-600" />
+        title: "Breath Authentication",
+        description: "Revolutionary biometric authentication using breath patterns for secure wallet access.",
+        icon: <Fingerprint className="h-10 w-10 text-forest-600" />
       }
     ]
   },
   {
     id: "infrastructure",
-    name: "AI Infrastructure",
-    description: "Robust systems supporting our AI technologies",
+    name: "Blockchain Infrastructure",
+    description: "Robust systems supporting our blockchain ecosystem",
     technologies: [
       {
-        title: "Scalable Computing",
-        description: "Distributed computing infrastructure designed to handle massive AI workloads efficiently.",
+        title: "Validator Network",
+        description: "Distributed validator infrastructure designed to secure transactions with consensus mechanisms.",
         icon: <Cpu className="h-10 w-10 text-forest-600" />
       },
       {
-        title: "Data Storage",
-        description: "High-performance, secure data storage solutions optimized for AI training and inference.",
+        title: "Fractal Storage",
+        description: "Decentralized storage solutions optimized for blockchain data with fractal compression.",
         icon: <Database className="h-10 w-10 text-forest-600" />
       },
       {
-        title: "AI API Gateway",
-        description: "Unified API interface for seamless integration of our AI services into third-party applications.",
+        title: "Chain API Gateway",
+        description: "Unified API interface for seamless integration of our blockchain services into third-party applications.",
         icon: <Server className="h-10 w-10 text-forest-600" />
       },
       {
-        title: "Model Deployment",
-        description: "Streamlined systems for deploying and managing AI models in production environments.",
-        icon: <Share2 className="h-10 w-10 text-forest-600" />
+        title: "Smart Contract Platform",
+        description: "Advanced smart contract execution environment with quantum-resistant security features.",
+        icon: <Layers className="h-10 w-10 text-forest-600" />
       }
     ]
   },
   {
     id: "advanced",
     name: "Advanced Capabilities",
-    description: "Cutting-edge AI features and capabilities",
+    description: "Cutting-edge blockchain features and ecosystem capabilities",
     technologies: [
       {
-        title: "Federated Learning",
-        description: "Training AI models across multiple devices while keeping data private and secure.",
+        title: "Cross-Chain Integration",
+        description: "Communication protocols enabling secure interaction between different blockchain ecosystems.",
         icon: <Network className="h-10 w-10 text-forest-600" />
       },
       {
-        title: "Explainable AI",
-        description: "Systems that provide transparent explanations for AI decisions, building trust and accountability.",
-        icon: <LineChart className="h-10 w-10 text-forest-600" />
+        title: "Tokenomics Dashboard",
+        description: "Visual analytics platform providing transparent insights into cryptocurrency economics and performance.",
+        icon: <BarChart2 className="h-10 w-10 text-forest-600" />
       },
       {
-        title: "Privacy-Preserving AI",
-        description: "AI systems designed to respect and protect user privacy while delivering powerful capabilities.",
+        title: "Zero-Knowledge Proofs",
+        description: "Cryptographic methods allowing transaction verification without revealing sensitive information.",
         icon: <Lock className="h-10 w-10 text-forest-600" />
       },
       {
-        title: "Cross-Domain Learning",
-        description: "AI models that can transfer knowledge between different domains and applications.",
-        icon: <Share2 className="h-10 w-10 text-forest-600" />
+        title: "Lightning Network",
+        description: "Layer-2 scaling solution providing near-instant transactions with minimal fees.",
+        icon: <Zap className="h-10 w-10 text-forest-600" />
       }
     ]
   }
@@ -108,10 +109,10 @@ const TechnologyPage = () => {
     <div className="container py-12">
       <div className="space-y-6 mb-12">
         <h1 className="text-3xl md:text-4xl font-display font-bold">
-          <span className="gradient-text">AI Technologies</span> Powering Our Ecosystem
+          <span className="gradient-text">Quantum-Resistant</span> Blockchain Technology
         </h1>
         <p className="text-lg text-muted-foreground max-w-3xl">
-          Explore the advanced AI technologies and infrastructure that power our brand ecosystem. We're committed to developing and deploying cutting-edge solutions that are both powerful and responsible.
+          Explore the advanced blockchain technologies and infrastructure that power the Aetherion ecosystem. We're committed to developing and deploying quantum-resistant, ecologically-focused solutions that are both secure and sustainable.
         </p>
       </div>
       
@@ -156,31 +157,31 @@ const TechnologyPage = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-8">
           <div className="text-center space-y-4">
             <div className="mx-auto bg-forest-100 text-forest-700 rounded-full w-16 h-16 flex items-center justify-center mb-4">
-              <Lock className="h-8 w-8" />
+              <Shield className="h-8 w-8" />
             </div>
-            <h3 className="text-xl font-semibold">Privacy-First</h3>
+            <h3 className="text-xl font-semibold">Quantum-Resistant</h3>
             <p className="text-muted-foreground">
-              We design all our AI technologies with privacy as a fundamental principle, not an afterthought.
+              We design all our blockchain technologies to withstand attacks from quantum computers, ensuring long-term security.
             </p>
           </div>
           
           <div className="text-center space-y-4">
             <div className="mx-auto bg-forest-100 text-forest-700 rounded-full w-16 h-16 flex items-center justify-center mb-4">
-              <Share2 className="h-8 w-8" />
+              <Leaf className="h-8 w-8" />
             </div>
-            <h3 className="text-xl font-semibold">Interoperable</h3>
+            <h3 className="text-xl font-semibold">Ecologically Sound</h3>
             <p className="text-muted-foreground">
-              Our technologies work seamlessly together and integrate easily with third-party systems.
+              Our biozoe currencies directly impact environmental preservation, making every transaction contribute to planetary health.
             </p>
           </div>
           
           <div className="text-center space-y-4">
             <div className="mx-auto bg-forest-100 text-forest-700 rounded-full w-16 h-16 flex items-center justify-center mb-4">
-              <LineChart className="h-8 w-8" />
+              <CircleDashed className="h-8 w-8" />
             </div>
-            <h3 className="text-xl font-semibold">Transparent</h3>
+            <h3 className="text-xl font-semibold">Fractal Economics</h3>
             <p className="text-muted-foreground">
-              We build AI systems that are explainable and transparent in their decision-making processes.
+              We embrace natural scaling patterns found in fractal mathematics, creating sustainable growth that mirrors nature's own design.
             </p>
           </div>
         </div>
