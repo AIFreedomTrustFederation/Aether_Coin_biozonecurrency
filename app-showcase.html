@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aetherion Ecosystem Suite</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #041e3c, #0b3561);
+      color: white;
+      margin: 0;
+      padding: 20px;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 2rem;
+      background: rgba(15, 35, 75, 0.8);
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      backdrop-filter: blur(10px);
+    }
+    h1 {
+      font-size: 2.5rem;
+      text-align: center;
+      margin-bottom: 1rem;
+      background: linear-gradient(90deg, #41e0fd, #9b83fc);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+    .section {
+      margin-bottom: 2rem;
+      padding: 1.5rem;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+    }
+    .section h2 {
+      color: #9b83fc;
+      margin-top: 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 0.5rem;
+    }
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+    .feature-card {
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 8px;
+      padding: 1rem;
+      transition: all 0.3s ease;
+      text-align: center;
+    }
+    .feature-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+      background: rgba(0, 0, 0, 0.3);
+    }
+    .feature-card h3 {
+      margin-top: 0;
+      font-size: 1.1rem;
+    }
+    .feature-card a {
+      color: #41e0fd;
+      text-decoration: none;
+      display: block;
+      padding: 0.5rem;
+      border-radius: 4px;
+      transition: background 0.2s;
+    }
+    .feature-card a:hover {
+      background: rgba(65, 224, 253, 0.1);
+    }
+    .status-container {
+      margin-top: 2rem;
+    }
+    .status-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.5rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .status-item:last-child {
+      border-bottom: none;
+    }
+    .status-indicator {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      margin-right: 8px;
+    }
+    .status-ok {
+      background: #4caf50;
+    }
+    .status-warning {
+      background: #ff9800;
+    }
+    .status-error {
+      background: #f44336;
+    }
+    .status-unknown {
+      background: #9e9e9e;
+    }
+    .btn {
+      background: linear-gradient(90deg, #41e0fd, #9b83fc);
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 50px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: inline-block;
+      margin: 10px 0;
+    }
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+    #api-status {
+      font-family: monospace;
+      background: rgba(0, 0, 0, 0.3);
+      padding: 1rem;
+      border-radius: 8px;
+      margin-top: 1rem;
+      height: 200px;
+      overflow: auto;
+    }
+    .loading {
+      text-align: center;
+      padding: 2rem;
+    }
+    .loading-spinner {
+      display: inline-block;
+      width: 50px;
+      height: 50px;
+      border: 5px solid rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+      border-top-color: #41e0fd;
+      animation: spin 1s ease-in-out infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Aetherion Ecosystem Suite</h1>
+    
+    <div class="section">
+      <h2>Core Applications</h2>
+      <div class="feature-grid">
+        <div class="feature-card">
+          <h3>Wallet Interface</h3>
+          <p>Quantum-resistant blockchain wallet</p>
+          <a href="/wallet" target="_blank">Launch Wallet</a>
+        </div>
+        <div class="feature-card">
+          <h3>DApp Platform</h3>
+          <p>Decentralized application ecosystem</p>
+          <a href="/dapp" target="_blank">Launch DApp</a>
+        </div>
+        <div class="feature-card">
+          <h3>Tokenomics</h3>
+          <p>Token economics dashboard</p>
+          <a href="/tokenomics" target="_blank">View Tokenomics</a>
+        </div>
+        <div class="feature-card">
+          <h3>DNS Manager</h3>
+          <p>Domain management system</p>
+          <a href="/dns-manager" target="_blank">Manage DNS</a>
+        </div>
+      </div>
+    </div>
+    
+    <div class="section">
+      <h2>Advanced Features</h2>
+      <div class="feature-grid">
+        <div class="feature-card">
+          <h3>Quantum Security</h3>
+          <p>Post-quantum cryptography tools</p>
+          <a href="/api/quantum-security/status" class="api-check" data-target="quantum-security">Check Status</a>
+        </div>
+        <div class="feature-card">
+          <h3>Matrix DApp Integration</h3>
+          <p>Secure communication services</p>
+          <a href="/api/matrix-integration/status" class="api-check" data-target="matrix-integration">Check Status</a>
+        </div>
+        <div class="feature-card">
+          <h3>Scroll Keeper</h3>
+          <p>Document management system</p>
+          <a href="/scroll-keeper" target="_blank">Open Scroll Keeper</a>
+        </div>
+        <div class="feature-card">
+          <h3>Code Star Platform</h3>
+          <p>Development environment</p>
+          <a href="/codestar" target="_blank">Open CodeStar</a>
+        </div>
+      </div>
+    </div>
+    
+    <div class="section">
+      <h2>GitHub Pages Deployment</h2>
+      <div class="feature-grid">
+        <div class="feature-card">
+          <h3>Brand Showcase</h3>
+          <p>View all brands in the ecosystem</p>
+          <a href="/brands" target="_blank">View Brands</a>
+        </div>
+        <div class="feature-card">
+          <h3>Deployment Status</h3>
+          <p>GitHub Pages deployment status</p>
+          <a href="/api/deployment/status" class="api-check" data-target="deployment-status">Check Status</a>
+        </div>
+      </div>
+    </div>
+    
+    <div class="section status-container">
+      <h2>System Status</h2>
+      <div class="status-item">
+        <span><span class="status-indicator status-unknown" id="api-health-indicator"></span> API Server</span>
+        <button class="btn" id="check-api-health">Check Health</button>
+      </div>
+      <div class="status-item">
+        <span><span class="status-indicator status-unknown" id="db-indicator"></span> Database Connection</span>
+        <button class="btn" id="check-db">Check DB</button>
+      </div>
+      <div class="status-item">
+        <span><span class="status-indicator status-unknown" id="ws-indicator"></span> WebSocket Server</span>
+        <button class="btn" id="check-ws">Check WS</button>
+      </div>
+      
+      <div id="api-status">System status checks will appear here...</div>
+    </div>
+  </div>
+
+  <script>
+    // Function to format date/time
+    function formatDateTime(date) {
+      return new Date(date).toLocaleString();
+    }
+    
+    // Function to append message to the API status area
+    function logMessage(message, type = 'info') {
+      const statusArea = document.getElementById('api-status');
+      const logEntry = document.createElement('div');
+      logEntry.classList.add(type);
+      logEntry.innerHTML = `<strong>[${formatDateTime(new Date())}]</strong> ${message}`;
+      statusArea.appendChild(logEntry);
+      statusArea.scrollTop = statusArea.scrollHeight;
+    }
+    
+    // Function to update status indicator
+    function updateStatusIndicator(id, status) {
+      const indicator = document.getElementById(id);
+      indicator.className = 'status-indicator';
+      
+      switch(status) {
+        case 'ok':
+          indicator.classList.add('status-ok');
+          break;
+        case 'warning':
+          indicator.classList.add('status-warning');
+          break;
+        case 'error':
+          indicator.classList.add('status-error');
+          break;
+        default:
+          indicator.classList.add('status-unknown');
+      }
+    }
+    
+    // Check API health
+    document.getElementById('check-api-health').addEventListener('click', async () => {
+      logMessage('Checking API health...');
+      
+      try {
+        const response = await fetch('/api/health');
+        const data = await response.json();
+        
+        if (data.status === 'ok') {
+          updateStatusIndicator('api-health-indicator', 'ok');
+          logMessage(`API health check successful: ${JSON.stringify(data)}`, 'success');
+        } else {
+          updateStatusIndicator('api-health-indicator', 'warning');
+          logMessage(`API health check returned unexpected status: ${JSON.stringify(data)}`, 'warning');
+        }
+      } catch (error) {
+        updateStatusIndicator('api-health-indicator', 'error');
+        logMessage(`API health check failed: ${error.message}`, 'error');
+      }
+    });
+    
+    // Check Database connection
+    document.getElementById('check-db').addEventListener('click', async () => {
+      logMessage('Checking database connection...');
+      
+      try {
+        const response = await fetch('/api/db/status');
+        const data = await response.json();
+        
+        if (data.connected) {
+          updateStatusIndicator('db-indicator', 'ok');
+          logMessage(`Database connection successful: ${JSON.stringify(data)}`, 'success');
+        } else {
+          updateStatusIndicator('db-indicator', 'error');
+          logMessage(`Database connection failed: ${JSON.stringify(data)}`, 'error');
+        }
+      } catch (error) {
+        updateStatusIndicator('db-indicator', 'error');
+        logMessage(`Database check failed: ${error.message}`, 'error');
+      }
+    });
+    
+    // Check WebSocket connection
+    document.getElementById('check-ws').addEventListener('click', () => {
+      logMessage('Checking WebSocket connection...');
+      const wsUrl = `ws://${window.location.host}/ws`;
+      
+      try {
+        const socket = new WebSocket(wsUrl);
+        
+        socket.onopen = () => {
+          updateStatusIndicator('ws-indicator', 'ok');
+          logMessage(`WebSocket connection established to ${wsUrl}`, 'success');
+          socket.send('subscribe');
+        };
+        
+        socket.onmessage = (event) => {
+          logMessage(`WebSocket message received: ${event.data}`, 'success');
+        };
+        
+        socket.onerror = (error) => {
+          updateStatusIndicator('ws-indicator', 'error');
+          logMessage(`WebSocket error: ${error}`, 'error');
+        };
+        
+        socket.onclose = () => {
+          logMessage('WebSocket connection closed', 'info');
+        };
+      } catch (error) {
+        updateStatusIndicator('ws-indicator', 'error');
+        logMessage(`WebSocket connection failed: ${error.message}`, 'error');
+      }
+    });
+    
+    // Handle API check links
+    document.querySelectorAll('.api-check').forEach(link => {
+      link.addEventListener('click', async (e) => {
+        e.preventDefault();
+        const url = e.target.getAttribute('href');
+        const target = e.target.dataset.target;
+        
+        logMessage(`Checking ${target}...`);
+        
+        try {
+          const response = await fetch(url);
+          const data = await response.json();
+          logMessage(`${target} check result: ${JSON.stringify(data)}`, 'success');
+        } catch (error) {
+          logMessage(`${target} check failed: ${error.message}`, 'error');
+        }
+      });
+    });
+    
+    // Check API health on page load
+    window.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('check-api-health').click();
+    });
+  </script>
+</body>
+</html>

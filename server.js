@@ -12,6 +12,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
 import { WebSocketServer } from 'ws';
+import pg from 'pg';
 
 // Convert ESM __dirname
 const __filename = fileURLToPath(import.meta.url);
@@ -68,6 +69,43 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Add database status endpoint
+app.get('/api/db/status', async (req, res) => {
+  const dbStatus = {
+    connected: false,
+    message: '',
+    timestamp: new Date().toISOString()
+  };
+  
+  try {
+    // Check if DATABASE_URL exists
+    if (!process.env.DATABASE_URL) {
+      dbStatus.message = 'DATABASE_URL environment variable not set';
+      return res.json(dbStatus);
+    }
+    
+    // Simple query to test the connection
+    const pool = new pg.Pool({
+      connectionString: process.env.DATABASE_URL,
+      connectionTimeoutMillis: 5000
+    });
+    
+    const client = await pool.connect();
+    try {
+      const result = await client.query('SELECT NOW() as time');
+      dbStatus.connected = true;
+      dbStatus.message = `Connected successfully. Server time: ${result.rows[0].time}`;
+    } finally {
+      client.release();
+      await pool.end();
+    }
+  } catch (err) {
+    dbStatus.message = `Connection error: ${err.message}`;
+  }
+  
+  res.json(dbStatus);
+});
+
 // Import our API modules from the unified api-modules.js
 import { registerApiModules } from './api-modules.js';
 
@@ -83,6 +121,11 @@ import { registerApiModules } from './api-modules.js';
 // Serve static HTML landing page for /test path
 app.get('/test', (req, res) => {
   res.sendFile(path.join(__dirname, 'codestar-landing.html'));
+});
+
+// Serve our app showcase page
+app.get('/showcase', (req, res) => {
+  res.sendFile(path.join(__dirname, 'app-showcase.html'));
 });
 
 // Middleware to log all requests
@@ -132,6 +175,7 @@ process.on('SIGINT', () => {
 httpServer.listen(PORT, '0.0.0.0', () => {
   console.log(`✓ Aetherion integrated server running on port ${PORT}`);
   console.log(`✓ Test page available at http://localhost:${PORT}/test`);
+  console.log(`✓ App showcase available at http://localhost:${PORT}/showcase`);
   console.log(`✓ Landing page available at http://localhost:${PORT}/`);
   console.log(`✓ WebSocket server available at ws://localhost:${PORT}/ws`);
   console.log(`✓ Vite dev server running on port ${VITE_PORT}`);
