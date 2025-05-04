@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="100px" height="100px" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="purpleBlueGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8a2be2" />
+      <stop offset="100%" stop-color="#4169e1" />
+    </linearGradient>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="3" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+  
+  <!-- Outer circle -->
+  <circle cx="50" cy="50" r="45" fill="none" stroke="url(#purpleBlueGradient)" stroke-width="2" />
+  
+  <!-- Inner geometric pattern - quantum fractal representation -->
+  <g filter="url(#glow)">
+    <!-- Merkle tree-like quantum structure -->
+    <path d="M50,20 L30,50 L50,80 L70,50 Z" fill="none" stroke="url(#purpleBlueGradient)" stroke-width="1.5" />
+    <path d="M30,35 L50,50 L70,35" fill="none" stroke="url(#purpleBlueGradient)" stroke-width="1.5" />
+    <path d="M30,65 L50,50 L70,65" fill="none" stroke="url(#purpleBlueGradient)" stroke-width="1.5" />
+    
+    <!-- Inner connections representing quantum entanglement -->
+    <line x1="50" y1="20" x2="50" y2="80" stroke="url(#purpleBlueGradient)" stroke-width="0.75" stroke-dasharray="2,2" />
+    <line x1="30" y1="50" x2="70" y2="50" stroke="url(#purpleBlueGradient)" stroke-width="0.75" stroke-dasharray="2,2" />
+    
+    <!-- Fractal recursion element - smaller nested diamond -->
+    <path d="M50,35 L40,50 L50,65 L60,50 Z" fill="none" stroke="url(#purpleBlueGradient)" stroke-width="1" />
+    
+    <!-- Central node - represents the core of Aetherion -->
+    <circle cx="50" cy="50" r="5" fill="url(#purpleBlueGradient)" />
+    
+    <!-- Orbital points (validator nodes or connection points) -->
+    <circle cx="50" cy="20" r="2" fill="#8a2be2" />
+    <circle cx="30" cy="35" r="2" fill="#6a5acd" />
+    <circle cx="30" cy="50" r="2" fill="#4169e1" />
+    <circle cx="30" cy="65" r="2" fill="#6a5acd" />
+    <circle cx="50" cy="80" r="2" fill="#8a2be2" />
+    <circle cx="70" cy="65" r="2" fill="#6a5acd" />
+    <circle cx="70" cy="50" r="2" fill="#4169e1" />
+    <circle cx="70" cy="35" r="2" fill="#6a5acd" />
+    
+    <!-- Smaller connector nodes for the inner structure -->
+    <circle cx="40" cy="50" r="1.5" fill="#8a2be2" />
+    <circle cx="60" cy="50" r="1.5" fill="#4169e1" />
+    <circle cx="50" cy="35" r="1.5" fill="#6a5acd" />
+    <circle cx="50" cy="65" r="1.5" fill="#6a5acd" />
+  </g>
+</svg>

@@ -1,5 +1,6 @@
 /**
- * Aetherion Server - Original Configuration
+ * Combined Aetherion Server (Enhanced)
+ * Serves both the Aetherion Wallet v1.0.0 and Brand Showcase applications
  * Uses a modular API approach with routes-simple.js
  */
 
@@ -20,8 +21,10 @@ const __dirname = path.dirname(__filename);
 
 // Server configuration
 const PORT = process.env.PORT || 5000; 
-const VITE_PORT = 5173;
-const TARGET_URL = `http://localhost:${VITE_PORT}`;
+const SHOWCASE_VITE_PORT = 5173;
+const WALLET_VITE_PORT = 5174;
+const SHOWCASE_TARGET_URL = `http://localhost:${SHOWCASE_VITE_PORT}`;
+const WALLET_TARGET_URL = `http://localhost:${WALLET_VITE_PORT}`;
 
 // Create Express app and HTTP server
 const app = express();
@@ -33,9 +36,12 @@ app.use(cors());
 // Serve static files from 'public' directory and client/public
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.static(path.join(__dirname, 'client/public')));
+app.use('/wallet', express.static(path.join(__dirname, 'aetherion-wallet-v1.0.0', 'client/src/assets')));
 
 console.log(`Starting Aetherion Server`);
-console.log(`Main server on port ${PORT} proxying to Vite on port ${VITE_PORT}`);
+console.log(`Main server on port ${PORT} proxying to multiple Vite instances`);
+console.log(`- Brand Showcase Vite on port ${SHOWCASE_VITE_PORT}`);
+console.log(`- Aetherion Wallet Vite on port ${WALLET_VITE_PORT}`);
 
 // Create WebSocket server
 const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
@@ -165,52 +171,90 @@ app.use((req, res, next) => {
   next();
 });
 
-// Start the Vite server
-// For the full Aetherion Wallet v1.0.0 instead of just the CodeStar platform
-const viteProcess = spawn('npx', ['vite', '--host'], {
+// Start the Showcase Vite server
+const showcaseViteProcess = spawn('npx', ['vite', '--host', '--port', SHOWCASE_VITE_PORT], {
   stdio: 'inherit',
   shell: true,
-  cwd: path.join(__dirname, 'aetherion-wallet-v1.0.0')
+  cwd: path.join(__dirname)
 });
 
-// Create proxy middleware for the Vite dev server
-const viteProxy = createProxyMiddleware({
-  target: TARGET_URL,
+// Start the Wallet Vite server
+const walletViteProcess = spawn('npx', ['vite', 'serve', '--host', '--port', WALLET_VITE_PORT], {
+  stdio: 'inherit',
+  shell: true,
+  cwd: path.join(__dirname, 'aetherion-wallet-v1.0.0'),
+  env: {
+    ...process.env,
+    PORT: WALLET_VITE_PORT
+  }
+});
+
+// Create proxy middleware for the Brand Showcase Vite server
+const showcaseViteProxy = createProxyMiddleware({
+  target: SHOWCASE_TARGET_URL,
   changeOrigin: true,
   ws: true,
   logLevel: 'error'
 });
 
+// Create proxy middleware for the Wallet Vite server
+const walletViteProxy = createProxyMiddleware({
+  target: WALLET_TARGET_URL,
+  changeOrigin: true,
+  ws: true,
+  logLevel: 'error',
+  pathRewrite: {
+    '^/wallet': '/'  // Remove /wallet prefix when forwarding to the wallet Vite server
+  }
+});
+
 // Define which paths should go to the API vs. the frontend
 app.use(['/@vite/client', '/@vite/hmr', '/vite-hmr', '/__vite_ping'], (req, res, next) => {
-  viteProxy(req, res, next);
+  // Direct HMR requests to the appropriate Vite server based on the path
+  if (req.path.startsWith('/wallet')) {
+    walletViteProxy(req, res, next);
+  } else {
+    showcaseViteProxy(req, res, next);
+  }
 });
 
-// Redirect root URL to the full Aetherion Wallet application
+// Redirect root URL to the brand showcase
 app.get('/', (req, res) => {
-  res.redirect('/wallet');
+  res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// Dedicated path for the full Aetherion Wallet v1.0.0 application
+// Route to access the wallet
 app.get('/wallet', (req, res, next) => {
-  // Pass to Vite to serve the full Aetherion Wallet
-  viteProxy(req, res, next);
+  // Pass to Wallet Vite to serve the full Aetherion Wallet
+  walletViteProxy(req, res, next);
 });
 
-// All other frontend routes go to Vite
+// Route for brand showcase
+app.get('/brands', (req, res, next) => {
+  // Pass to Showcase Vite
+  showcaseViteProxy(req, res, next);
+});
+
+// All other frontend routes go to the appropriate Vite server
 app.use('/', (req, res, next) => {
   // Don't proxy API requests
   if (req.path.startsWith('/api/')) {
     return next();
   }
   
-  viteProxy(req, res, next);
+  // Route to Wallet or Showcase based on path
+  if (req.path.startsWith('/wallet')) {
+    walletViteProxy(req, res, next);
+  } else {
+    showcaseViteProxy(req, res, next);
+  }
 });
 
 // Handle cleanup
 process.on('SIGINT', () => {
   console.log('Shutting down servers...');
-  viteProcess.kill();
+  showcaseViteProcess.kill();
+  walletViteProcess.kill();
   process.exit();
 });
 
@@ -227,7 +271,8 @@ httpServer.listen(PORT, '0.0.0.0', () => {
   console.log(`✓ Pure test page available at http://localhost:${PORT}/pure-test`);
   console.log(`✓ Feedback check page available at http://localhost:${PORT}/feedback-check`);
   console.log(`✓ WebSocket server available at ws://localhost:${PORT}/ws`);
-  console.log(`✓ Vite dev server running on port ${VITE_PORT}`);
+  console.log(`✓ Brand Showcase Vite server running on port ${SHOWCASE_VITE_PORT}`);
+  console.log(`✓ Aetherion Wallet Vite server running on port ${WALLET_VITE_PORT}`);
   
   // Display Replit-specific URL information
   const replitSlug = process.env.REPL_SLUG;

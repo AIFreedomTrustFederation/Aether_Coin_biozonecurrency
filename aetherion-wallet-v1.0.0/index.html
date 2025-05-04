@@ -3,12 +3,141 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Aetherion Wallet v1.0.0</title>
-    <meta name="description" content="Quantum-resistant blockchain wallet by AI Freedom Trust" />
+    <title>Aetherion Full System v1.0.0</title>
+    <meta name="description" content="Quantum-resistant blockchain ecosystem by AI Freedom Trust" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+        background: #0a1020;
+        color: #fff;
+      }
+      
+      .loading-screen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: #0a1020;
+        z-index: 9999;
+      }
+      
+      .quantum-loader {
+        width: 100px;
+        height: 100px;
+        position: relative;
+        margin-bottom: 20px;
+      }
+      
+      .quantum-loader::before, 
+      .quantum-loader::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        border: 3px solid transparent;
+        border-top-color: #8a2be2;
+        animation: quantum-spin 2s linear infinite;
+      }
+      
+      .quantum-loader::after {
+        border-top-color: transparent;
+        border-bottom-color: #4169e1;
+        animation-duration: 3s;
+      }
+      
+      @keyframes quantum-spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      
+      .load-text {
+        font-size: 1.2rem;
+        margin-bottom: 10px;
+      }
+      
+      .load-subtext {
+        font-size: 0.9rem;
+        opacity: 0.7;
+        max-width: 400px;
+        text-align: center;
+      }
+      
+      .progress-bar {
+        width: 250px;
+        height: 4px;
+        background: #1a2035;
+        position: relative;
+        margin-top: 20px;
+        border-radius: 2px;
+        overflow: hidden;
+      }
+      
+      .progress-fill {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        background: linear-gradient(90deg, #8a2be2, #4169e1);
+        width: 0%;
+        transition: width 0.3s ease;
+        animation: progress-animate 3s ease-in-out infinite;
+      }
+      
+      @keyframes progress-animate {
+        0% { width: 0%; }
+        50% { width: 70%; }
+        100% { width: 100%; }
+      }
+    </style>
   </head>
   <body>
+    <!-- Loading screen with quantum animation -->
+    <div id="quantum-loading" class="loading-screen">
+      <div class="quantum-loader"></div>
+      <h2 class="load-text">Initializing Aetherion Ecosystem</h2>
+      <p class="load-subtext">Establishing quantum entanglement and fractal validation...</p>
+      <div class="progress-bar">
+        <div class="progress-fill"></div>
+      </div>
+    </div>
+    
+    <!-- Root element for React -->
     <div id="root"></div>
-    <script type="module" src="/client/src/main.tsx"></script>
+    
+    <!-- Load the main application -->
+    <script type="module" src="./client/src/main.tsx"></script>
+    
+    <!-- Script to handle specialized loading -->
+    <script>
+      // Show full system instead of just CodeStar Platform
+      window.AETHERION_FULL_SYSTEM = true;
+      window.AETHERION_SECURITY_LEVEL = 'optimal';
+      
+      // Hide loading screen when application is ready
+      window.addEventListener('load', () => {
+        // Simulate quantum startup delay for better UX
+        setTimeout(() => {
+          const loadingScreen = document.getElementById('quantum-loading');
+          if (loadingScreen) {
+            loadingScreen.style.opacity = '0';
+            loadingScreen.style.transition = 'opacity 0.5s ease';
+            setTimeout(() => {
+              loadingScreen.style.display = 'none';
+            }, 500);
+          }
+        }, 2000);
+      });
+    </script>
   </body>
 </html>

@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="100px" height="100px" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="biozoeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#006400" />
+      <stop offset="100%" stop-color="#00ff7f" />
+    </linearGradient>
+    <filter id="biozoeGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="2" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+    <radialGradient id="centerGlow" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+      <stop offset="0%" stop-color="#00ff7f" stop-opacity="0.7" />
+      <stop offset="100%" stop-color="#006400" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+  
+  <!-- Background -->
+  <circle cx="50" cy="50" r="45" fill="#0a2010" stroke="url(#biozoeGradient)" stroke-width="2" />
+  
+  <!-- Center glow - represents life force energy -->
+  <circle cx="50" cy="50" r="25" fill="url(#centerGlow)" />
+  
+  <!-- Sacred geometry pattern - Flower of Life inspired -->
+  <g filter="url(#biozoeGlow)">
+    <!-- Central circle -->
+    <circle cx="50" cy="50" r="8" fill="none" stroke="#3cb371" stroke-width="1.5" />
+    
+    <!-- First ring of 6 circles -->
+    <circle cx="50" cy="34" r="8" fill="none" stroke="#3cb371" stroke-width="1.5" />
+    <circle cx="64" cy="42" r="8" fill="none" stroke="#3cb371" stroke-width="1.5" />
+    <circle cx="64" cy="58" r="8" fill="none" stroke="#3cb371" stroke-width="1.5" />
+    <circle cx="50" cy="66" r="8" fill="none" stroke="#3cb371" stroke-width="1.5" />
+    <circle cx="36" cy="58" r="8" fill="none" stroke="#3cb371" stroke-width="1.5" />
+    <circle cx="36" cy="42" r="8" fill="none" stroke="#3cb371" stroke-width="1.5" />
+    
+    <!-- Second partial ring (selected circles to avoid overcrowding) -->
+    <circle cx="50" cy="18" r="8" fill="none" stroke="#00ff7f" stroke-width="1" opacity="0.6" />
+    <circle cx="78" cy="50" r="8" fill="none" stroke="#00ff7f" stroke-width="1" opacity="0.6" />
+    <circle cx="50" cy="82" r="8" fill="none" stroke="#00ff7f" stroke-width="1" opacity="0.6" />
+    <circle cx="22" cy="50" r="8" fill="none" stroke="#00ff7f" stroke-width="1" opacity="0.6" />
+    
+    <!-- DNA helix representation -->
+    <path d="M30,20 C40,30 60,20 70,30 C60,40 40,30 30,40 C40,50 60,40 70,50 C60,60 40,50 30,60 C40,70 60,60 70,70 C60,80 40,70 30,80" 
+          fill="none" stroke="#006400" stroke-width="1.5" stroke-dasharray="0,0" />
+    
+    <path d="M70,20 C60,30 40,20 30,30 C40,40 60,30 70,40 C60,50 40,40 30,50 C40,60 60,50 70,60 C60,70 40,60 30,70 C40,80 60,70 70,80" 
+          fill="none" stroke="#00ff7f" stroke-width="1.5" stroke-dasharray="0,0" />
+    
+    <!-- Connection points along the DNA helix -->
+    <circle cx="30" cy="20" r="2" fill="#006400" />
+    <circle cx="70" cy="30" r="2" fill="#006400" />
+    <circle cx="30" cy="40" r="2" fill="#006400" />
+    <circle cx="70" cy="50" r="2" fill="#006400" />
+    <circle cx="30" cy="60" r="2" fill="#006400" />
+    <circle cx="70" cy="70" r="2" fill="#006400" />
+    <circle cx="30" cy="80" r="2" fill="#006400" />
+    
+    <circle cx="70" cy="20" r="2" fill="#00ff7f" />
+    <circle cx="30" cy="30" r="2" fill="#00ff7f" />
+    <circle cx="70" cy="40" r="2" fill="#00ff7f" />
+    <circle cx="30" cy="50" r="2" fill="#00ff7f" />
+    <circle cx="70" cy="60" r="2" fill="#00ff7f" />
+    <circle cx="30" cy="70" r="2" fill="#00ff7f" />
+    <circle cx="70" cy="80" r="2" fill="#00ff7f" />
+    
+    <!-- Spirit-body connection - vertical axis -->
+    <line x1="50" y1="15" x2="50" y2="85" stroke="#3cb371" stroke-width="1" stroke-dasharray="3,3" />
+    
+    <!-- Heart center - represents consciousness core -->
+    <circle cx="50" cy="50" r="5" fill="url(#biozoeGradient)" />
+  </g>
+</svg>

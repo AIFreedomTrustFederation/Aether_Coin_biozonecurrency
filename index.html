@@ -1,204 +1,224 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aetherion - AI Freedom Trust</title>
-    <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            line-height: 1.6;
-            margin: 0;
-            padding: 0;
-            background: #f9f9f9;
-            color: #333;
-        }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        header {
-            background: linear-gradient(135deg, #6e48aa 0%, #9d50bb 100%);
-            color: white;
-            padding: 60px 0;
-            text-align: center;
-        }
-        h1 {
-            font-size: 2.5rem;
-            margin-bottom: 15px;
-        }
-        .subtitle {
-            font-size: 1.2rem;
-            opacity: 0.9;
-        }
-        .brands {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 20px;
-            margin: 40px 0;
-        }
-        .brand-card {
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            padding: 20px;
-            width: 250px;
-            text-align: center;
-            transition: transform 0.3s ease;
-        }
-        .brand-card:hover {
-            transform: translateY(-5px);
-        }
-        .brand-logo {
-            height: 80px;
-            width: 80px;
-            margin: 0 auto 15px;
-        }
-        .button {
-            display: inline-block;
-            background: #6e48aa;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 4px;
-            text-decoration: none;
-            font-weight: bold;
-            margin-top: 15px;
-        }
-        .button:hover {
-            background: #9d50bb;
-        }
-        footer {
-            background: #333;
-            color: white;
-            text-align: center;
-            padding: 20px;
-            margin-top: 40px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aetherion Ecosystem</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(135deg, #0a101f, #121a3a);
+      color: #ffffff;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
+    .container {
+      width: 90%;
+      max-width: 1200px;
+      text-align: center;
+    }
+    h1 {
+      font-size: 2.5rem;
+      background: linear-gradient(90deg, #8a2be2, #4169e1);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin-bottom: 1rem;
+    }
+    p {
+      font-size: 1.2rem;
+      line-height: 1.6;
+      margin-bottom: 2rem;
+      opacity: 0.9;
+    }
+    .buttons {
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .button {
+      padding: 0.8rem 1.5rem;
+      font-size: 1rem;
+      font-weight: bold;
+      text-decoration: none;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 200px;
+    }
+    .wallet-btn {
+      background: linear-gradient(90deg, #6a359e, #4169e1);
+      color: white;
+      border: none;
+      box-shadow: 0 4px 15px rgba(65, 105, 225, 0.3);
+    }
+    .wallet-btn:hover {
+      background: linear-gradient(90deg, #7b41b7, #517aee);
+      transform: translateY(-3px);
+      box-shadow: 0 7px 20px rgba(65, 105, 225, 0.4);
+    }
+    .showcase-btn {
+      background: transparent;
+      color: white;
+      border: 2px solid #6a359e;
+      box-shadow: 0 4px 15px rgba(106, 53, 158, 0.2);
+    }
+    .showcase-btn:hover {
+      background: rgba(106, 53, 158, 0.1);
+      transform: translateY(-3px);
+      box-shadow: 0 7px 20px rgba(106, 53, 158, 0.3);
+    }
+    .logo {
+      margin-bottom: 2rem;
+      width: 120px;
+      height: 120px;
+      position: relative;
+    }
+    .logo::before {
+      content: '';
+      position: absolute;
+      width: 120px;
+      height: 120px;
+      background: linear-gradient(135deg, #8a2be2, #4169e1);
+      border-radius: 50%;
+      opacity: 0.2;
+      animation: pulse 2s infinite;
+    }
+    .logo::after {
+      content: '';
+      position: absolute;
+      width: 100px;
+      height: 100px;
+      top: 10px;
+      left: 10px;
+      background: url(./public/aetherion-logo.svg) center/contain no-repeat;
+      border-radius: 50%;
+    }
+    @keyframes pulse {
+      0% {
+        transform: scale(1);
+        opacity: 0.2;
+      }
+      50% {
+        transform: scale(1.1);
+        opacity: 0.3;
+      }
+      100% {
+        transform: scale(1);
+        opacity: 0.2;
+      }
+    }
+    .quantum-particles {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: -1;
+      overflow: hidden;
+    }
+  </style>
 </head>
 <body>
-    <header>
-        <div class="container">
-            <h1>Aetherion Technologies</h1>
-            <p class="subtitle">Advanced Blockchain Solutions for the AI Freedom Trust Ecosystem</p>
-        </div>
-    </header>
-
-    <div class="container">
-        <h2 style="text-align: center; margin: 40px 0 20px;">Our Brand Ecosystem</h2>
-        
-        <div class="brands">
-            <div class="brand-card">
-                <div class="brand-logo">
-                    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                        <circle cx="50" cy="50" r="40" fill="#6e48aa" />
-                        <path d="M30,50 L70,50 M50,30 L50,70" stroke="white" stroke-width="5" />
-                    </svg>
-                </div>
-                <h3>Quantum Domain</h3>
-                <p>Post-quantum cryptographic solutions</p>
-                <a href="https://quantumdomain.aifreedomtrust.com" class="button">Visit</a>
-            </div>
-            
-            <div class="brand-card">
-                <div class="brand-logo">
-                    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                        <rect x="25" y="25" width="50" height="50" fill="#4a90e2" />
-                        <path d="M35,35 L65,65 M65,35 L35,65" stroke="white" stroke-width="5" />
-                    </svg>
-                </div>
-                <h3>Zero Trust Framework</h3>
-                <p>Advanced security architecture</p>
-                <a href="https://zerotrust.aifreedomtrust.com" class="button">Visit</a>
-            </div>
-            
-            <div class="brand-card">
-                <div class="brand-logo">
-                    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                        <polygon points="50,20 80,50 50,80 20,50" fill="#50bb9d" />
-                        <circle cx="50" cy="50" r="15" fill="white" />
-                    </svg>
-                </div>
-                <h3>Fractal Network</h3>
-                <p>Self-similar distributed systems</p>
-                <a href="https://fractalnetwork.aifreedomtrust.com" class="button">Visit</a>
-            </div>
-            
-            <div class="brand-card">
-                <div class="brand-logo">
-                    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M20,50 Q50,20 80,50 Q50,80 20,50" fill="#e24a4a" />
-                        <circle cx="50" cy="50" r="10" fill="white" />
-                    </svg>
-                </div>
-                <h3>AetherMesh</h3>
-                <p>Interconnected blockchain foundation</p>
-                <a href="https://aethermesh.aifreedomtrust.com" class="button">Visit</a>
-            </div>
-            
-            <div class="brand-card">
-                <div class="brand-logo">
-                    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                        <rect x="30" y="30" width="40" height="40" fill="#bb9d50" />
-                        <circle cx="50" cy="50" r="20" fill="transparent" stroke="white" stroke-width="5" />
-                    </svg>
-                </div>
-                <h3>Fractal Vault</h3>
-                <p>Secure asset storage solutions</p>
-                <a href="https://fractalvault.aifreedomtrust.com" class="button">Visit</a>
-            </div>
-            
-            <div class="brand-card">
-                <div class="brand-logo">
-                    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                        <polygon points="50,20 70,40 70,70 30,70 30,40" fill="#4ae2e2" />
-                        <line x1="40" y1="50" x2="60" y2="50" stroke="white" stroke-width="5" />
-                    </svg>
-                </div>
-                <h3>Quantum Guard</h3>
-                <p>Advanced protection systems</p>
-                <a href="https://quantumguard.aifreedomtrust.com" class="button">Visit</a>
-            </div>
-            
-            <div class="brand-card">
-                <div class="brand-logo">
-                    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                        <circle cx="50" cy="50" r="30" fill="#9d50bb" />
-                        <path d="M40,40 Q50,30 60,40 Q70,50 60,60 Q50,70 40,60 Q30,50 40,40" fill="white" />
-                    </svg>
-                </div>
-                <h3>Mysterion</h3>
-                <p>AI-powered assistant network</p>
-                <a href="https://mysterion.aifreedomtrust.com" class="button">Visit</a>
-            </div>
-            
-            <div class="brand-card">
-                <div class="brand-logo">
-                    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M30,30 L70,30 L70,70 L30,70 Z" fill="#4a90e2" />
-                        <path d="M40,40 L60,40 L60,60 L40,60 Z" fill="white" />
-                    </svg>
-                </div>
-                <h3>Fractal Chain</h3>
-                <p>Recursive blockchain architecture</p>
-                <a href="https://fractalchain.aifreedomtrust.com" class="button">Visit</a>
-            </div>
-        </div>
-        
-        <div style="text-align: center; margin-top: 30px;">
-            <a href="https://ai.aifreedomtrust.com" class="button" style="font-size: 1.2rem; padding: 15px 30px;">
-                Explore Brand Showcase
-            </a>
-        </div>
+  <div class="quantum-particles" id="particles"></div>
+  <div class="container">
+    <div class="logo"></div>
+    <h1>Welcome to the Aetherion Ecosystem</h1>
+    <p>
+      Explore the quantum-resistant blockchain ecosystem with advanced decentralized applications
+      and brand integrations. Choose your destination below.
+    </p>
+    <div class="buttons">
+      <a href="/wallet" class="button wallet-btn">Aetherion Wallet</a>
+      <a href="/brands" class="button showcase-btn">Brand Showcase</a>
     </div>
+  </div>
 
-    <footer>
-        <div class="container">
-            <p>&copy; 2025 AI Freedom Trust. All rights reserved.</p>
-            <p>Powered by Aetherion Technologies</p>
-        </div>
-    </footer>
+  <script>
+    // Simple particle animation for quantum effect
+    document.addEventListener('DOMContentLoaded', function() {
+      const particlesContainer = document.getElementById('particles');
+      const particleCount = 50;
+      const colors = ['#8a2be2', '#4169e1', '#6a359e', '#2b5797'];
+      
+      for (let i = 0; i < particleCount; i++) {
+        createParticle();
+      }
+      
+      function createParticle() {
+        const particle = document.createElement('div');
+        
+        // Random positioning and styling
+        const size = Math.random() * 5 + 1;
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        
+        particle.style.position = 'absolute';
+        particle.style.width = `${size}px`;
+        particle.style.height = `${size}px`;
+        particle.style.background = color;
+        particle.style.borderRadius = '50%';
+        particle.style.opacity = Math.random() * 0.5 + 0.2;
+        
+        // Set initial position
+        const xPos = Math.random() * 100;
+        const yPos = Math.random() * 100;
+        particle.style.left = `${xPos}%`;
+        particle.style.top = `${yPos}%`;
+        
+        // Create animation with random duration and delay
+        const duration = Math.random() * 20 + 10;
+        const delay = Math.random() * 5;
+        
+        particle.style.animation = `float ${duration}s ${delay}s infinite linear`;
+        
+        // Add animation keyframes dynamically
+        const styleSheet = document.styleSheets[0];
+        const keyframes = `
+          @keyframes float {
+            0% {
+              transform: translate(0, 0) rotate(0deg);
+              opacity: ${Math.random() * 0.5 + 0.2};
+            }
+            25% {
+              transform: translate(${Math.random() * 100 - 50}px, ${Math.random() * 100 - 50}px) rotate(${Math.random() * 360}deg);
+              opacity: ${Math.random() * 0.5 + 0.2};
+            }
+            50% {
+              transform: translate(${Math.random() * 100 - 50}px, ${Math.random() * 100 - 50}px) rotate(${Math.random() * 360}deg);
+              opacity: ${Math.random() * 0.5 + 0.2};
+            }
+            75% {
+              transform: translate(${Math.random() * 100 - 50}px, ${Math.random() * 100 - 50}px) rotate(${Math.random() * 360}deg);
+              opacity: ${Math.random() * 0.5 + 0.2};
+            }
+            100% {
+              transform: translate(0, 0) rotate(0deg);
+              opacity: ${Math.random() * 0.5 + 0.2};
+            }
+          }
+        `;
+        
+        try {
+          styleSheet.insertRule(keyframes, styleSheet.cssRules.length);
+        } catch (e) {
+          // Fallback for browser compatibility
+          const style = document.createElement('style');
+          style.innerHTML = keyframes;
+          document.head.appendChild(style);
+        }
+        
+        particlesContainer.appendChild(particle);
+      }
+    });
+  </script>
 </body>
 </html>

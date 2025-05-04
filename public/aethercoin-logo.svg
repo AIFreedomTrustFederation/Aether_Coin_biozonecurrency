@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="100px" height="100px" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="aethercoinGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4b0082" />
+      <stop offset="100%" stop-color="#9370db" />
+    </linearGradient>
+    <filter id="aethercoinGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="3" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+  
+  <!-- Outer coin circle -->
+  <circle cx="50" cy="50" r="45" fill="#1a0033" stroke="url(#aethercoinGradient)" stroke-width="2.5" />
+  
+  <!-- Inner design elements -->
+  <g filter="url(#aethercoinGlow)">
+    <!-- Coin edges/grooves -->
+    <path d="M50,10 C73.1,10 92,28.9 92,52 C92,75.1 73.1,94 50,94 C26.9,94 8,75.1 8,52 C8,28.9 26.9,10 50,10 Z" 
+          fill="none" stroke="#e6e6fa" stroke-width="0.75" stroke-dasharray="1,2" opacity="0.5" />
+          
+    <path d="M50,15 C70.3,15 87,31.7 87,52 C87,72.3 70.3,89 50,89 C29.7,89 13,72.3 13,52 C13,31.7 29.7,15 50,15 Z" 
+          fill="none" stroke="#e6e6fa" stroke-width="0.75" stroke-dasharray="1,2" opacity="0.5" />
+    
+    <!-- Octagonal shape representing quantum security layers -->
+    <path d="M29,29 L71,29 L71,71 L29,71 Z" 
+          fill="none" stroke="#9370db" stroke-width="1.5" transform="rotate(45,50,50)" />
+    
+    <!-- Stylized 'A' for AetherCoin -->
+    <path d="M50,25 L65,75 L35,75 Z" fill="none" stroke="#e6e6fa" stroke-width="2" />
+    <line x1="40" y1="60" x2="60" y2="60" stroke="#e6e6fa" stroke-width="2" />
+    
+    <!-- Quantum field representation - nested hexagons -->
+    <path d="M50,35 L65,43 L65,57 L50,65 L35,57 L35,43 Z" 
+          fill="none" stroke="#9370db" stroke-width="1" />
+    
+    <path d="M50,40 L60,45 L60,55 L50,60 L40,55 L40,45 Z" 
+          fill="none" stroke="#9370db" stroke-width="1" />
+          
+    <!-- Digital wave pattern -->
+    <path d="M25,52 L35,47 L45,57 L55,47 L65,57 L75,52" 
+          fill="none" stroke="#4b0082" stroke-width="1.5" />
+    
+    <!-- Connection nodes -->
+    <circle cx="50" cy="25" r="2" fill="#e6e6fa" />
+    <circle cx="35" cy="75" r="2" fill="#e6e6fa" />
+    <circle cx="65" cy="75" r="2" fill="#e6e6fa" />
+    
+    <circle cx="35" cy="43" r="1.5" fill="#9370db" />
+    <circle cx="35" cy="57" r="1.5" fill="#9370db" />
+    <circle cx="50" cy="35" r="1.5" fill="#9370db" />
+    <circle cx="50" cy="65" r="1.5" fill="#9370db" />
+    <circle cx="65" cy="43" r="1.5" fill="#9370db" />
+    <circle cx="65" cy="57" r="1.5" fill="#9370db" />
+    
+    <!-- Center - coin core -->
+    <circle cx="50" cy="50" r="6" fill="url(#aethercoinGradient)" />
+    <circle cx="50" cy="50" r="3" fill="#e6e6fa" />
+  </g>
+</svg>

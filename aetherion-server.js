@@ -19,7 +19,7 @@ const __dirname = path.dirname(__filename);
 
 // Server configuration
 const PORT = process.env.PORT || 5000;
-const VITE_PORT = 5173;
+const VITE_PORT = 5176; // Changed to avoid conflicts with other servers
 const TARGET_URL = `http://localhost:${VITE_PORT}`;
 
 // Create Express app and HTTP server

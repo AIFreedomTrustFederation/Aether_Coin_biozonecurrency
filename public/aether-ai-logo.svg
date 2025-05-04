@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="100px" height="100px" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="aiGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#483d8b" />
+      <stop offset="100%" stop-color="#9370db" />
+    </linearGradient>
+    <filter id="aiGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="3" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+    <radialGradient id="energyFlow" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+      <stop offset="0%" stop-color="#ff00ff" stop-opacity="0.8" />
+      <stop offset="100%" stop-color="#483d8b" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+  
+  <!-- Background circle with purple energy field -->
+  <circle cx="50" cy="50" r="45" fill="#0a081a" />
+  <circle cx="50" cy="50" r="45" fill="url(#energyFlow)" opacity="0.4" />
+  
+  <!-- Energy ring based on the AI Freedom Trust logo -->
+  <circle cx="50" cy="50" r="38" fill="none" stroke="#ff00ff" stroke-width="3" filter="url(#aiGlow)" opacity="0.7" />
+  
+  <!-- Lightning energy effects on the ring -->
+  <g filter="url(#aiGlow)">
+    <path d="M50,12 C65,20 70,30 75,50 C70,70 65,80 50,88" 
+          fill="none" stroke="#ff00ff" stroke-width="2" stroke-dasharray="1,2" opacity="0.8" />
+    <path d="M50,12 C35,20 30,30 25,50 C30,70 35,80 50,88" 
+          fill="none" stroke="#ff00ff" stroke-width="2" stroke-dasharray="1,2" opacity="0.8" />
+    
+    <!-- "A" letter stylized with digital elements -->
+    <path d="M35,70 L50,30 L65,70" fill="none" stroke="white" stroke-width="3" />
+    <line x1="40" y1="55" x2="60" y2="55" stroke="white" stroke-width="3" />
+    
+    <!-- Digital connection points -->
+    <circle cx="50" cy="30" r="2" fill="white" />
+    <circle cx="35" cy="70" r="2" fill="white" />
+    <circle cx="65" cy="70" r="2" fill="white" />
+    <circle cx="40" cy="55" r="2" fill="white" />
+    <circle cx="60" cy="55" r="2" fill="white" />
+    
+    <!-- Energy nodes -->
+    <circle cx="50" cy="30" r="1" fill="#ff00ff" filter="url(#aiGlow)" />
+    <circle cx="35" cy="70" r="1" fill="#ff00ff" filter="url(#aiGlow)" />
+    <circle cx="65" cy="70" r="1" fill="#ff00ff" filter="url(#aiGlow)" />
+    
+    <!-- Digital circuit lines -->
+    <line x1="25" y1="50" x2="75" y2="50" stroke="#483d8b" stroke-width="0.5" stroke-dasharray="1,1" />
+    <line x1="50" y1="25" x2="50" y2="75" stroke="#483d8b" stroke-width="0.5" stroke-dasharray="1,1" />
+    
+    <!-- Center pulse representing AI core -->
+    <circle cx="50" cy="50" r="8" fill="url(#aiGradient)" />
+    <circle cx="50" cy="50" r="5" fill="#0a081a" />
+    <circle cx="50" cy="50" r="3" fill="#ff00ff" opacity="0.8" />
+  </g>
+</svg>
