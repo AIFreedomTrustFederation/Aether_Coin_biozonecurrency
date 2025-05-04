@@ -6,43 +6,138 @@
   <title>AI Freedom Trust Brand Ecosystem</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <style>
+    :root {
+      /* Enhanced color palette with neon elements */
+      --bg-gradient: linear-gradient(135deg, #041227, #0c1f3f);
+      --primary: #00e5ff;
+      --primary-glow: #00e5ff;
+      --secondary: #a170ff;
+      --secondary-glow: #a170ff;
+      --accent-green: #00ffa3;
+      --accent-green-glow: #00ffa3;
+      --accent-purple: #c537dd;
+      --accent-purple-glow: #c537dd;
+      --text: #f0f4f8;
+      --card-bg: rgba(13, 25, 45, 0.8);
+      --card-border: rgba(0, 229, 255, 0.2);
+      --card-glow: 0 0 15px rgba(0, 229, 255, 0.3);
+
+      /* Brand-specific colors with glow variants */
+      --forest: #1a6f38;
+      --forest-glow: rgba(26, 111, 56, 0.7);
+      --fractal-blue: #2563eb;
+      --fractal-blue-glow: rgba(37, 99, 235, 0.7);
+      --aether-purple: #7c3aed;
+      --aether-purple-glow: rgba(124, 58, 237, 0.7);
+      --biozoe-green: #10b981;
+      --biozoe-green-glow: rgba(16, 185, 129, 0.7);
+      --ai-amber: #d97706;
+      --ai-amber-glow: rgba(217, 119, 6, 0.7);
+      --quantum-red: #dc2626;
+      --quantum-red-glow: rgba(220, 38, 38, 0.7);
+      --dev-cyan: #0891b2;
+      --dev-cyan-glow: rgba(8, 145, 178, 0.7);
+      --main-indigo: #4f46e5;
+      --main-indigo-glow: rgba(79, 70, 229, 0.7);
+    }
+    
     body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background-color: #f9fafb;
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-gradient);
+      color: var(--text);
     }
+
+    /* Add background pattern effect */
+    body::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image: 
+        radial-gradient(circle at 25px 25px, rgba(0, 229, 255, 0.05) 2%, transparent 0%),
+        radial-gradient(circle at 75px 75px, rgba(161, 112, 255, 0.05) 2%, transparent 0%);
+      background-size: 100px 100px;
+      z-index: -1;
+    }
+    
     .brand-card {
-      transition: all 0.3s ease;
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      position: relative;
+      overflow: hidden;
+      z-index: 1;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      box-shadow: var(--card-glow);
     }
+    
+    .brand-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(120deg, rgba(0, 229, 255, 0.03), rgba(161, 112, 255, 0.03));
+      z-index: -1;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+    
     .brand-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      transform: translateY(-10px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3), 0 0 20px rgba(0, 229, 255, 0.4);
+      border-color: rgba(0, 229, 255, 0.3);
     }
+    
+    .brand-card:hover::before {
+      opacity: 1;
+    }
+    
+    /* Brand color classes with glow effects */
     .bg-forest {
-      background-color: #1a6f38;
+      background-color: var(--forest);
+      box-shadow: 0 0 10px var(--forest-glow);
     }
+    
     .bg-fractal-blue {
-      background-color: #2563eb;
+      background-color: var(--fractal-blue);
+      box-shadow: 0 0 10px var(--fractal-blue-glow);
     }
+    
     .bg-aether-purple {
-      background-color: #7c3aed;
+      background-color: var(--aether-purple);
+      box-shadow: 0 0 10px var(--aether-purple-glow);
     }
+    
     .bg-biozoe-green {
-      background-color: #10b981;
+      background-color: var(--biozoe-green);
+      box-shadow: 0 0 10px var(--biozoe-green-glow);
     }
+    
     .bg-ai-amber {
-      background-color: #d97706;
+      background-color: var(--ai-amber);
+      box-shadow: 0 0 10px var(--ai-amber-glow);
     }
+    
     .bg-quantum-red {
-      background-color: #dc2626;
+      background-color: var(--quantum-red);
+      box-shadow: 0 0 10px var(--quantum-red-glow);
     }
+    
     .bg-dev-cyan {
-      background-color: #0891b2;
+      background-color: var(--dev-cyan);
+      box-shadow: 0 0 10px var(--dev-cyan-glow);
     }
+    
     .bg-main-indigo {
-      background-color: #4f46e5;
+      background-color: var(--main-indigo);
+      box-shadow: 0 0 10px var(--main-indigo-glow);
     }
+    
+    /* Enhanced header with neon effects */
     .header-gradient {
-      background: linear-gradient(to right, #1a6f38, #0e4429);
+      background: var(--bg-gradient);
+      position: relative;
+      overflow: hidden;
     }
   </style>
 </head>

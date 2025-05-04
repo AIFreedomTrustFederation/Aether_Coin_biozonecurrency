@@ -18,7 +18,7 @@ const MobileMenu = ({ isOpen, onClose }: MobileMenuProps) => {
     { icon: Shield, label: 'Contracts', path: '/contracts' },
     { icon: CreditCard, label: 'Payments', path: '/payments' },
     { icon: GitMerge, label: 'Fractal Explorer', path: '/fractal-explorer' },
-    { icon: Globe, label: 'Brand Showcase', path: '/brands-showcase' },
+    { icon: Globe, label: 'Brand Showcase', path: '/brands-showcase' }, // Added Brand Showcase link
     { icon: FileText, label: 'White Paper', path: '/whitepaper' },
     { icon: Settings, label: 'Settings', path: '/settings' },
   ];
@@ -30,8 +30,8 @@ const MobileMenu = ({ isOpen, onClose }: MobileMenuProps) => {
   };
 
   const handleNavigation = (path: string) => {
-    // Special handling for the brand showcase page
-    if (path === '/brands-showcase') {
+    // For external links (starting with http), open in new tab
+    if (path.startsWith('/brands-showcase')) {
       window.location.href = path;
       onClose();
       return;

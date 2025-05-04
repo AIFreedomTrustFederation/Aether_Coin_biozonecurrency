@@ -48,6 +48,7 @@ const NetworkDetailsPage = lazy(() => import("./pages/NetworkDetailsPage"));
 
 // Lazy load new personalization pages
 const DashboardPage = lazy(() => import("./pages/DashboardPage"));
+const BrandShowcaseFrame = lazy(() => import("./components/brand-showcase/BrandShowcaseFrame"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
 const BlockchainVisualizerPage = lazy(() => import("./pages/BlockchainVisualizerPage"));
 const BlockchainDashboardPage = lazy(() => import("./pages/BlockchainDashboardPage"));
@@ -116,6 +117,7 @@ const navigationItems = [
   { name: "Whitepaper", path: "/whitepaper", icon: <FileText className="h-5 w-5" /> },
   { name: "About", path: "/about", icon: <Info className="h-5 w-5" /> },
   { name: "Fractal Explorer", path: "/fractal-explorer", icon: <Cpu className="h-5 w-5" /> },
+  { name: "Brand Showcase", path: "/brands-showcase", icon: <Globe className="h-5 w-5" /> },
   { name: "Blockchain Visualizer", path: "/blockchain-visualizer", icon: <Database className="h-5 w-5" /> },
   { name: "Mysterion AI", path: "/ai-assistant", icon: <Bot className="h-5 w-5" /> },
   { name: "AI Assistant Demo", path: "/ai-assistant-onboarding", icon: <Lightbulb className="h-5 w-5" /> },
@@ -607,6 +609,11 @@ function App() {
             <Route path="/quantum-secure-payment">
               <Suspense fallback={<LoadingScreen message="Loading quantum secure payment..." />}>
                 <QuantumSecurePaymentPage />
+              </Suspense>
+            </Route>
+            <Route path="/brands-showcase">
+              <Suspense fallback={<LoadingScreen message="Loading brand showcase..." />}>
+                <BrandShowcaseFrame />
               </Suspense>
             </Route>
             <Route path="/singularity">

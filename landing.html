@@ -3,29 +3,37 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Aether_Coin CodeStar Platform</title>
+  <title>Aetherion - Quantum-Resistant Blockchain Ecosystem</title>
   <style>
     :root {
-      --bg-gradient: linear-gradient(135deg, #0a1a35, #0c1f3f);
-      --primary: #41e0fd;
-      --secondary: #9b83fc;
-      --accent: #0d2a4a;
-      --text: #f0f4f8;
-      --card-bg: rgba(13, 25, 45, 0.8);
+      /* Color palette based on the screenshot */
+      --bg-dark: #0e1524;
+      --bg-darker: #0a101b;
+      --primary-blue: #4a8eff;
+      --primary-purple: #9e7aff;
+      --accent-blue: #6eb3f7;
+      --text-white: #ffffff;
+      --card-bg: #1a2438;
+      --button-blue: #4080ff;
+      --button-outline: #1a2848;
     }
     
+    /* Base Styles */
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
     }
     
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
     body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-      background: var(--bg-gradient);
-      color: var(--text);
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-dark);
+      color: var(--text-white);
       min-height: 100vh;
       line-height: 1.6;
+      overflow-x: hidden;
     }
     
     .wrapper {
@@ -34,148 +42,299 @@
       padding: 0 20px;
     }
     
+    /* Navigation */
+    nav {
+      height: 60px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 2rem;
+      background: var(--bg-darker);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .logo {
+      font-weight: 700;
+      font-size: 1.5rem;
+      color: var(--text-white);
+      text-decoration: none;
+    }
+    
+    .nav-links {
+      display: flex;
+      gap: 1.5rem;
+    }
+    
+    .nav-link {
+      color: var(--text-white);
+      text-decoration: none;
+      font-size: 0.95rem;
+      font-weight: 500;
+      transition: color 0.3s ease;
+    }
+
+    .live-mode-btn {
+      background: rgba(156, 120, 255, 0.2);
+      color: var(--primary-purple);
+      padding: 8px 16px;
+      border-radius: 50px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 500;
+      text-decoration: none;
+    }
+    
+    .live-mode-btn svg {
+      width: 14px;
+      height: 14px;
+    }
+    
+    /* Header */
     header {
-      padding: 4rem 0;
+      padding: 6rem 0 3rem;
       text-align: center;
     }
     
-    h1 {
-      font-size: clamp(2.5rem, 5vw, 4rem);
-      background: linear-gradient(to right, var(--primary), var(--secondary));
+    .title {
+      font-size: clamp(3.5rem, 7vw, 5rem);
+      font-weight: 800;
+      background: linear-gradient(to right, var(--primary-blue), var(--primary-purple));
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
-      margin-bottom: 1rem;
+      margin-bottom: 1.5rem;
+      line-height: 1.1;
     }
     
     .subtitle {
-      font-size: clamp(1.2rem, 2vw, 1.5rem);
+      font-size: 1.3rem;
       max-width: 700px;
-      margin: 0 auto 2rem;
-      color: rgba(240, 244, 248, 0.9);
+      margin: 0 auto 2.5rem;
+      color: rgba(255, 255, 255, 0.9);
+      font-weight: 500;
     }
     
-    .features {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 2rem;
-      margin: 3rem 0;
+    /* Main buttons */
+    .main-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 3rem;
     }
     
-    .feature-card {
-      background: var(--card-bg);
-      border-radius: 12px;
-      padding: 2rem;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-    
-    .feature-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
-    }
-    
-    .feature-title {
-      font-size: 1.5rem;
-      margin-bottom: 1rem;
-      color: var(--secondary);
-    }
-    
-    .feature-text {
-      margin-bottom: 1.5rem;
-      color: rgba(240, 244, 248, 0.8);
-    }
-    
-    .btn {
-      display: inline-block;
-      background: linear-gradient(to right, var(--primary), var(--secondary));
-      color: #0a1a35;
+    .btn-primary {
+      background: var(--button-blue);
+      color: white;
       font-weight: 600;
-      padding: 0.7rem 1.5rem;
+      padding: 0.85rem 2rem;
       border-radius: 50px;
       text-decoration: none;
-      transition: all 0.3s ease;
       border: none;
-      cursor: pointer;
       font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
     }
     
-    .btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(65, 224, 253, 0.4);
+    .btn-primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 15px rgba(74, 142, 255, 0.3);
     }
     
     .btn-outline {
       background: transparent;
-      border: 2px solid var(--primary);
-      color: var(--primary);
+      color: var(--primary-blue);
+      font-weight: 600;
+      padding: 0.85rem 2rem;
+      border-radius: 50px;
+      text-decoration: none;
+      border: 1px solid var(--button-outline);
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
     }
     
     .btn-outline:hover {
-      background: rgba(65, 224, 253, 0.1);
+      background: rgba(74, 142, 255, 0.1);
+      transform: translateY(-3px);
     }
     
+    /* Feature Cards */
+    .features {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+      margin: 2rem 0;
+    }
+    
+    .feature-card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+    }
+    
+    .feature-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: var(--primary-blue);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+    }
+    
+    .feature-content h3 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+    
+    .feature-content p {
+      color: rgba(255, 255, 255, 0.7);
+      margin-bottom: 1rem;
+    }
+    
+    .brand-links {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-top: 3rem;
+    }
+    
+    .brand-link {
+      background: rgba(74, 142, 255, 0.1);
+      border: 1px solid rgba(74, 142, 255, 0.2);
+      padding: 1rem;
+      border-radius: 8px;
+      text-align: center;
+      color: var(--text-white);
+      text-decoration: none;
+      transition: all 0.3s ease;
+    }
+    
+    .brand-link:hover {
+      background: rgba(74, 142, 255, 0.2);
+      transform: translateY(-3px);
+    }
+    
+    /* Footer */
     footer {
       text-align: center;
-      padding: 3rem 0;
+      padding: 4rem 0;
       margin-top: 3rem;
-      color: rgba(240, 244, 248, 0.7);
+      color: rgba(255, 255, 255, 0.6);
       font-size: 0.9rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
     }
-
-    .icon {
-      font-size: 2.5rem;
-      margin-bottom: 1rem;
-      display: inline-block;
-      background: linear-gradient(to right, var(--primary), var(--secondary));
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
+    
+    /* Media queries */
+    @media (min-width: 768px) {
+      .features {
+        grid-template-columns: repeat(2, 1fr);
+      }
     }
   </style>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
+  <!-- Navigation Bar -->
+  <nav>
+    <a href="/" class="logo">Aetherion</a>
+    <div class="nav-links">
+      <a href="/live-mode" class="live-mode-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M13 2L3 14h9l-1 8 10-16h-9l1-4z"></path>
+        </svg>
+        Live Mode
+      </a>
+    </div>
+  </nav>
+
   <div class="wrapper">
     <header>
-      <h1>Aether_Coin CodeStar Platform</h1>
-      <p class="subtitle">Welcome to the CodeStar development environment powered by Aether_Coin blockchain technology.</p>
+      <h1 class="title">Aetherion</h1>
+      <p class="subtitle">Pioneering the Quantum-Resistant Blockchain Ecosystem</p>
+      
+      <div class="main-buttons">
+        <a href="/ai-assistant" class="btn-primary">AI Assistant Demo</a>
+        <a href="/wallet" class="btn-outline">Explore Wallet</a>
+      </div>
     </header>
 
     <main>
       <div class="features">
         <div class="feature-card">
-          <div class="icon"><i class="fa-solid fa-code"></i></div>
-          <h2 class="feature-title">Code Complexity Analysis</h2>
-          <p class="feature-text">Visualize and optimize your codebase complexity with AI-powered insights. Get detailed metrics about your code quality and suggestions for improvement.</p>
-          <a href="/code-mood-meter" class="btn">Analyze Code</a>
+          <div class="feature-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+          </div>
+          <div class="feature-content">
+            <h3>Quantum-Resistant Security</h3>
+            <p>Advanced encryption that's secure against quantum computing attacks, ensuring long-term protection for all blockchain assets.</p>
+            <a href="/security" class="btn-outline">Learn More</a>
+          </div>
         </div>
         
         <div class="feature-card">
-          <div class="icon"><i class="fa-solid fa-chart-line"></i></div>
-          <h2 class="feature-title">Developer Productivity</h2>
-          <p class="feature-text">Track and improve your development productivity with personalized metrics and insights. Monitor your progress and identify areas for optimization.</p>
-          <a href="/productivity" class="btn">View Dashboard</a>
+          <div class="feature-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="4 17 10 11 4 5"></polyline>
+              <line x1="12" y1="19" x2="20" y2="19"></line>
+            </svg>
+          </div>
+          <div class="feature-content">
+            <h3>Advanced Smart Contracts</h3>
+            <p>Create and deploy quantum-secure smart contracts with our intuitive development environment.</p>
+            <a href="/smart-contracts" class="btn-outline">Start Building</a>
+          </div>
         </div>
         
         <div class="feature-card">
-          <div class="icon"><i class="fa-solid fa-server"></i></div>
-          <h2 class="feature-title">Brand Showcase</h2>
-          <p class="feature-text">Explore our innovative brands and technologies within the Aether_Coin ecosystem. Discover the full range of solutions we offer.</p>
-          <a href="/brands" class="btn">View Brands</a>
+          <div class="feature-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+              <line x1="8" y1="21" x2="16" y2="21"></line>
+              <line x1="12" y1="17" x2="12" y2="21"></line>
+            </svg>
+          </div>
+          <div class="feature-content">
+            <h3>Cross-Chain Integration</h3>
+            <p>Seamlessly connect with other blockchain networks through our quantum-secure bridge technology.</p>
+            <a href="/integrations" class="btn-outline">Explore Bridges</a>
+          </div>
         </div>
         
         <div class="feature-card">
-          <div class="icon"><i class="fa-brands fa-github"></i></div>
-          <h2 class="feature-title">GitHub Integration</h2>
-          <p class="feature-text">Connect to GitHub repositories and visualize project activity and collaboration. Seamlessly integrate with your existing workflow.</p>
-          <a href="https://github.com/aifreedomtrust" target="_blank" class="btn btn-outline">View on GitHub</a>
+          <div class="feature-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M16.2 7.8l-2 6.3-6.4 2.1 2-6.3z"></path>
+            </svg>
+          </div>
+          <div class="feature-content">
+            <h3>Brand Showcase</h3>
+            <p>Explore our ecosystem of connected brands and technologies powering the next generation of blockchain applications.</p>
+            <a href="/brands-showcase" class="btn-outline">View All Brands</a>
+          </div>
         </div>
+      </div>
+      
+      <div class="brand-links">
+        <a href="https://atc.aifreedomtrust.com" class="brand-link">Aether Coin</a>
+        <a href="https://fractalcoin.aifreedomtrust.com" class="brand-link">FractalCoin</a>
+        <a href="https://biozoe.aifreedomtrust.com" class="brand-link">Biozoe</a>
+        <a href="https://ai.aifreedomtrust.com" class="brand-link">AI Freedom Trust</a>
+        <a href="https://aethercore.aifreedomtrust.com" class="brand-link">AetherCore</a>
       </div>
     </main>
 
     <footer>
-      <p>&copy; 2025 Aether_Coin CodeStar Platform. All rights reserved.</p>
+      <p>&copy; 2025 AI Freedom Trust | Aetherion Blockchain Ecosystem. All rights reserved.</p>
+      <p style="margin-top: 0.5rem;">Powered by Aetherion Technologies & Biozoe Integration</p>
     </footer>
   </div>
 </body>

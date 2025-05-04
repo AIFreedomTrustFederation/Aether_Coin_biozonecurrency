@@ -124,6 +124,11 @@ app.get('/test', (req, res) => {
   res.sendFile(path.join(__dirname, 'codestar-landing.html'));
 });
 
+// Serve our enhanced landing page
+app.get('/landing', (req, res) => {
+  res.sendFile(path.join(__dirname, 'landing.html'));
+});
+
 // Serve our app showcase page
 app.get('/showcase', (req, res) => {
   res.sendFile(path.join(__dirname, 'app-showcase.html'));
@@ -175,7 +180,12 @@ app.use(['/@vite/client', '/@vite/hmr', '/vite-hmr', '/__vite_ping'], (req, res,
   viteProxy(req, res, next);
 });
 
-// All frontend routes go to Vite
+// Serve our enhanced landing page at the root URL
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'landing.html'));
+});
+
+// All other frontend routes go to Vite
 app.use('/', (req, res, next) => {
   // Don't proxy API requests
   if (req.path.startsWith('/api/')) {

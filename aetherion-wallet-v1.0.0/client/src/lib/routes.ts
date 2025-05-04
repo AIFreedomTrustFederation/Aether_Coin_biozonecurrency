@@ -7,6 +7,7 @@ export const appRoutes = [
   { path: '/payments', label: 'Payments' },
   { path: '/settings', label: 'Settings' },
   { path: '/fractal-explorer', label: 'Fractal Explorer' },
+  { path: '/brands-showcase', label: 'Brand Showcase' },
   { path: '/whitepaper', label: 'Whitepaper' },
 ];
 
