@@ -97,7 +97,7 @@ const DashboardSection = () => {
           <Card className="border-forest-100">
             <CardHeader>
               <CardTitle>Biozoe Funding Goals</CardTitle>
-              <CardDescription>Planned allocation of presale funds</CardDescription>
+              <CardDescription>Planned allocation of presale funds for βίος & ζωή preservation</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-8">

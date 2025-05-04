@@ -171,7 +171,7 @@ const TechnologyPage = () => {
             </div>
             <h3 className="text-xl font-semibold">Ecologically Sound</h3>
             <p className="text-muted-foreground">
-              Our biozoe currencies directly impact environmental preservation, making every transaction contribute to planetary health.
+              Our biozoe currencies directly impact environmental preservation, making every transaction contribute to planetary health and spiritual well-being.
             </p>
           </div>
           

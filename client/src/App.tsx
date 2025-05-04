@@ -16,6 +16,8 @@ const DApp = lazy(() => import("./pages/DApp"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const Api = lazy(() => import("./pages/Api"));
+const Brands = lazy(() => import("./pages/Brands"));
+const Technology = lazy(() => import("./pages/Technology"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -43,6 +45,8 @@ const App = () => (
             <Route path="/terms-of-service" element={<TermsOfService />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/api" element={<Api />} />
+            <Route path="/brands" element={<Brands />} />
+            <Route path="/technology" element={<Technology />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

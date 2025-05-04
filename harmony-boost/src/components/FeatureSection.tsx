@@ -13,7 +13,7 @@ const features = [
   {
     icon: <Shield className="h-10 w-10 text-forest-600" />,
     title: "Biozoe Protection",
-    description: "Secure and protect endangered biozoe through tokenized conservation efforts."
+    description: "Secure and protect endangered ecosystems through tokenized biozoe conservation efforts."
   },
   {
     icon: <Activity className="h-10 w-10 text-forest-600" />,

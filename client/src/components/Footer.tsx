@@ -2,6 +2,7 @@
 import React from "react";
 import { Leaf, ExternalLink } from "lucide-react";
 import { Link } from "react-router-dom";
+import { EcosystemLinksGrid } from "./EcosystemLinks";
 
 const Footer = () => {
   return (
@@ -14,7 +15,7 @@ const Footer = () => {
               <span className="text-xl font-display font-semibold text-white">Aether Coin</span>
             </div>
             <p className="text-forest-200/80 text-sm">
-              A biozoecurrency designed to protect and preserve our planet's vital ecological zones, the inverse of traditional eco-cryptocurrencies.
+              A biozoe (βίος & ζωή) currency designed to protect and preserve our planet's vital ecological zones while integrating temporal life and eternal spirit consciousness.
             </p>
           </div>
           
@@ -22,7 +23,8 @@ const Footer = () => {
             <h3 className="text-lg font-medium mb-4">About</h3>
             <ul className="space-y-2 text-forest-200/80 text-sm">
               <li><a href="#" className="hover:text-white">Our Mission</a></li>
-              <li><a href="#" className="hover:text-white">Ecosystem</a></li>
+              <li><Link to="/brands" className="hover:text-white">Brand Ecosystem</Link></li>
+              <li><Link to="/technology" className="hover:text-white">Technology</Link></li>
               <li><a href="#" className="hover:text-white">Team</a></li>
               <li><a href="#" className="hover:text-white">Whitepaper</a></li>
             </ul>
@@ -41,6 +43,15 @@ const Footer = () => {
                 </a>
               </li>
             </ul>
+            
+            <div className="mt-4 pt-4 border-t border-forest-700">
+              <h4 className="text-sm font-medium mb-3">Ecosystem Domains</h4>
+              <EcosystemLinksGrid 
+                columns={1}
+                itemClassName="py-1 text-sm text-forest-200/80 hover:text-white"
+                showIcons={false}
+              />
+            </div>
           </div>
           
           <div>

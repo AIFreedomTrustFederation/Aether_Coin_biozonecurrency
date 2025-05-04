@@ -116,7 +116,7 @@ const DualitySection = () => {
             className="max-w-2xl mx-auto"
           >
             <h3 className="text-2xl md:text-3xl font-display font-bold mb-4">
-              <span className="gradient-text">Biozoe Unity</span>
+              <span className="gradient-text">Biozoe (βίος & ζωή) Unity</span>
             </h3>
             <p className="text-lg mb-6 text-muted-foreground">
               Through <Link to="/tokenomics" className="text-forest-600 hover:underline">Aether Coin</Link>, we recognize that the material world and spiritual essence are not separate domains, 
