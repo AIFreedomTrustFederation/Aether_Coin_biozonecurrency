@@ -3,10 +3,19 @@
  * 
  * This file provides a collection of API modules that can be used by different server implementations
  * (server.js, server-local.js, replit-server.js) to ensure consistent API functionality across environments.
+ * 
+ * Enhanced with comprehensive error handling and validation
  */
 
 import express from 'express';
 import OpenAI from 'openai';
+
+// Import error handling utilities
+import { 
+  errorHandlerMiddleware, 
+  asyncHandler, 
+  ApiError
+} from './error-handler.js';
 
 // Initialize OpenAI client
 const openai = new OpenAI({
@@ -189,76 +198,67 @@ const brands = [
 ];
 
 // GET /api/brands - Get all brands
-brandsRouter.get('/', async (req, res) => {
-  try {
-    res.json(brands);
-  } catch (error) {
-    console.error('Error fetching brands:', error);
-    res.status(500).json({ error: 'Failed to fetch brands' });
-  }
-});
+brandsRouter.get('/', asyncHandler(async (req, res) => {
+  // Simplified handler - asyncHandler will catch and process any errors
+  res.json(brands);
+}));
 
-// GET /api/brands/:slug - Get a specific brand by slug
-brandsRouter.get('/:slug', async (req, res) => {
-  try {
-    const { slug } = req.params;
-    const brand = brands.find(b => b.slug === slug);
-    
-    if (!brand) {
-      return res.status(404).json({ error: 'Brand not found' });
-    }
-    
-    res.json(brand);
-  } catch (error) {
-    console.error(`Error fetching brand with slug ${req.params.slug}:`, error);
-    res.status(500).json({ error: 'Failed to fetch brand' });
+// GET /api/brands/:slug - Get a specific brand by slug  
+brandsRouter.get('/:slug', asyncHandler(async (req, res) => {
+  const { slug } = req.params;
+  const brand = brands.find(b => b.slug === slug);
+  
+  if (!brand) {
+    throw new ApiError('Brand not found', 404, 'BRAND_NOT_FOUND');
   }
-});
+  
+  res.json(brand);
+}));
 
 // GET /api/brands/id/:id - Get a specific brand by id
-brandsRouter.get('/id/:id', async (req, res) => {
-  try {
-    const id = parseInt(req.params.id, 10);
-    
-    if (isNaN(id)) {
-      return res.status(400).json({ error: 'Invalid ID format' });
-    }
-    
-    const brand = brands.find(b => b.id === id);
-    
-    if (!brand) {
-      return res.status(404).json({ error: 'Brand not found' });
-    }
-    
-    res.json(brand);
-  } catch (error) {
-    console.error(`Error fetching brand with id ${req.params.id}:`, error);
-    res.status(500).json({ error: 'Failed to fetch brand' });
+brandsRouter.get('/id/:id', asyncHandler(async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  
+  if (isNaN(id)) {
+    throw new ApiError('Invalid ID format', 400, 'INVALID_ID_FORMAT');
   }
-});
+  
+  const brand = brands.find(b => b.id === id);
+  
+  if (!brand) {
+    throw new ApiError('Brand not found', 404, 'BRAND_NOT_FOUND');
+  }
+  
+  res.json(brand);
+}));
 
 // GET /api/brands/:slug/enhanced - Get enhanced description for a brand using AI
-brandsRouter.get('/:slug/enhanced', async (req, res) => {
-  try {
-    const { slug } = req.params;
-    const brand = brands.find(b => b.slug === slug);
+brandsRouter.get('/:slug/enhanced', asyncHandler(async (req, res) => {
+  const { slug } = req.params;
+  const brand = brands.find(b => b.slug === slug);
+  
+  if (!brand) {
+    throw new ApiError('Brand not found', 404, 'BRAND_NOT_FOUND');
+  }
+  
+  // Check if OpenAI API key is present
+  if (!process.env.OPENAI_API_KEY) {
+    throw new ApiError('OpenAI API key not configured', 503, 'OPENAI_API_KEY_MISSING');
+  }
+  
+  // Generate enhanced description using OpenAI
+  const prompt = `
+    Generate an enhanced marketing description for a technology brand called "${brand.name}".
+    The brand specializes in: ${brand.technologies.join(', ')}.
+    Their core offering is: "${brand.description}"
+    Some of their key features include: ${brand.features.join(', ')}.
     
-    if (!brand) {
-      return res.status(404).json({ error: 'Brand not found' });
-    }
-    
-    // Generate enhanced description using OpenAI
-    const prompt = `
-      Generate an enhanced marketing description for a technology brand called "${brand.name}".
-      The brand specializes in: ${brand.technologies.join(', ')}.
-      Their core offering is: "${brand.description}"
-      Some of their key features include: ${brand.features.join(', ')}.
-      
-      Write a compelling, professional 2-paragraph description that highlights their unique value proposition
-      and positions them as a leader in their field. Focus on business benefits and innovative aspects.
-      Keep the tone professional and avoid hyperbole.
-    `;
+    Write a compelling, professional 2-paragraph description that highlights their unique value proposition
+    and positions them as a leader in their field. Focus on business benefits and innovative aspects.
+    Keep the tone professional and avoid hyperbole.
+  `;
 
+  try {
     const response = await openai.chat.completions.create({
       model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
       messages: [
@@ -276,38 +276,44 @@ brandsRouter.get('/:slug/enhanced', async (req, res) => {
       enhancedDescription
     });
   } catch (error) {
-    console.error(`Error generating enhanced description for brand with slug ${req.params.slug}:`, error);
-    res.status(500).json({ 
-      error: 'Failed to generate enhanced description',
-      message: error.message
-    });
+    console.error(`OpenAI API error:`, error);
+    throw new ApiError(
+      'Failed to generate enhanced description: ' + error.message,
+      500,
+      'OPENAI_API_ERROR'
+    );
   }
-});
+}));
 
 // GET /api/brands/:slug/trends - Get technology trends for a brand using AI
-brandsRouter.get('/:slug/trends', async (req, res) => {
-  try {
-    const { slug } = req.params;
-    const brand = brands.find(b => b.slug === slug);
+brandsRouter.get('/:slug/trends', asyncHandler(async (req, res) => {
+  const { slug } = req.params;
+  const brand = brands.find(b => b.slug === slug);
+  
+  if (!brand) {
+    throw new ApiError('Brand not found', 404, 'BRAND_NOT_FOUND');
+  }
+  
+  // Check if OpenAI API key is present
+  if (!process.env.OPENAI_API_KEY) {
+    throw new ApiError('OpenAI API key not configured', 503, 'OPENAI_API_KEY_MISSING');
+  }
+  
+  // Generate technology trends using OpenAI
+  const prompt = `
+    Analyze current technology trends related to: ${brand.technologies.join(', ')}.
+    Focus on how these trends relate to: "${brand.description}"
     
-    if (!brand) {
-      return res.status(404).json({ error: 'Brand not found' });
-    }
+    Provide 3 specific trends that would be relevant to ${brand.name}'s business.
     
-    // Generate technology trends using OpenAI
-    const prompt = `
-      Analyze current technology trends related to: ${brand.technologies.join(', ')}.
-      Focus on how these trends relate to: "${brand.description}"
-      
-      Provide 3 specific trends that would be relevant to ${brand.name}'s business.
-      
-      Format the response as a JSON array with objects containing:
-      - title: The name of the trend
-      - description: A brief explanation of the trend and its relevance
-      
-      Keep each description under 100 words and focus on business impact.
-    `;
+    Format the response as a JSON array with objects containing:
+    - title: The name of the trend
+    - description: A brief explanation of the trend and its relevance
+    
+    Keep each description under 100 words and focus on business impact.
+  `;
 
+  try {
     const response = await openai.chat.completions.create({
       model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
       messages: [
@@ -328,37 +334,84 @@ brandsRouter.get('/:slug/trends', async (req, res) => {
       trends
     });
   } catch (error) {
-    console.error(`Error generating technology trends for brand with slug ${req.params.slug}:`, error);
-    res.status(500).json({ 
-      error: 'Failed to generate technology trends',
-      message: error.message
-    });
+    console.error(`OpenAI API error:`, error);
+    throw new ApiError(
+      'Failed to generate technology trends: ' + error.message,
+      500,
+      'OPENAI_API_ERROR'
+    );
   }
-});
+}));
 
 // Health check endpoint
 const healthRouter = express.Router();
 
-healthRouter.get('/', (req, res) => {
-  res.json({
+healthRouter.get('/', asyncHandler(async (req, res) => {
+  // Gather system health metrics
+  const memoryUsage = process.memoryUsage();
+  const healthMetrics = {
     status: 'ok',
     version: process.env.npm_package_version || '1.0.0',
     environment: process.env.NODE_ENV || 'development',
-    timestamp: new Date().toISOString()
-  });
-});
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString(),
+    system: {
+      memory: {
+        rss: `${Math.round(memoryUsage.rss / 1024 / 1024)} MB`,
+        heapTotal: `${Math.round(memoryUsage.heapTotal / 1024 / 1024)} MB`,
+        heapUsed: `${Math.round(memoryUsage.heapUsed / 1024 / 1024)} MB`,
+        external: `${Math.round(memoryUsage.external / 1024 / 1024)} MB`,
+      },
+      node: process.version,
+      platform: process.platform,
+      arch: process.arch
+    }
+  };
+  
+  // Check for OpenAI API availability
+  if (process.env.OPENAI_API_KEY) {
+    healthMetrics.services = {
+      ...healthMetrics.services,
+      openai: {
+        status: 'configured',
+        message: 'OpenAI API key found'
+      }
+    };
+  } else {
+    healthMetrics.services = {
+      ...healthMetrics.services,
+      openai: {
+        status: 'not_configured',
+        message: 'OpenAI API key missing'
+      }
+    };
+  }
+  
+  res.json(healthMetrics);
+}));
 
 // Export a function that registers all routes
 export function registerApiModules(app) {
-  // Register brand routes
-  app.use('/api/brands', brandsRouter);
-  
-  // Register health check
-  app.use('/api/health', healthRouter);
-  
-  console.log('✓ API modules registered successfully');
-  
-  return app;
+  try {
+    // Register common express middleware if needed
+    app.use(express.json()); // Parse JSON request body
+    
+    // Add error handling middleware
+    app.use(errorHandlerMiddleware);
+    
+    // Register brand routes
+    app.use('/api/brands', brandsRouter);
+    
+    // Register health check
+    app.use('/api/health', healthRouter);
+    
+    console.log('✓ API modules registered successfully');
+    
+    return app;
+  } catch (error) {
+    console.error('❌ Failed to register API modules:', error);
+    throw error; // Propagate the error up
+  }
 }
 
 // Export individual routers for more fine-grained usage

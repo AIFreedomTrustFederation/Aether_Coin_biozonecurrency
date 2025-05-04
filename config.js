@@ -9,7 +9,7 @@
 const config = {
   // Main proxy server
   mainServer: {
-    port: 5000,
+    port: 5000, // Reverted back to 5000 as required by the system
     basePath: '/',
     name: 'Aetherion Ecosystem Server'
   },

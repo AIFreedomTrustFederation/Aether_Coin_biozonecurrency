@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aetherion WebSocket Test Client</title>
+  <style>
+    :root {
+      --primary: #1a1c3a;
+      --primary-light: #2d307b;
+      --secondary: #7857c5;
+      --accent: #4e30c5;
+      --light: #f8f9fa;
+      --dark: #121224;
+      --text: #e6e6fa;
+      --success: #4CAF50;
+      --warning: #FFC107;
+      --error: #F44336;
+      --info: #2196F3;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--primary);
+      color: var(--text);
+      margin: 0;
+      padding: 2rem;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    h1 {
+      background: linear-gradient(45deg, var(--secondary), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      font-size: 2.5rem;
+      text-align: center;
+    }
+    
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1.5rem;
+    }
+    
+    .card {
+      background-color: var(--dark);
+      border-radius: 0.5rem;
+      padding: 1.5rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    }
+    
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .card-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin: 0;
+    }
+    
+    .status-indicator {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      margin-right: 8px;
+    }
+    
+    .status-text {
+      font-size: 0.85rem;
+      opacity: 0.8;
+    }
+    
+    .connected {
+      background-color: var(--success);
+    }
+    
+    .disconnected {
+      background-color: var(--error);
+    }
+    
+    .connecting {
+      background-color: var(--warning);
+    }
+    
+    .message-list {
+      height: 240px;
+      overflow-y: auto;
+      background-color: rgba(0, 0, 0, 0.2);
+      border-radius: 0.25rem;
+      padding: 0.5rem;
+      margin-bottom: 1rem;
+      font-family: monospace;
+      font-size: 0.9rem;
+      line-height: 1.4;
+    }
+    
+    .message {
+      margin-bottom: 0.5rem;
+      padding: 0.5rem;
+      border-radius: 0.25rem;
+      background-color: rgba(255, 255, 255, 0.05);
+      word-break: break-all;
+    }
+    
+    .message-time {
+      font-size: 0.75rem;
+      opacity: 0.6;
+      margin-right: 0.5rem;
+    }
+    
+    .message-type {
+      display: inline-block;
+      padding: 0.1rem 0.3rem;
+      border-radius: 0.25rem;
+      font-size: 0.75rem;
+      margin-right: 0.5rem;
+    }
+    
+    .message-type-system {
+      background-color: var(--info);
+    }
+    
+    .message-type-in {
+      background-color: var(--secondary);
+    }
+    
+    .message-type-out {
+      background-color: var(--accent);
+    }
+    
+    .message-type-error {
+      background-color: var(--error);
+    }
+    
+    .message-content {
+      margin-top: 0.3rem;
+    }
+    
+    .controls {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    
+    button {
+      background-color: var(--secondary);
+      color: white;
+      border: none;
+      border-radius: 0.25rem;
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: background-color 0.3s ease;
+    }
+    
+    button:hover {
+      background-color: var(--accent);
+    }
+    
+    .button-error {
+      background-color: var(--error);
+    }
+    
+    .button-error:hover {
+      background-color: #d32f2f;
+    }
+    
+    .button-success {
+      background-color: var(--success);
+    }
+    
+    .button-success:hover {
+      background-color: #388e3c;
+    }
+    
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.5rem;
+    }
+    
+    .stat-item {
+      background-color: rgba(255, 255, 255, 0.05);
+      padding: 0.5rem;
+      border-radius: 0.25rem;
+    }
+    
+    .stat-label {
+      font-size: 0.8rem;
+      opacity: 0.7;
+      margin-bottom: 0.2rem;
+    }
+    
+    .stat-value {
+      font-size: 1rem;
+      font-weight: 500;
+    }
+    
+    .system-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 0.5rem;
+    }
+    
+    .checkbox-group {
+      margin: 1rem 0;
+    }
+    
+    .checkbox-group label {
+      margin-right: 1rem;
+      cursor: pointer;
+    }
+    
+    .nav-links {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 2rem;
+      gap: 1rem;
+    }
+    
+    .nav-link {
+      color: var(--text);
+      text-decoration: none;
+      padding: 0.5rem 1rem;
+      border-radius: 0.25rem;
+      background-color: var(--primary-light);
+      transition: background-color 0.3s ease;
+    }
+    
+    .nav-link:hover {
+      background-color: var(--secondary);
+    }
+    
+    @media (max-width: 768px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .system-stats {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Aetherion WebSocket Test Client</h1>
+    
+    <div class="nav-links">
+      <a href="/" class="nav-link">Main Landing Page</a>
+      <a href="/brands" class="nav-link">Brand Showcase</a>
+      <a href="/wallet" class="nav-link">Aetherion Wallet</a>
+      <a href="/app3" class="nav-link">Third Application</a>
+      <a href="/api/health" class="nav-link">API Health</a>
+    </div>
+    
+    <div class="grid">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">WebSocket Connection</h2>
+          <div>
+            <span class="status-indicator disconnected" id="connection-indicator"></span>
+            <span class="status-text" id="connection-status">Disconnected</span>
+          </div>
+        </div>
+        
+        <div class="controls">
+          <button id="connect-btn">Connect</button>
+          <button id="disconnect-btn" disabled>Disconnect</button>
+          <button id="ping-btn" disabled>Ping</button>
+        </div>
+        
+        <div class="checkbox-group">
+          <strong>Subscribe to:</strong>
+          <div>
+            <label>
+              <input type="checkbox" id="system-cb" value="system"> System Stats
+            </label>
+            <label>
+              <input type="checkbox" id="database-cb" value="database"> Database Status
+            </label>
+            <label>
+              <input type="checkbox" id="services-cb" value="services"> Services Status
+            </label>
+            <label>
+              <input type="checkbox" id="notifications-cb" value="notifications"> Notifications
+            </label>
+          </div>
+          <button id="subscribe-btn" disabled>Subscribe</button>
+        </div>
+      </div>
+      
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Messages</h2>
+          <button id="clear-btn">Clear</button>
+        </div>
+        
+        <div class="message-list" id="message-list"></div>
+      </div>
+    </div>
+    
+    <div class="grid" style="margin-top: 1.5rem;">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">System Stats</h2>
+          <span id="system-updated">Never updated</span>
+        </div>
+        
+        <div class="system-stats" id="system-stats">
+          <div class="stat-item">
+            <div class="stat-label">RSS Memory</div>
+            <div class="stat-value" id="memory-rss">-</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Heap Used</div>
+            <div class="stat-value" id="memory-heap-used">-</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Heap Total</div>
+            <div class="stat-value" id="memory-heap-total">-</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">External</div>
+            <div class="stat-value" id="memory-external">-</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">CPU Load (1m)</div>
+            <div class="stat-value" id="cpu-load">-</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Uptime</div>
+            <div class="stat-value" id="uptime">-</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Database Status</h2>
+          <span id="db-updated">Never updated</span>
+        </div>
+        
+        <div class="stats-grid">
+          <div class="stat-item">
+            <div class="stat-label">Status</div>
+            <div class="stat-value" id="db-status">Unknown</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Message</div>
+            <div class="stat-value" id="db-message">-</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card" style="margin-top: 1.5rem;">
+      <div class="card-header">
+        <h2 class="card-title">Services Status</h2>
+        <button id="get-services-btn" disabled>Refresh</button>
+      </div>
+      
+      <div class="stats-grid">
+        <div class="stat-item">
+          <div class="stat-label">Brand Showcase</div>
+          <div class="stat-value" id="brand-showcase-status">Unknown</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Aetherion Wallet</div>
+          <div class="stat-value" id="wallet-status">Unknown</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Third App</div>
+          <div class="stat-value" id="third-app-status">Unknown</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Elements
+      const connectBtn = document.getElementById('connect-btn');
+      const disconnectBtn = document.getElementById('disconnect-btn');
+      const pingBtn = document.getElementById('ping-btn');
+      const subscribeBtn = document.getElementById('subscribe-btn');
+      const clearBtn = document.getElementById('clear-btn');
+      const getServicesBtn = document.getElementById('get-services-btn');
+      const connectionIndicator = document.getElementById('connection-indicator');
+      const connectionStatus = document.getElementById('connection-status');
+      const messageList = document.getElementById('message-list');
+      
+      // Checkboxes
+      const systemCb = document.getElementById('system-cb');
+      const databaseCb = document.getElementById('database-cb');
+      const servicesCb = document.getElementById('services-cb');
+      const notificationsCb = document.getElementById('notifications-cb');
+      
+      // System stats elements
+      const memoryRss = document.getElementById('memory-rss');
+      const memoryHeapUsed = document.getElementById('memory-heap-used');
+      const memoryHeapTotal = document.getElementById('memory-heap-total');
+      const memoryExternal = document.getElementById('memory-external');
+      const cpuLoad = document.getElementById('cpu-load');
+      const uptime = document.getElementById('uptime');
+      const systemUpdated = document.getElementById('system-updated');
+      
+      // Database status elements
+      const dbStatus = document.getElementById('db-status');
+      const dbMessage = document.getElementById('db-message');
+      const dbUpdated = document.getElementById('db-updated');
+      
+      // Services status
+      const brandShowcaseStatus = document.getElementById('brand-showcase-status');
+      const walletStatus = document.getElementById('wallet-status');
+      const thirdAppStatus = document.getElementById('third-app-status');
+      
+      // WebSocket connection
+      let socket = null;
+      
+      // Connect to WebSocket
+      function connect() {
+        // Determine the WebSocket URL based on the current page
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${protocol}//${window.location.host}/ws`;
+        
+        // Update UI to connecting state
+        connectionIndicator.className = 'status-indicator connecting';
+        connectionStatus.textContent = 'Connecting...';
+        connectBtn.disabled = true;
+        
+        // Create WebSocket
+        socket = new WebSocket(wsUrl);
+        
+        // Connection opened
+        socket.addEventListener('open', (event) => {
+          logMessage('WebSocket connection established', 'system');
+          connectionIndicator.className = 'status-indicator connected';
+          connectionStatus.textContent = 'Connected';
+          connectBtn.disabled = true;
+          disconnectBtn.disabled = false;
+          pingBtn.disabled = false;
+          subscribeBtn.disabled = false;
+          getServicesBtn.disabled = false;
+        });
+        
+        // Listen for messages
+        socket.addEventListener('message', (event) => {
+          const message = JSON.parse(event.data);
+          logMessage(`Received: ${event.data}`, 'in');
+          
+          // Handle different message types
+          switch (message.type) {
+            case 'system-stats':
+              updateSystemStats(message.data);
+              systemUpdated.textContent = `Updated: ${new Date().toLocaleTimeString()}`;
+              break;
+              
+            case 'database-status':
+              updateDatabaseStatus(message.data);
+              dbUpdated.textContent = `Updated: ${new Date().toLocaleTimeString()}`;
+              break;
+              
+            case 'services-status':
+              updateServicesStatus(message.data);
+              break;
+          }
+        });
+        
+        // Connection closed
+        socket.addEventListener('close', (event) => {
+          logMessage(`WebSocket connection closed: ${event.reason || 'No reason provided'}`, 'system');
+          connectionIndicator.className = 'status-indicator disconnected';
+          connectionStatus.textContent = 'Disconnected';
+          connectBtn.disabled = false;
+          disconnectBtn.disabled = true;
+          pingBtn.disabled = true;
+          subscribeBtn.disabled = true;
+          getServicesBtn.disabled = true;
+          socket = null;
+        });
+        
+        // Connection error
+        socket.addEventListener('error', (error) => {
+          logMessage(`WebSocket error: ${error}`, 'error');
+          connectionIndicator.className = 'status-indicator disconnected';
+          connectionStatus.textContent = 'Error';
+        });
+      }
+      
+      // Disconnect WebSocket
+      function disconnect() {
+        if (socket) {
+          socket.close();
+          socket = null;
+        }
+      }
+      
+      // Send ping
+      function sendPing() {
+        if (socket && socket.readyState === WebSocket.OPEN) {
+          const ping = {
+            type: 'ping',
+            timestamp: new Date().toISOString()
+          };
+          socket.send(JSON.stringify(ping));
+          logMessage(`Sent: ${JSON.stringify(ping)}`, 'out');
+        }
+      }
+      
+      // Send subscription request
+      function subscribe() {
+        if (socket && socket.readyState === WebSocket.OPEN) {
+          const channels = [];
+          if (systemCb.checked) channels.push('system');
+          if (databaseCb.checked) channels.push('database');
+          if (servicesCb.checked) channels.push('services');
+          if (notificationsCb.checked) channels.push('notifications');
+          
+          const subscription = {
+            type: 'subscribe',
+            channels: channels
+          };
+          
+          socket.send(JSON.stringify(subscription));
+          logMessage(`Sent: ${JSON.stringify(subscription)}`, 'out');
+        }
+      }
+      
+      // Get services status
+      function getServicesStatus() {
+        if (socket && socket.readyState === WebSocket.OPEN) {
+          const request = {
+            type: 'get-services-status'
+          };
+          socket.send(JSON.stringify(request));
+          logMessage(`Sent: ${JSON.stringify(request)}`, 'out');
+        }
+      }
+      
+      // Log a message to the message list
+      function logMessage(message, type = 'system') {
+        const messageElement = document.createElement('div');
+        messageElement.className = 'message';
+        
+        const time = document.createElement('span');
+        time.className = 'message-time';
+        time.textContent = new Date().toLocaleTimeString();
+        
+        const typeSpan = document.createElement('span');
+        typeSpan.className = `message-type message-type-${type}`;
+        typeSpan.textContent = type.toUpperCase();
+        
+        const content = document.createElement('div');
+        content.className = 'message-content';
+        content.textContent = message;
+        
+        messageElement.appendChild(time);
+        messageElement.appendChild(typeSpan);
+        messageElement.appendChild(content);
+        
+        messageList.appendChild(messageElement);
+        messageList.scrollTop = messageList.scrollHeight;
+      }
+      
+      // Update system stats
+      function updateSystemStats(stats) {
+        if (!stats) return;
+        
+        memoryRss.textContent = stats.memory.rss;
+        memoryHeapUsed.textContent = stats.memory.heapUsed;
+        memoryHeapTotal.textContent = stats.memory.heapTotal;
+        memoryExternal.textContent = stats.memory.external;
+        cpuLoad.textContent = stats.cpu[0].toFixed(2);
+        
+        // Format uptime
+        const uptimeSeconds = stats.uptime;
+        const hours = Math.floor(uptimeSeconds / 3600);
+        const minutes = Math.floor((uptimeSeconds % 3600) / 60);
+        const seconds = Math.floor(uptimeSeconds % 60);
+        uptime.textContent = `${hours}h ${minutes}m ${seconds}s`;
+      }
+      
+      // Update database status
+      function updateDatabaseStatus(status) {
+        if (!status) return;
+        
+        dbStatus.textContent = status.connected ? 'Connected' : 'Disconnected';
+        dbStatus.style.color = status.connected ? 'var(--success)' : 'var(--error)';
+        dbMessage.textContent = status.message || '-';
+      }
+      
+      // Update services status
+      function updateServicesStatus(services) {
+        if (!services) return;
+        
+        if (services.brandShowcase) {
+          brandShowcaseStatus.textContent = services.brandShowcase.status;
+          brandShowcaseStatus.style.color = services.brandShowcase.status === 'running' ? 'var(--success)' : 'var(--error)';
+        }
+        
+        if (services.aetherionWallet) {
+          walletStatus.textContent = services.aetherionWallet.status;
+          walletStatus.style.color = services.aetherionWallet.status === 'running' ? 'var(--success)' : 'var(--error)';
+        }
+        
+        if (services.thirdApp) {
+          thirdAppStatus.textContent = services.thirdApp.status;
+          thirdAppStatus.style.color = services.thirdApp.status === 'running' ? 'var(--success)' : 'var(--error)';
+        }
+      }
+      
+      // Clear message list
+      function clearMessages() {
+        messageList.innerHTML = '';
+      }
+      
+      // Event listeners
+      connectBtn.addEventListener('click', connect);
+      disconnectBtn.addEventListener('click', disconnect);
+      pingBtn.addEventListener('click', sendPing);
+      subscribeBtn.addEventListener('click', subscribe);
+      clearBtn.addEventListener('click', clearMessages);
+      getServicesBtn.addEventListener('click', getServicesStatus);
+      
+      // Log initial message
+      logMessage('WebSocket client initialized. Click "Connect" to start.', 'system');
+    });
+  </script>
+</body>
+</html>

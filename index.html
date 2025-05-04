@@ -3,18 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Aetherion Ecosystem</title>
+  <title>Aetherion Ecosystem Hub</title>
   <style>
     :root {
       --primary: #1a1c3a;
       --primary-light: #2d307b;
       --secondary: #7857c5;
       --accent: #4e30c5;
+      --success: #28a745;
+      --danger: #dc3545;
+      --warning: #ffc107;
       --light: #f8f9fa;
       --dark: #121224;
       --text: #e6e6fa;
       --text-muted: #a4a6c5;
-      --border-radius: 0.5rem;
+      --border-radius: 0.25rem;
     }
     
     * {
@@ -24,267 +27,199 @@
     }
     
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: var(--primary);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, var(--dark), var(--primary));
       color: var(--text);
-      line-height: 1.6;
-    }
-    
-    .hero {
-      background: linear-gradient(135deg, var(--primary), var(--dark));
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       padding: 2rem;
-      position: relative;
-      overflow: hidden;
-    }
-    
-    .hero::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: radial-gradient(circle at 30% 40%, rgba(126, 87, 197, 0.2), transparent 80%),
-                  radial-gradient(circle at 70% 60%, rgba(78, 48, 197, 0.2), transparent 80%);
-      z-index: 0;
     }
     
     .container {
       max-width: 1200px;
       width: 100%;
-      z-index: 1;
+    }
+    
+    .header {
       text-align: center;
+      margin-bottom: 3rem;
     }
     
-    .logo {
-      margin-bottom: 2rem;
+    .header h1 {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      background: linear-gradient(90deg, #7857c5, #4e30c5);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      display: inline-block;
     }
     
-    .logo-image {
-      width: 120px;
-      height: 120px;
-      background: linear-gradient(45deg, var(--secondary), var(--accent));
-      border-radius: 60px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    .header p {
+      font-size: 1.25rem;
+      color: var(--text-muted);
+      max-width: 700px;
       margin: 0 auto;
-      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+    }
+    
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+      margin-bottom: 3rem;
+    }
+    
+    .card {
+      background: rgba(26, 28, 58, 0.8);
+      border-radius: var(--border-radius);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
       position: relative;
       overflow: hidden;
     }
     
-    .logo-image::before {
-      content: 'A';
-      font-size: 60px;
-      font-weight: bold;
-      color: var(--light);
-    }
-    
-    .logo-image::after {
-      content: '';
+    .card::before {
+      content: "";
       position: absolute;
-      width: 120%;
-      height: 120%;
-      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-      transform: rotate(45deg);
-      animation: shine 3s infinite;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 5px;
+      background: linear-gradient(90deg, var(--secondary), var(--accent));
+      border-radius: var(--border-radius) var(--border-radius) 0 0;
     }
     
-    @keyframes shine {
-      0% { left: -150%; }
-      100% { left: 150%; }
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
     }
     
-    h1 {
-      font-size: 3rem;
-      margin-bottom: 1rem;
-      background: linear-gradient(45deg, var(--secondary), var(--accent));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-    
-    p {
-      font-size: 1.2rem;
-      max-width: 700px;
-      margin: 0 auto 3rem;
-      color: var(--text-muted);
-    }
-    
-    .app-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 2rem;
-      margin-top: 3rem;
-    }
-    
-    .app-card {
-      background-color: rgba(18, 18, 36, 0.6);
-      border: 1px solid rgba(126, 87, 197, 0.3);
-      border-radius: var(--border-radius);
-      padding: 2rem;
-      transition: all 0.3s ease;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      cursor: pointer;
-      height: 100%;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
-    
-    .app-card:hover {
-      transform: translateY(-10px);
-      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
-      border-color: var(--secondary);
-    }
-    
-    .app-icon {
-      width: 80px;
-      height: 80px;
-      border-radius: 20px;
-      background: linear-gradient(45deg, var(--primary-light), var(--secondary));
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 1.5rem;
-      font-size: 2rem;
-      color: var(--light);
-      box-shadow: 0 10px 15px -5px rgba(0, 0, 0, 0.3);
-    }
-    
-    .app-title {
+    .card h2 {
+      margin: 1.5rem 0 1rem;
       font-size: 1.5rem;
-      margin-bottom: 1rem;
-      color: var(--light);
     }
     
-    .app-description {
+    .card p {
       color: var(--text-muted);
       margin-bottom: 1.5rem;
-      flex-grow: 1;
+      font-size: 0.95rem;
     }
     
-    .app-link {
+    .btn {
       display: inline-block;
-      padding: 0.75rem 1.5rem;
-      background: linear-gradient(45deg, var(--secondary), var(--accent));
+      background: linear-gradient(90deg, var(--secondary), var(--accent));
       color: white;
       text-decoration: none;
-      border-radius: 50px;
-      font-weight: 500;
-      transition: all 0.3s ease;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+      padding: 0.75rem 1.5rem;
+      border-radius: var(--border-radius);
+      font-weight: 600;
+      transition: opacity 0.3s ease;
+      border: none;
+      cursor: pointer;
     }
     
-    .app-link:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 8px 15px rgba(0, 0, 0, 0.3);
-    }
-    
-    .status-link {
-      position: absolute;
-      bottom: 2rem;
-      right: 2rem;
-      color: var(--text-muted);
-      text-decoration: none;
-      display: flex;
-      align-items: center;
-      transition: color 0.3s ease;
-    }
-    
-    .status-link::before {
-      content: '';
-      display: inline-block;
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background-color: #28a745;
-      margin-right: 0.5rem;
-    }
-    
-    .status-link:hover {
-      color: var(--light);
+    .btn:hover {
+      opacity: 0.9;
     }
     
     .footer {
-      position: absolute;
-      bottom: 2rem;
-      left: 0;
-      right: 0;
       text-align: center;
+      margin-top: 2rem;
       color: var(--text-muted);
       font-size: 0.9rem;
     }
     
+    .footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+    
+    .icon {
+      display: block;
+      width: 64px;
+      height: 64px;
+      margin: 0 auto;
+      color: var(--accent);
+    }
+
+    /* Added animation for quantum effect */
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(78, 48, 197, 0.7); }
+      70% { box-shadow: 0 0 0 10px rgba(78, 48, 197, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(78, 48, 197, 0); }
+    }
+    
+    .quantum-pulse {
+      animation: pulse 2s infinite;
+    }
+    
+    /* Responsive adjustments */
     @media (max-width: 768px) {
-      h1 {
-        font-size: 2.2rem;
+      .header h1 {
+        font-size: 2.5rem;
       }
       
-      p {
-        font-size: 1rem;
-      }
-      
-      .app-grid {
+      .grid {
         grid-template-columns: 1fr;
-      }
-      
-      .status-link {
-        position: static;
-        margin-top: 3rem;
-        justify-content: center;
-      }
-      
-      .hero {
-        padding: 1.5rem;
       }
     }
   </style>
 </head>
 <body>
-  <section class="hero">
-    <div class="container">
-      <div class="logo">
-        <div class="logo-image"></div>
-      </div>
-      
-      <h1>Aetherion Ecosystem</h1>
-      <p>Welcome to the Aetherion Ecosystem, a comprehensive platform built on quantum-resistant blockchain technology. Explore our suite of integrated applications, tools, and services.</p>
-      
-      <div class="app-grid">
-        <div class="app-card" onclick="window.location.href='/brands'">
-          <div class="app-icon">🎨</div>
-          <h3 class="app-title">Brand Showcase</h3>
-          <p class="app-description">Explore and interact with the complete suite of Biozoe and Aether brand identities, showcasing quantum-resistant blockchain technologies.</p>
-          <a href="/brands" class="app-link">Launch Showcase</a>
+  <div class="container">
+    <header class="header">
+      <h1>Aetherion Ecosystem Hub</h1>
+      <p>A quantum-resistant blockchain ecosystem for the future of secure distributed applications</p>
+    </header>
+    
+    <main>
+      <div class="grid">
+        <div class="card quantum-pulse">
+          <div class="icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="4.93" y1="4.93" x2="9.17" y2="9.17"/><line x1="14.83" y1="14.83" x2="19.07" y2="19.07"/><line x1="14.83" y1="9.17" x2="19.07" y2="4.93"/><line x1="4.93" y1="19.07" x2="9.17" y2="14.83"/></svg>
+          </div>
+          <h2>Brand Showcase</h2>
+          <p>Explore our featured brands and technologies powering the Aetherion ecosystem</p>
+          <a href="/brands" class="btn">Visit Brand Showcase</a>
         </div>
         
-        <div class="app-card" onclick="window.location.href='/wallet'">
-          <div class="app-icon">💼</div>
-          <h3 class="app-title">Aetherion Wallet</h3>
-          <p class="app-description">Access the full Aetherion Wallet to manage your digital assets securely with quantum-resistant encryption and advanced features.</p>
-          <a href="/wallet" class="app-link">Launch Wallet</a>
+        <div class="card quantum-pulse">
+          <div class="icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          </div>
+          <h2>Aetherion Wallet</h2>
+          <p>Secure, quantum-resistant wallet for managing your digital assets</p>
+          <a href="/wallet" class="btn">Open Wallet</a>
         </div>
         
-        <div class="app-card" onclick="window.location.href='/app3'">
-          <div class="app-icon">🔌</div>
-          <h3 class="app-title">Third Application</h3>
-          <p class="app-description">A modular extension for the Aetherion Ecosystem, providing additional functionality and integration capabilities.</p>
-          <a href="/app3" class="app-link">Launch App</a>
+        <div class="card quantum-pulse">
+          <div class="icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          </div>
+          <h2>Third Application</h2>
+          <p>Additional applications and tools in the Aetherion ecosystem</p>
+          <a href="/app3" class="btn">Explore More</a>
         </div>
       </div>
-    </div>
+      
+      <div class="card">
+        <h2>System Status</h2>
+        <p>Check the current operational status of the Aetherion ecosystem</p>
+        <a href="/status" class="btn">Check Status</a>
+      </div>
+    </main>
     
-    <a href="/status" class="status-link">System Status</a>
-    
-    <div class="footer">
-      <p>Aetherion Ecosystem | &copy; 2025 AI Freedom Trust</p>
-    </div>
-  </section>
+    <footer class="footer">
+      <p>© 2025 Aetherion Ecosystem | <a href="/api/health">API Health</a> | <a href="/ws-client">WebSocket Client</a> | <a href="https://aifreedomtrust.com">AI Freedom Trust</a></p>
+    </footer>
+  </div>
 </body>
 </html>
