@@ -1,44 +1,81 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aetherion Test Page</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 40px;
-            line-height: 1.6;
-            text-align: center;
-        }
-        h1 {
-            color: #4a5568;
-        }
-        .card {
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 20px;
-            margin: 20px auto;
-            max-width: 600px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        .success {
-            color: #38a169;
-            font-weight: bold;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Brand Ecosystem Test</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      padding: 2rem;
+      max-width: 800px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+    h1 {
+      color: #1a6f38;
+    }
+    .card {
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+    .card h2 {
+      margin-top: 0;
+      color: #2d3748;
+    }
+    .flex {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .brand {
+      flex: 1 1 200px;
+      padding: 1rem;
+      border-radius: 8px;
+      color: white;
+    }
+    .brand-1 { background-color: #1a6f38; }
+    .brand-2 { background-color: #2563eb; }
+    .brand-3 { background-color: #7c3aed; }
+    .brand-4 { background-color: #10b981; }
+  </style>
 </head>
 <body>
-    <div class="card">
-        <h1>Aetherion Test Page</h1>
-        <p>If you can see this page, the static file serving is working correctly.</p>
-        <p class="success">✓ Static files are being served</p>
-        <p>Server time: <span id="server-time"></span></p>
-        <p><a href="/">Go to Main Application</a></p>
+  <h1>AI Freedom Trust - Brand Ecosystem</h1>
+  
+  <div class="card">
+    <h2>Server Status: Active</h2>
+    <p>This test page confirms that the server is correctly responding to HTTP requests.</p>
+  </div>
+  
+  <div class="card">
+    <h2>Our Ecosystem Brands</h2>
+    <div class="flex">
+      <div class="brand brand-1">
+        <h3>Aether Coin</h3>
+        <p>Quantum-resistant utility token</p>
+      </div>
+      <div class="brand brand-2">
+        <h3>FractalCoin</h3>
+        <p>Fractal-based economic scaling</p>
+      </div>
+      <div class="brand brand-3">
+        <h3>AetherCore</h3>
+        <p>Core blockchain infrastructure</p>
+      </div>
+      <div class="brand brand-4">
+        <h3>Biozoe</h3>
+        <p>Temporal life & eternal spirit</p>
+      </div>
     </div>
-
-    <script>
-        document.getElementById('server-time').textContent = new Date().toLocaleString();
-    </script>
+  </div>
+  
+  <div class="card">
+    <h2>Next Steps</h2>
+    <p>The main application is available at the root URL with enhanced navigation and brand showcase components.</p>
+  </div>
 </body>
 </html>

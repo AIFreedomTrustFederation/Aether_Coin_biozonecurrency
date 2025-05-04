@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Leaf, Sparkles, Database, Brain, Shield, Code, Globe, ExternalLink, Coins } from 'lucide-react';
@@ -26,7 +27,12 @@ const BrandCard: React.FC<BrandCardProps> = ({ brand, index }) => {
   const hoverColor = brand.color?.replace('bg-', 'hover:bg-').replace('-600', '-700') || 'hover:bg-forest-700';
   
   const getSubdomainUrl = () => {
-    const subdomainLink = subdomainLinks.find(link => link.name === brand.name);
+    // Find the matching subdomain link by name
+    const subdomainLink = subdomainLinks.find(link => 
+      link.name.toLowerCase() === brand.name.toLowerCase()
+    );
+    
+    // Return the URL if found, otherwise construct one from the subdomain
     return subdomainLink?.url || `https://${brand.subdomain}.aifreedomtrust.com`;
   };
 
@@ -54,9 +60,9 @@ const BrandCard: React.FC<BrandCardProps> = ({ brand, index }) => {
       </CardContent>
       <CardFooter className="flex justify-between p-5 pt-0">
         <Button variant="outline" asChild>
-          <a href={brand.path} target="_blank" rel="noopener noreferrer">
+          <Link to={brand.path}>
             Learn More
-          </a>
+          </Link>
         </Button>
         <Button asChild className={`${brandColor} ${hoverColor}`}>
           <a href={getSubdomainUrl()} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">

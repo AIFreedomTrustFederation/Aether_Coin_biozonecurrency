@@ -30,8 +30,9 @@ const httpServer = createServer(app);
 // Enable CORS
 app.use(cors());
 
-// Serve static files from 'public' directory
+// Serve static files from 'public' directory and client/public
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'client/public')));
 
 console.log(`Starting Aetherion Server`);
 console.log(`Main server on port ${PORT} proxying to Vite on port ${VITE_PORT}`);
@@ -175,6 +176,7 @@ process.on('SIGINT', () => {
 httpServer.listen(PORT, '0.0.0.0', () => {
   console.log(`✓ Aetherion integrated server running on port ${PORT}`);
   console.log(`✓ Test page available at http://localhost:${PORT}/test`);
+  console.log(`✓ Simple test page available at http://localhost:${PORT}/test.html`);
   console.log(`✓ App showcase available at http://localhost:${PORT}/showcase`);
   console.log(`✓ Landing page available at http://localhost:${PORT}/`);
   console.log(`✓ WebSocket server available at ws://localhost:${PORT}/ws`);
@@ -187,6 +189,7 @@ httpServer.listen(PORT, '0.0.0.0', () => {
     const replitUrl = `https://${replitSlug}.${replitOwner}.repl.co`;
     console.log(`\n✓ REPLIT URL: ${replitUrl}`);
     console.log(`✓ Landing page on Replit: ${replitUrl}/`);
+    console.log(`✓ Test HTML page on Replit: ${replitUrl}/test.html`);
     console.log(`✓ API health endpoint: ${replitUrl}/api/health`);
   }
 });
