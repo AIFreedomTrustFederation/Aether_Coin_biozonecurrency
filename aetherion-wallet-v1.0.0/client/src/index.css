@@ -1,5 +1,7 @@
 /* Import custom styles before Tailwind */
 @import './styles/neon.css';
+@import './styles/progressBars.css';
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Montserrat:wght@500;600;700&family=Roboto+Slab:wght@400;500;600&display=swap');
 
 /* Tailwind CSS directives */
 @tailwind base;
@@ -7,19 +9,44 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --background: 222 47% 11%;
+    --foreground: 210 40% 98%;
+    --card: 222 47% 11%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222 47% 11%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 260 84% 67%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 260 84% 67%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217 33% 17%;
+    --input: 217 33% 17%;
+    --ring: 224 76% 48%;
+    --radius: 0.5rem;
+  }
+
   html {
-    @apply border-solid border-[hsl(var(--border))];
+    border-color: hsl(var(--border));
+    border-style: solid;
   }
 
   html, body, #root {
-    @apply h-full w-full antialiased overflow-hidden;
+    height: 100%;
+    width: 100%;
+    overflow-x: hidden;
     font-family: Inter, system-ui, sans-serif;
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
   }
 
   body {
-    @apply antialiased;
     font-family: Inter, system-ui, sans-serif;
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));

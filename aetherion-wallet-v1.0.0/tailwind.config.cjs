@@ -4,11 +4,16 @@ module.exports = {
     "./client/src/**/*.{js,jsx,ts,tsx}",
     "./client/public/index.html",
     "./index.html",
+    "./**/*.{js,jsx,ts,tsx,html}",
   ],
+  darkMode: "class",
   theme: {
     extend: {
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
+        display: ['Montserrat', 'sans-serif'],
+        mono: ['IBM Plex Mono', 'monospace'],
+        serif: ['Roboto Slab', 'serif']
       },
       colors: {
         background: "hsl(var(--background))",
