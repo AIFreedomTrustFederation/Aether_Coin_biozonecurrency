@@ -9,32 +9,32 @@
 const config = {
   // Main proxy server
   mainServer: {
-    port: 5000, // Reverted back to 5000 as required by the system
+    port: process.env.PORT || 5000, // Use port 5000 for Replit workflow compatibility
     basePath: '/',
     name: 'Aetherion Ecosystem Server'
   },
   
   // Brand Showcase application
   brandShowcase: {
-    port: 5173,
+    port: 8080,
     basePath: '/brands',
     proxyPath: '/brands',
-    vitePort: 5173,
+    vitePort: 8080,
     name: 'Brand Showcase'
   },
   
   // Aetherion Wallet application
   aetherionWallet: {
-    port: 5174,
+    port: 8081,
     basePath: '/wallet',
     proxyPath: '/wallet',
-    vitePort: 5176,
+    vitePort: 8082,
     name: 'Aetherion Wallet'
   },
   
   // Third application
   thirdApp: {
-    port: 5175,
+    port: 8083,
     basePath: '/app3',
     proxyPath: '/app3',
     name: 'Third Application'

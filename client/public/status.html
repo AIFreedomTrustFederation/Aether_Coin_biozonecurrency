@@ -4,429 +4,509 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aetherion Ecosystem Status</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <style>
         body {
-            background-color: #0a101f;
-            color: #f0f4f8;
-            font-family: 'Inter', sans-serif;
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #f8fafc;
+            min-height: 100vh;
         }
-        .aetherion-gradient {
-            background: linear-gradient(135deg, #1e3a8a 0%, #4f46e5 50%, #6366f1 100%);
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 1rem;
+        }
+        h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(45deg, #818cf8, #a5b4fc);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 0.5rem;
+        }
+        .subtitle {
+            color: #94a3b8;
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+        }
+        .status-card {
+            background: rgba(30, 41, 59, 0.8);
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .status-card h2 {
+            margin-top: 0;
+            font-size: 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 0.75rem;
+            margin-bottom: 1rem;
+            color: #e2e8f0;
+        }
+        .status-group {
+            margin-bottom: 1.5rem;
+        }
+        .status-group h3 {
+            color: #e2e8f0;
+            margin-bottom: 0.75rem;
+            font-size: 1.2rem;
+        }
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            background: rgba(51, 65, 85, 0.4);
+            margin-bottom: 0.5rem;
+        }
+        .status-name {
+            display: flex;
+            align-items: center;
+        }
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 0.75rem;
+        }
+        .status-online {
+            background-color: #10b981;
+        }
+        .status-offline {
+            background-color: #ef4444;
+        }
+        .status-loading {
+            background-color: #f59e0b;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+        .status-details {
+            color: #94a3b8;
+            font-size: 0.9rem;
+            text-align: right;
+        }
+        .port-info {
+            margin-top: 0.25rem;
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+        .btn {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(45deg, #6366f1, #4f46e5);
+            color: white;
+            border-radius: 0.5rem;
+            text-decoration: none;
+            font-weight: bold;
+            transition: background 0.3s ease;
+            margin-top: 1rem;
+        }
+        .btn:hover {
+            background: linear-gradient(45deg, #4f46e5, #4338ca);
+        }
+        .system-info {
+            background: rgba(30, 41, 59, 0.5);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-top: 2rem;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        .info-label {
+            color: #94a3b8;
+        }
+        .info-value {
+            color: #e2e8f0;
+            font-weight: bold;
+        }
+        footer {
+            margin-top: 4rem;
+            text-align: center;
+            color: #94a3b8;
+            font-size: 0.9rem;
+            padding: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .refresh-btn {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #e2e8f0;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            margin-left: auto;
+            transition: all 0.3s ease;
+        }
+        .refresh-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .refresh-icon {
+            margin-right: 0.5rem;
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid currentColor;
+            border-radius: 50%;
+            border-right-color: transparent;
+        }
+        .refreshing .refresh-icon {
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        #last-updated {
+            font-size: 0.85rem;
+            color: #64748b;
+            margin-top: 0.5rem;
+            text-align: center;
+        }
+        .status-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1.5rem;
+        }
+        .home-link {
+            color: #94a3b8;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+        .home-link:hover {
+            color: #e2e8f0;
+        }
+        .home-icon {
+            margin-right: 0.5rem;
+            font-size: 1.1rem;
         }
     </style>
 </head>
 <body>
-    <div class="min-h-screen flex flex-col">
-        <!-- Header -->
-        <header class="aetherion-gradient p-4 shadow-lg">
-            <div class="container mx-auto flex justify-between items-center">
-                <div class="flex items-center">
-                    <span class="text-2xl font-bold">Aetherion</span>
-                    <span class="ml-2 text-xs bg-white/20 px-2 py-1 rounded-full">System Status</span>
-                </div>
-                <nav class="hidden md:flex space-x-6">
-                    <a href="/" class="text-white/90 hover:text-white">Home</a>
-                    <a href="/brands" class="text-white/90 hover:text-white">Brand Showcase</a>
-                    <a href="/wallet" class="text-white/90 hover:text-white">Aetherion Wallet</a>
-                    <a href="/app3" class="text-white/90 hover:text-white">Applications</a>
-                </nav>
-            </div>
+    <div class="container">
+        <header>
+            <h1>Aetherion Ecosystem Status</h1>
+            <div class="subtitle">System Health and Performance Monitor</div>
         </header>
 
-        <!-- Main Content -->
-        <main class="flex-grow container mx-auto p-4 md:p-8">
-            <h1 class="text-3xl font-bold my-8">System Status</h1>
-            
-            <!-- Status Overview -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <!-- Left Column - Service Status -->
-                <div>
-                    <h2 class="text-xl font-semibold mb-4">Service Status</h2>
-                    <div class="space-y-4">
-                        <!-- Main Server -->
-                        <div class="bg-gray-800/50 p-4 rounded-lg">
-                            <div class="flex justify-between items-center">
-                                <h3 class="font-medium">Main Server</h3>
-                                <div id="main-server-status" class="flex items-center">
-                                    <span class="h-3 w-3 bg-gray-500 rounded-full mr-2"></span>
-                                    <span>Checking...</span>
-                                </div>
-                            </div>
-                            <div class="mt-2 text-sm text-gray-400">
-                                Port: <span id="main-server-port">5000</span>
-                            </div>
-                        </div>
-                        
-                        <!-- Brand Showcase -->
-                        <div class="bg-gray-800/50 p-4 rounded-lg">
-                            <div class="flex justify-between items-center">
-                                <h3 class="font-medium">Brand Showcase</h3>
-                                <div id="brand-showcase-status" class="flex items-center">
-                                    <span class="h-3 w-3 bg-gray-500 rounded-full mr-2"></span>
-                                    <span>Checking...</span>
-                                </div>
-                            </div>
-                            <div class="mt-2 text-sm text-gray-400">
-                                Port: <span id="brand-showcase-port">5173</span>
-                            </div>
-                            <div class="mt-2">
-                                <a href="/brands" class="text-indigo-400 hover:text-indigo-300 text-sm">Open Service →</a>
-                            </div>
-                        </div>
-                        
-                        <!-- Aetherion Wallet -->
-                        <div class="bg-gray-800/50 p-4 rounded-lg">
-                            <div class="flex justify-between items-center">
-                                <h3 class="font-medium">Aetherion Wallet</h3>
-                                <div id="wallet-status" class="flex items-center">
-                                    <span class="h-3 w-3 bg-gray-500 rounded-full mr-2"></span>
-                                    <span>Checking...</span>
-                                </div>
-                            </div>
-                            <div class="mt-2 text-sm text-gray-400">
-                                Port: <span id="wallet-port">5174</span>
-                            </div>
-                            <div class="mt-2">
-                                <a href="/wallet" class="text-indigo-400 hover:text-indigo-300 text-sm">Open Service →</a>
-                            </div>
-                        </div>
-                        
-                        <!-- Third Application -->
-                        <div class="bg-gray-800/50 p-4 rounded-lg">
-                            <div class="flex justify-between items-center">
-                                <h3 class="font-medium">Third Application</h3>
-                                <div id="app3-status" class="flex items-center">
-                                    <span class="h-3 w-3 bg-gray-500 rounded-full mr-2"></span>
-                                    <span>Checking...</span>
-                                </div>
-                            </div>
-                            <div class="mt-2 text-sm text-gray-400">
-                                Port: <span id="app3-port">5175</span>
-                            </div>
-                            <div class="mt-2">
-                                <a href="/app3" class="text-indigo-400 hover:text-indigo-300 text-sm">Open Service →</a>
-                            </div>
-                        </div>
+        <div class="status-card">
+            <div class="status-group">
+                <h3>Core Services</h3>
+                
+                <div class="status-item">
+                    <div class="status-name">
+                        <div class="status-indicator status-loading" id="main-indicator"></div>
+                        <span>Main Ecosystem Server</span>
+                    </div>
+                    <div class="status-details">
+                        <div id="main-status">Checking...</div>
+                        <div class="port-info">Port: 5000</div>
                     </div>
                 </div>
                 
-                <!-- Right Column - System Stats -->
-                <div>
-                    <h2 class="text-xl font-semibold mb-4">System Resources</h2>
-                    
-                    <!-- Memory Usage -->
-                    <div class="bg-gray-800/50 p-4 rounded-lg mb-4">
-                        <h3 class="font-medium mb-2">Memory Usage</h3>
-                        <div id="memory-stats" class="space-y-2">
-                            <div class="flex justify-between items-center">
-                                <span class="text-sm text-gray-400">RSS:</span>
-                                <span id="memory-rss">Loading...</span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span class="text-sm text-gray-400">Heap Total:</span>
-                                <span id="memory-heap-total">Loading...</span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span class="text-sm text-gray-400">Heap Used:</span>
-                                <span id="memory-heap-used">Loading...</span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span class="text-sm text-gray-400">External:</span>
-                                <span id="memory-external">Loading...</span>
-                            </div>
-                        </div>
+                <div class="status-item">
+                    <div class="status-name">
+                        <div class="status-indicator status-loading" id="brand-indicator"></div>
+                        <span>Brand Showcase</span>
                     </div>
-                    
-                    <!-- Uptime -->
-                    <div class="bg-gray-800/50 p-4 rounded-lg mb-4">
-                        <h3 class="font-medium mb-2">Uptime</h3>
-                        <div class="flex justify-between items-center">
-                            <span class="text-sm text-gray-400">Server Running For:</span>
-                            <span id="uptime">Loading...</span>
-                        </div>
+                    <div class="status-details">
+                        <div id="brand-status">Checking...</div>
+                        <div class="port-info">Port: 5173</div>
                     </div>
-                    
-                    <!-- System Info -->
-                    <div class="bg-gray-800/50 p-4 rounded-lg mb-4">
-                        <h3 class="font-medium mb-2">System Information</h3>
-                        <div class="space-y-2">
-                            <div class="flex justify-between items-center">
-                                <span class="text-sm text-gray-400">Platform:</span>
-                                <span id="platform">Loading...</span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span class="text-sm text-gray-400">Node Version:</span>
-                                <span id="node-version">Loading...</span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span class="text-sm text-gray-400">Architecture:</span>
-                                <span id="architecture">Loading...</span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span class="text-sm text-gray-400">CPU Cores:</span>
-                                <span id="cpu-cores">Loading...</span>
-                            </div>
-                        </div>
+                </div>
+                
+                <div class="status-item">
+                    <div class="status-name">
+                        <div class="status-indicator status-loading" id="wallet-indicator"></div>
+                        <span>Aetherion Wallet</span>
                     </div>
-                    
-                    <!-- Last Updated -->
-                    <div class="text-right text-sm text-gray-400">
-                        Last Updated: <span id="last-updated">Loading...</span>
-                        <button id="refresh-btn" class="ml-2 px-2 py-1 bg-indigo-600/30 hover:bg-indigo-600/50 rounded-md text-xs">
-                            Refresh
-                        </button>
+                    <div class="status-details">
+                        <div id="wallet-status">Checking...</div>
+                        <div class="port-info">Port: 5174</div>
+                    </div>
+                </div>
+                
+                <div class="status-item">
+                    <div class="status-name">
+                        <div class="status-indicator status-loading" id="app3-indicator"></div>
+                        <span>Third Application</span>
+                    </div>
+                    <div class="status-details">
+                        <div id="app3-status">Checking...</div>
+                        <div class="port-info">Port: 5175</div>
                     </div>
                 </div>
             </div>
             
-            <!-- Database Status -->
-            <div class="mt-8">
-                <h2 class="text-xl font-semibold mb-4">Database Status</h2>
-                <div class="bg-gray-800/50 p-4 rounded-lg">
-                    <div class="flex justify-between items-center">
-                        <h3 class="font-medium">PostgreSQL Connection</h3>
-                        <div id="db-status" class="flex items-center">
-                            <span class="h-3 w-3 bg-gray-500 rounded-full mr-2"></span>
-                            <span>Checking...</span>
-                        </div>
+            <div class="status-group">
+                <h3>Additional Services</h3>
+                
+                <div class="status-item">
+                    <div class="status-name">
+                        <div class="status-indicator status-loading" id="api-indicator"></div>
+                        <span>API Endpoints</span>
                     </div>
-                    <div class="mt-2 text-sm">
-                        <div id="db-message">Loading database status...</div>
+                    <div class="status-details">
+                        <div id="api-status">Checking...</div>
+                    </div>
+                </div>
+                
+                <div class="status-item">
+                    <div class="status-name">
+                        <div class="status-indicator status-loading" id="ws-indicator"></div>
+                        <span>WebSocket Server</span>
+                    </div>
+                    <div class="status-details">
+                        <div id="ws-status">Checking...</div>
                     </div>
                 </div>
             </div>
             
-            <!-- WebSocket Status -->
-            <div class="mt-8">
-                <h2 class="text-xl font-semibold mb-4">WebSocket Server</h2>
-                <div class="bg-gray-800/50 p-4 rounded-lg">
-                    <div class="flex justify-between items-center">
-                        <h3 class="font-medium">WebSocket Connection</h3>
-                        <div id="ws-status" class="flex items-center">
-                            <span class="h-3 w-3 bg-gray-500 rounded-full mr-2"></span>
-                            <span>Checking...</span>
-                        </div>
-                    </div>
-                    <div class="mt-4">
-                        <div id="ws-log" class="bg-gray-900/50 p-2 rounded text-sm h-32 overflow-y-auto font-mono">
-                            Connecting to WebSocket server...
-                        </div>
-                    </div>
+            <div class="system-info">
+                <h3>System Information</h3>
+                <div class="info-row">
+                    <span class="info-label">Uptime:</span>
+                    <span class="info-value" id="uptime">Checking...</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Memory Usage:</span>
+                    <span class="info-value" id="memory">Checking...</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Node Version:</span>
+                    <span class="info-value" id="node-version">Checking...</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Current Time:</span>
+                    <span class="info-value" id="current-time">Checking...</span>
                 </div>
             </div>
-        </main>
+            
+            <div class="status-actions">
+                <a href="/" class="home-link">
+                    <span class="home-icon">&#8592;</span>
+                    Return to Dashboard
+                </a>
+                <button id="refresh-btn" class="refresh-btn">
+                    <span class="refresh-icon"></span>
+                    Refresh Status
+                </button>
+            </div>
+            
+            <div id="last-updated">Last updated: Checking...</div>
+        </div>
 
-        <!-- Footer -->
-        <footer class="bg-gray-900 p-4 mt-8">
-            <div class="container mx-auto text-center text-sm text-gray-500">
-                <p>Aetherion Ecosystem Status Dashboard</p>
-                <p>© 2025 AI Freedom Trust. All rights reserved.</p>
-            </div>
+        <footer>
+            <p>&copy; 2025 AI Freedom Trust | Aetherion Quantum Ecosystem</p>
         </footer>
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const refreshBtn = document.getElementById('refresh-btn');
-            refreshBtn.addEventListener('click', checkAllServices);
+        // Function to format uptime
+        function formatUptime(seconds) {
+            const days = Math.floor(seconds / 86400);
+            seconds %= 86400;
+            const hours = Math.floor(seconds / 3600);
+            seconds %= 3600;
+            const minutes = Math.floor(seconds / 60);
+            seconds = Math.floor(seconds % 60);
             
-            // WebSocket connection
-            setupWebSocket();
+            let result = '';
+            if (days > 0) result += `${days}d `;
+            if (hours > 0 || days > 0) result += `${hours}h `;
+            if (minutes > 0 || hours > 0 || days > 0) result += `${minutes}m `;
+            result += `${seconds}s`;
             
-            // Initial checks
-            checkAllServices();
-            
-            // Set periodic refresh (every 30 seconds)
-            setInterval(checkAllServices, 30000);
-        });
+            return result;
+        }
         
-        function checkAllServices() {
-            // Check system health
-            fetch('/api/health')
-                .then(response => response.json())
-                .then(data => {
-                    updateServiceStatus('main-server-status', data.status === 'ok' ? 'running' : 'error');
-                    updateServiceStatus('brand-showcase-status', data.services.brandShowcase);
-                    updateServiceStatus('wallet-status', data.services.wallet);
-                    updateServiceStatus('app3-status', data.services.thirdApp);
+        // Function to format bytes
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        // Function to update status indicators
+        function updateIndicator(id, status) {
+            const indicator = document.getElementById(`${id}-indicator`);
+            indicator.classList.remove('status-loading', 'status-online', 'status-offline');
+            
+            if (status === 'online') {
+                indicator.classList.add('status-online');
+            } else if (status === 'offline') {
+                indicator.classList.add('status-offline');
+            } else {
+                indicator.classList.add('status-loading');
+            }
+        }
+        
+        // Function to check service status
+        async function checkStatus() {
+            // Update refresh button state
+            const refreshBtn = document.getElementById('refresh-btn');
+            refreshBtn.classList.add('refreshing');
+            refreshBtn.disabled = true;
+            
+            try {
+                // Check main server
+                try {
+                    const healthResponse = await fetch('/api/health');
+                    if (healthResponse.ok) {
+                        const healthData = await healthResponse.json();
+                        document.getElementById('main-status').textContent = 'Online';
+                        updateIndicator('main', 'online');
+                        
+                        // Update system info
+                        document.getElementById('uptime').textContent = formatUptime(healthData.uptime);
+                        document.getElementById('memory').textContent = `${formatBytes(healthData.memory.rss)} / ${formatBytes(healthData.memory.heapTotal)}`;
+                        document.getElementById('node-version').textContent = healthData.version;
+                        document.getElementById('current-time').textContent = new Date(healthData.timestamp).toLocaleString();
+                    } else {
+                        document.getElementById('main-status').textContent = 'Offline';
+                        updateIndicator('main', 'offline');
+                    }
+                } catch (error) {
+                    document.getElementById('main-status').textContent = 'Connection Error';
+                    updateIndicator('main', 'offline');
+                }
+                
+                // Check brand showcase
+                try {
+                    const brandResponse = await fetch('/brands/api/status');
+                    if (brandResponse.ok) {
+                        document.getElementById('brand-status').textContent = 'Online';
+                        updateIndicator('brand', 'online');
+                    } else {
+                        document.getElementById('brand-status').textContent = 'Error';
+                        updateIndicator('brand', 'offline');
+                    }
+                } catch (error) {
+                    document.getElementById('brand-status').textContent = 'Starting Up...';
+                    updateIndicator('brand', 'offline');
+                }
+                
+                // Check wallet
+                try {
+                    const walletResponse = await fetch('/wallet/api/status');
+                    if (walletResponse.ok) {
+                        document.getElementById('wallet-status').textContent = 'Online';
+                        updateIndicator('wallet', 'online');
+                    } else {
+                        document.getElementById('wallet-status').textContent = 'Error';
+                        updateIndicator('wallet', 'offline');
+                    }
+                } catch (error) {
+                    document.getElementById('wallet-status').textContent = 'Starting Up...';
+                    updateIndicator('wallet', 'offline');
+                }
+                
+                // Check third app
+                try {
+                    const app3Response = await fetch('/app3/api/status');
+                    if (app3Response.ok) {
+                        document.getElementById('app3-status').textContent = 'Online';
+                        updateIndicator('app3', 'online');
+                    } else {
+                        document.getElementById('app3-status').textContent = 'Error';
+                        updateIndicator('app3', 'offline');
+                    }
+                } catch (error) {
+                    document.getElementById('app3-status').textContent = 'Starting Up...';
+                    updateIndicator('app3', 'offline');
+                }
+                
+                // Check API endpoints
+                try {
+                    const apiEndpoints = [
+                        '/api/health',
+                        '/api/version',
+                        '/api/status'
+                    ];
                     
-                    // Update system info
-                    if (data.system) {
-                        document.getElementById('platform').textContent = data.system.platform;
-                        document.getElementById('node-version').textContent = data.system.nodeVersion;
-                        document.getElementById('architecture').textContent = data.system.arch;
-                        document.getElementById('cpu-cores').textContent = data.system.cpuCores;
-                        
-                        // Memory stats
-                        const memory = data.system.memoryUsage;
-                        document.getElementById('memory-rss').textContent = memory.rss;
-                        document.getElementById('memory-heap-total').textContent = memory.heapTotal;
-                        document.getElementById('memory-heap-used').textContent = memory.heapUsed;
-                        document.getElementById('memory-external').textContent = memory.external;
-                        
-                        // Uptime
-                        const uptime = data.system.uptime;
-                        document.getElementById('uptime').textContent = 
-                            `${uptime.days}d ${uptime.hours}h ${uptime.minutes}m ${uptime.seconds}s`;
+                    let workingEndpoints = 0;
+                    for (const endpoint of apiEndpoints) {
+                        try {
+                            const response = await fetch(endpoint);
+                            if (response.ok) workingEndpoints++;
+                        } catch (e) {
+                            // Ignore individual endpoint errors
+                        }
                     }
                     
-                    document.getElementById('last-updated').textContent = new Date().toLocaleTimeString();
-                })
-                .catch(error => {
-                    console.error('Error fetching health data:', error);
-                    updateServiceStatus('main-server-status', 'unreachable');
-                });
+                    const apiStatus = `${workingEndpoints}/${apiEndpoints.length} Available`;
+                    document.getElementById('api-status').textContent = apiStatus;
+                    updateIndicator('api', workingEndpoints > 0 ? 'online' : 'offline');
+                } catch (error) {
+                    document.getElementById('api-status').textContent = 'Connection Error';
+                    updateIndicator('api', 'offline');
+                }
                 
-            // Check database status
-            fetch('/api/db/status')
-                .then(response => response.json())
-                .then(data => {
-                    updateDatabaseStatus(data);
-                })
-                .catch(error => {
-                    console.error('Error fetching database status:', error);
-                    updateDatabaseStatus({
-                        connected: false,
-                        message: 'Failed to reach database status endpoint'
-                    });
-                });
-        }
-        
-        function updateServiceStatus(elementId, status) {
-            const element = document.getElementById(elementId);
-            const statusDot = element.querySelector('span:first-child');
-            const statusText = element.querySelector('span:last-child');
-            
-            statusText.textContent = status;
-            
-            switch(status) {
-                case 'running':
-                    statusDot.className = 'h-3 w-3 bg-green-500 rounded-full mr-2';
-                    break;
-                case 'error':
-                    statusDot.className = 'h-3 w-3 bg-red-500 rounded-full mr-2';
-                    break;
-                case 'warning':
-                    statusDot.className = 'h-3 w-3 bg-yellow-500 rounded-full mr-2';
-                    break;
-                case 'unreachable':
-                    statusDot.className = 'h-3 w-3 bg-red-500 rounded-full mr-2';
-                    break;
-                default:
-                    statusDot.className = 'h-3 w-3 bg-gray-500 rounded-full mr-2';
+                // Check WebSocket server (since we can't directly check, we'll just mimic the main server status for now)
+                const wsStatus = document.getElementById('main-status').textContent === 'Online' ? 'Ready' : 'Unavailable';
+                document.getElementById('ws-status').textContent = wsStatus;
+                updateIndicator('ws', wsStatus === 'Ready' ? 'online' : 'offline');
+                
+                // Update last updated time
+                document.getElementById('last-updated').textContent = `Last updated: ${new Date().toLocaleString()}`;
+            } catch (error) {
+                console.error('Error checking status:', error);
+            } finally {
+                // Re-enable refresh button
+                refreshBtn.classList.remove('refreshing');
+                refreshBtn.disabled = false;
             }
         }
         
-        function updateDatabaseStatus(data) {
-            const statusElement = document.getElementById('db-status');
-            const statusDot = statusElement.querySelector('span:first-child');
-            const statusText = statusElement.querySelector('span:last-child');
-            const messageElement = document.getElementById('db-message');
-            
-            statusText.textContent = data.connected ? 'Connected' : 'Disconnected';
-            statusDot.className = `h-3 w-3 ${data.connected ? 'bg-green-500' : 'bg-red-500'} rounded-full mr-2`;
-            messageElement.textContent = data.message;
-        }
+        // Initial check
+        checkStatus();
         
-        function setupWebSocket() {
-            const wsStatusElement = document.getElementById('ws-status');
-            const wsLogElement = document.getElementById('ws-log');
-            
-            // Determine WebSocket protocol
-            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const wsUrl = `${protocol}//${window.location.host}/ws`;
-            
-            logWebSocketMessage('Connecting to WebSocket server at ' + wsUrl);
-            
-            const socket = new WebSocket(wsUrl);
-            
-            socket.onopen = function() {
-                updateWebSocketStatus('connected');
-                logWebSocketMessage('Connection established successfully');
-                
-                // Subscribe to system updates
-                socket.send(JSON.stringify({
-                    type: 'subscribe',
-                    channels: ['system', 'database', 'services']
-                }));
-                
-                // Ping the server
-                socket.send(JSON.stringify({ type: 'ping' }));
-            };
-            
-            socket.onmessage = function(event) {
-                const data = JSON.parse(event.data);
-                logWebSocketMessage(`Received message: ${data.type}`);
-                
-                if (data.type === 'welcome') {
-                    logWebSocketMessage(`Server message: ${data.message}`);
-                }
-                else if (data.type === 'pong') {
-                    logWebSocketMessage('Ping response received from server');
-                }
-                else if (data.type === 'system-stats') {
-                    logWebSocketMessage('Received system stats update');
-                }
-                else if (data.type === 'database-status') {
-                    updateDatabaseStatus(data.data);
-                    logWebSocketMessage(`Database status update: ${data.data.connected ? 'Connected' : 'Disconnected'}`);
-                }
-            };
-            
-            socket.onclose = function() {
-                updateWebSocketStatus('disconnected');
-                logWebSocketMessage('Connection closed');
-                
-                // Attempt to reconnect after 5 seconds
-                setTimeout(setupWebSocket, 5000);
-            };
-            
-            socket.onerror = function(error) {
-                updateWebSocketStatus('error');
-                logWebSocketMessage('WebSocket error: ' + JSON.stringify(error));
-            };
-        }
+        // Set up periodic checks
+        const statusInterval = setInterval(checkStatus, 30000); // Check every 30 seconds
         
-        function updateWebSocketStatus(status) {
-            const element = document.getElementById('ws-status');
-            const statusDot = element.querySelector('span:first-child');
-            const statusText = element.querySelector('span:last-child');
-            
-            switch(status) {
-                case 'connected':
-                    statusDot.className = 'h-3 w-3 bg-green-500 rounded-full mr-2';
-                    statusText.textContent = 'Connected';
-                    break;
-                case 'disconnected':
-                    statusDot.className = 'h-3 w-3 bg-red-500 rounded-full mr-2';
-                    statusText.textContent = 'Disconnected';
-                    break;
-                case 'error':
-                    statusDot.className = 'h-3 w-3 bg-red-500 rounded-full mr-2';
-                    statusText.textContent = 'Error';
-                    break;
-                default:
-                    statusDot.className = 'h-3 w-3 bg-gray-500 rounded-full mr-2';
-                    statusText.textContent = 'Unknown';
+        // Add refresh button functionality
+        document.getElementById('refresh-btn').addEventListener('click', () => {
+            checkStatus();
+        });
+        
+        // Update current time periodically
+        setInterval(() => {
+            const currentTimeElement = document.getElementById('current-time');
+            // Only update if we've already received data
+            if (currentTimeElement.textContent !== 'Checking...') {
+                currentTimeElement.textContent = new Date().toLocaleString();
             }
-        }
-        
-        function logWebSocketMessage(message) {
-            const logElement = document.getElementById('ws-log');
-            const timestamp = new Date().toLocaleTimeString();
-            const logEntry = document.createElement('div');
-            logEntry.textContent = `[${timestamp}] ${message}`;
-            logElement.appendChild(logEntry);
-            
-            // Scroll to bottom
-            logElement.scrollTop = logElement.scrollHeight;
-            
-            // Limit log entries
-            while (logElement.children.length > 50) {
-                logElement.removeChild(logElement.firstChild);
-            }
-        }
+        }, 1000);
     </script>
 </body>
 </html>

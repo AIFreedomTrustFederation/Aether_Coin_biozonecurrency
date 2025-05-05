@@ -3,216 +3,284 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aetherion Ecosystem - AI Freedom Trust</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <title>Aetherion Ecosystem</title>
     <style>
-        /* Custom Aetherion styling */
         body {
-            background-color: #0a101f;
-            color: #f0f4f8;
-            font-family: 'Inter', sans-serif;
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #f8fafc;
+            min-height: 100vh;
         }
-        .aetherion-gradient {
-            background: linear-gradient(135deg, #1e3a8a 0%, #4f46e5 50%, #6366f1 100%);
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
         }
-        .biozoe-gradient {
-            background: linear-gradient(135deg, rgba(77, 153, 77, 0.2) 0%, rgba(54, 191, 250, 0.2) 100%);
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 1rem;
+        }
+        h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(45deg, #818cf8, #a5b4fc);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 0.5rem;
+        }
+        .subtitle {
+            color: #94a3b8;
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+        }
+        .card-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
         }
         .card {
+            background: rgba(30, 41, 59, 0.8);
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            padding: 1.5rem;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
         .card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(79, 70, 229, 0.2);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+        }
+        .card h2 {
+            margin-top: 0;
+            font-size: 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 0.75rem;
+            margin-bottom: 1rem;
+            color: #e2e8f0;
+        }
+        .card p {
+            color: #cbd5e1;
+            line-height: 1.5;
+            margin-bottom: 1.5rem;
+        }
+        .btn {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(45deg, #6366f1, #4f46e5);
+            color: white;
+            border-radius: 0.5rem;
+            text-decoration: none;
+            font-weight: bold;
+            transition: background 0.3s ease;
+        }
+        .btn:hover {
+            background: linear-gradient(45deg, #4f46e5, #4338ca);
+        }
+        .status-badge {
+            display: inline-block;
+            background-color: #10b981;
+            color: white;
+            font-size: 0.8rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            margin-left: 0.5rem;
+        }
+        footer {
+            margin-top: 4rem;
+            text-align: center;
+            color: #94a3b8;
+            font-size: 0.9rem;
+            padding: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .loading {
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 0.5rem;
+            vertical-align: middle;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .system-status {
+            background: rgba(30, 41, 59, 0.5);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-top: 2rem;
+            text-align: center;
+        }
+        .system-status h3 {
+            margin-top: 0;
+            color: #e2e8f0;
+        }
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .status-item:last-child {
+            border-bottom: none;
+        }
+        .status-label {
+            color: #94a3b8;
+        }
+        .status-value {
+            color: #e2e8f0;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
-    <div class="min-h-screen flex flex-col">
-        <!-- Header -->
-        <header class="aetherion-gradient p-4 shadow-lg">
-            <div class="container mx-auto flex justify-between items-center">
-                <div class="flex items-center">
-                    <span class="text-2xl font-bold">Aetherion</span>
-                    <span class="ml-2 text-xs bg-white/20 px-2 py-1 rounded-full">Ecosystem Hub</span>
-                </div>
-                <nav class="hidden md:flex space-x-6">
-                    <a href="/" class="text-white/90 hover:text-white">Home</a>
-                    <a href="/brands" class="text-white/90 hover:text-white">Brand Showcase</a>
-                    <a href="/wallet" class="text-white/90 hover:text-white">Aetherion Wallet</a>
-                    <a href="/app3" class="text-white/90 hover:text-white">Applications</a>
-                </nav>
-            </div>
+    <div class="container">
+        <header>
+            <h1>Aetherion Ecosystem</h1>
+            <div class="subtitle">Quantum-Resistant Blockchain Platform</div>
         </header>
 
-        <!-- Main Content -->
-        <main class="flex-grow container mx-auto p-4 md:p-8">
-            <div class="text-center my-12">
-                <h1 class="text-3xl md:text-5xl font-bold mb-4">Welcome to the Aetherion Ecosystem</h1>
-                <p class="text-lg text-gray-300 max-w-3xl mx-auto">
-                    A quantum-resistant blockchain platform powering the next generation of decentralized applications. 
-                    Explore our comprehensive suite of tools and services.
-                </p>
+        <div class="card-container">
+            <div class="card">
+                <h2>Brand Showcase <span class="status-badge"><div class="loading"></div> Connecting</span></h2>
+                <p>Explore our collection of integrated decentralized brands, each with its own unique identity and purpose within the quantum ecosystem.</p>
+                <a href="/brands" class="btn">View Showcase</a>
             </div>
 
-            <!-- Main Applications -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 my-12">
-                <!-- Brand Showcase -->
-                <div class="card bg-gray-800/50 rounded-xl p-6 border border-gray-700 hover:border-indigo-500/50">
-                    <div class="rounded-full w-12 h-12 flex items-center justify-center bg-indigo-600 mb-4">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                        </svg>
-                    </div>
-                    <h2 class="text-xl font-bold mb-2">Brand Showcase</h2>
-                    <p class="text-gray-400 mb-4">
-                        Explore our curated collection of brands within the Aetherion ecosystem, 
-                        each with its own unique identity and purpose.
-                    </p>
-                    <a href="/brands" class="inline-block px-4 py-2 rounded bg-indigo-600 text-white hover:bg-indigo-700 transition-colors">
-                        Open Showcase
-                    </a>
-                </div>
-
-                <!-- Aetherion Wallet -->
-                <div class="card bg-gray-800/50 rounded-xl p-6 border border-gray-700 hover:border-purple-500/50">
-                    <div class="rounded-full w-12 h-12 flex items-center justify-center bg-purple-600 mb-4">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                        </svg>
-                    </div>
-                    <h2 class="text-xl font-bold mb-2">Aetherion Wallet</h2>
-                    <p class="text-gray-400 mb-4">
-                        The most secure quantum-resistant wallet for managing your digital assets. 
-                        Built with advanced security features and intuitive design.
-                    </p>
-                    <a href="/wallet" class="inline-block px-4 py-2 rounded bg-purple-600 text-white hover:bg-purple-700 transition-colors">
-                        Open Wallet
-                    </a>
-                </div>
-
-                <!-- Applications -->
-                <div class="card bg-gray-800/50 rounded-xl p-6 border border-gray-700 hover:border-blue-500/50">
-                    <div class="rounded-full w-12 h-12 flex items-center justify-center bg-blue-600 mb-4">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
-                        </svg>
-                    </div>
-                    <h2 class="text-xl font-bold mb-2">Applications</h2>
-                    <p class="text-gray-400 mb-4">
-                        Discover decentralized applications built on the Aetherion platform. 
-                        From DeFi to social media, our ecosystem supports diverse solutions.
-                    </p>
-                    <a href="/app3" class="inline-block px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 transition-colors">
-                        Explore Apps
-                    </a>
-                </div>
+            <div class="card">
+                <h2>Aetherion Wallet <span class="status-badge"><div class="loading"></div> Connecting</span></h2>
+                <p>Access your quantum-secure wallet for managing assets, transactions, and interacting with decentralized applications.</p>
+                <a href="/wallet" class="btn">Open Wallet</a>
             </div>
 
-            <!-- Biozoe Banner -->
-            <div class="biozoe-gradient rounded-xl p-8 my-12 text-center">
-                <h2 class="text-2xl font-bold mb-4">Powered by Biozoe Technology</h2>
-                <p class="text-lg max-w-2xl mx-auto text-gray-200 mb-6">
-                    Biozoe combines temporal life and eternal spirit principles to create 
-                    a more sustainable and harmonious technological ecosystem.
-                </p>
-                <div class="flex justify-center space-x-4">
-                    <span class="px-3 py-1 bg-white/10 rounded-full text-sm">Quantum Resistant</span>
-                    <span class="px-3 py-1 bg-white/10 rounded-full text-sm">Sustainable</span>
-                    <span class="px-3 py-1 bg-white/10 rounded-full text-sm">Fractal Architecture</span>
-                </div>
+            <div class="card">
+                <h2>Third Application <span class="status-badge"><div class="loading"></div> Connecting</span></h2>
+                <p>Additional utilities and tools for advanced interaction with the Aetherion ecosystem services.</p>
+                <a href="/app3" class="btn">Launch App</a>
             </div>
+        </div>
 
-            <!-- Status Section -->
-            <div class="rounded-xl bg-gray-800/30 p-6 my-12">
-                <h2 class="text-xl font-bold mb-4">System Status</h2>
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div class="bg-gray-800/50 p-4 rounded-lg">
-                        <h3 class="text-sm text-gray-400">Main Server</h3>
-                        <div class="flex items-center mt-2">
-                            <span class="h-3 w-3 bg-green-500 rounded-full mr-2"></span>
-                            <span class="font-medium">Operational</span>
-                        </div>
-                    </div>
-                    <div class="bg-gray-800/50 p-4 rounded-lg">
-                        <h3 class="text-sm text-gray-400">Brand Showcase</h3>
-                        <div class="flex items-center mt-2">
-                            <span class="h-3 w-3 bg-green-500 rounded-full mr-2"></span>
-                            <span class="font-medium">Operational</span>
-                        </div>
-                    </div>
-                    <div class="bg-gray-800/50 p-4 rounded-lg">
-                        <h3 class="text-sm text-gray-400">Aetherion Wallet</h3>
-                        <div class="flex items-center mt-2">
-                            <span class="h-3 w-3 bg-green-500 rounded-full mr-2"></span>
-                            <span class="font-medium">Operational</span>
-                        </div>
-                    </div>
-                    <div class="bg-gray-800/50 p-4 rounded-lg">
-                        <h3 class="text-sm text-gray-400">Applications</h3>
-                        <div class="flex items-center mt-2">
-                            <span class="h-3 w-3 bg-green-500 rounded-full mr-2"></span>
-                            <span class="font-medium">Operational</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="mt-4 text-right">
-                    <a href="/status" class="text-sm text-indigo-400 hover:text-indigo-300">View detailed status →</a>
-                </div>
+        <div class="system-status">
+            <h3>System Status</h3>
+            <div class="status-item">
+                <span class="status-label">Main Server:</span>
+                <span class="status-value" id="main-status">Checking...</span>
             </div>
-        </main>
+            <div class="status-item">
+                <span class="status-label">Brand Showcase:</span>
+                <span class="status-value" id="brand-status">Checking...</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Aetherion Wallet:</span>
+                <span class="status-value" id="wallet-status">Checking...</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Third Application:</span>
+                <span class="status-value" id="app3-status">Checking...</span>
+            </div>
+        </div>
 
-        <!-- Footer -->
-        <footer class="bg-gray-900 p-8">
-            <div class="container mx-auto">
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-                    <div>
-                        <h3 class="text-lg font-bold mb-4">Aetherion</h3>
-                        <p class="text-gray-400 text-sm">
-                            A quantum-resistant blockchain ecosystem designed for the future of secure, 
-                            decentralized applications.
-                        </p>
-                    </div>
-                    <div>
-                        <h3 class="text-md font-bold mb-4">Navigation</h3>
-                        <ul class="space-y-2 text-sm text-gray-400">
-                            <li><a href="/" class="hover:text-white">Home</a></li>
-                            <li><a href="/brands" class="hover:text-white">Brand Showcase</a></li>
-                            <li><a href="/wallet" class="hover:text-white">Aetherion Wallet</a></li>
-                            <li><a href="/app3" class="hover:text-white">Applications</a></li>
-                        </ul>
-                    </div>
-                    <div>
-                        <h3 class="text-md font-bold mb-4">Resources</h3>
-                        <ul class="space-y-2 text-sm text-gray-400">
-                            <li><a href="#" class="hover:text-white">Documentation</a></li>
-                            <li><a href="#" class="hover:text-white">API Reference</a></li>
-                            <li><a href="#" class="hover:text-white">Community</a></li>
-                            <li><a href="#" class="hover:text-white">Support</a></li>
-                        </ul>
-                    </div>
-                    <div>
-                        <h3 class="text-md font-bold mb-4">Legal</h3>
-                        <ul class="space-y-2 text-sm text-gray-400">
-                            <li><a href="#" class="hover:text-white">Privacy Policy</a></li>
-                            <li><a href="#" class="hover:text-white">Terms of Service</a></li>
-                            <li><a href="#" class="hover:text-white">Cookie Policy</a></li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="mt-8 pt-8 border-t border-gray-800 text-center text-gray-500 text-sm">
-                    <p>© 2025 AI Freedom Trust. All rights reserved.</p>
-                </div>
-            </div>
+        <footer>
+            <p>&copy; 2025 AI Freedom Trust | Aetherion Quantum Ecosystem</p>
         </footer>
     </div>
 
     <script>
-        // Simple script to check system status
-        document.addEventListener('DOMContentLoaded', function() {
-            // You can replace this with actual fetch calls to your status endpoints
-            console.log('Aetherion Ecosystem Hub loaded');
-        });
+        // Function to update service status
+        async function checkServiceStatus() {
+            try {
+                // Check main API health
+                const healthResponse = await fetch('/api/health');
+                if (healthResponse.ok) {
+                    document.getElementById('main-status').textContent = 'Online';
+                    document.getElementById('main-status').style.color = '#10b981';
+                } else {
+                    document.getElementById('main-status').textContent = 'Offline';
+                    document.getElementById('main-status').style.color = '#ef4444';
+                }
+            } catch (error) {
+                document.getElementById('main-status').textContent = 'Connection Error';
+                document.getElementById('main-status').style.color = '#f59e0b';
+            }
+
+            // Check brand showcase
+            try {
+                const brandResponse = await fetch('/brands/api/status');
+                if (brandResponse.ok) {
+                    document.getElementById('brand-status').textContent = 'Online';
+                    document.getElementById('brand-status').style.color = '#10b981';
+                    
+                    // Update badge
+                    const badges = document.querySelectorAll('.card:nth-child(1) .status-badge');
+                    badges.forEach(badge => {
+                        badge.innerHTML = 'Online';
+                        badge.style.backgroundColor = '#10b981';
+                    });
+                } else {
+                    document.getElementById('brand-status').textContent = 'Error';
+                    document.getElementById('brand-status').style.color = '#ef4444';
+                }
+            } catch (error) {
+                document.getElementById('brand-status').textContent = 'Starting Up...';
+                document.getElementById('brand-status').style.color = '#f59e0b';
+            }
+
+            // Check wallet
+            try {
+                const walletResponse = await fetch('/wallet/api/status');
+                if (walletResponse.ok) {
+                    document.getElementById('wallet-status').textContent = 'Online';
+                    document.getElementById('wallet-status').style.color = '#10b981';
+                    
+                    // Update badge
+                    const badges = document.querySelectorAll('.card:nth-child(2) .status-badge');
+                    badges.forEach(badge => {
+                        badge.innerHTML = 'Online';
+                        badge.style.backgroundColor = '#10b981';
+                    });
+                } else {
+                    document.getElementById('wallet-status').textContent = 'Error';
+                    document.getElementById('wallet-status').style.color = '#ef4444';
+                }
+            } catch (error) {
+                document.getElementById('wallet-status').textContent = 'Starting Up...';
+                document.getElementById('wallet-status').style.color = '#f59e0b';
+            }
+
+            // Check third app
+            try {
+                const app3Response = await fetch('/app3/api/status');
+                if (app3Response.ok) {
+                    document.getElementById('app3-status').textContent = 'Online';
+                    document.getElementById('app3-status').style.color = '#10b981';
+                    
+                    // Update badge
+                    const badges = document.querySelectorAll('.card:nth-child(3) .status-badge');
+                    badges.forEach(badge => {
+                        badge.innerHTML = 'Online';
+                        badge.style.backgroundColor = '#10b981';
+                    });
+                } else {
+                    document.getElementById('app3-status').textContent = 'Error';
+                    document.getElementById('app3-status').style.color = '#ef4444';
+                }
+            } catch (error) {
+                document.getElementById('app3-status').textContent = 'Starting Up...';
+                document.getElementById('app3-status').style.color = '#f59e0b';
+            }
+        }
+
+        // Check status every 5 seconds
+        checkServiceStatus();
+        setInterval(checkServiceStatus, 5000);
     </script>
 </body>
 </html>

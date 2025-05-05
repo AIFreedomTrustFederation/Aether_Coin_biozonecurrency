@@ -9,7 +9,7 @@ const __dirname = path.dirname(__filename);
 // Create Express app
 const app = express();
 
-// Replit typically expects apps to run on port 3000 by default
+// Set to port 3000 for Replit compatibility
 const PORT = process.env.PORT || 3000;
 
 // Serve static files from client/public
@@ -36,27 +36,9 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Add API endpoint to check availability
-app.get('/api/status', (req, res) => {
-  res.json({
-    status: 'online',
-    message: 'Replit Server is running',
-    port: PORT,
-    timestamp: new Date().toISOString()
-  });
-});
-
-// Add a simple echo endpoint for testing
-app.get('/api/echo', (req, res) => {
-  res.json({
-    echo: req.query.message || 'No message provided',
-    timestamp: new Date().toISOString()
-  });
-});
-
 // Start the server
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Replit server running on port ${PORT}`);
+  console.log(`Basic server running on port ${PORT}`);
   console.log(`Access at http://localhost:${PORT}`);
   
   // Display Replit-specific URL information
