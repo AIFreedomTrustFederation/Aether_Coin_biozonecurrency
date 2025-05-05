@@ -16,17 +16,18 @@ MAGENTA="\e[35m"
 CYAN="\e[36m"
 RESET="\e[0m"
 
-# Configuration - MODIFY THESE
+# Configuration - ALREADY CONFIGURED FOR YOUR DEPLOYMENT
 DEPLOY_PATH="$HOME/public_html/atc"
 DOMAIN="atc.aifreedomtrust.com"
-GITHUB_REPO="https://github.com/yourusername/aetherion-ecosystem.git"
+GITHUB_REPO="https://github.com/aifreedomtrust/aetherion-ecosystem.git"
 GITHUB_BRANCH="main"
 NODE_VERSION="18"
 APPLICATION_PORT="3000"
 
-# API Keys - Replace with your actual keys or leave empty to be prompted
-OPENAI_API_KEY=""
-STRIPE_SECRET_KEY=""
+# API Keys are already configured
+# These will be automatically populated from environment variables during deployment
+OPENAI_API_KEY="${OPENAI_API_KEY}"
+STRIPE_SECRET_KEY="${STRIPE_SECRET_KEY}"
 
 # Detect environment (Replit or cPanel)
 if [ -d "/home/runner" ] || [ -f "/.replit" ]; then
@@ -113,16 +114,21 @@ create_package_replit() {
     "config.js"
     "api-modules.js"
     "error-handler.js"
+    "aetherion-server.js"
     "package.json"
     "package-lock.json"
     ".env.example"
     "deploy-to-cpanel.sh"
     "DEPLOYMENT-GUIDE.md"
+    "GITHUB-ACTIONS-DEPLOYMENT-GUIDE.md"
+    "CPANEL-DEPLOYMENT-GUIDE.md"
+    "AIFREEDOMTRUST-DOMAIN-DEPLOYMENT.md"
     "README.md"
     "client"
     "public"
     "server"
     "shared"
+    "aetherion-wallet-v1.0.0/client/src/assets"
   )
   
   # Create exclude options for tar
@@ -326,21 +332,25 @@ configure_environment_cpanel() {
     read -p "Enter your Stripe Secret key (leave blank if not using Stripe): " STRIPE_SECRET_KEY
   fi
   
-  # Create .env file
+  # Create .env file with Aetherion Ecosystem configuration
   cat > .env << EOL
 NODE_ENV=production
 PORT=$APPLICATION_PORT
 PUBLIC_URL=https://$DOMAIN
-EOL
 
-  # Add API keys if provided
-  if [ ! -z "$OPENAI_API_KEY" ]; then
-    echo "OPENAI_API_KEY=$OPENAI_API_KEY" >> .env
-  fi
-  
-  if [ ! -z "$STRIPE_SECRET_KEY" ]; then
-    echo "STRIPE_SECRET_KEY=$STRIPE_SECRET_KEY" >> .env
-  fi
+# Database configuration
+DATABASE_URL=postgres://username:password@hostname:port/database
+
+# Configured API keys
+OPENAI_API_KEY=$OPENAI_API_KEY
+STRIPE_SECRET_KEY=$STRIPE_SECRET_KEY
+
+# Optional configurations
+REPLIT_URL=https://workspace.aifreedomtrust.repl.co
+BRAND_SHOWCASE_PATH=/brands
+AETHERION_WALLET_PATH=/wallet
+THIRD_APP_PATH=/app3
+EOL
   
   print_success "Created .env file"
   
@@ -392,8 +402,8 @@ start_application_cpanel() {
     print_info "Application is already running in PM2. Restarting..."
     pm2 restart aetherion-ecosystem
   else
-    print_info "Starting application with PM2..."
-    pm2 start combined-server.js --name "aetherion-ecosystem"
+    print_info "Starting Aetherion Ecosystem with PM2..."
+    pm2 start combined-server.js --name "aetherion-ecosystem" --env production --log "./logs/pm2.log"
   fi
   
   print_success "Application is running with PM2"
