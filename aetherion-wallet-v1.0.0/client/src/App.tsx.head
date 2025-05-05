@@ -1,0 +1,50 @@
+import React, { useState, useEffect, lazy, Suspense, startTransition } from "react";
+import { Switch, Route, useLocation } from "wouter";
+import { queryClient } from "./lib/queryClient";
+import { QueryClientProvider } from "@tanstack/react-query";
+// Temporarily removed react-helmet-async import to fix build error
+// import { HelmetProvider } from "react-helmet-async";
+import { Toaster } from "@/components/ui/toaster";
+import { LiveModeProvider } from "./contexts/LiveModeContext";
+import { LiveModeIndicator } from "@/components/ui/LiveModeIndicator";
+import { ThemeProvider } from "./contexts/ThemeContext";
+import { MultiWalletProvider } from "./context/MultiWalletContext";
+import ResourceHints from "./components/ResourceHints";
+import { Button } from "@/components/ui/button";
+import { Link } from "wouter";
+import { 
+  Menu, X, Home, Layout, Wallet, Lock, Shield, Settings, AlertTriangle, ChevronRight, 
+  BarChart3, Eye, Cpu, Bell, Zap, Coins, FileText, Database, Bot, TestTube, Blocks,
+  Smartphone, Lightbulb, CreditCard, Info, Palette, Loader2, UserCircle2, Globe, Code, Key
+} from "lucide-react";
+import { AuthProvider } from "./context/AuthContext";
+import TrustMemberGuard from "./components/auth/TrustMemberGuard";
+
+// Loading screen component for lazy-loaded routes
+const LoadingScreen = ({ message = "Loading..." }: { message?: string }) => (
+  <div className="flex flex-col items-center justify-center min-h-[70vh]">
+    <div className="flex flex-col items-center gap-3">
+      <Loader2 className="h-10 w-10 animate-spin text-primary" />
+      <p className="text-muted-foreground">{message}</p>
+    </div>
+  </div>
+);
+
+// Import landing page for fast initial load
+import LandingPage from "./pages/LandingPage";
+
+// Lazy load all other components
+const AIAssistant = lazy(() => import("./modules/ai-assistant/components/AIAssistant").then(m => ({ default: m.AIAssistant })));
+const AISettings = lazy(() => import("./modules/ai-assistant/components/AISettings"));
+const Dashboard = lazy(() => import("@/components/Dashboard"));
+const SecurityPage = lazy(() => import("./pages/SecurityPage").then(m => ({ default: m.SecurityPage })));
+const SingularityCoinPage = lazy(() => import("./pages/SingularityCoinPage"));
+const ICOPage = lazy(() => import("./pages/ICOPage"));
+const WhitepaperPage = lazy(() => import("./pages/WhitepaperPage"));
+const AboutPage = lazy(() => import("./pages/AboutPage"));
+const AdminPortal = lazy(() => import("./pages/AdminPortal"));
+const LazyAetherCoinPage = lazy(() => import("./pages/LazyAetherCoinPage"));
+const NetworkDetailsPage = lazy(() => import("./pages/NetworkDetailsPage"));
+
+// Lazy load new personalization pages
+const DashboardPage = lazy(() => import("./pages/DashboardPage"));

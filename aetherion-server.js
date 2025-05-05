@@ -38,11 +38,21 @@ app.use((req, res, next) => {
 console.log('Starting Aetherion Wallet v1.0.0 Server');
 console.log(`Main server on port ${PORT} proxying to Vite on port ${VITE_PORT}`);
 
-// Start the Vite server in the aetherion-wallet-v1.0.0 directory
+// Set environment variable to enable full Aetherion Wallet system
+process.env.VITE_AETHERION_FULL_SYSTEM = 'true';
+process.env.VITE_AETHERION_SECURITY_LEVEL = 'optimal';
+
+// Start the Vite server in the aetherion-wallet-v1.0.0 directory with the environment variables
 const viteProcess = spawn('npx', ['vite', '--host'], {
   stdio: 'inherit',
   shell: true,
-  cwd: path.join(__dirname, 'aetherion-wallet-v1.0.0')
+  cwd: path.join(__dirname, 'aetherion-wallet-v1.0.0'),
+  env: {
+    ...process.env,
+    VITE_AETHERION_FULL_SYSTEM: 'true',
+    VITE_AETHERION_SECURITY_LEVEL: 'optimal',
+    NODE_ENV: 'development'
+  }
 });
 
 // Create proxy middleware for the Vite dev server

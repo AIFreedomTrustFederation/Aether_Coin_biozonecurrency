@@ -5,11 +5,31 @@ import './index.css';
 import './styles/progressBars.css';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
+// TypeScript declarations for global window properties
+declare global {
+  interface Window {
+    AETHERION_FULL_SYSTEM: boolean;
+    AETHERION_SECURITY_LEVEL: string;
+    APP_MODE: string;
+  }
+}
+
+// Import mode configuration
+import './mode';
+
+// Import debug utility
+import { initLoadDebug } from './loadDebug';
+
 // Set global flags for the application mode
 // This enables the full Aetherion Wallet instead of just the CodeStar Platform
 (window as any).AETHERION_FULL_SYSTEM = true;
 (window as any).AETHERION_SECURITY_LEVEL = 'optimal';
-console.log('Aetherion Full System Mode: Enabled');
+(window as any).APP_MODE = 'full';
+console.log('Aetherion Full System Mode: Enabled [main.tsx]');
+
+// Initialize debug logging
+initLoadDebug();
+console.log('Aetherion Full System Mode enabled explicitly in main.tsx');
 
 // Import the Aetherion provider to initialize window.aetherion
 import './core/blockchain/AetherionProvider';

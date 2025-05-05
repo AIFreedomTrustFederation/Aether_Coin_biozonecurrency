@@ -18,6 +18,20 @@ import {
   Smartphone, Lightbulb, CreditCard, Info, Palette, Loader2, UserCircle2, Globe, Code, Key
 } from "lucide-react";
 import { AuthProvider } from "./context/AuthContext";
+import { isFullSystem, getSecurityLevel } from "./mode";
+
+// Declare custom window properties for TypeScript
+declare global {
+  interface Window {
+    AETHERION_FULL_SYSTEM: boolean;
+    AETHERION_SECURITY_LEVEL: string;
+    APP_MODE: string;
+  }
+}
+
+// Force full system mode
+console.log("Aetherion Mode Check in App.tsx:", isFullSystem() ? "Full System" : "CodeStar Platform");
+console.log("Aetherion Security Level:", getSecurityLevel());
 import TrustMemberGuard from "./components/auth/TrustMemberGuard";
 
 // Loading screen component for lazy-loaded routes
@@ -451,6 +465,20 @@ function App() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   
+  // Ensure full system mode is enabled (not CodeStar Platform)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      (window as any).AETHERION_FULL_SYSTEM = true;
+      (window as any).AETHERION_SECURITY_LEVEL = 'optimal';
+      (window as any).APP_MODE = 'full';
+      console.log('App.tsx: Enforcing Full Aetherion System Mode');
+      
+      // Dispatch a custom event that components can listen for
+      const event = new CustomEvent('aetherion:fullSystemEnabled');
+      window.dispatchEvent(event);
+    }
+  }, []);
+  
   // Check if mobile on mount and when window resizes
   useEffect(() => {
     const checkIfMobile = () => {
@@ -519,8 +547,12 @@ function App() {
               <h1 className="font-bold text-xl cursor-pointer">Aetherion</h1>
             </Link>
             
-            <div className="ml-4">
+            <div className="ml-4 flex items-center">
               <LiveModeIndicator variant="button" showToggle={true} />
+              {/* Add Full System Indicator next to Live Mode Indicator */}
+              <Suspense fallback={null}>
+                {React.createElement(lazy(() => import("@/components/FullSystemIndicator")))}
+              </Suspense>
             </div>
           </div>
           
