@@ -1,324 +1,444 @@
 #!/bin/bash
-# Automated deployment script for Aetherion to cPanel hosting
-# This script prepares the application for deployment to your specific cPanel environment
+# =============================================================================
+# Aetherion Ecosystem Deployment Script for atc.aifreedomtrust.com
+# =============================================================================
+# This script automates the deployment of the Aetherion Ecosystem to 
+# atc.aifreedomtrust.com via cPanel terminal
+# 
+# Usage: ./deploy-to-cpanel.sh [--github | --package]
+#   --github: Deploy from GitHub repository
+#   --package: Deploy from local package (default)
+# =============================================================================
 
-# Configuration - Update these variables
-DEPLOY_DIR="./deployment-package"
-APP_NAME="biozone-harmony-boost"
-BUILD_TYPE="static" # Options: static, node
-CPANEL_HOST="crispr"
-CPANEL_USER="bixnyorm"  # Update with your cPanel username
-DEPLOY_PATH="public_html/aetherion"  # Subdirectory under public_html
+# Text formatting
+BOLD="\e[1m"
+RED="\e[31m"
+GREEN="\e[32m"
+YELLOW="\e[33m"
+BLUE="\e[34m"
+MAGENTA="\e[35m"
+CYAN="\e[36m"
+RESET="\e[0m"
 
-# Color codes for output
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-RED='\033[0;31m'
-NC='\033[0m' # No Color
+# Configuration variables - MODIFY THESE
+DEPLOY_PATH="$HOME/public_html/atc"
+DOMAIN="atc.aifreedomtrust.com"
+GITHUB_REPO="https://github.com/yourusername/aetherion-ecosystem.git"
+GITHUB_BRANCH="main"
+PACKAGE_NAME="aetherion-ecosystem-deployment.tar.gz"
+NODE_VERSION="18"  # Node.js version to use
+APPLICATION_PORT="3000"  # Port the application will run on
+
+# API Keys - Replace with your actual keys or leave empty
+OPENAI_API_KEY=""
+STRIPE_SECRET_KEY=""
 
 # Print banner
-echo -e "${GREEN}"
-echo "=========================================================="
-echo "  Aetherion - AI Freedom Trust Deployment Package Builder"
-echo "  For cPanel on $CPANEL_HOST"
-echo "=========================================================="
-echo -e "${NC}"
+print_banner() {
+  echo -e "${CYAN}${BOLD}"
+  echo "┌─────────────────────────────────────────────────┐"
+  echo "│         Aetherion Ecosystem Deployment          │"
+  echo "│                                                 │"
+  echo "│            Target: $DOMAIN            │"
+  echo "└─────────────────────────────────────────────────┘"
+  echo -e "${RESET}"
+}
 
-# Create deployment directory if it doesn't exist
-if [ ! -d "$DEPLOY_DIR" ]; then
-  mkdir -p "$DEPLOY_DIR"
-  echo -e "${GREEN}Created deployment directory: $DEPLOY_DIR${NC}"
-else
-  # Clean the directory
-  rm -rf "$DEPLOY_DIR"/*
-  echo -e "${GREEN}Cleaned deployment directory: $DEPLOY_DIR${NC}"
-fi
+# Print section header
+print_section() {
+  echo -e "\n${BLUE}${BOLD}▶ $1${RESET}\n"
+}
 
-# Function to create a static build deployment package
-create_static_build() {
-  echo -e "${YELLOW}Creating static deployment package...${NC}"
+# Print success message
+print_success() {
+  echo -e "${GREEN}✓ $1${RESET}"
+}
+
+# Print error message
+print_error() {
+  echo -e "${RED}✗ $1${RESET}"
+}
+
+# Print warning message
+print_warning() {
+  echo -e "${YELLOW}! $1${RESET}"
+}
+
+# Print info message
+print_info() {
+  echo -e "${CYAN}ℹ $1${RESET}"
+}
+
+# Check if a command exists
+command_exists() {
+  command -v "$1" >/dev/null 2>&1
+}
+
+# Ask for confirmation
+confirm() {
+  read -p "$1 (y/n) " -n 1 -r
+  echo
+  [[ $REPLY =~ ^[Yy]$ ]]
+}
+
+# Check requirements
+check_requirements() {
+  print_section "Checking requirements"
   
-  # Build the application
-  echo "Building the application..."
-  npm run build
+  # Check if we're in a cPanel environment
+  if [ ! -d "/usr/local/cpanel" ] && [ ! -f "$HOME/.cpanel/contactinfo" ]; then
+    print_warning "This doesn't appear to be a cPanel environment. Some features may not work as expected."
+  else
+    print_success "cPanel environment detected"
+  fi
   
-  if [ $? -ne 0 ]; then
-    echo -e "${RED}Build failed. Aborting deployment.${NC}"
+  # Check if Node.js is installed
+  if command_exists node; then
+    NODE_CURRENT_VERSION=$(node -v | cut -d 'v' -f 2)
+    print_success "Node.js is installed (version $NODE_CURRENT_VERSION)"
+    
+    # Check if Node.js version matches desired version
+    if [[ "$NODE_CURRENT_VERSION" != $NODE_VERSION* ]]; then
+      print_warning "Node.js version $NODE_CURRENT_VERSION detected, but version $NODE_VERSION is recommended."
+      
+      if command_exists nvm; then
+        if confirm "Do you want to switch to Node.js version $NODE_VERSION using NVM?"; then
+          nvm install $NODE_VERSION
+          nvm use $NODE_VERSION
+          print_success "Switched to Node.js version $NODE_VERSION"
+        fi
+      else
+        print_warning "NVM not found. Please ask your hosting provider to install Node.js version $NODE_VERSION."
+      fi
+    fi
+  else
+    print_error "Node.js is not installed. Please install Node.js version $NODE_VERSION or ask your hosting provider to install it."
     exit 1
   fi
   
-  # Copy build output to deployment directory
-  echo "Copying build files to deployment directory..."
-  cp -r dist/* "$DEPLOY_DIR"
-  
-  # Create .htaccess file
-  echo "Creating .htaccess file for static deployment..."
-  cat > "$DEPLOY_DIR/.htaccess" << 'EOF'
-# Enable the rewrite engine
-RewriteEngine On
-
-# Set the base directory
-RewriteBase /aetherion/
-
-# Enable HTTPS
-RewriteCond %{HTTPS} off
-RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
-
-# Redirect all requests to index.html except for actual files and directories
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^(.*)$ index.html [L,QSA]
-
-# Serve static files from the 'aifreedomtrust' directory
-RewriteCond %{REQUEST_URI} ^/aetherion/aifreedomtrust/(.*)$
-RewriteCond %{DOCUMENT_ROOT}/aetherion/aifreedomtrust/%1 -f
-RewriteRule ^aifreedomtrust/(.*)$ aifreedomtrust/$1 [L]
-
-# Set security headers
-Header set X-Content-Type-Options "nosniff"
-Header set X-XSS-Protection "1; mode=block"
-Header set X-Frame-Options "SAMEORIGIN"
-Header set Referrer-Policy "strict-origin-when-cross-origin"
-Header set Content-Security-Policy "upgrade-insecure-requests;"
-EOF
-
-  # Create a sample .env file
-  echo "Creating sample .env file..."
-  cat > "$DEPLOY_DIR/.env.example" << 'EOF'
-# Database Configuration
-DB_HOST=localhost
-DB_PORT=3306
-DB_USER=your_db_user
-DB_PASSWORD=your_db_password
-DB_NAME=your_db_name
-
-# Application Configuration
-NODE_ENV=production
-PORT=8080
-DOMAIN=aifreedomtrust.com
-SITE_URL=https://aifreedomtrust.com
-ATC_SUBDOMAIN=atc.aifreedomtrust.com
-EOF
-
-  # Copy AI Freedom Trust static site files
-  echo "Copying AI Freedom Trust static site files..."
-  mkdir -p "$DEPLOY_DIR/aifreedomtrust"
-  cp -r client/public/aifreedomtrust/* "$DEPLOY_DIR/aifreedomtrust/"
-
-  echo -e "${GREEN}Static deployment package created successfully${NC}"
-}
-
-# Function to create a Node.js deployment package
-create_node_deployment() {
-  echo -e "${YELLOW}Creating Node.js deployment package...${NC}"
-  
-  # Create package structure
-  mkdir -p "$DEPLOY_DIR/client/public"
-  
-  # Copy server files
-  echo "Copying server files..."
-  cp server.js "$DEPLOY_DIR/"
-  cp package.json "$DEPLOY_DIR/"
-  cp -r server "$DEPLOY_DIR/"
-  cp -r shared "$DEPLOY_DIR/"
-  
-  # Build the client application
-  echo "Building the client application..."
-  npm run build
-  
-  if [ $? -ne 0 ]; then
-    echo -e "${RED}Build failed. Aborting deployment.${NC}"
+  # Check if npm is installed
+  if command_exists npm; then
+    NPM_VERSION=$(npm -v)
+    print_success "npm is installed (version $NPM_VERSION)"
+  else
+    print_error "npm is not installed. It should come with Node.js."
     exit 1
   fi
   
-  # Copy client files
-  echo "Copying client files..."
-  cp -r dist/* "$DEPLOY_DIR/client/public/"
-  cp -r client/public/* "$DEPLOY_DIR/client/public/"
+  # Check if git is installed (required for GitHub deployment)
+  if [ "$DEPLOY_FROM" == "github" ]; then
+    if command_exists git; then
+      GIT_VERSION=$(git --version | cut -d ' ' -f 3)
+      print_success "git is installed (version $GIT_VERSION)"
+    else
+      print_error "git is not installed and is required for GitHub deployment."
+      exit 1
+    fi
+  fi
   
-  # Create a start script
-  echo "Creating start script..."
-  cat > "$DEPLOY_DIR/start.sh" << 'EOF'
-#!/bin/bash
-NODE_ENV=production node server.js
-EOF
-  chmod +x "$DEPLOY_DIR/start.sh"
-  
-  # Create .htaccess file for Node.js proxy
-  echo "Creating .htaccess file for Node.js proxy..."
-  cat > "$DEPLOY_DIR/.htaccess" << 'EOF'
-# Enable the rewrite engine
-RewriteEngine On
-
-# Set the base directory
-RewriteBase /aetherion/
-
-# Enable HTTPS
-RewriteCond %{HTTPS} off
-RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
-
-# Proxy requests to Node.js server
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^(.*)$ http://localhost:8080/$1 [P,L]
-
-# Set security headers
-Header set X-Content-Type-Options "nosniff"
-Header set X-XSS-Protection "1; mode=block"
-Header set X-Frame-Options "SAMEORIGIN"
-Header set Referrer-Policy "strict-origin-when-cross-origin"
-EOF
-
-  # Create a sample .env file
-  echo "Creating sample .env file..."
-  cat > "$DEPLOY_DIR/.env.example" << 'EOF'
-# Database Configuration
-DB_HOST=localhost
-DB_PORT=3306
-DB_USER=your_db_user
-DB_PASSWORD=your_db_password
-DB_NAME=your_db_name
-
-# Application Configuration
-NODE_ENV=production
-PORT=8080
-DOMAIN=aifreedomtrust.com
-SITE_URL=https://aifreedomtrust.com
-ATC_SUBDOMAIN=atc.aifreedomtrust.com
-EOF
-
-  # Create a passenger config for cPanel
-  echo "Creating passenger configuration for cPanel..."
-  cat > "$DEPLOY_DIR/.cpanel.yml" << 'EOF'
----
-deployment:
-  tasks:
-    - export DEPLOYPATH=/home/user/public_html/aetherion
-    - /bin/cp -R * $DEPLOYPATH
-EOF
-
-  echo -e "${GREEN}Node.js deployment package created successfully${NC}"
+  # Check if pm2 is installed
+  if command_exists pm2; then
+    PM2_VERSION=$(pm2 -v)
+    print_success "PM2 is installed (version $PM2_VERSION)"
+  else
+    print_warning "PM2 is not installed. It will be installed globally during deployment."
+  fi
 }
 
-# Function to create a cPanel Node.js App deployment script
-create_cpanel_app_script() {
-  echo "Creating cPanel Node.js app setup script..."
-  cat > "$DEPLOY_DIR/setup-cpanel-app.sh" << 'EOF'
-#!/bin/bash
-# This script should be run on your cPanel server to set up the Node.js application
+# Create directories
+create_directories() {
+  print_section "Creating directories"
+  
+  # Create deployment directory if it doesn't exist
+  if [ ! -d "$DEPLOY_PATH" ]; then
+    mkdir -p "$DEPLOY_PATH"
+    print_success "Created deployment directory: $DEPLOY_PATH"
+  else
+    print_info "Deployment directory already exists: $DEPLOY_PATH"
+  fi
+  
+  # Create logs and tmp directories
+  mkdir -p "$DEPLOY_PATH/logs" "$DEPLOY_PATH/tmp"
+  print_success "Created logs and tmp directories"
+}
 
-# Configuration
-APP_NAME="biozone-harmony-boost"
-APP_ROOT="/home/user/public_html/aetherion"
-APP_ENTRY="server.js"
-APP_PORT=8080
+# Backup existing deployment
+backup_existing() {
+  print_section "Backing up existing deployment"
+  
+  if [ -f "$DEPLOY_PATH/package.json" ]; then
+    BACKUP_DIR="$HOME/backups"
+    BACKUP_FILE="$BACKUP_DIR/aetherion-backup-$(date +%Y%m%d-%H%M%S).tar.gz"
+    
+    # Create backups directory if it doesn't exist
+    mkdir -p "$BACKUP_DIR"
+    
+    # Create backup archive
+    tar -czf "$BACKUP_FILE" -C "$DEPLOY_PATH" .
+    
+    print_success "Created backup: $BACKUP_FILE"
+  else
+    print_info "No existing deployment found to backup."
+  fi
+}
 
-# Print banner
-echo "=========================================================="
-echo "  Setting up Node.js application in cPanel"
-echo "=========================================================="
+# Deploy from GitHub
+deploy_from_github() {
+  print_section "Deploying from GitHub"
+  
+  # Navigate to deployment directory
+  cd "$DEPLOY_PATH"
+  
+  # Check if git repository exists
+  if [ -d ".git" ]; then
+    print_info "Git repository already exists. Pulling latest changes..."
+    
+    # Reset any local changes
+    git reset --hard HEAD
+    
+    # Pull latest changes
+    if git pull origin "$GITHUB_BRANCH"; then
+      print_success "Pulled latest changes from $GITHUB_BRANCH branch"
+    else
+      print_error "Failed to pull latest changes. Check repository and credentials."
+      exit 1
+    fi
+  else
+    print_info "Cloning repository..."
+    
+    # Clone repository
+    if git clone --branch "$GITHUB_BRANCH" "$GITHUB_REPO" .; then
+      print_success "Cloned repository: $GITHUB_REPO ($GITHUB_BRANCH branch)"
+    else
+      print_error "Failed to clone repository. Check repository URL and credentials."
+      exit 1
+    fi
+  fi
+}
 
-# Create application directory if it doesn't exist
-if [ ! -d "$APP_ROOT" ]; then
-  mkdir -p "$APP_ROOT"
-  echo "Created application directory: $APP_ROOT"
-fi
+# Deploy from package
+deploy_from_package() {
+  print_section "Deploying from package"
+  
+  # Check if package exists in current directory or home directory
+  PACKAGE_PATH=""
+  if [ -f "./$PACKAGE_NAME" ]; then
+    PACKAGE_PATH="./$PACKAGE_NAME"
+  elif [ -f "$HOME/$PACKAGE_NAME" ]; then
+    PACKAGE_PATH="$HOME/$PACKAGE_NAME"
+  else
+    print_error "Package not found: $PACKAGE_NAME"
+    print_info "Please upload the package to your home directory or current directory."
+    exit 1
+  fi
+  
+  print_info "Found package: $PACKAGE_PATH"
+  
+  # Extract package to deployment directory
+  print_info "Extracting package to $DEPLOY_PATH..."
+  
+  if [[ "$PACKAGE_NAME" == *.tar.gz ]] || [[ "$PACKAGE_NAME" == *.tgz ]]; then
+    tar -xzf "$PACKAGE_PATH" -C "$DEPLOY_PATH"
+  elif [[ "$PACKAGE_NAME" == *.zip ]]; then
+    unzip -q "$PACKAGE_PATH" -d "$DEPLOY_PATH"
+  else
+    print_error "Unsupported package format. Only .tar.gz, .tgz, and .zip are supported."
+    exit 1
+  fi
+  
+  print_success "Extracted package to $DEPLOY_PATH"
+}
+
+# Configure environment
+configure_environment() {
+  print_section "Configuring environment"
+  
+  # Navigate to deployment directory
+  cd "$DEPLOY_PATH"
+  
+  # Create .env file
+  cat > .env << EOL
+NODE_ENV=production
+PORT=$APPLICATION_PORT
+PUBLIC_URL=https://$DOMAIN
+EOL
+
+  # Add API keys if provided
+  if [ ! -z "$OPENAI_API_KEY" ]; then
+    echo "OPENAI_API_KEY=$OPENAI_API_KEY" >> .env
+  fi
+  
+  if [ ! -z "$STRIPE_SECRET_KEY" ]; then
+    echo "STRIPE_SECRET_KEY=$STRIPE_SECRET_KEY" >> .env
+  fi
+  
+  print_success "Created .env file"
+  
+  # Create .htaccess file for Apache
+  cat > .htaccess << EOL
+# Aetherion Ecosystem .htaccess
+# Proxy requests to Node.js application
+
+RewriteEngine On
+RewriteRule ^$ http://localhost:$APPLICATION_PORT/ [P,L]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ http://localhost:$APPLICATION_PORT/$1 [P,L]
+EOL
+
+  print_success "Created .htaccess file"
+}
 
 # Install dependencies
-echo "Installing dependencies..."
-cd "$APP_ROOT"
-npm install --production
-
-# Create application startup script
-echo "Creating application startup script..."
-cat > "$APP_ROOT/start.sh" << 'EOL'
-#!/bin/bash
-cd "$(dirname "$0")"
-NODE_ENV=production node server.js
-EOL
-chmod +x "$APP_ROOT/start.sh"
-
-echo "Node.js application setup complete!"
-echo "You can now use the cPanel Node.js App interface to set up and run your application."
-echo "Application entry point: $APP_ENTRY"
-echo "Application port: $APP_PORT"
-EOF
-  chmod +x "$DEPLOY_DIR/setup-cpanel-app.sh"
+install_dependencies() {
+  print_section "Installing dependencies"
+  
+  # Navigate to deployment directory
+  cd "$DEPLOY_PATH"
+  
+  # Install PM2 globally if not already installed
+  if ! command_exists pm2; then
+    print_info "Installing PM2 globally..."
+    npm install -g pm2
+    print_success "Installed PM2 globally"
+  fi
+  
+  # Install application dependencies
+  print_info "Installing application dependencies (this may take a while)..."
+  npm install --production
+  
+  print_success "Installed application dependencies"
 }
 
-# Create README file for the deployment package
-create_readme() {
-  echo "Creating deployment README file..."
-  cat > "$DEPLOY_DIR/DEPLOYMENT-README.md" << 'EOF'
-# Aetherion Deployment Package for cPanel
-
-This package contains the files necessary to deploy the Aetherion biozone-harmony-boost application
-to your cPanel hosting environment on server "crispr".
-
-## Quick Start Deployment Instructions
-
-1. Upload all files in this package to your cPanel environment at: `public_html/aetherion`
-   * Use the File Manager in cPanel
-   * Or use FTP with your cPanel credentials
-
-2. Set appropriate file permissions:
-   * Directories: 755
-   * Files: 644
-   * Configuration files (.env, etc.): 600
-
-3. Rename `.env.example` to `.env` and update the configuration values
-
-4. Verify that the .htaccess file is properly configured for your environment
-
-## Additional Notes
-
-* The application is configured to run at: `https://yourdomain.com/aetherion`
-* The AI Freedom Trust landing page will be accessible at: `https://yourdomain.com/aetherion/aifreedomtrust`
-* For subdomain configuration, refer to DOMAIN-DEPLOYMENT.md
-
-## Troubleshooting
-
-If you encounter any issues:
-1. Check the Apache error logs in cPanel
-2. Verify that mod_rewrite is enabled
-3. Ensure the file permissions are set correctly
-4. Confirm that all paths in .htaccess match your actual deployment
-
-For more detailed instructions, refer to HOSTING-DEPLOYMENT-GUIDE.md.
-EOF
-
-  # Copy the hosting deployment guide
-  cp HOSTING-DEPLOYMENT-GUIDE.md "$DEPLOY_DIR/"
-  cp DOMAIN-DEPLOYMENT.md "$DEPLOY_DIR/"
-  cp CPANEL-README.md "$DEPLOY_DIR/"
+# Start application
+start_application() {
+  print_section "Starting application"
+  
+  # Navigate to deployment directory
+  cd "$DEPLOY_PATH"
+  
+  # Check if application is already running in PM2
+  if pm2 list | grep -q "aetherion-ecosystem"; then
+    print_info "Application is already running in PM2. Restarting..."
+    pm2 restart aetherion-ecosystem
+  else
+    print_info "Starting application with PM2..."
+    pm2 start combined-server.js --name "aetherion-ecosystem"
+  fi
+  
+  print_success "Application is running with PM2"
+  
+  # Configure PM2 to start on server reboot
+  print_info "Configuring PM2 to start on server reboot..."
+  pm2 startup
+  pm2 save
+  
+  print_success "PM2 configured to start on server reboot"
 }
 
-# Create deployment package based on configuration
-if [ "$BUILD_TYPE" = "static" ]; then
-  create_static_build
-else
-  create_node_deployment
-  create_cpanel_app_script
-fi
+# Verify deployment
+verify_deployment() {
+  print_section "Verifying deployment"
+  
+  # Check if the application is running
+  if pm2 list | grep -q "aetherion-ecosystem" | grep -q "online"; then
+    print_success "Application is running in PM2"
+  else
+    print_error "Application is not running or has an error"
+    exit 1
+  fi
+  
+  # Check if the application is responding
+  print_info "Checking application health endpoint..."
+  
+  if curl -s "http://localhost:$APPLICATION_PORT/api/health" | grep -q "ok"; then
+    print_success "Application is responding to health check"
+  else
+    print_warning "Application is not responding to health check. Check logs for errors."
+  fi
+  
+  # Display PM2 logs
+  print_info "Recent application logs:"
+  pm2 logs aetherion-ecosystem --lines 10
+}
 
-# Create README file
-create_readme
+# Display completion message
+display_completion() {
+  print_section "Deployment completed"
+  
+  echo -e "${GREEN}${BOLD}"
+  echo "┌─────────────────────────────────────────────────┐"
+  echo "│         Aetherion Ecosystem Deployed!           │"
+  echo "│                                                 │"
+  echo "│  Your application is now available at:          │"
+  echo "│  https://$DOMAIN                      │"
+  echo "└─────────────────────────────────────────────────┘"
+  echo -e "${RESET}"
+  
+  echo -e "${CYAN}Additional URLs:${RESET}"
+  echo "- Brand Showcase: https://$DOMAIN/brands"
+  echo "- Aetherion Wallet: https://$DOMAIN/wallet"
+  echo "- Third Application: https://$DOMAIN/app3"
+  echo "- Status Page: https://$DOMAIN/status"
+  echo "- API Health: https://$DOMAIN/api/health"
+  
+  echo -e "\n${CYAN}Useful commands:${RESET}"
+  echo "- View logs: ${YELLOW}pm2 logs aetherion-ecosystem${RESET}"
+  echo "- Restart app: ${YELLOW}pm2 restart aetherion-ecosystem${RESET}"
+  echo "- Monitor app: ${YELLOW}pm2 monit${RESET}"
+  
+  echo -e "\n${MAGENTA}Thank you for using the Aetherion Ecosystem Deployment Script!${RESET}"
+}
 
-# Create deployment zip file
-echo "Creating deployment zip file..."
-cd "$DEPLOY_DIR"
-zip -r ../${APP_NAME}-deployment-package.zip ./*
-cd ..
+# Main function
+main() {
+  # Parse command-line arguments
+  DEPLOY_FROM="package"  # Default to package deployment
+  
+  while [[ "$#" -gt 0 ]]; do
+    case $1 in
+      --github) DEPLOY_FROM="github" ;;
+      --package) DEPLOY_FROM="package" ;;
+      *) echo "Unknown parameter: $1"; exit 1 ;;
+    esac
+    shift
+  done
+  
+  # Print banner
+  print_banner
+  
+  # Ask for API keys if not provided
+  if [ -z "$OPENAI_API_KEY" ]; then
+    read -p "Enter your OpenAI API key (leave blank if not using OpenAI): " OPENAI_API_KEY
+  fi
+  
+  if [ -z "$STRIPE_SECRET_KEY" ]; then
+    read -p "Enter your Stripe Secret key (leave blank if not using Stripe): " STRIPE_SECRET_KEY
+  fi
+  
+  # Confirm deployment
+  if ! confirm "Deploy Aetherion Ecosystem to $DOMAIN?"; then
+    print_info "Deployment canceled."
+    exit 0
+  fi
+  
+  # Run deployment steps
+  check_requirements
+  create_directories
+  backup_existing
+  
+  if [ "$DEPLOY_FROM" == "github" ]; then
+    deploy_from_github
+  else
+    deploy_from_package
+  fi
+  
+  configure_environment
+  install_dependencies
+  start_application
+  verify_deployment
+  display_completion
+}
 
-echo -e "${GREEN}"
-echo "=========================================================="
-echo "  Deployment package created successfully!"
-echo "  Location: ${APP_NAME}-deployment-package.zip"
-echo "=========================================================="
-echo -e "${NC}"
-
-echo "You can now upload this package to your cPanel hosting environment at: $CPANEL_HOST"
-echo "1. Log in to cPanel"
-echo "2. Use File Manager to upload the ZIP file to your account"
-echo "3. Extract the ZIP to $DEPLOY_PATH"
-echo "4. Configure as per the instructions in DEPLOYMENT-README.md"
+# Run main function
+main "$@"
