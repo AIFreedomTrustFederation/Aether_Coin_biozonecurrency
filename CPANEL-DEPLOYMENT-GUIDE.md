@@ -1,183 +1,282 @@
-# Aetherion Wallet - CPanel Deployment Guide
+# cPanel Deployment Guide for Aetherion Ecosystem
 
-This comprehensive guide explains how to deploy and configure the Aetherion Wallet application on a CPanel hosting environment.
+This guide provides detailed instructions for deploying the Aetherion Ecosystem to atc.aifreedomtrust.com using cPanel.
 
 ## Overview
 
-CPanel is one of the most common web hosting control panels and provides all the necessary features to host the Aetherion Wallet application, including:
+The Aetherion Ecosystem consists of multiple components:
+- Brand Showcase (accessible at /brands)
+- Aetherion Wallet (accessible at /wallet)
+- Third Application (accessible at /app3)
 
-1. Web server (Apache) management
-2. Database (MySQL/MariaDB) hosting
-3. PHP support for server-side functionality
-4. SSL certificate management
-5. Subdomain and domain configuration
+All of these components are served by a single Node.js server that routes requests appropriately.
 
 ## Prerequisites
 
-- A CPanel hosting account with:
-  - PHP 7.4 or higher
-  - MySQL 5.7 or higher / MariaDB 10.3 or higher
-  - Node.js support (for build process)
-  - SSH access (recommended but optional)
+1. cPanel access to aifreedomtrust.com
+2. Node.js version 14 or later (provided by your hosting provider)
+3. SSH access to the server (recommended but not required)
+4. The deployment package for Aetherion Ecosystem
 
-## Step 1: Prepare Your Local Environment
+## Step 1: Create Subdomain in cPanel
 
-1. Ensure your application is ready for production deployment
-2. Update environment variables for production in `.env.production`
-3. Make sure all features are working correctly in local development
+1. Log in to your cPanel account
+2. Navigate to the "Domains" or "Subdomains" section
+3. Create a new subdomain:
+   - Subdomain: `atc`
+   - Domain: `aifreedomtrust.com`
+   - Document Root: `/public_html/atc` (or your preferred path)
+4. Click "Create"
 
-## Step 2: Build the Application
+## Step 2: Configure Node.js Environment
 
-### Option A: Build Locally
+### Using SSH (Recommended)
 
-1. Run the deployment script to build and package the application:
-
-```bash
-chmod +x deploy-to-cpanel.sh
-./deploy-to-cpanel.sh
-```
-
-2. This will create a file named `aetherion-cpanel-deploy.zip` containing all necessary files
-
-### Option B: Build on CPanel Server (if Node.js is supported)
-
-1. Upload your source code to a temporary directory on the server
-2. Use SSH to connect to your server and run:
+If you have SSH access to your server:
 
 ```bash
-cd /path/to/source
-npm install
-npm run build
+# Connect to the server
+ssh username@aifreedomtrust.com
+
+# Navigate to your document root
+cd ~/public_html/atc
+
+# Create necessary directories
+mkdir -p logs tmp
+
+# Check Node.js version
+node -v  # Should be v14.x or later
+
+# Install pm2 for process management
+npm install -g pm2
 ```
 
-## Step 3: Database Setup
+### Using cPanel File Manager
 
-1. Log in to your CPanel dashboard
-2. Navigate to **MySQL Database Wizard**
-3. Create a new database (example: `aetherion_db`)
-4. Create a new user with a strong password
-5. Assign all privileges for the user to the database
-6. Note down the following information:
-   - Database name
-   - Database username
-   - Database password
-   - Database host (usually `localhost`)
+If you don't have SSH access:
 
-## Step 4: Upload Application Files
+1. Log in to cPanel
+2. Open the File Manager
+3. Navigate to `/public_html/atc`
+4. Create folders named `logs` and `tmp`
 
-### Option A: Using CPanel File Manager
+## Step 3: Upload Deployment Package
 
-1. Log in to CPanel
-2. Navigate to **File Manager**
-3. Go to your document root (usually `public_html`)
-4. Create a subdirectory for your application (e.g., `wallet` or leave empty for root domain)
-5. Upload the `aetherion-cpanel-deploy.zip` file
-6. Extract the zip file
-7. Delete the zip file after extraction
+### Using SCP (if you have SSH access)
 
-### Option B: Using FTP
-
-1. Use an FTP client (like FileZilla) to connect to your server
-2. Navigate to your document root (usually `public_html`)
-3. Create a subdirectory for your application (e.g., `wallet`)
-4. Upload all files from your production build
-
-## Step 5: Configure the Database Connection
-
-1. Locate the `.env.production.template` file on the server
-2. Rename it to `.env.production`
-3. Edit the file with your database credentials:
-
-```
-DB_HOST=localhost
-DB_USER=your_cpanel_db_username
-DB_PASS=your_db_password
-DB_NAME=your_cpanel_db_name
+```bash
+# From your local machine
+scp aetherion-ecosystem-deployment.tar.gz username@aifreedomtrust.com:~/public_html/atc/
 ```
 
-## Step 6: Initialize the Database
+### Using cPanel File Manager
 
-1. Access the database setup script at `https://your-domain.com/wallet/db_setup.php`
-2. Follow the on-screen instructions to create the necessary tables
-3. After successful setup, **delete the `db_setup.php` file immediately**
+1. Log in to cPanel
+2. Open the File Manager
+3. Navigate to `/public_html/atc`
+4. Click "Upload" and select your deployment package
+5. Once uploaded, extract the package:
+   - Right-click on the file
+   - Select "Extract"
+   - Confirm the extraction
 
-## Step 7: Configure SSL (if not already set up)
+## Step 4: Configure Environment Variables
 
-1. In CPanel, navigate to **SSL/TLS**
-2. Use **Let's Encrypt** or another SSL provider to generate a certificate
-3. Install the certificate for your domain
-4. Enable **Force HTTPS Redirect** if available
+Create a `.env` file in the root directory:
 
-## Step 8: Set Up Cron Jobs (if needed)
+1. Navigate to `/public_html/atc`
+2. Create a new file named `.env`
+3. Add the following environment variables:
 
-1. In CPanel, navigate to **Cron Jobs**
-2. Set up any required periodic tasks, such as:
-   - Database backups
-   - Node status monitoring
-   - Reward calculations
-
-Example cron job to run daily at 2 AM:
 ```
-0 2 * * * php /home/username/public_html/wallet/cron/daily-tasks.php
+NODE_ENV=production
+PORT=3000
+PUBLIC_URL=https://atc.aifreedomtrust.com
 ```
 
-## Step 9: Test the Deployment
+If your application requires additional environment variables (e.g., API keys, database credentials), add them to this file.
 
-1. Access your application at `https://your-domain.com/wallet/`
-2. Test all major functionality:
-   - User authentication
-   - Wallet operations
-   - Node management
-   - API connections
+## Step 5: Install Dependencies
 
-## Step 10: Regular Maintenance
+### Using SSH
 
-1. **Backups**: Set up regular database backups using CPanel's backup tools
-2. **Updates**: Establish a procedure for deploying application updates
-3. **Monitoring**: Set up monitoring for server and application health
+```bash
+# Navigate to the application directory
+cd ~/public_html/atc
 
-## Troubleshooting Common Issues
+# Install dependencies
+npm install --production
+```
 
-### 404 Errors on Refresh/Direct URL Access
+### Using cPanel Terminal
 
-Ensure your `.htaccess` file is properly configured for SPA routing:
+If your cPanel has the Terminal feature:
+
+1. Open the Terminal from cPanel
+2. Navigate to your application directory: `cd ~/public_html/atc`
+3. Run: `npm install --production`
+
+## Step 6: Configure Application as a Service
+
+### Using SSH with PM2
+
+```bash
+# Navigate to your application directory
+cd ~/public_html/atc
+
+# Start the application with PM2
+pm2 start combined-server.js --name "aetherion-ecosystem"
+
+# Set PM2 to start on server reboot
+pm2 startup
+# Follow the instructions provided by this command
+
+# Save the PM2 process list
+pm2 save
+```
+
+### Using cPanel Node.js App Setup (if available)
+
+Some cPanel installations have a Node.js application setup:
+
+1. In cPanel, find the "Node.js" or "Setup Node.js App" section
+2. Create a new application:
+   - Application name: aetherion-ecosystem
+   - Application root: /public_html/atc
+   - Application URL: https://atc.aifreedomtrust.com
+   - Application startup file: combined-server.js
+   - Node.js version: (select the latest available)
+3. Click "Create"
+
+## Step 7: Configure Nginx or Apache (if necessary)
+
+If your hosting uses Nginx or Apache, create a configuration file that proxies requests to your Node.js application.
+
+### For Nginx
+
+Create a file named `nginx.conf` in your application directory:
+
+```nginx
+server {
+    listen 80;
+    server_name atc.aifreedomtrust.com;
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    server_name atc.aifreedomtrust.com;
+    
+    ssl_certificate /path/to/certificate.crt;
+    ssl_certificate_key /path/to/private.key;
+    
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+```
+
+### For Apache
+
+Create a file named `.htaccess` in your application directory:
 
 ```apache
-<IfModule mod_rewrite.c>
-  RewriteEngine On
-  RewriteBase /
-  RewriteRule ^index\.html$ - [L]
-  RewriteCond %{REQUEST_FILENAME} !-f
-  RewriteCond %{REQUEST_FILENAME} !-d
-  RewriteRule . /index.html [L]
-</IfModule>
+RewriteEngine On
+RewriteRule ^$ http://localhost:3000/ [P,L]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ http://localhost:3000/$1 [P,L]
 ```
 
-### Database Connection Issues
+## Step 8: Test the Deployment
 
-Verify your database credentials and that the database user has appropriate permissions:
+1. Visit https://atc.aifreedomtrust.com
+2. Check each component:
+   - Brand Showcase: https://atc.aifreedomtrust.com/brands
+   - Aetherion Wallet: https://atc.aifreedomtrust.com/wallet
+   - Third Application: https://atc.aifreedomtrust.com/app3
+3. Verify that all functionality works as expected
 
-1. Test connection using phpMyAdmin (available in CPanel)
-2. Check the error logs in CPanel (under **Logs** section)
+## Step 9: Set Up Logs and Monitoring
 
-### Performance Optimization
+### Using PM2
 
-1. **Enable caching**: Configure browser caching through `.htaccess`
-2. **Image optimization**: Compress images before deployment
-3. **CDN integration**: Consider using a CDN for static assets
+If you used PM2 to manage your application:
 
-## Security Best Practices
+```bash
+# Check logs
+pm2 logs aetherion-ecosystem
 
-1. **Keep software updated**: Regularly update all components
-2. **Restrict directory access**: Use `.htaccess` to protect sensitive directories
-3. **Security headers**: Implement HTTP security headers
-4. **Database hardening**: Use prepared statements for all database operations
-5. **Regular audits**: Perform security audits of your code and infrastructure
+# Monitor the application
+pm2 monit
+```
 
-## Additional Resources
+### Using Log Files
 
-- [CPanel Documentation](https://docs.cpanel.net/)
-- [PHP Security Best Practices](https://phptherightway.com/#security)
-- [MySQL Performance Tuning](https://dev.mysql.com/doc/refman/8.0/en/optimization.html)
+The application writes logs to the `logs` directory:
 
-For support, contact the Aetherion team at support@aifreedomtrust.com
+- `server.log`: Main server logs
+- `error.log`: Error logs
+- `access.log`: HTTP access logs
+
+## Troubleshooting
+
+### Application Won't Start
+
+1. Check the Node.js version: `node -v`
+2. Verify all dependencies are installed: `npm install --production`
+3. Check for errors in the logs: `cat logs/error.log`
+4. Ensure the port is not in use: `lsof -i :3000`
+
+### 502 Bad Gateway or 504 Gateway Timeout
+
+1. Make sure the Node.js application is running
+2. Check if the proxy configuration is correct
+3. Increase timeout values in the proxy configuration
+
+### Permission Issues
+
+```bash
+# Fix permissions for your application files
+chmod -R 755 ~/public_html/atc
+chmod -R 644 ~/public_html/atc/*.js
+chmod -R 644 ~/public_html/atc/*.json
+chmod 755 ~/public_html/atc/node_modules/.bin/*
+```
+
+## Support and Maintenance
+
+### Updating the Application
+
+To update the application:
+
+1. Stop the running instance: `pm2 stop aetherion-ecosystem`
+2. Pull the latest code or upload a new deployment package
+3. Install dependencies: `npm install --production`
+4. Start the application: `pm2 start aetherion-ecosystem`
+
+### Backing Up
+
+Regularly back up your application:
+
+```bash
+# Create a backup archive
+tar -czf ~/backups/aetherion-ecosystem-$(date +%Y%m%d).tar.gz ~/public_html/atc
+```
+
+### Monitoring
+
+Set up regular monitoring to ensure the application remains healthy:
+
+1. Use PM2 monitoring: `pm2 monit`
+2. Configure PM2 to send email alerts on application crashes
+3. Set up a separate uptime monitoring service to check the site regularly
+
+## Contact
+
+For assistance with deployment issues, please contact the AI Freedom Trust team.

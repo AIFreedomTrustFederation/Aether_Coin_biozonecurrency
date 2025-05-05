@@ -1,185 +1,201 @@
-# Aetherion Wallet Deployment Guide for aifreedomtrust.com
+# Aetherion Ecosystem Deployment to atc.aifreedomtrust.com
 
-This comprehensive guide covers the deployment of Aetherion Wallet to the registered domain aifreedomtrust.com and its subdomains.
+This guide provides specific instructions for deploying the Aetherion Ecosystem to atc.aifreedomtrust.com.
 
 ## Overview
 
-The Aetherion Wallet application has been enhanced to support both custom HTTQS protocol access and regular web browser access through traditional HTTPS, specifically for the aifreedomtrust.com domain. This dual-access approach ensures maximum compatibility while maintaining quantum-resistant security features.
+The Aetherion Ecosystem will be deployed to atc.aifreedomtrust.com, a subdomain of aifreedomtrust.com. The deployment includes:
 
-## Domain Setup
+- Combined server routing traffic to multiple Vite instances
+- Brand Showcase application (/brands)
+- Aetherion Wallet application (/wallet)
+- Third application (/app3)
+- WebSocket server for real-time communication
 
-### Domain Structure
-- **Main Domain**: aifreedomtrust.com
-- **Subdomain**: atc.aifreedomtrust.com (ATC Portal)
-- **Quantum DNS**: .trust TLD via FractalCoin DNS system
+## Prerequisites
 
-### DNS Configuration
-1. Configure A records pointing to your server IP:
-   ```
-   aifreedomtrust.com → your-server-ip
-   www.aifreedomtrust.com → your-server-ip
-   atc.aifreedomtrust.com → your-server-ip
-   ```
+1. Access to aifreedomtrust.com's cPanel
+2. GitHub repository for the Aetherion Ecosystem
+3. Node.js 14+ on the hosting server
+4. GitHub Personal Access Token for automated deployments
 
-2. For subdomain wildcard support:
-   ```
-   *.aifreedomtrust.com → your-server-ip
-   ```
+## Deployment Process
 
-## Deployment Options
+The deployment will be handled by:
 
-### Option 1: Automated Deployment (Recommended)
+1. GitHub Actions for CI/CD pipeline
+2. cPanel for hosting and domain configuration
+3. PM2 for process management on the server
 
-1. Update server details in `deploy-to-production.sh`:
+## Step 1: DNS Configuration
+
+Configure DNS records for atc.aifreedomtrust.com:
+
+1. Log in to your domain registrar or DNS management panel
+2. Create an A record:
+   - Name: atc
+   - Type: A
+   - Value: [Your server IP address]
+   - TTL: 3600 (or default)
+
+## Step 2: cPanel Setup
+
+1. Log in to cPanel for aifreedomtrust.com
+2. Create a subdomain:
+   - Subdomain: atc
+   - Document Root: /public_html/atc
+3. Set up SSL certificate:
+   - Navigate to SSL/TLS section
+   - Request a Let's Encrypt certificate for atc.aifreedomtrust.com
+
+## Step 3: Repository Setup
+
+If your code is not already in a GitHub repository:
+
+1. Create a new repository on GitHub
+2. Initialize Git in your project folder:
    ```bash
-   SERVER_USER="your-server-username"
-   SERVER_HOST="your-server-ip"
+   git init
+   git add .
+   git commit -m "Initial commit"
+   git remote add origin https://github.com/yourusername/aetherion-ecosystem.git
+   git push -u origin main
    ```
 
-2. Run the deployment script:
+3. Set up GitHub secrets:
+   - Go to repository Settings > Secrets and variables > Actions
+   - Add the following secrets:
+     - `CPANEL_SERVER`: aifreedomtrust.com
+     - `CPANEL_USERNAME`: [Your cPanel username]
+     - `CPANEL_PASSWORD`: [Your cPanel password]
+     - `CPANEL_PATH`: /public_html/atc/
+     - `GITHUB_TOKEN`: [Your GitHub token]
+
+## Step 4: Configure GitHub Actions
+
+1. Run the GitHub Actions generator script:
    ```bash
-   ./deploy-to-production.sh
+   node github-actions-generator.js
    ```
-   
-3. Follow the on-screen instructions to complete the deployment.
 
-### Option 2: Manual Deployment
-
-1. Build the application:
+2. Commit and push the generated workflow file:
    ```bash
-   npm run build
+   git add .github/workflows/deploy.yml
+   git commit -m "Add GitHub Actions workflow"
+   git push origin main
    ```
 
-2. Transfer files to your server:
+## Step 5: First Deployment
+
+The first deployment will occur automatically after pushing the workflow file to GitHub. To monitor:
+
+1. Go to the Actions tab in your GitHub repository
+2. Watch the deployment workflow execute
+3. Upon completion, check https://atc.aifreedomtrust.com
+
+## Step 6: Verify Deployment
+
+After deployment, verify:
+
+1. Main site loads correctly at https://atc.aifreedomtrust.com
+2. Brand Showcase works at https://atc.aifreedomtrust.com/brands
+3. Aetherion Wallet works at https://atc.aifreedomtrust.com/wallet
+4. Third application works at https://atc.aifreedomtrust.com/app3
+5. API endpoints respond correctly
+
+## Step 7: Configure Environment Variables
+
+Set up environment variables on the server:
+
+1. Create/edit `.env` file in the application root:
+   ```
+   NODE_ENV=production
+   PORT=3000
+   PUBLIC_URL=https://atc.aifreedomtrust.com
+   ```
+
+2. If using OpenAI or Stripe, add their API keys:
+   ```
+   OPENAI_API_KEY=sk-...
+   STRIPE_SECRET_KEY=sk_...
+   ```
+
+## Ongoing Maintenance
+
+### Updates and Deployments
+
+For future updates:
+
+1. Make changes to your local code
+2. Commit and push to GitHub:
    ```bash
-   scp -r dist server shared client/public server.js package.json your-username@your-server-ip:/var/www/aetherion/
+   git add .
+   git commit -m "Update description"
+   git push origin main
    ```
+3. GitHub Actions will automatically deploy the changes
 
-3. Set up the server environment:
-   ```bash
-   # On your server
-   cd /var/www/aetherion
-   cp .env.production.example .env.production
-   # Edit .env.production with your values
-   npm install --production
-   ```
+### Monitoring
 
-4. Install and configure Nginx:
-   ```bash
-   sudo apt install -y nginx certbot python3-certbot-nginx
-   sudo cp nginx.conf.example /etc/nginx/sites-available/aifreedomtrust.com
-   sudo ln -s /etc/nginx/sites-available/aifreedomtrust.com /etc/nginx/sites-enabled/
-   sudo nginx -t
-   sudo systemctl reload nginx
-   ```
+1. SSH into the server: `ssh username@aifreedomtrust.com`
+2. Check application status: `pm2 status`
+3. View logs: `pm2 logs aetherion-ecosystem`
+4. Monitor performance: `pm2 monit`
 
-5. Set up SSL:
-   ```bash
-   sudo certbot --nginx -d aifreedomtrust.com -d www.aifreedomtrust.com -d atc.aifreedomtrust.com
-   ```
+### Rollbacks
 
-6. Configure systemd service:
-   ```bash
-   sudo cp aetherion.service /etc/systemd/system/
-   sudo systemctl daemon-reload
-   sudo systemctl enable aetherion.service
-   sudo systemctl start aetherion.service
-   ```
+If you need to roll back to a previous version:
 
-## Accessing the Application
+1. In GitHub, navigate to Actions > Completed workflows
+2. Find the successful workflow for the version you want to restore
+3. Click "Re-run workflow"
 
-After deployment, your application will be accessible at:
+## Domain Structure
 
-- **Main Application**: https://aifreedomtrust.com
-- **ATC Portal**:
-  - Direct access: https://aifreedomtrust.com/atc-aifreedomtrust
-  - Subdomain access: https://atc.aifreedomtrust.com (redirects to the direct access URL)
+After deployment, your domain structure will be:
 
-## Special Features
+- Main application: https://atc.aifreedomtrust.com/
+- Brand Showcase: https://atc.aifreedomtrust.com/brands
+- Aetherion Wallet: https://atc.aifreedomtrust.com/wallet
+- Third Application: https://atc.aifreedomtrust.com/app3
+- Status page: https://atc.aifreedomtrust.com/status
+- API health endpoint: https://atc.aifreedomtrust.com/api/health
+- WebSocket endpoint: wss://atc.aifreedomtrust.com/ws
 
-### ATC Portal
+## Custom Subdomain Setup
 
-The ATC Portal can be accessed through two methods:
+If you want to set up additional custom subdomains (e.g., biozoe.aifreedomtrust.com):
 
-1. **Regular HTTPS Browser Access**:
-   - Through the navigation menu in the main application
-   - Directly via https://aifreedomtrust.com/atc-aifreedomtrust
-   - Via subdomain at https://atc.aifreedomtrust.com
-
-2. **Quantum-Secure HTTQS Access**:
-   - Through the AetherCore Browser within the application
-   - Using the protocol: httqs://www.atc.aifreedomtrust.com
-
-### Quantum Security Features
-
-The deployment includes several quantum security features:
-
-1. **HTTQS Protocol Support**: Custom protocol for quantum-resistant connections
-2. **Dual-layer Security**: Traditional TLS 1.3 combined with post-quantum cryptography
-3. **Certificate Verification**: Enhanced verification process in the AetherCore Browser
-4. **Visual Security Indicators**: Clear indication of connection security status
-
-## Maintenance and Updates
-
-### Log Files
-
-Important logs are stored in:
-- Application logs: `/var/log/aetherion/app.log`
-- Nginx access logs: `/var/log/nginx/aifreedomtrust.com-access.log`
-- Nginx error logs: `/var/log/nginx/aifreedomtrust.com-error.log`
-
-### Updating the Application
-
-1. Build the new version locally
-2. Run the deployment script with the new version
-3. Or manually update files and restart the service:
-   ```bash
-   sudo systemctl restart aetherion.service
-   ```
-
-### SSL Certificate Renewal
-
-SSL certificates from Let's Encrypt are valid for 90 days and will auto-renew via the certbot cron job. To manually renew:
-
-```bash
-sudo certbot renew
-```
+1. Add DNS A record for the new subdomain pointing to the same server IP
+2. Configure Nginx/Apache to route traffic to the correct application
+3. Add routing logic in the combined-server.js file to handle the new subdomain
 
 ## Troubleshooting
 
-### Application Not Starting
+### Common Issues
 
-Check the service status and logs:
-```bash
-sudo systemctl status aetherion.service
-sudo journalctl -u aetherion.service
-```
+1. **Application not accessible:**
+   - Check if Node.js server is running: `pm2 status`
+   - Verify Nginx/Apache configuration
+   - Check firewall settings
 
-### Nginx Configuration Issues
+2. **Deployment fails:**
+   - Check GitHub Actions logs for errors
+   - Verify GitHub secrets are correctly set
+   - Ensure server has sufficient disk space
 
-Validate the Nginx configuration:
-```bash
-sudo nginx -t
-```
+3. **SSL certificate issues:**
+   - Renew Let's Encrypt certificate: `certbot renew`
+   - Check certificate paths in Nginx/Apache configuration
 
-### Database Connection Problems
+## Contact and Support
 
-Verify the database connection details in the .env file and check that PostgreSQL is running:
-```bash
-sudo systemctl status postgresql
-```
+For issues related to deployment, contact the AI Freedom Trust team at:
 
-### SSL Certificate Issues
+- Email: support@aifreedomtrust.com
+- GitHub: Open an issue in the repository
 
-Check certificate status:
-```bash
-sudo certbot certificates
-```
+## Reference Documentation
 
-## Security Recommendations
-
-1. Enable a firewall (UFW) with only necessary ports open (80, 443, SSH)
-2. Install and configure fail2ban to prevent brute force attacks
-3. Keep the system and all packages updated
-4. Set up automated database backups
-5. Implement server monitoring and alerting
+- [GitHub Actions Deployment Guide](./GITHUB-ACTIONS-DEPLOYMENT-GUIDE.md)
+- [cPanel Deployment Guide](./CPANEL-DEPLOYMENT-GUIDE.md)
