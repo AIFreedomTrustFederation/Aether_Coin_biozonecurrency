@@ -8,15 +8,21 @@
 
 @layer base {
   html {
-    @apply border-border;
+    @apply border-solid border-[hsl(var(--border))];
   }
 
   html, body, #root {
-    @apply h-full w-full font-sans antialiased bg-background text-foreground overflow-hidden;
+    @apply h-full w-full antialiased overflow-hidden;
+    font-family: Inter, system-ui, sans-serif;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
   }
 
   body {
-    @apply font-sans antialiased bg-background text-foreground;
+    @apply antialiased;
+    font-family: Inter, system-ui, sans-serif;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
   }
   
   /* Ensure all scrollable areas have smooth scrolling */

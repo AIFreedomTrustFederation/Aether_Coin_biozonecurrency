@@ -146,7 +146,8 @@
 }
 
 .gradient-text {
-  @apply text-transparent bg-clip-text bg-gradient-to-r from-forest-600 to-water-500;
+  @apply text-transparent bg-clip-text;
+  background-image: linear-gradient(to right, #3a7a3c, #0ca3eb);
 }
 
 .ecosystem-border {
@@ -159,7 +160,7 @@
   inset: 0;
   border-radius: inherit;
   padding: 2px;
-  background: linear-gradient(to right, theme('colors.forest.400'), theme('colors.water.400'));
+  background: linear-gradient(to right, #65b668, #36bff8);
   -webkit-mask: 
     linear-gradient(#fff 0 0) content-box, 
     linear-gradient(#fff 0 0);
@@ -189,7 +190,7 @@
 
 .bio-zoe-divider {
   height: 2px;
-  background: linear-gradient(to right, theme('colors.forest.400'), theme('colors.water.400'));
+  background: linear-gradient(to right, #65b668, #36bff8);
   margin: 2rem auto;
   width: 50%;
   border-radius: 1px;
