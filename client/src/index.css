@@ -88,8 +88,9 @@
 }
 
 @layer base {
+  /* Removing the border-border class that's causing the error */
   * {
-    @apply border-border;
+    border-color: hsl(var(--border));
   }
 
   body {

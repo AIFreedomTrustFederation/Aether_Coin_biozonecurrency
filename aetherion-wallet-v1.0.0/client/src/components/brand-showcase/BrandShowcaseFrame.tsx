@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { useQuantumState } from '@/features/quantum-security';
-import * as quantumBridge from '@/features/quantum-security/lib/quantumBridge';
+import { useQuantumState, quantumBridge } from '@/features/quantum-security';
 import { Shield, Check, ExternalLink, RefreshCw } from 'lucide-react';
+
+// Debug import status
+console.log("BrandShowcaseFrame imported useQuantumState:", !!useQuantumState);
+console.log("BrandShowcaseFrame imported quantumBridge:", !!quantumBridge, Object.keys(quantumBridge));
 
 /**
  * BrandShowcaseFrame Component
@@ -119,7 +122,7 @@ const BrandShowcaseFrame: React.FC = () => {
       {isSecureChannelEstablished ? (
         <iframe 
           key={iframeKey}
-          src="/brand-ecosystem-showcase" 
+          src="/brands" 
           className="w-full flex-1 border-0"
           title="AI Freedom Trust Brand Ecosystem"
           sandbox="allow-same-origin allow-scripts allow-forms"

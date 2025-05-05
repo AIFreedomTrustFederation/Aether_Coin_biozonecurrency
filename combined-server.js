@@ -547,13 +547,15 @@ app.use(config.aetherionWallet.basePath, (req, res, next) => {
   walletProxy(req, res, next);
 });
 
-// Brand Showcase route
-app.get(config.brandShowcase.basePath, (req, res, next) => {
+// Brand Showcase route - handle all methods and all paths under /brands
+app.use(config.brandShowcase.basePath, (req, res, next) => {
+  console.log(`Brand Showcase request received: ${req.method} ${req.originalUrl}`);
   brandShowcaseProxy(req, res, next);
 });
 
 // Third application route (placeholder for future)
-app.get(config.thirdApp.basePath, (req, res, next) => {
+app.use(config.thirdApp.basePath, (req, res, next) => {
+  console.log(`Third App request received: ${req.method} ${req.originalUrl}`);
   thirdAppProxy(req, res, next);
 });
 

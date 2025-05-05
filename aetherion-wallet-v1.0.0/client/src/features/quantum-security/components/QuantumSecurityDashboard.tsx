@@ -8,6 +8,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useQuantumState } from '../hooks/useQuantumState';
+
+// Debug imports
+console.log("QuantumSecurityDashboard loaded with useQuantumState:", !!useQuantumState);
 import {
   Shield, 
   Zap, 

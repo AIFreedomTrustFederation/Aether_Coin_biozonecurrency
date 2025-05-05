@@ -10,13 +10,25 @@
  * 4. Eternal Now Engine - Time convergence system
  */
 
-// Export all components
-export { QuantumBridge } from './lib/quantumBridge';
-export { FractalConsensus } from './lib/fractalConsensus';
-export { TemporalEntanglement } from './lib/temporalEntanglement';
-export { getEternalNowEngine, useEternalNow } from './lib/eternalNowEngine';
+// Export all components with correct implementations
+export * as quantumBridge from './lib/quantumBridge';
+export * as fractalConsensus from './lib/fractalConsensus';
+export * as temporalEntanglement from './lib/temporalEntanglement';
+export * as temporalState from './lib/temporalState';
+export { getEternalNowEngine } from './lib/eternalNowEngine';
 export { default as QuantumSecurityDashboard } from './components/QuantumSecurityDashboard';
 export { useQuantumState } from './hooks/useQuantumState';
+
+// Log active exports for debugging
+console.log('Quantum Security Module loaded with the following exports:', {
+  quantumBridge: true,
+  fractalConsensus: true,
+  temporalEntanglement: true,
+  temporalState: true,
+  eternalNowEngine: true,
+  QuantumSecurityDashboard: true,
+  useQuantumState: true
+});
 
 // Export types
 export type { 
