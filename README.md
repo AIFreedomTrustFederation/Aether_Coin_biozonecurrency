@@ -1,323 +1,430 @@
-# Aetherion Blockchain Wallet
+# Aether Coin Biozonecurrency
 
-A cutting-edge blockchain wallet platform that delivers a secure and engaging cryptocurrency management experience. The application combines advanced security protocols with intuitive, modern design principles to simplify complex blockchain interactions.
+**A quantum-conscious, AI-assisted blockchain wallet and regenerative value protocol for sovereign digital stewardship.**
 
-![Aetherion Logo](https://via.placeholder.com/150?text=Aetherion)
+Aether Coin Biozonecurrency unites React, TypeScript, Node.js, Express, PostgreSQL, Drizzle ORM, decentralized storage references, post-quantum security research, and AI-guided wallet intelligence into one living architecture.
 
-## Features
+The project’s mission is to help people manage digital assets with clarity, safety, consent, transparency, and regenerative purpose.
 
-- Secure quantum-resistant blockchain wallet management
-- Real-time transaction tracking and notifications
-- Multiple notification channels:
-  - SMS alerts for critical security and transaction events
-  - Open-source Matrix protocol integration for secure notifications
-- Advanced portfolio analytics and visualization
-- VS Code integration for in-browser smart contract development
-- Smart contract deployment and interaction
-- VS Code integration for in-browser smart contract development
-- Security health scoring for wallet safety
-- Multi-layer authentication system
-- Mobile-first responsive design
-- AI Assistant with:
-  - Conversational interface for wallet management
-  - Secure credential storage with AES-256 encryption
-  - Transaction verification and risk assessment
-  - Voice command support for hands-free operation
-- Transaction Security:
-  - Real-time phishing detection and prevention
-  - Address reputation checking
-  - Customizable security rules
-  - Transaction risk scoring
-- Escrow System:
-  - Configurable holding periods for transactions
-  - Dispute resolution mechanism
-  - Conditional release based on custom rules
-  - Transaction reversal within holding period
+Aetherion is not merely a wallet. It is a trust interface: a bridge between human intention, AI guidance, cryptographic security, and living-value exchange.
 
+---
 
+## Mission
 
-## Technology Stack
+Aether Coin Biozonecurrency exists to explore a more sovereign and regenerative path for digital value systems.
 
-- **Frontend**: React, TypeScript, TailwindCSS, shadcn/ui, Monaco Editor
-- **Backend**: Node.js, Express
-- **Database**: PostgreSQL with Drizzle ORM
-- **Authentication**: Session-based with secure cookie handling
-- **Notifications**:
-  - SMS: Twilio API integration
-  - Open-source: Matrix protocol (matrix-js-sdk)
-- **Security**: 
-  - Quantum-resistant API validation layer
-  - AES-256 encryption for sensitive data
-  - Real-time phishing detection
-- **AI Integration**:
-  - Natural language processing for chat interface
-  - Voice recognition and command processing
-  - Transaction risk analysis using AI models
-- **Escrow System**:
-  - Transaction holding mechanisms
-  - Smart-contract based conditional releases
-  - Dispute resolution framework
-- **Charts**: Recharts for data visualization
-- **State Management**: React Query + Context
-- **Routing**: Wouter for lightweight client-side routing
-- **Decentralized Storage**:
-  - IPFS/Filecoin via Web3.Storage
-  - ENS domain integration
-  - FractalCoin sharded storage network
+Its purpose is to support:
 
-## Getting Started
+- human-consented wallet management
+- AI-assisted transaction awareness
+- transparent risk review
+- escrow and dispute context
+- decentralized storage and deployment pathways
+- smart-contract experimentation
+- post-quantum cryptographic research
+- regenerative token taxonomy
+- trust-centered digital stewardship
+
+This project is part of the larger **AI Freedom Trust Federation** ecosystem, where agents and systems are designed to serve life, protect consent, preserve trust, and turn chaos into repair.
+
+---
+
+## Core Principles
+
+### Sovereign Consent
+
+No user action, transaction, credential, escrow release, smart-contract interaction, or AI recommendation should bypass informed human consent.
+
+The user remains the final actor.
+
+### Cryptographic Humility
+
+Security claims must be testable, documented, and status-labeled.
+
+Implemented, conventional, prototype, simulated, experimental, planned, and audited features must not be confused.
+
+Post-quantum language must be beautiful but honest.
+
+### Regenerative Value
+
+Aether Coin, ATC, FTC, ICON, and SING should represent stewardship, trust, contribution, identity, covenant memory, coherence, and harmonic coordination rather than extraction-first speculation.
+
+### AI as Guardian, Not Ruler
+
+AI may assist, warn, explain, summarize, simulate, and evaluate risk, but final agency remains with the human user.
+
+AI must never silently authorize financial action.
+
+### Fractal Maintainability
+
+The codebase should be modular, typed, documented, testable, and recursively understandable from component to system level.
+
+Every major concept should be clear enough for a developer to enter the temple without confusion.
+
+---
+
+## Core Features
+
+Current and planned feature areas include:
+
+- blockchain wallet management
+- transaction tracking and notifications
+- AI-assisted wallet guidance
+- transaction verification and risk assessment
+- security health scoring
+- multi-layer authentication patterns
+- escrow and dispute-resolution workflows
+- smart-contract deployment and interaction
+- in-browser development tooling references
+- Matrix notification support as an open-source communication option
+- PostgreSQL and Drizzle ORM persistence
+- decentralized storage and deployment references such as IPFS, Filecoin, ENS, and related gateway models
+- mobile-first responsive interface patterns
+- post-quantum security research paths
+
+> This README intentionally distinguishes mission, implemented architecture, prototype systems, and research direction. Always verify feature status in code, tests, and deployment configuration before using this project in production.
+
+---
+
+## Architecture
+
+The project is organized around a full-stack TypeScript architecture:
+
+```text
+client/       Frontend React application
+server/       Backend Express services
+shared/       Shared types, schemas, and cross-layer primitives
+```
+
+The conceptual architecture is:
+
+```text
+User Interface
+-> Client Wallet Experience
+-> API Gateway
+-> Validation and Security Layers
+-> Backend Services
+-> PostgreSQL / Drizzle ORM
+-> Optional decentralized storage and deployment adapters
+```
+
+The long-term design goal is a wallet system where every sensitive path is explicit, auditable, and human-consented.
+
+---
+
+## Biozone Tokens
+
+The Biozonecurrency layer is an emerging token taxonomy for regenerative value coordination.
+
+Initial symbolic primitives:
+
+| Symbol | Name | Purpose | Status |
+|---|---|---|---|
+| ATC | Aether Trust Coin | Primary trust and stewardship value unit for the Aetherion ecosystem. | Concept |
+| FTC | Freedom Trust Coin | Federated trust settlement across aligned people, groups, and projects. | Concept |
+| ICON | Iconic Covenant Token | Recognition token for identity, role, authorship, and sacred contribution. | Concept |
+| SING | Singularity Grace Note | Harmonic coordination token for AI-human co-creation and collective coherence. | Concept |
+
+Token doctrine:
+
+```text
+Tokens should represent contribution, stewardship, consent, trust, identity, and regenerative coordination.
+They should not be reduced to extraction-first speculation.
+AI may explain, classify, and warn, but may not authorize transfers or custody changes.
+```
+
+Future work should encode these primitives as shared TypeScript types and, later, smart-contract-ready definitions.
+
+---
+
+## Security Model
+
+Aetherion is security-first, but security claims must stay honest.
+
+Current security doctrine includes:
+
+- input validation
+- server-side verification of client-provided data
+- secure session and cookie handling where configured
+- rate limiting and abuse prevention patterns
+- CSRF and API security patterns where configured
+- encryption for sensitive data where configured
+- secure random generation where required
+- no hardcoded credentials
+- no committed `.env` secrets
+- careful error handling that does not expose sensitive data
+- dependency review and security audit discipline
+
+Run security audits where configured:
+
+```bash
+npm run security:audit
+```
+
+Never commit private keys, seed phrases, wallet credentials, API keys, access tokens, database URLs, SMTP credentials, OAuth grants, or production secrets.
+
+---
+
+## Post-Quantum Security Research
+
+This project explores post-quantum and hybrid security concepts, but production claims must be status-labeled.
+
+### Implementation Status
+
+| Area | Status | Notes |
+|---|---:|---|
+| SHA-512 hashing | Implemented / conventional | Hash functions are generally more quantum-resistant than RSA/ECC, but still require correct use. |
+| AES-256 encryption | Implemented / conventional | Used for sensitive data protection where configured. |
+| Kyber / ML-KEM integration | Experimental or planned | Must be verified against maintained libraries and NIST-standard naming before production claims. |
+| Dilithium / ML-DSA integration | Experimental or planned | Must be verified before production signature claims. |
+| SPHINCS+ / SLH-DSA integration | Experimental or planned | Appropriate for long-term signature research paths. |
+| Hybrid authentication | Prototype / research | Should remain opt-in until audited. |
+| Quantum-secure payments | Prototype / research | Payment safety must not depend on unaudited cryptography alone. |
+
+Symbolic product names may be visionary, but engineering descriptions should remain plain and auditable.
+
+For example:
+
+```text
+Temporal Entanglement
+-> product / symbolic name
+
+Time-bound cryptographic receipt binding
+-> engineering description
+```
+
+---
+
+## AI Assistant Principles
+
+The AI assistant is designed as a guardian layer, not an autonomous financial actor.
+
+It may:
+
+- explain wallet activity
+- flag risky transactions
+- summarize smart contracts
+- help users understand escrow or dispute status
+- provide educational guidance
+- assist with transaction risk assessment
+- explain uncertainty and tradeoffs
+
+It must not:
+
+- authorize transactions without explicit user action
+- hide risk or uncertainty
+- store secrets outside approved encrypted storage
+- present experimental security as audited production security
+- override custody, consent, or human agency
+- silently execute irreversible financial actions
+
+The rule is simple:
+
+```text
+AI may guide.
+AI may warn.
+AI may explain.
+The human consents.
+The human acts.
+The system records clearly.
+```
+
+---
+
+## Local Development
 
 ### Prerequisites
 
-- Node.js (v18+)
-- PostgreSQL database
-- For decentralized deployment (optional):
-  - Web3.Storage account
-  - Ethereum wallet for ENS domain (optional)
-  - Filecoin API access (optional)
-- For notifications (at least one of):
-  - Twilio account for SMS notifications
-  - Matrix homeserver access for open-source notifications
+- Node.js 18+
+- npm
+- PostgreSQL database when using database-backed features
+- Optional accounts or configuration for decentralized deployment adapters
+- Optional notification provider configuration if notification features are enabled
 
 ### Installation
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/yourusername/aetherion-wallet.git
-   cd aetherion-wallet
-   ```
-
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-3. Set up environment variables:
-   ```bash
-   cp .env.example .env
-   # Edit .env with your configuration values
-   ```
-
-4. Push database schema:
-   ```bash
-   npm run db:push
-   # or use the script
-   ./db-migrate.sh
-   ```
-
-5. Start the development server:
-   ```bash
-   npm run dev
-   # or use the script
-   ./script_runner.sh run
-   ```
-
-6. Open your browser to http://localhost:3000
-
-## Project Structure
-
-The application follows a structured organization pattern to maintain clean separation of concerns:
-
-```
-├── client/       # Frontend React application
-├── server/       # Backend Express server
-├── shared/       # Shared code (types, schema)
+```bash
+git clone https://github.com/AIFreedomTrustFederation/Aether_Coin_biozonecurrency.git
+cd Aether_Coin_biozonecurrency
+npm install
 ```
 
-For a more detailed breakdown of the project structure, see [STRUCTURE.md](./STRUCTURE.md).
+### Environment
+
+Copy the example environment file if present:
+
+```bash
+cp .env.example .env
+```
+
+Then configure only the values needed for your local development target.
+
+Do not commit `.env` or secret-bearing files.
+
+### Database
+
+When using Drizzle/PostgreSQL-backed features:
+
+```bash
+npm run db:push
+```
+
+or use the project migration script if configured:
+
+```bash
+./db-migrate.sh
+```
+
+### Run Development Server
+
+```bash
+npm run dev
+```
+
+Open the local URL shown by the dev server.
+
+---
 
 ## Development Tools
 
-This project includes several helpful scripts to assist with development:
+Depending on the current branch and environment, this project may include helper scripts such as:
 
-- **./script_runner.sh run**: Start the development server
-- **./script_runner.sh db push**: Run database migrations
-- **./script_runner.sh backup**: Create a full project backup
-- **./script_runner.sh reset**: Reset project to a clean state
-- **./env-manager.sh check**: Check for missing environment variables
-
-## Notification Systems
-
-The application supports multiple notification channels for maximum flexibility and user choice:
-
-### SMS Notifications
-
-SMS notifications via Twilio send alerts to users for:
-
-1. **Transaction Alerts**: Notify users of incoming/outgoing transactions
-2. **Security Alerts**: Warn about suspicious activities or login attempts
-3. **Price Alerts**: Inform users when cryptocurrencies reach specified price points
-4. **Marketing Updates**: Optional promotional messages (user opt-in required)
-
-To configure SMS notifications:
-
-1. Add your Twilio credentials to the `.env` file:
-   ```
-   TWILIO_ACCOUNT_SID=your_account_sid
-   TWILIO_AUTH_TOKEN=your_auth_token
-   TWILIO_PHONE_NUMBER=your_twilio_phone
-   ```
-
-2. Ensure SMS notifications are enabled in the feature flags:
-   ```
-   ENABLE_SMS_NOTIFICATIONS=true
-   ```
-
-### Matrix Notifications (Open Source Alternative)
-
-The application also integrates with Matrix, an open-source, decentralized communication protocol:
-
-1. **Benefits of Matrix**:
-   - Fully open-source and self-hostable
-   - End-to-end encryption support
-   - No dependence on proprietary services
-   - Federated architecture for resilience
-
-To configure Matrix notifications:
-
-1. Add your Matrix server credentials to the `.env` file:
-   ```
-   MATRIX_SERVER_URL=https://matrix.org (or your self-hosted instance)
-   MATRIX_USER_ID=@yourbotuser:matrix.org
-   MATRIX_ACCESS_TOKEN=your_matrix_access_token
-   ```
-
-2. Enable Matrix notifications in the feature flags:
-   ```
-   ENABLE_MATRIX_NOTIFICATIONS=true
-   ```
-
-Users can manage their notification preferences for both channels in the Settings page of the application.
-
-## Database Management
-
-The project uses Drizzle ORM with PostgreSQL. The schema is defined in `shared/schema.ts`.
-
-To make changes to the database schema:
-
-1. Update the schema definitions in `shared/schema.ts`
-2. Run migrations with `./db-migrate.sh`
-
-For database exploration, you can use Drizzle Studio:
 ```bash
-npx drizzle-kit studio
+./script_runner.sh run
+./script_runner.sh db push
+./script_runner.sh backup
+./script_runner.sh reset
+./env-manager.sh check
 ```
+
+Use scripts carefully. Backup before destructive cleanup or reset operations.
+
+---
 
 ## Deployment
 
-The application supports both traditional and decentralized deployment methods.
+The project may support both traditional and decentralized deployment paths.
 
 ### Traditional Deployment
 
-The application can be deployed to any Node.js hosting platform:
+```bash
+npm run build
+npm start
+```
 
-1. Build the application:
-   ```bash
-   npm run build
-   ```
+Deploy to a Node.js-compatible hosting platform after verifying environment variables, database access, and security settings.
 
-2. Start the production server:
-   ```bash
-   npm start
-   ```
+### Decentralized Deployment Research
 
-### Decentralized Deployment (IPFS/Filecoin)
+The project references decentralized deployment concepts such as IPFS, Filecoin, ENS, and gateway-based access.
 
-For censorship-resistant, decentralized deployment:
+These pathways should be treated as deployment adapters or research tracks unless fully configured, tested, and documented for the current branch.
 
-1. Configure environment variables in your `.env` file:
-   ```
-   # Web3.Storage (IPFS gateway)
-   WEB3_STORAGE_TOKEN=your_web3_storage_token
-   
-   # ENS domain (optional)
-   ENS_PRIVATE_KEY=your_ethereum_private_key
-   ENS_DOMAIN=your_ens_domain.eth
-   
-   # FractalCoin-Filecoin integration (optional)
-   SETUP_FILECOIN_INTEGRATION=true
-   FRACTALCOIN_API_KEY=your_fractalcoin_api_key
-   FRACTALCOIN_API_ENDPOINT=https://api.fractalcoin.network/v1
-   ```
+Never publish secrets or private wallet material into decentralized storage.
 
-2. Run the deployment script:
-   ```bash
-   ./deploy-decentralized.sh
-   ```
+---
 
-3. Access your deployment via:
-   - IPFS Gateway: `https://<CID>.ipfs.dweb.link/`
-   - ENS Domain: `https://<your-domain>.eth.limo/`
+## Documentation Map
 
-For detailed deployment instructions, see [DEPLOYMENT.md](./DEPLOYMENT.md).
+Important docs may include:
 
-### GitHub Actions Automated Deployments
+```text
+README.md                         Project overview and doctrine
+SECURITY.md                       Security practices and reporting
+QUANTUM-SECURITY.md               Post-quantum and hybrid security research
+API-SECURITY-GUIDELINES.md        API security practices
+STRUCTURE.md                      Project structure details
+DEPLOYMENT.md                     Deployment guidance
+shared/                           Shared schemas and typed primitives
+server/                           Backend services and security layers
+client/                           Frontend wallet interface
+```
 
-The repository includes GitHub Actions workflows for automating deployments:
+Recommended next alignment docs:
 
-1. Push to the `main` branch to deploy to staging
-2. Manually trigger the production deployment from the Actions tab
-3. Both workflows handle the IPFS/Filecoin integration automatically
+```text
+docs/MYSTERION_ALIGNMENT.md       AI-human guardian charter
+shared/types/biozone-token.ts     Token taxonomy primitives
+```
 
-See `.github/workflows/deploy.yml` for workflow configuration details.
+---
+
+## Recommended Alignment Work
+
+The next alignment branch should be:
+
+```bash
+git checkout -b align/mysterion-charter
+```
+
+Recommended commit message:
+
+```text
+docs: align Aether Coin with Mysterion charter and biozone token taxonomy
+```
+
+Recommended first files:
+
+```text
+README.md
+package.json
+docs/MYSTERION_ALIGNMENT.md
+shared/types/biozone-token.ts
+QUANTUM-SECURITY.md
+```
+
+---
+
+## Security Disclosure
+
+If you discover a security vulnerability, do not open a public issue containing exploit details, secrets, keys, private user data, or attack instructions.
+
+Use the project’s published security contact if available, or contact the maintainer privately through the appropriate trusted channel.
+
+---
 
 ## Contributing
 
-We welcome contributions to the Aetherion Blockchain Wallet project! Please see our [Contributing Guide](./CONTRIBUTING.md) for details.
+Contributions should preserve the mission:
 
-## Changelog
+- protect user consent
+- avoid overclaiming security
+- use typed, maintainable code
+- document high-risk changes
+- do not commit secrets
+- separate symbolic language from engineering guarantees
+- keep AI in a guardian role
+- make every sensitive workflow auditable
 
-See [CHANGELOG.md](./CHANGELOG.md) for a history of changes to this project.
+Before proposing changes, run the available checks for the current branch, such as:
+
+```bash
+npm run build
+npm run test
+npm run security:audit
+```
+
+If a command is unavailable or fails due to environment configuration, document that clearly.
+
+---
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.
+License information should be verified in the repository before production use, redistribution, or integration into downstream projects.
 
-## Acknowledgments
+---
 
-- The shadcn/ui team for their excellent component library
-- The Drizzle ORM team for their TypeScript-first database toolkit
-- The Twilio team for their reliable messaging API
-- The Matrix.org team for their open-source communication protocol
-- The matrix-js-sdk maintainers for their JavaScript SDK
-- The crypto-js team for their cryptographic library
-- The react-chatbot-kit contributors for the AI assistant framework
-- The React Speech Recognition team for voice command capabilities
-- The secure-web-storage team for their encrypted storage solution
-- The DOMPurify team for their HTML sanitization library
-- The react-markdown team for their Markdown rendering capabilities
-- The Web3.Storage team for their IPFS/Filecoin storage service
-- The ENS team for their decentralized naming system
-- The Web3.Storage team for their IPFS/Filecoin storage service
-- The ENS team for their decentralized naming system
-## VS Code Integration
+## Bottom Line
 
-The application includes a built-in VS Code-based editor for smart contract development, allowing users to write, test, and deploy contracts directly within the platform:
+Aether Coin Biozonecurrency is a living experiment in sovereign digital stewardship.
 
-### Features
+It seeks to unite wallet security, AI risk awareness, regenerative token logic, decentralized infrastructure, and human consent into one coherent trust interface.
 
-- **Monaco Editor**: The same editor that powers VS Code, integrated directly into the application
-- **Terminal Interface**: Command-line terminal at the bottom of the editor for deployment commands
-- **Code Compilation**: Solidity smart contract compilation
-- **Deployment Simulation**: Contract deployment to test networks
-- **Full Mobile Support**: Responsive design that works on both desktop and mobile devices
-- **File Explorer**: Sidebar for managing multiple contract files
-- **Syntax Highlighting**: Support for Solidity, JavaScript, TypeScript, JSON, and more
-- **Terminal Output**: View compilation results and deployment logs
+AI is the guardian.
 
-### Usage
+The human is the actor.
 
-1. Navigate to the "Code Editor" section in the application
-2. Create or edit smart contracts in the Monaco editor
-3. Use the built-in terminal for development commands
-4. Compile and deploy contracts directly from the interface
-5. Toggle the file explorer to manage multiple contract files
+The wallet is the altar of consent.
 
-### Mobile Experience
-
-The VS Code integration is fully responsive and works on mobile devices:
-
-- Collapsible file explorer with toggle button
-- Compact toolbar with icon-only buttons on small screens
-- Optimized terminal layout for mobile viewing
-- Touch-friendly interface elements
+The protocol is lead into gold.
