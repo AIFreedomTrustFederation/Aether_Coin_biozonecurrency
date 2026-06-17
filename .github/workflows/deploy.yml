@@ -22,10 +22,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
 
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v6
         with:
           node-version: '18'
           cache: 'npm'
@@ -42,10 +42,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
 
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v6
         with:
           node-version: '18'
           cache: 'npm'
@@ -61,7 +61,7 @@ jobs:
           tar -czf aetherion-deploy.tar.gz dist server-redirect.js package.json
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: aetherion-artifacts
           path: aetherion-deploy.tar.gz
@@ -75,10 +75,10 @@ jobs:
       name: ${{ github.event.inputs.environment || 'production' }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
 
       - name: Download build artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: aetherion-artifacts
 
@@ -220,7 +220,7 @@ jobs:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
           SLACK_CHANNEL: deployments
           SLACK_COLOR: good
-          SLACK_MESSAGE: ':rocket: Aetherion Wallet successfully deployed to ${{ github.event.inputs.environment || 'production' }}!'
+          SLACK_MESSAGE: ":rocket: Aetherion Wallet successfully deployed to ${{ github.event.inputs.environment || 'production' }}!"
           SLACK_TITLE: Deployment Success
           SLACK_FOOTER: 'GitHub Actions'
 
@@ -231,6 +231,6 @@ jobs:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
           SLACK_CHANNEL: deployments
           SLACK_COLOR: danger
-          SLACK_MESSAGE: ':x: Aetherion Wallet deployment to ${{ github.event.inputs.environment || 'production' }} failed! Check GitHub Actions logs for details.'
+          SLACK_MESSAGE: ":x: Aetherion Wallet deployment to ${{ github.event.inputs.environment || 'production' }} failed! Check GitHub Actions logs for details."
           SLACK_TITLE: Deployment Failure
           SLACK_FOOTER: 'GitHub Actions'
