@@ -45,6 +45,16 @@ const Header: React.FC = () => {
             </NavLink>
           </li>
           <li>
+            <a
+              href="https://aifreedomtrustfederation.github.io/AI-Freedom-Trust/docs/aetherion-flight-paper-post-quantum-sovereign-network.md"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-blue-400"
+            >
+              Flight Paper
+            </a>
+          </li>
+          <li>
             <NavLink
               to="/contact"
               className={({ isActive }) =>
