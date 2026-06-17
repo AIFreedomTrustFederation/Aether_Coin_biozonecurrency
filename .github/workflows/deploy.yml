@@ -74,29 +74,54 @@ jobs:
     environment:
       name: ${{ github.event.inputs.environment || 'production' }}
     steps:
+      - name: Check deployment secrets
+        id: deployment-check
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          DEPLOY_HOST: ${{ secrets.DEPLOY_SSH_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_SSH_USER }}
+        run: |
+          missing=()
+          [ -z "$SSH_PRIVATE_KEY" ] && missing+=("SSH_PRIVATE_KEY")
+          [ -z "$DEPLOY_HOST" ] && missing+=("DEPLOY_SSH_HOST")
+          [ -z "$DEPLOY_USER" ] && missing+=("DEPLOY_SSH_USER")
+
+          if [ "${#missing[@]}" -gt 0 ]; then
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Deployment secrets are missing: ${missing[*]}. Build artifacts were created, but server deployment is skipped."
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Checkout repository
+        if: steps.deployment-check.outputs.configured == 'true'
         uses: actions/checkout@v6
 
       - name: Download build artifacts
+        if: steps.deployment-check.outputs.configured == 'true'
         uses: actions/download-artifact@v4
         with:
           name: aetherion-artifacts
 
       - name: Setup SSH key
+        if: steps.deployment-check.outputs.configured == 'true'
         uses: webfactory/ssh-agent@v0.7.0
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
       - name: Add SSH host key
+        if: steps.deployment-check.outputs.configured == 'true'
         run: |
           mkdir -p ~/.ssh
           ssh-keyscan -p ${{ secrets.DEPLOY_SSH_PORT || 22 }} ${{ secrets.DEPLOY_SSH_HOST }} >> ~/.ssh/known_hosts
 
       - name: Create backup timestamp
+        if: steps.deployment-check.outputs.configured == 'true'
         id: backup-timestamp
         run: echo "timestamp=$(date +%Y%m%d%H%M%S)" >> $GITHUB_OUTPUT
 
       - name: Backup existing deployment
+        if: steps.deployment-check.outputs.configured == 'true'
         run: |
           ssh -p ${{ secrets.DEPLOY_SSH_PORT || 22 }} ${{ secrets.DEPLOY_SSH_USER }}@${{ secrets.DEPLOY_SSH_HOST }} "
             if [ -d ~/aetherion ]; then
@@ -112,10 +137,12 @@ jobs:
           "
 
       - name: Upload package to server
+        if: steps.deployment-check.outputs.configured == 'true'
         run: |
           scp -P ${{ secrets.DEPLOY_SSH_PORT || 22 }} aetherion-deploy.tar.gz ${{ secrets.DEPLOY_SSH_USER }}@${{ secrets.DEPLOY_SSH_HOST }}:~/
 
       - name: Deploy on server
+        if: steps.deployment-check.outputs.configured == 'true'
         id: deploy
         run: |
           ssh -p ${{ secrets.DEPLOY_SSH_PORT || 22 }} ${{ secrets.DEPLOY_SSH_USER }}@${{ secrets.DEPLOY_SSH_HOST }} "
@@ -174,7 +201,7 @@ jobs:
           "
 
       - name: Rollback on failure
-        if: failure() && steps.deploy.outcome == 'failure'
+        if: failure() && steps.deployment-check.outputs.configured == 'true' && steps.deploy.outcome == 'failure'
         run: |
           ssh -p ${{ secrets.DEPLOY_SSH_PORT || 22 }} ${{ secrets.DEPLOY_SSH_USER }}@${{ secrets.DEPLOY_SSH_HOST }} "
             echo 'Deployment failed. Rolling back to previous version...'
@@ -198,7 +225,7 @@ jobs:
           "
 
       - name: Verify deployment
-        if: success() && steps.deploy.outcome == 'success'
+        if: success() && steps.deployment-check.outputs.configured == 'true' && steps.deploy.outcome == 'success'
         run: |
           echo "Waiting for application to start up completely..."
           sleep 10
@@ -214,7 +241,7 @@ jobs:
           fi
 
       - name: Notify Slack on success
-        if: success() && steps.deploy.outcome == 'success'
+        if: success() && steps.deployment-check.outputs.configured == 'true' && steps.deploy.outcome == 'success'
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
@@ -225,7 +252,7 @@ jobs:
           SLACK_FOOTER: 'GitHub Actions'
 
       - name: Notify Slack on failure
-        if: failure()
+        if: failure() && steps.deployment-check.outputs.configured == 'true'
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
