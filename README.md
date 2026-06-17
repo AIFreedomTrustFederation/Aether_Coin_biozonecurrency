@@ -2,6 +2,68 @@
 
 **A quantum-conscious, AI-assisted blockchain wallet and regenerative value protocol for sovereign digital stewardship.**
 
+## Federation Status
+
+| Field | Value |
+| --- | --- |
+| Status | Active / protocol research |
+| Federation layer | Stewardship |
+| Repository role | Wallet, regenerative value protocol, AI-guided digital stewardship, and cryptographic trust interface |
+| Visibility | Public |
+| Primary language | TypeScript |
+
+## Purpose
+
+`Aether_Coin_biozonecurrency` is the federation stewardship lane. It explores wallet UX, regenerative value primitives, consent-centered AI guidance, smart-contract context, decentralized storage references, and cryptographic trust patterns.
+
+It is high-risk by domain. Financial, wallet, custody, cryptographic, and security language must stay explicit, status-labeled, and human-consented.
+
+## Current Capabilities
+
+- React/Vite frontend architecture.
+- Express/Node backend services.
+- Shared schema/type layer.
+- PostgreSQL and Drizzle ORM integration paths.
+- Security audit scripts and API-key checks.
+- Wallet, token, AI-guardian, Matrix notification, decentralized storage, and post-quantum research references.
+
+## Setup
+
+```bash
+npm install
+npm run dev
+```
+
+Database-backed features may require PostgreSQL and environment configuration.
+
+## Verification
+
+Recommended checks:
+
+```bash
+npm run build
+npm run check
+npm run security:audit
+npm run security:deps
+```
+
+Database check when configured:
+
+```bash
+npm run db:push
+```
+
+## Roadmap
+
+1. Keep token taxonomy and wallet consent language status-labeled.
+2. Separate implemented features from prototypes, simulations, experiments, and plans.
+3. Harden security reporting, secret handling, and dependency review.
+4. Review and resolve the currently open pull request.
+
+## Public Claims Note
+
+Do not imply audited wallet safety, production custody, financial value, post-quantum guarantees, or decentralized deployment guarantees unless the implementation and audit trail support those claims.
+
 Aether Coin Biozonecurrency unites React, TypeScript, Node.js, Express, PostgreSQL, Drizzle ORM, decentralized storage references, post-quantum security research, and AI-guided wallet intelligence into one living architecture.
 
 The project’s mission is to help people manage digital assets with clarity, safety, consent, transparency, and regenerative purpose.
