@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DynastyLink | AI Freedom Trust Federation</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <div class="stars"></div>
+  <header class="topbar">
+    <a class="brand" href="#landing" data-route="landing">
+      <span class="sigil">DL</span>
+      <span><strong>DynastyLink</strong><small>AI Freedom Trust Federation</small></span>
+    </a>
+    <nav>
+      <a href="#landing" data-route="landing">Home</a>
+      <a href="#dashboard" data-route="dashboard" class="authed">Dashboard</a>
+      <a href="#builder" data-route="builder" class="authed">Trust Identity</a>
+      <a href="#packet" data-route="packet" class="authed">Packet</a>
+      <button id="logoutBtn" class="ghost authed">Logout</button>
+    </nav>
+  </header>
+
+  <main id="app">
+    <section id="landing" class="view active hero">
+      <div class="hero-copy">
+        <p class="eyebrow">Sovereign • Futuristic • Sacred • Trustworthy</p>
+        <h1>Establish your Federated Trust identity inside the 1000-Year Dynasty Trust vision.</h1>
+        <p class="lead">DynastyLink helps individuals, families, veterans, creators, businesses, ministries, cooperatives, and AI projects organize themselves as sovereign legacy-bearing nodes within the AI Freedom Trust Federation.</p>
+        <div class="hero-actions">
+          <a class="btn primary" href="#auth" data-route="auth">Begin Onboarding</a>
+          <a class="btn" href="#packet-demo">View Packet Structure</a>
+        </div>
+        <p class="disclaimer">Educational and organizational platform only. Not legal, tax, investment, insurance, or financial advice.</p>
+      </div>
+      <div class="hero-card glass">
+        <h2>Federated Trust Paths</h2>
+        <div class="path-grid" id="pathPills"></div>
+      </div>
+    </section>
+
+    <section id="auth" class="view shell">
+      <div class="panel glass two-col">
+        <div>
+          <p class="eyebrow">Account Creation</p>
+          <h2>Create your DynastyLink account</h2>
+          <p>Start by naming the Federated Trust that will become your sovereign legacy-bearing node.</p>
+          <form id="signupForm" class="form-stack">
+            <input name="full_name" placeholder="Full name" required />
+            <input name="email" type="email" placeholder="Email" required />
+            <input name="password" type="password" placeholder="Password, 8+ characters" minlength="8" required />
+            <input name="trust_name" placeholder="Federated Trust name" required />
+            <button class="btn primary" type="submit">Create Account</button>
+          </form>
+        </div>
+        <div>
+          <p class="eyebrow">Returning Steward</p>
+          <h2>Sign in</h2>
+          <form id="loginForm" class="form-stack">
+            <input name="email" type="email" placeholder="Email" required />
+            <input name="password" type="password" placeholder="Password" required />
+            <button class="btn" type="submit">Login</button>
+          </form>
+          <div id="authMessage" class="message"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="dashboard" class="view shell authed-view">
+      <div class="dashboard-grid">
+        <div class="panel glass span-2">
+          <p class="eyebrow">Dashboard</p>
+          <h2 id="dashTrustName">Federated Trust Dashboard</h2>
+          <div class="meter"><span id="completionBar"></span></div>
+          <p><strong id="completionText">0%</strong> complete</p>
+          <div class="status-grid">
+            <div><small>Covenant</small><strong id="statCovenant">Not Started</strong></div>
+            <div><small>Asset Status</small><strong id="statAssets">0 mapped</strong></div>
+            <div><small>Beneficiaries</small><strong id="statBeneficiaries">0 mapped</strong></div>
+            <div><small>Legal Preparation</small><strong id="statLegal">Preparation Needed</strong></div>
+            <div><small>Federation Status</small><strong id="statFederation">Draft</strong></div>
+          </div>
+        </div>
+        <div class="panel glass">
+          <h3>Next Sacred Step</h3>
+          <p id="nextStep">Name your trust and select a trust path.</p>
+          <a class="btn primary" href="#builder" data-route="builder">Continue Builder</a>
+        </div>
+      </div>
+    </section>
+
+    <section id="builder" class="view shell authed-view">
+      <div class="tabs">
+        <button data-tab="identity" class="active">Trust Identity</button>
+        <button data-tab="covenant">Covenant</button>
+        <button data-tab="assets">Asset Map</button>
+        <button data-tab="beneficiaries">Beneficiary Map</button>
+        <button data-tab="roles">Stewardship Roles</button>
+        <button data-tab="vault">Trust Vault</button>
+      </div>
+
+      <div class="tab-panel active" id="tab-identity">
+        <div class="panel glass">
+          <p class="eyebrow">Trust Identity Builder</p>
+          <h2>Name and path your Federated Trust</h2>
+          <form id="identityForm" class="form-grid">
+            <label>Federated Trust Name<input name="trust_name" required /></label>
+            <label>Trust Path<select name="trust_type" id="trustTypeSelect" required></select></label>
+            <label>Federation Status<select name="federation_status"><option>Draft</option><option>Submitted</option><option>Under Review</option><option>Federated</option></select></label>
+            <label>Legal Preparation Status<select name="legal_status"><option>Preparation Needed</option><option>Information Organized</option><option>Professional Review Needed</option><option>Reviewed</option></select></label>
+            <button class="btn primary" type="submit">Save Identity</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="tab-panel" id="tab-covenant">
+        <div class="panel glass">
+          <p class="eyebrow">Covenant Builder</p>
+          <h2>Turn your answers into covenant, mission, and trust purpose</h2>
+          <form id="covenantForm" class="form-stack">
+            <label>What do you protect?<textarea name="protect_answer" required></textarea></label>
+            <label>Who do you serve?<textarea name="serve_answer" required></textarea></label>
+            <label>What principles govern this trust?<textarea name="principles_answer" required></textarea></label>
+            <label>What assets or gifts are you stewarding?<textarea name="stewarding_answer" required></textarea></label>
+            <label>What must never be violated?<textarea name="never_violate_answer" required></textarea></label>
+            <label>What legacy should remain alive for 100, 500, and 1,000 years?<textarea name="legacy_answer" required></textarea></label>
+            <button class="btn primary" type="submit">Generate Covenant</button>
+          </form>
+          <div class="generated">
+            <h3>Mission</h3><p id="missionOut"></p>
+            <h3>Trust Purpose</h3><p id="purposeOut"></p>
+            <h3>Covenant</h3><p id="covenantOut"></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-panel" id="tab-assets">
+        <div class="panel glass">
+          <p class="eyebrow">Asset Map</p>
+          <h2>Map the legacy-bearing assets and gifts</h2>
+          <form id="assetForm" class="form-grid">
+            <label>Category<select name="category" id="assetCategorySelect"></select></label>
+            <label>Name<input name="name" required /></label>
+            <label class="wide">Description<textarea name="description"></textarea></label>
+            <button class="btn primary" type="submit">Add Asset</button>
+          </form>
+          <div id="assetList" class="cards"></div>
+        </div>
+      </div>
+
+      <div class="tab-panel" id="tab-beneficiaries">
+        <div class="panel glass">
+          <p class="eyebrow">Beneficiary Map</p>
+          <h2>Map who and what the trust serves</h2>
+          <form id="beneficiaryForm" class="form-grid">
+            <label>Category<select name="category" id="beneficiaryCategorySelect"></select></label>
+            <label>Name<input name="name" required /></label>
+            <label>Relationship<input name="relationship" /></label>
+            <label class="wide">Purpose<textarea name="purpose"></textarea></label>
+            <button class="btn primary" type="submit">Add Beneficiary</button>
+          </form>
+          <div id="beneficiaryList" class="cards"></div>
+        </div>
+      </div>
+
+      <div class="tab-panel" id="tab-roles">
+        <div class="panel glass">
+          <p class="eyebrow">Stewardship Roles</p>
+          <h2>Assign founders, trustees, protectors, advisors, AI agents, and successors</h2>
+          <form id="roleForm" class="form-grid">
+            <label>Role<select name="role" id="roleSelect"></select></label>
+            <label>Name<input name="name" required /></label>
+            <label class="wide">Duties<textarea name="duties"></textarea></label>
+            <button class="btn primary" type="submit">Add Role</button>
+          </form>
+          <div id="roleList" class="cards"></div>
+        </div>
+      </div>
+
+      <div class="tab-panel" id="tab-vault">
+        <div class="panel glass">
+          <p class="eyebrow">Trust Vault</p>
+          <h2>Upload documents, photos, IDs, records, contracts, evidence, and legacy files</h2>
+          <form id="vaultForm" class="form-grid" enctype="multipart/form-data">
+            <label>Document Type<select name="doc_type" id="docTypeSelect"></select></label>
+            <label>File<input name="file" type="file" required /></label>
+            <label class="wide">Notes<textarea name="notes"></textarea></label>
+            <button class="btn primary" type="submit">Upload to Local Vault</button>
+          </form>
+          <p class="disclaimer">Files are stored locally in the server data folder for this MVP. No external storage calls are made.</p>
+          <div id="fileList" class="cards"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="packet" class="view shell authed-view">
+      <div class="panel glass packet" id="packetPrintable">
+        <p class="eyebrow">Federated Trust Identity Packet</p>
+        <h1 id="packetTrustName">Federated Trust Identity Packet</h1>
+        <p id="packetTrustType"></p>
+        <hr />
+        <h2>Mission</h2><p id="packetMission"></p>
+        <h2>Covenant</h2><p id="packetCovenant"></p>
+        <h2>Trust Purpose</h2><p id="packetPurpose"></p>
+        <h2>Assets</h2><div id="packetAssets"></div>
+        <h2>Beneficiaries</h2><div id="packetBeneficiaries"></div>
+        <h2>Stewardship Roles</h2><div id="packetRoles"></div>
+        <h2>Federation Summary</h2><p id="packetSummary"></p>
+        <h2>Legal Steps Checklist</h2>
+        <ul class="checklist">
+          <li>Review this packet for accuracy.</li>
+          <li>Gather supporting documents in the Trust Vault.</li>
+          <li>Consult a qualified attorney for trust creation and jurisdiction-specific requirements.</li>
+          <li>Consult a qualified tax professional before moving assets or making elections.</li>
+          <li>Consult licensed financial, insurance, or investment professionals before funding decisions.</li>
+          <li>Finalize trust documents only after professional review.</li>
+          <li>Preserve signed records and updates in the local Trust Vault.</li>
+        </ul>
+        <p class="legal"><strong>Disclaimer:</strong> DynastyLink organizes information and prepares educational identity materials. It is not legal, tax, financial, investment, or insurance advice.</p>
+      </div>
+      <button class="btn primary print-btn" onclick="window.print()">Print / Save Packet as PDF</button>
+    </section>
+  </main>
+
+  <template id="cardTemplate"><article class="mini-card"><strong></strong><small></small><p></p></article></template>
+  <script src="/static/app.js"></script>
+</body>
+</html>
