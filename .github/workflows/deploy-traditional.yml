@@ -9,8 +9,6 @@ env:
   NODE_VERSION: 18
   APP_PORT: 3000
   NODE_ENV: production
-  # Absolute path on the remote server
-  APP_DIR: /home/${{ secrets.DEPLOY_SSH_USER }}/aetherion
   SERVICE_NAME: aetherion
 
 jobs:
@@ -20,29 +18,56 @@ jobs:
       contents: read
     environment:
       name: production
-      url: https://${{ secrets.DOMAIN_NAME }}
 
     steps:
+      - name: Check deployment secrets
+        id: deployment-check
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_SSH_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_SSH_USER }}
+          DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+          DOMAIN_NAME: ${{ secrets.DOMAIN_NAME }}
+          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+        run: |
+          missing=()
+          [ -z "$DEPLOY_HOST" ] && missing+=("DEPLOY_SSH_HOST")
+          [ -z "$DEPLOY_USER" ] && missing+=("DEPLOY_SSH_USER")
+          [ -z "$DEPLOY_KEY" ] && missing+=("DEPLOY_SSH_PRIVATE_KEY")
+          [ -z "$DOMAIN_NAME" ] && missing+=("DOMAIN_NAME")
+          [ -z "$ADMIN_EMAIL" ] && missing+=("ADMIN_EMAIL")
+
+          if [ "${#missing[@]}" -gt 0 ]; then
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Traditional deploy secrets are missing: ${missing[*]}. Skipping server deploy."
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Checkout repository
+        if: steps.deployment-check.outputs.configured == 'true'
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: Set up Node.js
+        if: steps.deployment-check.outputs.configured == 'true'
         uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
 
       - name: Install dependencies
+        if: steps.deployment-check.outputs.configured == 'true'
         run: npm ci
 
       - name: Build application
+        if: steps.deployment-check.outputs.configured == 'true'
         run: npm run build
         env:
           NODE_ENV: ${{ env.NODE_ENV }}
 
       - name: Prepare deployment files
+        if: steps.deployment-check.outputs.configured == 'true'
         run: |
           cp server-redirect.js dist/
           cat <<EOF > dist/.env
@@ -51,24 +76,28 @@ jobs:
           EOF
 
       - name: Package application
+        if: steps.deployment-check.outputs.configured == 'true'
         run: tar czf deploy-package.tar.gz dist package.json
 
       - name: Start SSH agent and add key
+        if: steps.deployment-check.outputs.configured == 'true'
         uses: webfactory/ssh-agent@v0.5.4
         with:
           ssh-private-key: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
 
       - name: Add SSH host to known_hosts
+        if: steps.deployment-check.outputs.configured == 'true'
         run: ssh-keyscan -H ${{ secrets.DEPLOY_SSH_HOST }} >> ~/.ssh/known_hosts
 
       - name: Deploy to server
+        if: steps.deployment-check.outputs.configured == 'true'
         env:
           DEPLOY_HOST:      ${{ secrets.DEPLOY_SSH_HOST }}
           DEPLOY_USER:      ${{ secrets.DEPLOY_SSH_USER }}
           DOMAIN_NAME:      ${{ secrets.DOMAIN_NAME }}
           DOMAIN_NAME_WWW:  ${{ secrets.DOMAIN_NAME_WWW }}   # optional
           ADMIN_EMAIL:      ${{ secrets.ADMIN_EMAIL }}
-          APP_DIR:          ${{ env.APP_DIR }}
+          APP_DIR:          /home/${{ secrets.DEPLOY_SSH_USER }}/aetherion
           SERVICE_NAME:     ${{ env.SERVICE_NAME }}
           APP_PORT:         ${{ env.APP_PORT }}
           NODE_ENV:         ${{ env.NODE_ENV }}
@@ -240,6 +269,7 @@ jobs:
           EOF
 
       - name: Verify deployment
+        if: steps.deployment-check.outputs.configured == 'true'
         run: |
           echo "Waiting for service to become healthy…"
           sleep 10
