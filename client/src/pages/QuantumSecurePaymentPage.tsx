@@ -1,5 +1,5 @@
 import React from 'react';
-import QuantumSecurePayment from '@/components/payment/QuantumSecurePayment';
+import { QuantumSecurePayment } from '@/components/payment/QuantumSecurePayment';
 import { Shield, Lock } from 'lucide-react';
 
 const QuantumSecurePaymentPage: React.FC = () => {
