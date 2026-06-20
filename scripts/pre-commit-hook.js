@@ -13,13 +13,13 @@
  *    if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
  */
 
-const { execSync } = require('child_process');
-const fs = require('fs');
-const path = require('path');
+import { execSync } from 'child_process';
+import fs from 'fs';
 
 // Patterns that might indicate API keys
 const API_KEY_PATTERNS = [
-  /(['"`])?(sk|pk|api|key|token|secret)-[A-Za-z0-9]{10,}(['"`])?/i,
+  /(['"`])?(sk|pk|rk)-[A-Za-z0-9]{20,}(['"`])?/i,
+  /(api[_-]?key|apikey|api[_-]?secret|access[_-]?token|auth[_-]?token|private[_-]?key|secret)\s*[:=]\s*(['"`])[^'"`\s]{8,}(['"`])/i,
   /(['"`])?[A-Za-z0-9_-]{20,}\.?[A-Za-z0-9_-]{20,}\.?[A-Za-z0-9_-]{20,}(['"`])?/,
   /(['"`])?[A-Za-z0-9]{32,}(['"`])?/,
   /BRAINTRUST_API_KEY\s*=\s*(['"`])[^'"`\s]{8,}(['"`])/i,

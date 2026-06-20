@@ -41,6 +41,10 @@ The system records clearly.
 
 Use available project checks such as build, tests, audits, and documentation review. Do not claim production security without proof.
 
+Use `npm run qa:local` as the dependency-light gate for docs, manifests, package scripts, package-lock alignment, DynastyLink local-first docs, package surfaces, and the API-key guard script.
+
+Use area-specific checks from `docs/validation.md` for app code, database, security, wallet, AI, deployment, or DynastyLink changes. Do not claim production wallet safety, audited cryptography, legal validity, or deployment readiness without matching evidence.
+
 ## Handoff
 
 - Doctrine -> Federation Doctrine Agent

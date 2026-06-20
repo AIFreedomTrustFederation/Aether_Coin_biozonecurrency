@@ -27,6 +27,14 @@ It is high-risk by domain. Financial, wallet, custody, cryptographic, and securi
 - Security audit scripts and API-key checks.
 - Wallet, token, AI-guardian, Matrix notification, decentralized storage, and post-quantum research references.
 
+## Operating Docs
+
+- `docs/status.md` - current verified status and public-claim boundary.
+- `docs/validation.md` - lightweight, app, security, database, and DynastyLink checks.
+- `docs/security-and-privacy.md` - wallet, AI, DynastyLink, secret, and privacy boundaries.
+- `SECURITY.md` - project security practices and reporting path.
+- `API-SECURITY-GUIDELINES.md` - API-key and credential handling.
+
 ## Setup
 
 ```bash
@@ -37,6 +45,12 @@ npm run dev
 Database-backed features may require PostgreSQL and environment configuration.
 
 ## Verification
+
+Lightweight repo checks:
+
+```bash
+npm run qa:local
+```
 
 Recommended checks:
 
