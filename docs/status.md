@@ -15,6 +15,12 @@ This repository is the federation stewardship and wallet research lane. It conta
 - The local-first DynastyLink lane lives under `apps/dynastylink-local`.
 - The quantum-validator and API-gateway packages are present as separate package surfaces.
 - Lightweight local repo verification is available through `npm run qa:local`.
+- `federation.manifest.json` now defines the machine-readable Federation handshake.
+- Biozoecurrency token taxonomy docs and TypeScript primitives now exist.
+- Consent Ledger docs and TypeScript primitives now exist.
+- Federation event docs and TypeScript primitives now exist.
+- Operational status docs and TypeScript primitives now exist.
+- The DynastyLink to Aetherion bridge guide now defines the local-first integration boundary.
 
 ## Not Yet Claimed
 
@@ -36,10 +42,32 @@ Last local `npm run qa:local` pass: 2026-06-24 on the Windows local builder.
 
 Full build, TypeScript, database, dependency, and security audit checks require the full local dependency stack and environment. See `docs/validation.md`.
 
+## Federation Alignment Added On 2026-06-24
+
+- `federation.manifest.json`
+- `docs/federation-integration.md`
+- `docs/biozoecurrency-token-taxonomy.md`
+- `docs/consent-ledger.md`
+- `docs/dynastylink-aetherion-bridge.md`
+- `docs/federation-events.md`
+- `docs/operations-dashboard.md`
+- `shared/types/biozoecurrency-token.ts`
+- `shared/types/consent-ledger.ts`
+- `shared/types/federation-events.ts`
+- `shared/types/operational-status.ts`
+
+## Current Known Gaps
+
+- Full local build and TypeScript checks have not been run in this connector session.
+- The structure verifier still needs to be extended to require the new Federation files; an attempted connector update was blocked by the tool safety layer.
+- `docs/security-and-privacy.md` and `AGENTS.md` still need small terminology-only updates where connector safety blocked direct rewrites.
+- Older scripts, archived pasted logs, and deployment helper files may still contain the old Biozone spelling and should be cleaned in a dedicated terminology pass.
+- Real custody, live token, legal trust, deployment, and post-quantum production claims remain out of scope until verified and reviewed.
+
 ## Next Best Work
 
-1. Keep `npm run qa:local` green for docs, manifests, and repo-structure changes.
-2. Resolve current TypeScript/build gaps before making production wallet claims.
-3. Split implemented features from prototypes, simulations, experiments, and plans.
-4. Add typed Biozoecurrency token taxonomy primitives with explicit status labels.
-5. Keep DynastyLink local-first with no required external API path in the core app.
+1. Run `npm run qa:local` in a local checkout.
+2. Regenerate a full `package-lock.json` from `package.json` in a local checkout.
+3. Extend `scripts/aether-verify-structure.mjs` locally to require the new Federation docs and typed contracts.
+4. Wire typed contracts into the app only after TypeScript and build checks are green.
+5. Continue replacing old Biozone wording with Biozoecurrency in active source and docs.
