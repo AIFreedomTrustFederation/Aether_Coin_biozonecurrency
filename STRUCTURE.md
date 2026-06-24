@@ -1,159 +1,128 @@
-# Aetherion Blockchain Wallet Project Structure
+# Aetherion Biozoecurrency Project Structure
 
-This document outlines the project's architecture, file organization, and key components to help developers understand how the system is structured.
+This document outlines the project architecture, file organization, and key components for developers and Federation stewards.
 
 ## Overview
 
-Aetherion is a cutting-edge blockchain wallet platform with a focus on security, usability, and quantum-resistant blockchain integration. The application is built with a React frontend (using TypeScript) and a Node.js backend with Express.
+Aetherion is a TypeScript-based stewardship and wallet research application for Aether Coin Biozoecurrency. It combines a React frontend, Node/Express backend services, shared schema contracts, local-first DynastyLink foundations, and status-labeled research paths for regenerative value coordination.
 
-The platform features a quantum-secure API architecture with three distinct layers:
-1. **Client Layer**: User interface and frontend logic
-2. **API Gateway**: Security intermediary with quantum validation
-3. **Backend Services**: Core business logic and data storage
+This repository contains high-risk concepts. Architecture language must remain honest: wallet, custody, token, legal, financial, deployment, and post-quantum claims require evidence before production language is used.
 
-This quantum-resistant API architecture ensures:
-- Complete separation between frontend and backend services
-- All API requests are verified through quantum-resistant validation
-- Defense against both classical and quantum-computing based attacks
-- Consistent application of security policies across all services
+## Federation-Aligned Architecture
+
+The current architecture is organized around these layers:
+
+1. **Client Layer**: React interface and user-facing stewardship workflows.
+2. **Backend Services**: Express services, API routes, persistence paths, and integration logic.
+3. **Shared Contracts**: Cross-layer TypeScript types and schemas.
+4. **DynastyLink Local Lane**: Local-first trust identity onboarding and packet preparation.
+5. **Federation Contracts**: Manifest, event vocabulary, consent ledger, Biozoecurrency taxonomy, and operations status.
+6. **Research Adapters**: Optional decentralized storage, notification, wallet, and post-quantum research paths.
 
 ## Directory Structure
 
-```
-aetherion-wallet/
-├── .backup/                  # Auto-generated backup directory
-├── .github/                  # GitHub configuration and templates
-├── api-gateway/              # API Gateway with quantum security
-│   ├── src/                  # Gateway source code
-│   │   └── index.ts          # Main API Gateway implementation
-│   └── tsconfig.json         # TypeScript configuration
-├── quantum-validator/        # Quantum security validation module
-│   ├── src/                  # Validator source code
-│   │   └── validator.ts      # Request validation implementation
-│   └── tsconfig.json         # TypeScript configuration
-├── client/                   # Frontend application code
-│   ├── public/               # Static assets
-│   └── src/                  # React application source code
-│       ├── assets/           # Frontend assets (images, fonts)
-│       ├── components/       # React components
-│       │   ├── dashboard/    # Dashboard-specific components
-│       │   ├── layout/       # Layout components
-│       │   ├── shared/       # Shared/reusable components
-│       │   └── ui/           # UI components (shadcn, buttons, etc.)
-│       ├── hooks/            # Custom React hooks
-│       ├── lib/              # Utility functions and client libraries
-│       │   └── queryClient.ts # API Gateway-aware query client
-│       ├── pages/            # Page components
-│       └── types/            # TypeScript type definitions
-├── server/                   # Backend server code
-│   ├── api/                  # API routes and controllers
-│   ├── db/                   # Database connection and migrations
-│   ├── middleware/           # Express middleware
-│   │   └── gateway-validation.ts # Gateway validation guard
-│   ├── routes/               # Route definitions
-│   ├── services/             # Service layer (business logic)
-│   │   ├── twilio.ts         # Twilio SMS integration service
-│   │   └── ...
-│   └── utils/                # Server utilities
-├── shared/                   # Shared code between frontend and backend
-│   ├── constants/            # Shared constants
-│   ├── schema.ts             # Database schema definitions
-│   ├── types/                # Shared TypeScript type definitions
-│   └── validation/           # Validation schemas
-└── scripts/                  # Utility scripts
+```text
+Aether_Coin_biozonecurrency/
+├── federation.manifest.json       # Machine-readable Federation handshake
+├── docs/                          # Status, validation, security, and integration docs
+├── client/                        # React frontend application
+├── server/                        # Node/Express backend services
+├── shared/                        # Shared schemas and TypeScript contracts
+│   └── types/                     # Federation-facing typed contracts
+├── apps/dynastylink-local/        # Local-first DynastyLink app foundation
+├── api-gateway/                   # API gateway research surface
+├── quantum-validator/             # Post-quantum validation research surface
+└── scripts/                       # Verification, security, and utility scripts
 ```
 
-## Key Components
+## Canonical Federation Files
+
+| File | Purpose |
+|---|---|
+| `federation.manifest.json` | Machine-readable integration contract for Federation tools. |
+| `docs/federation-integration.md` | Human-readable Federation integration guide. |
+| `docs/biozoecurrency-token-taxonomy.md` | Biozoecurrency token taxonomy and claim boundary. |
+| `docs/consent-ledger.md` | Human-consent record doctrine and implementation path. |
+| `docs/dynastylink-aetherion-bridge.md` | Local-first bridge between DynastyLink and Aetherion. |
+| `docs/federation-events.md` | Event vocabulary for cross-Federation coordination. |
+| `docs/operations-dashboard.md` | Operating truth layer and dashboard plan. |
+
+## Shared Typed Contracts
+
+| File | Purpose |
+|---|---|
+| `shared/types/biozoecurrency-token.ts` | Token taxonomy primitives and claim boundaries. |
+| `shared/types/consent-ledger.ts` | Human consent record shape and helper rules. |
+| `shared/types/federation-events.ts` | Minimal event envelope for Federation tools. |
+| `shared/types/operational-status.ts` | Operational status snapshot contract. |
+
+## Existing Application Areas
 
 ### Frontend
 
-1. **App.tsx**: The entry point for the React application, setting up routes and global context.
-2. **components/layout/MainLayout.tsx**: The main layout wrapper that includes navigation and common UI elements.
-3. **components/dashboard/PortfolioChart.tsx**: Chart visualization for user portfolio data.
-4. **components/dashboard/NotificationSettings.tsx**: UI for managing notification preferences.
-5. **hooks/use-theme.ts**: Hook for theme handling throughout the application.
-
-### API Gateway & Security Layer
-
-1. **api-gateway/src/index.ts**: API Gateway that validates and routes requests.
-2. **quantum-validator/src/validator.ts**: Quantum-resistant security validation.
-3. **server/middleware/gateway-validation.ts**: Backend validation of gateway headers.
+The frontend lives under `client/` and contains React pages, layout components, dashboard components, hooks, utility libraries, and UI primitives.
 
 ### Backend
 
-1. **server/index.ts**: The main server entry point that sets up Express and middleware.
-2. **server/db.ts**: Database connection setup.
-3. **server/routes.ts**: API route registration.
-4. **server/services/twilio.ts**: Twilio integration for SMS notifications.
-5. **server/pg-storage.ts**: PostgreSQL database interface implementation.
+The backend lives under `server/` and contains API routes, service logic, middleware, storage interfaces, and persistence paths.
 
-### Shared
+### Shared Schemas
 
-1. **shared/schema.ts**: Drizzle ORM schema definitions shared between frontend and backend.
-2. **shared/types/**: Type definitions used across the application.
+The `shared/` directory contains Drizzle schemas, cross-layer types, wallet schemas, bridge schemas, AI assistant schemas, and new Federation-facing contracts.
 
-## Database Schema
+### DynastyLink Local App
 
-The database is designed with the following core entities:
+The DynastyLink lane lives under `apps/dynastylink-local/`. It is the local-first onboarding path for Federation identity and should not require remote services for its core MVP.
 
-1. **User**: Account information and authentication details.
-2. **Wallet**: Blockchain wallet information linked to users.
-3. **Transaction**: Record of blockchain transactions.
-4. **SmartContract**: Smart contract deployments and interactions.
-5. **NotificationPreference**: User preferences for various types of notifications.
-6. **WalletHealthScore**: Security and health metrics for wallets.
-7. **PaymentMethod**: User payment methods for purchasing crypto.
-8. **CidEntry**: Content-addressable storage entries for blockchain data.
+### API Gateway And Validator Packages
 
-## Authentication Flow
+The `api-gateway/` and `quantum-validator/` packages are research or prototype surfaces unless build, test, and review evidence prove a stronger status label.
 
-1. User registers or logs in through the authentication pages.
-2. Server validates credentials and issues a session token.
-3. Frontend stores the token and includes it in subsequent API requests.
-4. Protected routes check for valid authentication before serving content.
+## Development Workflow
 
-## Notification System
+The early-stage Federation workflow is main-only:
 
-The notification system supports multiple channels:
+1. Read `README.md`, `AGENTS.md`, `docs/status.md`, and `docs/validation.md`.
+2. Make focused commits directly on `main`.
+3. Keep claim labels honest.
+4. Run the available local checks in a local checkout.
+5. Update status documentation when a surface becomes canonical.
 
-1. **SMS Notifications**: Integrated with Twilio for delivering time-sensitive alerts.
-2. **In-App Notifications**: Real-time updates displayed within the application.
-3. **Email Notifications**: (Future implementation) For digest reports and security alerts.
+## Validation Commands
 
-## Development Tools & Scripts
+Use the dependency-light gate for docs, manifests, scripts, and structure changes:
 
-- **backup.sh**: Creates a comprehensive backup of code, configuration, and database.
-- **reinit.sh**: Resets the development environment cleanly.
-- **db-migrate.sh**: Manages database schema migrations.
-- **env-manager.sh**: Helper for managing environment variables.
-- **script_runner.sh**: Unified interface for running various project scripts.
-- **npm-scripts.sh**: Additional npm script functionality.
+```bash
+npm run qa:local
+```
 
-## Workflow
+Use broader checks for application code changes:
 
-The standard development workflow follows these steps:
+```bash
+npm run check
+npm run build
+```
 
-1. Run the development server with `npm run dev` or `./script_runner.sh run`.
-2. Start the API Gateway with `./start-api-gateway.sh`.
-3. Make code changes in the appropriate directories.
-4. Test functionality locally through the API Gateway.
-5. Create a backup with `./backup.sh` before major changes.
-6. When database schema changes are needed, update `shared/schema.ts` and run migrations with `./db-migrate.sh`.
+Use database checks only against an intended local or development database:
 
-## Deployment
+```bash
+npm run db:push
+```
 
-The application is configured for deployment on Replit with an integrated workflow system that handles:
+## Deployment Boundary
 
-1. Building the frontend and backend
-2. Serving the application on a unified port
-3. Managing environment variables and secrets
+Deployment references are research or prototype paths until verified. Do not claim deployment readiness without local build evidence, environment review, security review, and operational runbook coverage.
 
-## Configuration
+## Public Claim Rule
 
-Configuration is managed through environment variables defined in the `.env` file (based on `.env.example`). Key configurations include:
+Use these labels consistently:
 
-1. Database connection details
-2. API Gateway settings (ports, trusted IPs)
-3. Twilio SMS credentials
-4. Session secrets and security settings
-5. Feature flags for optional functionality
+- `implemented`
+- `prototype`
+- `experimental`
+- `planned`
+- `blocked`
+- `needs_review`
+- `audited`
+
+Only use `audited` when a named review artifact exists. Only use production-ready language when implementation, validation, security, deployment, and operational evidence support it.
