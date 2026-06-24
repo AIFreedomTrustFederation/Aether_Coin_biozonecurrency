@@ -1,10 +1,10 @@
-# Aether Coin Biozonecurrency Status
+# Aether Coin Biozoecurrency Status
 
 Last reviewed: 2026-06-24
 
 ## Current Role
 
-`Aether_Coin_biozonecurrency` is the federation stewardship and wallet research lane. It contains Aetherion wallet UI work, regenerative token taxonomy concepts, AI-guided risk and consent research, post-quantum security experiments, QDNS/decentralized deployment references, and the local-first DynastyLink application foundation.
+This repository is the federation stewardship and wallet research lane. It contains Aetherion wallet UI work, regenerative token taxonomy concepts, AI-guided risk and consent research, post-quantum security experiments, QDNS/decentralized deployment references, and the local-first DynastyLink application foundation.
 
 ## Current Verified Foundation
 
@@ -41,5 +41,5 @@ Full build, TypeScript, database, dependency, and security audit checks require 
 1. Keep `npm run qa:local` green for docs, manifests, and repo-structure changes.
 2. Resolve current TypeScript/build gaps before making production wallet claims.
 3. Split implemented features from prototypes, simulations, experiments, and plans.
-4. Add typed Biozone token taxonomy primitives with explicit status labels.
+4. Add typed Biozoecurrency token taxonomy primitives with explicit status labels.
 5. Keep DynastyLink local-first with no required external API path in the core app.
