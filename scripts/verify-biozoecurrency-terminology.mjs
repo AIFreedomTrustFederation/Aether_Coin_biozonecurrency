@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 
 const root = process.cwd();
-const forbidden = ['Biozone', 'biozone', 'BIOZONE'];
+const forbiddenTerms = ['Biozone', 'biozone', 'BIOZONE'];
 const allowedPathFragments = [
   '.git',
   'node_modules',
@@ -11,12 +11,41 @@ const allowedPathFragments = [
   'build',
   'attached_assets',
   'package-lock.json',
+  'scripts/verify-biozoecurrency-terminology.mjs',
+];
+const allowedInlinePhrases = [
+  'Aether_Coin_biozonecurrency',
+  'github.com/AIFreedomTrustFederation/Aether_Coin_biozonecurrency',
+  'old Biozone spelling',
+  'old `Biozone` spelling',
 ];
 
 let failures = 0;
 
 function shouldSkip(relativePath) {
   return allowedPathFragments.some((fragment) => relativePath.includes(fragment));
+}
+
+function scrubAllowedPhrases(line) {
+  return allowedInlinePhrases.reduce((current, phrase) => current.split(phrase).join(''), line);
+}
+
+function checkFile(relativePath, absolutePath) {
+  const textExtensions = ['.md', '.ts', '.tsx', '.js', '.mjs', '.json', '.yml', '.yaml', '.sh', '.ps1', '.txt'];
+  if (!textExtensions.includes(path.extname(relativePath))) return;
+
+  const content = fs.readFileSync(absolutePath, 'utf8');
+  const lines = content.split(/\r?\n/);
+
+  lines.forEach((line, index) => {
+    const scrubbed = scrubAllowedPhrases(line);
+    for (const term of forbiddenTerms) {
+      if (scrubbed.includes(term)) {
+        failures += 1;
+        console.error(`RED forbidden term ${term} found in ${relativePath}:${index + 1}`);
+      }
+    }
+  });
 }
 
 function walk(directory) {
@@ -31,18 +60,7 @@ function walk(directory) {
       continue;
     }
 
-    if (!entry.isFile()) continue;
-
-    const textExtensions = ['.md', '.ts', '.tsx', '.js', '.mjs', '.json', '.yml', '.yaml', '.sh', '.ps1', '.txt'];
-    if (!textExtensions.includes(path.extname(entry.name))) continue;
-
-    const content = fs.readFileSync(absolutePath, 'utf8');
-    for (const term of forbidden) {
-      if (content.includes(term)) {
-        failures += 1;
-        console.error(`RED forbidden term ${term} found in ${relativePath}`);
-      }
-    }
+    if (entry.isFile()) checkFile(relativePath, absolutePath);
   }
 }
 
