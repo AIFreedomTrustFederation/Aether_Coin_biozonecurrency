@@ -1,0 +1,58 @@
+{
+  "schemaVersion": "1.0.0",
+  "repository": "AIFreedomTrustFederation/Aether_Coin_biozonecurrency",
+  "canonicalName": "Aether Coin Biozoecurrency",
+  "defaultBranch": "main",
+  "developmentMode": "main-only",
+  "federationLayer": "stewardship",
+  "role": "wallet-research-consent-ledger-biozoecurrency-trust-interface",
+  "status": "active-protocol-research",
+  "claimBoundary": {
+    "walletCustody": "not-audited-production-custody",
+    "tokenValue": "not-production-investment-utility",
+    "aiAuthorization": "human-consent-required",
+    "legalTrustValidity": "professional-review-required",
+    "postQuantumSecurity": "research-and-status-labeled-only"
+  },
+  "coreSurfaces": [
+    "README.md",
+    "AGENTS.md",
+    "docs/status.md",
+    "docs/validation.md",
+    "docs/federation-integration.md",
+    "docs/biozoecurrency-token-taxonomy.md",
+    "docs/consent-ledger.md",
+    "docs/dynastylink-aetherion-bridge.md",
+    "docs/federation-events.md",
+    "docs/operations-dashboard.md"
+  ],
+  "typedContracts": [
+    "shared/types/biozoecurrency-token.ts",
+    "shared/types/consent-ledger.ts",
+    "shared/types/federated-trust-profile.ts",
+    "shared/types/federation-events.ts",
+    "shared/types/operational-status.ts"
+  ],
+  "federationDependencies": {
+    "dynastyLink": "local-first trust identity onboarding",
+    "aiftForge": "future source and build coordination",
+    "vps": "future deployment and node registry lane",
+    "booksmithAi": "future doctrine and knowledge packet lane",
+    "publicPortal": "future public explanation and onboarding lane"
+  },
+  "localFirstBoundary": {
+    "coreFlowsMustWorkOfflineOrLocal": true,
+    "optionalIntegrationsMustBeLabeled": true,
+    "hiddenTelemetryAllowed": false
+  },
+  "eventFamilies": [
+    "trust-profile",
+    "consent",
+    "wallet-risk",
+    "vault-reference",
+    "biozoecurrency-token",
+    "security-boundary",
+    "operations"
+  ],
+  "lastReviewed": "2026-06-24"
+}
