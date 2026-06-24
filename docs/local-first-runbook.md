@@ -31,6 +31,26 @@ npm run check
 npm run build
 ```
 
+## Federation Contract Check
+
+Run the standalone Federation contract verifier:
+
+```bash
+node scripts/verify-federation-contracts.mjs
+```
+
+It checks that the manifest, federation docs, and typed contracts are present.
+
+## Biozoecurrency Terminology Check
+
+Run the terminology verifier:
+
+```bash
+node scripts/verify-biozoecurrency-terminology.mjs
+```
+
+It checks active source and documentation for the old Biozone spelling while skipping generated, dependency, lockfile, and archived asset paths.
+
 ## DynastyLink Local Check
 
 When changing the local DynastyLink app:
@@ -42,7 +62,7 @@ python -m compileall app
 
 Then run the local service according to the DynastyLink README.
 
-## Federation Contract Check
+## Federation Contract Surfaces
 
 Confirm these files exist and remain status-labeled:
 
@@ -54,6 +74,10 @@ docs/consent-ledger.md
 docs/dynastylink-aetherion-bridge.md
 docs/federation-events.md
 docs/operations-dashboard.md
+docs/optional-integrations.md
+docs/local-first-runbook.md
+scripts/verify-federation-contracts.mjs
+scripts/verify-biozoecurrency-terminology.mjs
 shared/types/biozoecurrency-token.ts
 shared/types/consent-ledger.ts
 shared/types/federation-events.ts
