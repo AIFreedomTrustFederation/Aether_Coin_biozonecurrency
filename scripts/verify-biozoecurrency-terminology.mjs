@@ -28,13 +28,13 @@ function walk(directory) {
 
     if (entry.isDirectory()) {
       walk(absolutePath);
-      return;
+      continue;
     }
 
-    if (!entry.isFile()) return;
+    if (!entry.isFile()) continue;
 
     const textExtensions = ['.md', '.ts', '.tsx', '.js', '.mjs', '.json', '.yml', '.yaml', '.sh', '.ps1', '.txt'];
-    if (!textExtensions.includes(path.extname(entry.name))) return;
+    if (!textExtensions.includes(path.extname(entry.name))) continue;
 
     const content = fs.readFileSync(absolutePath, 'utf8');
     for (const term of forbidden) {
