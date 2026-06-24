@@ -86,7 +86,7 @@ function checkHookIsEsm() {
 }
 
 function main() {
-  console.log('AETHER COIN BIOZONECURRENCY STRUCTURE CHECK');
+  console.log('AETHER COIN BIOZOECURRENCY STRUCTURE CHECK');
 
   const requiredFiles = [
     'README.md',
