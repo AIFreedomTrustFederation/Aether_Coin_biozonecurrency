@@ -18,7 +18,15 @@ This repository currently uses main-only development.
 
 ## First Local Checks
 
-From a local checkout:
+From a local checkout, run the combined local Federation check runner:
+
+```bash
+node scripts/run-local-federation-checks.mjs
+```
+
+This runs the Federation contract verifier, Biozoecurrency terminology verifier, and current local QA gate.
+
+You can also run the project QA gate directly:
 
 ```bash
 npm run qa:local
@@ -76,6 +84,7 @@ docs/federation-events.md
 docs/operations-dashboard.md
 docs/optional-integrations.md
 docs/local-first-runbook.md
+scripts/run-local-federation-checks.mjs
 scripts/verify-federation-contracts.mjs
 scripts/verify-biozoecurrency-terminology.mjs
 shared/types/biozoecurrency-token.ts
