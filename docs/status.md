@@ -21,6 +21,7 @@ This repository is the federation stewardship and wallet research lane. It conta
 - Federation event docs and TypeScript primitives now exist.
 - Operational status docs and TypeScript primitives now exist.
 - The DynastyLink to Aetherion bridge guide now defines the local-first integration boundary.
+- `scripts/verify-federation-contracts.mjs` now provides a standalone Federation contract check.
 
 ## Not Yet Claimed
 
@@ -42,6 +43,12 @@ Last local `npm run qa:local` pass: 2026-06-24 on the Windows local builder.
 
 Full build, TypeScript, database, dependency, and security audit checks require the full local dependency stack and environment. See `docs/validation.md`.
 
+The standalone Federation contract checker can be run locally with:
+
+```bash
+node scripts/verify-federation-contracts.mjs
+```
+
 ## Federation Alignment Added On 2026-06-24
 
 - `federation.manifest.json`
@@ -51,6 +58,9 @@ Full build, TypeScript, database, dependency, and security audit checks require 
 - `docs/dynastylink-aetherion-bridge.md`
 - `docs/federation-events.md`
 - `docs/operations-dashboard.md`
+- `docs/optional-integrations.md`
+- `docs/local-first-runbook.md`
+- `scripts/verify-federation-contracts.mjs`
 - `shared/types/biozoecurrency-token.ts`
 - `shared/types/consent-ledger.ts`
 - `shared/types/federation-events.ts`
@@ -59,15 +69,17 @@ Full build, TypeScript, database, dependency, and security audit checks require 
 ## Current Known Gaps
 
 - Full local build and TypeScript checks have not been run in this connector session.
-- The structure verifier still needs to be extended to require the new Federation files; an attempted connector update was blocked by the tool safety layer.
+- `package.json` still needs a local script hook for `verify:federation`; an attempted connector update was blocked by the tool safety layer.
+- The root `package-lock.json` is a minimal identity repair and should be regenerated from a local checkout.
 - `docs/security-and-privacy.md` and `AGENTS.md` still need small terminology-only updates where connector safety blocked direct rewrites.
 - Older scripts, archived pasted logs, and deployment helper files may still contain the old Biozone spelling and should be cleaned in a dedicated terminology pass.
 - Real custody, live token, legal trust, deployment, and post-quantum production claims remain out of scope until verified and reviewed.
 
 ## Next Best Work
 
-1. Run `npm run qa:local` in a local checkout.
-2. Regenerate a full `package-lock.json` from `package.json` in a local checkout.
-3. Extend `scripts/aether-verify-structure.mjs` locally to require the new Federation docs and typed contracts.
-4. Wire typed contracts into the app only after TypeScript and build checks are green.
-5. Continue replacing old Biozone wording with Biozoecurrency in active source and docs.
+1. Run `node scripts/verify-federation-contracts.mjs` in a local checkout.
+2. Run `npm run qa:local` in a local checkout.
+3. Regenerate a full `package-lock.json` from `package.json` in a local checkout.
+4. Add `verify:federation` to `package.json` locally if the connector continues blocking that rewrite.
+5. Wire typed contracts into the app only after TypeScript and build checks are green.
+6. Continue replacing old Biozone wording with Biozoecurrency in active source and docs.
