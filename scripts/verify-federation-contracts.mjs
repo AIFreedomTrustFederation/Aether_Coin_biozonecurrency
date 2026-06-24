@@ -19,6 +19,7 @@ const requiredFiles = [
   'shared/types/consent-ledger.ts',
   'shared/types/federation-events.ts',
   'shared/types/operational-status.ts',
+  'shared/types/federation.ts',
 ];
 
 function checkFile(relativePath) {
