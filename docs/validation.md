@@ -1,4 +1,4 @@
-# Aether Coin Biozonecurrency Validation
+# Aether Coin Biozoecurrency Validation
 
 This repository contains high-risk wallet, security, AI, token, and trust-document concepts. Use truthful validation labels and avoid production claims without evidence.
 
