@@ -39,7 +39,7 @@ Run the standalone Federation contract verifier:
 node scripts/verify-federation-contracts.mjs
 ```
 
-It checks that the manifest, federation docs, and typed contracts are present.
+It checks that the manifest, federation docs, typed contracts, and Federation type barrel are present.
 
 ## Biozoecurrency Terminology Check
 
@@ -82,6 +82,7 @@ shared/types/biozoecurrency-token.ts
 shared/types/consent-ledger.ts
 shared/types/federation-events.ts
 shared/types/operational-status.ts
+shared/types/federation.ts
 ```
 
 ## Public Claim Check
