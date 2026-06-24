@@ -32,6 +32,7 @@ It is high-risk by domain. Financial, wallet, custody, cryptographic, and securi
 - `docs/status.md` - current verified status and public-claim boundary.
 - `docs/validation.md` - lightweight, app, security, database, and DynastyLink checks.
 - `docs/security-and-privacy.md` - wallet, AI, DynastyLink, secret, and privacy boundaries.
+- `docs/material-routing.md` - how to preserve and route loose, generated, archival, and deployment material.
 - `SECURITY.md` - project security practices and reporting path.
 - `API-SECURITY-GUIDELINES.md` - API-key and credential handling.
 
@@ -72,7 +73,7 @@ npm run db:push
 1. Keep token taxonomy and wallet consent language status-labeled.
 2. Separate implemented features from prototypes, simulations, experiments, and plans.
 3. Harden security reporting, secret handling, and dependency review.
-4. Review and resolve the currently open pull request.
+4. Route useful reference material into canonical docs, QA records, or app assets before deleting raw intake files.
 
 ## Public Claims Note
 
@@ -412,6 +413,7 @@ QUANTUM-SECURITY.md               Post-quantum and hybrid security research
 API-SECURITY-GUIDELINES.md        API security practices
 STRUCTURE.md                      Project structure details
 DEPLOYMENT.md                     Deployment guidance
+docs/material-routing.md          Loose material routing and reuse plan
 shared/                           Shared schemas and typed primitives
 server/                           Backend services and security layers
 client/                           Frontend wallet interface
