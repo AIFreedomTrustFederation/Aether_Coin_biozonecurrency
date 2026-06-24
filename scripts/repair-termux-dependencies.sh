@@ -101,8 +101,8 @@ if [[ -z "$PYTHON_BIN" ]]; then
   fail "Python was not found after setup. Install python and rerun."
 fi
 
-run npm config set python "$PYTHON_BIN"
 export PYTHON="$PYTHON_BIN"
+export npm_config_python="$PYTHON_BIN"
 printf 'Using Python for node-gyp: %s\n' "$PYTHON"
 
 section "Baseline git state"
