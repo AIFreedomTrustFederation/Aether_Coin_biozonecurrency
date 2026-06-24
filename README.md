@@ -1,4 +1,4 @@
-# Aether Coin Biozonecurrency
+# Aether Coin Biozoecurrency
 
 **A quantum-conscious, AI-assisted blockchain wallet and regenerative value protocol for sovereign digital stewardship.**
 
@@ -14,7 +14,7 @@
 
 ## Purpose
 
-`Aether_Coin_biozonecurrency` is the federation stewardship lane. It explores wallet UX, regenerative value primitives, consent-centered AI guidance, smart-contract context, decentralized storage references, and cryptographic trust patterns.
+This repository is the federation stewardship lane. It explores wallet UX, regenerative value primitives, consent-centered AI guidance, smart-contract context, decentralized storage references, and cryptographic trust patterns.
 
 It is high-risk by domain. Financial, wallet, custody, cryptographic, and security language must stay explicit, status-labeled, and human-consented.
 
@@ -79,7 +79,7 @@ npm run db:push
 
 Do not imply audited wallet safety, production custody, financial value, post-quantum guarantees, or decentralized deployment guarantees unless the implementation and audit trail support those claims.
 
-Aether Coin Biozonecurrency unites React, TypeScript, Node.js, Express, PostgreSQL, Drizzle ORM, decentralized storage references, post-quantum security research, and AI-guided wallet intelligence into one living architecture.
+Aether Coin Biozoecurrency unites React, TypeScript, Node.js, Express, PostgreSQL, Drizzle ORM, decentralized storage references, post-quantum security research, and AI-guided wallet intelligence into one living architecture.
 
 The project’s mission is to help people manage digital assets with clarity, safety, consent, transparency, and regenerative purpose.
 
@@ -89,7 +89,7 @@ Aetherion is not merely a wallet. It is a trust interface: a bridge between huma
 
 ## Mission
 
-Aether Coin Biozonecurrency exists to explore a more sovereign and regenerative path for digital value systems.
+Aether Coin Biozoecurrency exists to explore a more sovereign and regenerative path for digital value systems.
 
 Its purpose is to support:
 
@@ -164,35 +164,9 @@ Current and planned feature areas include:
 
 ---
 
-## Architecture
+## Biozoecurrency Tokens
 
-The project is organized around a full-stack TypeScript architecture:
-
-```text
-client/       Frontend React application
-server/       Backend Express services
-shared/       Shared types, schemas, and cross-layer primitives
-```
-
-The conceptual architecture is:
-
-```text
-User Interface
--> Client Wallet Experience
--> API Gateway
--> Validation and Security Layers
--> Backend Services
--> PostgreSQL / Drizzle ORM
--> Optional decentralized storage and deployment adapters
-```
-
-The long-term design goal is a wallet system where every sensitive path is explicit, auditable, and human-consented.
-
----
-
-## Biozone Tokens
-
-The Biozonecurrency layer is an emerging token taxonomy for regenerative value coordination.
+The Biozoecurrency layer is an emerging token taxonomy for regenerative value coordination.
 
 Initial symbolic primitives:
 
@@ -397,112 +371,3 @@ Deploy to a Node.js-compatible hosting platform after verifying environment vari
 The project references decentralized deployment concepts such as IPFS, Filecoin, ENS, and gateway-based access.
 
 These pathways should be treated as deployment adapters or research tracks unless fully configured, tested, and documented for the current branch.
-
-Never publish secrets or private wallet material into decentralized storage.
-
----
-
-## Documentation Map
-
-Important docs may include:
-
-```text
-README.md                         Project overview and doctrine
-SECURITY.md                       Security practices and reporting
-QUANTUM-SECURITY.md               Post-quantum and hybrid security research
-API-SECURITY-GUIDELINES.md        API security practices
-STRUCTURE.md                      Project structure details
-DEPLOYMENT.md                     Deployment guidance
-docs/material-routing.md          Loose material routing and reuse plan
-shared/                           Shared schemas and typed primitives
-server/                           Backend services and security layers
-client/                           Frontend wallet interface
-```
-
-Recommended next alignment docs:
-
-```text
-docs/MYSTERION_ALIGNMENT.md       AI-human guardian charter
-shared/types/biozone-token.ts     Token taxonomy primitives
-```
-
----
-
-## Recommended Alignment Work
-
-The next alignment branch should be:
-
-```bash
-git checkout -b align/mysterion-charter
-```
-
-Recommended commit message:
-
-```text
-docs: align Aether Coin with Mysterion charter and biozone token taxonomy
-```
-
-Recommended first files:
-
-```text
-README.md
-package.json
-docs/MYSTERION_ALIGNMENT.md
-shared/types/biozone-token.ts
-QUANTUM-SECURITY.md
-```
-
----
-
-## Security Disclosure
-
-If you discover a security vulnerability, do not open a public issue containing exploit details, secrets, keys, private user data, or attack instructions.
-
-Use the project’s published security contact if available, or contact the maintainer privately through the appropriate trusted channel.
-
----
-
-## Contributing
-
-Contributions should preserve the mission:
-
-- protect user consent
-- avoid overclaiming security
-- use typed, maintainable code
-- document high-risk changes
-- do not commit secrets
-- separate symbolic language from engineering guarantees
-- keep AI in a guardian role
-- make every sensitive workflow auditable
-
-Before proposing changes, run the available checks for the current branch, such as:
-
-```bash
-npm run build
-npm run test
-npm run security:audit
-```
-
-If a command is unavailable or fails due to environment configuration, document that clearly.
-
----
-
-## License
-
-License information should be verified in the repository before production use, redistribution, or integration into downstream projects.
-
----
-
-## Bottom Line
-
-Aether Coin Biozonecurrency is a living experiment in sovereign digital stewardship.
-
-It seeks to unite wallet security, AI risk awareness, regenerative token logic, decentralized infrastructure, and human consent into one coherent trust interface.
-
-AI is the guardian.
-
-The human is the actor.
-
-The wallet is the altar of consent.
-
-The protocol is lead into gold.
