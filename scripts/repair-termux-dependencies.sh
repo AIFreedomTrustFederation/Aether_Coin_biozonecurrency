@@ -5,6 +5,7 @@ MODE="safe"
 UPGRADE_DEPRECATED="0"
 RUN_BUILD="1"
 COMMIT_CHANGES="0"
+INSTALL_STRATEGY="ignore-native-scripts"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -24,6 +25,10 @@ while [[ $# -gt 0 ]]; do
       COMMIT_CHANGES="1"
       shift
       ;;
+    --normal-install)
+      INSTALL_STRATEGY="normal"
+      shift
+      ;;
     --help|-h)
       cat <<'HELP'
 Usage: bash scripts/repair-termux-dependencies.sh [options]
@@ -33,9 +38,10 @@ Options:
   --force-audit         Run npm audit fix --force after the safe audit fix. This may introduce breaking changes.
   --skip-build          Skip npm run check and npm run build.
   --commit              Commit package/report changes directly on the current branch after checks.
+  --normal-install      Use normal npm install instead of Termux-safe install with ignored native scripts.
   --help                Show this help.
 
-Recommended first run:
+Recommended Termux first run:
   bash scripts/repair-termux-dependencies.sh
 
 More aggressive run after reviewing output:
@@ -75,6 +81,7 @@ fi
 
 section "Aether Coin Biozoecurrency dependency repair"
 printf 'Mode: %s\n' "$MODE"
+printf 'Install strategy: %s\n' "$INSTALL_STRATEGY"
 printf 'Upgrade deprecated direct dependencies: %s\n' "$UPGRADE_DEPRECATED"
 printf 'Run TypeScript/build checks: %s\n' "$RUN_BUILD"
 
@@ -108,9 +115,17 @@ printf 'Using Python for node-gyp: %s\n' "$PYTHON"
 section "Baseline git state"
 run git status --short --branch || true
 
-section "Clean dependency install without optional native packages"
+section "Clean dependency install"
 rm -rf node_modules
-run npm install --omit=optional
+npm cache verify || true
+
+if [[ "$INSTALL_STRATEGY" == "ignore-native-scripts" ]]; then
+  warn "Using Termux-safe install: npm install --omit=optional --ignore-scripts"
+  warn "This avoids Android native addon failures such as utf-8-validate binding.gyp android_ndk_path."
+  run npm install --omit=optional --ignore-scripts
+else
+  run npm install --omit=optional
+fi
 
 section "Dependency reports"
 mkdir -p reports
@@ -120,21 +135,29 @@ npm outdated > reports/npm-outdated.txt || true
 npm ls --depth=0 > reports/npm-direct-deps.txt || true
 
 section "Safe audit fix"
-run npm audit fix --omit=optional || true
+if [[ "$INSTALL_STRATEGY" == "ignore-native-scripts" ]]; then
+  run npm audit fix --omit=optional --ignore-scripts || true
+else
+  run npm audit fix --omit=optional || true
+fi
 npm audit --json > reports/npm-audit-after-safe-fix.json || true
 npm audit > reports/npm-audit-after-safe-fix.txt || true
 
 if [[ "$UPGRADE_DEPRECATED" == "1" ]]; then
   section "Direct dependency upgrades for common deprecated packages"
-  run npm install multer@latest glob@latest recharts@latest uuid@latest
-  run npm install @reown/appkit@latest wagmi@latest viem@latest ethers@latest
+  run npm install multer@latest glob@latest recharts@latest uuid@latest --ignore-scripts
+  run npm install @reown/appkit@latest wagmi@latest viem@latest ethers@latest --ignore-scripts
   npm outdated > reports/npm-outdated-after-upgrades.txt || true
 fi
 
 if [[ "$MODE" == "force" ]]; then
   section "Force audit fix"
   warn "npm audit fix --force may introduce breaking changes. Review package changes carefully."
-  run npm audit fix --force --omit=optional || true
+  if [[ "$INSTALL_STRATEGY" == "ignore-native-scripts" ]]; then
+    run npm audit fix --force --omit=optional --ignore-scripts || true
+  else
+    run npm audit fix --force --omit=optional || true
+  fi
   npm audit --json > reports/npm-audit-after-force-fix.json || true
   npm audit > reports/npm-audit-after-force-fix.txt || true
 fi
