@@ -1,6 +1,6 @@
 # Aether Coin Biozonecurrency Status
 
-Last reviewed: 2026-06-20
+Last reviewed: 2026-06-24
 
 ## Current Role
 
@@ -31,6 +31,8 @@ Do not claim these as production-ready without matching implementation, review, 
 ## Current Validation Boundary
 
 `npm run qa:local` is the current dependency-light repo gate. It validates required docs, package scripts, package-lock alignment, major source directories, DynastyLink local-first docs, package surfaces, and the API-key guard script.
+
+Last local `npm run qa:local` pass: 2026-06-24 on the Windows local builder.
 
 Full build, TypeScript, database, dependency, and security audit checks require the full local dependency stack and environment. See `docs/validation.md`.
 
