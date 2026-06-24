@@ -1,0 +1,54 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: dynastylink-postgres
+    environment:
+      POSTGRES_USER: dynastylink
+      POSTGRES_PASSWORD: dynastylink_dev_password
+      POSTGRES_DB: dynastylink
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  minio:
+    image: minio/minio:latest
+    container_name: dynastylink-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: dynastylink
+      MINIO_ROOT_PASSWORD: dynastylink_dev_password
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: dynastylink-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+
+  backend:
+    build: ../backend
+    container_name: dynastylink-backend
+    environment:
+      DATABASE_URL: postgresql://dynastylink:dynastylink_dev_password@postgres:5432/dynastylink
+      MINIO_ENDPOINT: minio:9000
+      OLLAMA_URL: http://ollama:11434
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+      - minio
+      - ollama
+
+volumes:
+  postgres_data:
+  minio_data:
+  ollama_data:

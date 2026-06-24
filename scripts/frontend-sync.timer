@@ -1,0 +1,13 @@
+[Unit]
+Description=Run Frontend Repository Synchronization on a schedule
+Requires=frontend-sync.service
+
+[Timer]
+Unit=frontend-sync.service
+# Run every hour
+OnCalendar=*-*-* *:00:00
+# Add randomized delay to prevent exact timing
+RandomizedDelaySec=300
+
+[Install]
+WantedBy=timers.target

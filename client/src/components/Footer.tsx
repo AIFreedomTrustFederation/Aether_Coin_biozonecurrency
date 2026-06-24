@@ -22,6 +22,7 @@ const footerLinks = [
     category: "Resources",
     links: [
       { name: "Whitepaper", path: "/whitepaper", icon: <FileText className="h-4 w-4" /> },
+      { name: "Aetherion Flight Paper", path: "https://aifreedomtrustfederation.github.io/AI-Freedom-Trust/docs/aetherion-flight-paper-post-quantum-sovereign-network.md", icon: <FileText className="h-4 w-4" /> },
       { name: "About", path: "/about", icon: <Info className="h-4 w-4" /> },
       { name: "ICO", path: "/ico", icon: <Coins className="h-4 w-4" /> },
       { name: "Singularity", path: "/singularity", icon: <Zap className="h-4 w-4" /> },
@@ -76,12 +77,19 @@ const Footer: React.FC = () => {
               <ul className="space-y-2">
                 {group.links.map((link) => (
                   <li key={link.path}>
-                    <Link href={link.path}>
-                      <a className="text-sm text-muted-foreground hover:text-foreground flex items-center">
+                    {link.path.startsWith('http') ? (
+                      <a href={link.path} target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-foreground flex items-center">
                         {link.icon}
                         <span className="ml-2">{link.name}</span>
                       </a>
-                    </Link>
+                    ) : (
+                      <Link href={link.path}>
+                        <a className="text-sm text-muted-foreground hover:text-foreground flex items-center">
+                          {link.icon}
+                          <span className="ml-2">{link.name}</span>
+                        </a>
+                      </Link>
+                    )}
                   </li>
                 ))}
               </ul>

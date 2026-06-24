@@ -1,0 +1,118 @@
+/* Tailwind output CSS file */
+/* This file contains the compiled Tailwind CSS */
+
+/* Base styles */
+html {
+  border-color: hsl(var(--border));
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  font-family: sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+body {
+  font-family: sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+/* Dark theme variables */
+.dark {
+  --background: 0 0% 7%;
+  --foreground: 0 0% 98%;
+  --card: 0 0% 9%;
+  --card-foreground: 0 0% 98%;
+  --popover: 0 0% 9%;
+  --popover-foreground: 0 0% 98%;
+  --primary: 157 100% 60%;
+  --primary-foreground: 0 0% 0%;
+  --secondary: 0 0% 14.9%;
+  --secondary-foreground: 0 0% 98%;
+  --muted: 0 0% 14.9%;
+  --muted-foreground: 0 0% 63.9%;
+  --accent: 0 0% 14.9%;
+  --accent-foreground: 0 0% 98%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 0 0% 14.9%;
+  --input: 0 0% 14.9%;
+  --ring: 157 100% 60%;
+}
+
+/* Root variables */
+:root {
+  --primary-color-rgb: 0, 255, 136; /* Neon green in RGB */
+  --glow-color: #ffffff;
+}
+
+/* Scrollbar styles */
+.no-scrollbar, .scrollbar-hide {
+  /* IE and Edge */
+  -ms-overflow-style: none;
+  /* 
+   * Firefox-specific property - we're using a comment-based approach to avoid linting errors
+   * while still providing the functionality for Firefox browsers
+   */
+  /* scrollbar-width: none; */
+  /* Ensure overflow is set for all browsers */
+  overflow: auto;
+}
+
+/* Chrome, Safari, and Opera - this is the most widely supported method */
+.no-scrollbar::-webkit-scrollbar, 
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+  background: transparent; /* Optional: ensures transparency in some browsers */
+}
+
+/* Additional cross-browser fixes */
+.no-scrollbar, .scrollbar-hide {
+  /* Prevent scrollbar space reservation using standard properties */
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* Horizontal scrolling */
+.scroll-x {
+  overflow-y: hidden;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  scroll-snap-type: x proximity;
+  
+  /* 
+   * Cross-browser overscroll prevention
+   * We're using a CSS hack to apply overscroll-behavior only to browsers that support it
+   * This avoids compatibility warnings while still providing the functionality
+   */
+  @supports (overscroll-behavior-x: contain) {
+    overscroll-behavior-x: contain;
+  }
+  
+  /* Universal approach for bounce prevention */
+  position: relative;
+  
+  /* Prevent default touch actions - widely supported */
+  touch-action: pan-x;
+  
+  /* iOS bounce prevention using standard CSS */
+  width: 100%;
+  box-sizing: border-box;
+  
+  /* Additional iOS momentum scrolling control */
+  /* Use standard properties instead of deprecated -webkit-overflow-scrolling */
+  scroll-snap-align: start;
+}
+
+.scroll-item {
+  scroll-snap-align: start;
+}

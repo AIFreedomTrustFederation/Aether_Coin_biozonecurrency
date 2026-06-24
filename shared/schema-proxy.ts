@@ -20,6 +20,9 @@ export * from './llm-api-schema';
 // Re-export from API Key schema
 export * from './api-key-schema';
 
+// Re-export from Quantum Security schema
+export * from './quantum-security-schema';
+
 // Define proxy references to schema tables with forward declarations for other schemas
 // that may have circular dependencies
 
@@ -178,6 +181,43 @@ export const llmPromptTemplates = {
   isPublic: null,
   version: null,
   modelRecommendation: null
+} as any;
+
+// Quantum Security schema proxies
+export const quantumSecurityEvents = {
+  id: null,
+  eventId: null,
+  eventType: null,
+  securityLevel: null,
+  algorithm: null,
+  userId: null,
+  walletId: null,
+  success: null,
+  metadata: null,
+  timestamp: null
+} as any;
+
+export const quantumSecurityRecommendations = {
+  id: null,
+  recommendationId: null,
+  eventId: null,
+  recommendationType: null,
+  description: null,
+  impact: null,
+  automated: null,
+  appliedAt: null,
+  createdAt: null
+} as any;
+
+export const quantumSecurityLearnings = {
+  id: null,
+  learningId: null,
+  learningType: null,
+  description: null,
+  confidence: null,
+  dataPoints: null,
+  metadata: null,
+  createdAt: null
 } as any;
 
 // Make sure any new schemas are also re-exported and proxied here

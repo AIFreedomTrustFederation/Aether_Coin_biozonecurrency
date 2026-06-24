@@ -5,7 +5,7 @@
  * providing code analysis, security validation, and quantum resilience injections.
  */
 
-import { QuantumBridge } from '../../quantum-security/lib/quantumBridge';
+import { CorrectExportedMember } from '../../quantum-security/lib/quantumBridge';
 import { getEternalNowEngine } from '../../quantum-security/lib/eternalNowEngine';
 import { EditorInstance } from '../../code-editor/types';
 
@@ -274,7 +274,7 @@ export class QuantumEditorBridge {
       
       // Add validator function to key operations if missing
       if (!modifiedCode.includes('_validateQuantumSignature')) {
-        // Find important operations (transfers, mints, etc.)
+        // Find important operations (transfers, mints, etc. )
         const functionsToSecure = [
           { pattern: /function\s+transfer\(/g, name: 'transfer' },
           { pattern: /function\s+transferFrom\(/g, name: 'transferFrom' },
@@ -379,6 +379,18 @@ export class QuantumEditorBridge {
     // Apply decorations to the editor
     editor.deltaDecorations([], decorations);
   }
+  
+  /**
+   * Integrate a new feature
+   * 
+   * @param featureName Name of the feature to integrate
+   * @param options Customization options for the feature
+   */
+  integrateFeature(featureName: string, options?: Record<string, unknown>) {
+    // Logic to integrate a new feature, using options for customization
+    console.log(`Integrating feature: ${featureName}`);
+    // ... feature integration logic
+}
 }
 
 // React hook for using the Quantum Editor Bridge
@@ -388,6 +400,7 @@ export const useQuantumEditorBridge = () => {
   return {
     validateSmartContract: bridge.validateSmartContract.bind(bridge),
     injectQuantumResistance: bridge.injectQuantumResistance.bind(bridge),
-    highlightIssuesInEditor: bridge.highlightIssuesInEditor.bind(bridge)
+    highlightIssuesInEditor: bridge.highlightIssuesInEditor.bind(bridge),
+    integrateFeature: bridge.integrateFeature.bind(bridge)
   };
 };

@@ -500,6 +500,7 @@ export default function EscrowCreationForm() {
                     className="form-checkbox h-5 w-5 rounded border-gray-300 dark:border-gray-700"
                     checked={field.value}
                     onChange={field.onChange}
+                    title="Enable Matrix Communication Room"
                   />
                 </FormControl>
                 <div className="space-y-1 leading-none">

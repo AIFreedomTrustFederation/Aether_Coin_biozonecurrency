@@ -43,7 +43,6 @@ const WalletConnector: React.FC = () => {
     try {
       const result = await connect(walletType);
       if (result && 'status' in result && result.status === 'error') {
-        // Type guard to ensure we can access the error property
         const errorResult = result as WalletConnectError;
         setError(`Failed to connect to ${walletType}: ${errorResult.error}`);
         return;
@@ -59,7 +58,17 @@ const WalletConnector: React.FC = () => {
     }
   };
   
-  // Truncate wallet address for display
+  const connectWallet = async () => {
+    try {
+      console.log("Attempting to connect to wallet...");
+      await connectToWallet();
+      console.log("Wallet connected successfully");
+    } catch (err) {
+      console.error("Failed to connect to wallet:", err);
+      setError("Could not connect to wallet. Please try again.");
+    }
+  };
+  
   const formatAddress = (address: string) => {
     if (!address) return '';
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
@@ -95,7 +104,7 @@ const WalletConnector: React.FC = () => {
         return <FaBitcoin />;
     }
   };
-  
+
   return (
     <div>
       {wallet ? (
@@ -139,52 +148,12 @@ const WalletConnector: React.FC = () => {
                   <p className="text-muted-foreground">Connecting to wallet...</p>
                 </div>
               ) : (
-                <>
-                  <WalletOption 
-                    type="metamask"
-                    name="MetaMask"
-                    icon={getWalletIcon('metamask')}
-                    onClick={handleConnect}
-                    disabled={!availableWallets.includes('metamask')}
-                  />
-                  
-                  <WalletOption 
-                    type="coinbase"
-                    name="Coinbase Wallet"
-                    icon={getWalletIcon('coinbase')}
-                    onClick={handleConnect}
-                    disabled={!availableWallets.includes('coinbase')}
-                  />
-                  
-                  <WalletOption 
-                    type="binance"
-                    name="Binance Wallet"
-                    icon={getWalletIcon('binance')}
-                    onClick={handleConnect}
-                    disabled={!availableWallets.includes('binance')}
-                  />
-                  
-                  <WalletOption 
-                    type="walletconnect"
-                    name="WalletConnect"
-                    icon={getWalletIcon('walletconnect')}
-                    onClick={handleConnect}
-                  />
-                  
-                  <WalletOption 
-                    type="1inch"
-                    name="1inch Wallet"
-                    icon={getWalletIcon('1inch')}
-                    onClick={handleConnect}
-                  />
-                  
-                  <WalletOption 
-                    type="trust"
-                    name="Trust Wallet"
-                    icon={getWalletIcon('trust')}
-                    onClick={handleConnect}
-                  />
-                </>
+                <div>
+                  <button onClick={connectWallet}>
+                    Connect Wallet
+                  </button>
+                  {error && <div className="error">{error}</div>}
+                </div>
               )}
             </div>
           </DialogContent>

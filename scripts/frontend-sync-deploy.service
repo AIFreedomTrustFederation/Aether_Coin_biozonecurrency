@@ -1,0 +1,14 @@
+[Unit]
+Description=Frontend Repository Synchronization and cPanel Deployment Service
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash /path/to/Aether_Coin_biozonecurrency/scripts/sync-and-deploy.sh --deploy
+User=your_username
+Group=your_group
+Environment="SLACK_WEBHOOK=your_slack_webhook_url"
+Environment="CPANEL_USERNAME=your_cpanel_username"
+Environment="CPANEL_PASSWORD=your_cpanel_password"
+Environment="CPANEL_HOST=your_cpanel_host"
+Environment="CPANEL_DOMAIN=your_cpanel_domain"
