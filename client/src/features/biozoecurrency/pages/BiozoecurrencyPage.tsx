@@ -13,7 +13,8 @@ import {
   BookOpen, 
   Download,
   Wallet,
-  Dices
+  Dices,
+  ShieldCheck
 } from 'lucide-react';
 import Sidebar from '../../../components/layout/Sidebar';
 import { 
@@ -22,6 +23,7 @@ import {
   BiozoecurrencyDocumentation, 
   IULPolicyIntegration 
 } from '..';
+import { biozoecurrencyTokenDefinitions } from '@shared/types/federation';
 
 const BiozoecurrencyPage = () => {
   return (
@@ -38,7 +40,7 @@ const BiozoecurrencyPage = () => {
             <div>
               <h1 className="text-3xl font-bold tracking-tight mb-1">Aetherion Biozoecurrency</h1>
               <p className="text-muted-foreground">
-                Explore the revolutionary approach to blockchain economics that aligns with natural growth patterns
+                Explore status-labeled regenerative value research, consent-first stewardship, and Federation-aligned token taxonomy.
               </p>
             </div>
             
@@ -57,15 +59,26 @@ const BiozoecurrencyPage = () => {
               </Button>
             </div>
           </div>
-          
+
+          <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4 flex gap-3 items-start">
+            <ShieldCheck className="h-5 w-5 mt-0.5 text-amber-600" />
+            <div>
+              <h2 className="font-medium">Protocol research boundary</h2>
+              <p className="text-sm text-muted-foreground">
+                Biozoecurrency concepts are status-labeled Federation primitives. This screen does not claim production token value,
+                audited custody, investment utility, legal validity, or autonomous AI authorization.
+              </p>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg p-6 flex flex-col items-center text-center">
               <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mb-4">
                 <Leaf className="h-8 w-8 text-primary" />
               </div>
-              <h3 className="text-xl font-medium mb-2">Natural Growth</h3>
+              <h3 className="text-xl font-medium mb-2">Regenerative Research</h3>
               <p className="text-sm text-muted-foreground">
-                Follows mathematical principles found in nature - Fibonacci sequences, Pi ratios, and fractal patterns
+                Explores natural growth metaphors, fractal coordination, and stewardship-centered value patterns.
               </p>
             </div>
             
@@ -73,9 +86,9 @@ const BiozoecurrencyPage = () => {
               <div className="w-16 h-16 bg-secondary/20 rounded-full flex items-center justify-center mb-4">
                 <Dices className="h-8 w-8 text-secondary" />
               </div>
-              <h3 className="text-xl font-medium mb-2">Inverse Incentives</h3>
+              <h3 className="text-xl font-medium mb-2">Status-Labeled Tokens</h3>
               <p className="text-sm text-muted-foreground">
-                Later adopters benefit from airdrops, death/resurrection cycles, and recursive transformations
+                Separates planned, prototype, experimental, implemented, needs-review, and audited claims.
               </p>
             </div>
             
@@ -83,10 +96,28 @@ const BiozoecurrencyPage = () => {
               <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mb-4">
                 <Wallet className="h-8 w-8 text-blue-500" />
               </div>
-              <h3 className="text-xl font-medium mb-2">Self-Repaying Loans</h3>
+              <h3 className="text-xl font-medium mb-2">Recurve Research</h3>
               <p className="text-sm text-muted-foreground">
-                Over-collateralized loans against IUL policies that repay themselves through transaction fees
+                Frames policy, collateral, and reserve concepts as research paths requiring qualified review before live use.
               </p>
+            </div>
+          </div>
+
+          <div className="bg-card border rounded-lg p-6">
+            <h2 className="text-xl font-semibold mb-4">Canonical Biozoecurrency Primitives</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {biozoecurrencyTokenDefinitions.map((token) => (
+                <div key={token.symbol} className="rounded-lg border p-4 bg-background/50">
+                  <div className="flex items-center justify-between gap-3 mb-2">
+                    <h3 className="font-semibold">{token.symbol} — {token.name}</h3>
+                    <span className="text-xs rounded-full border px-2 py-1 uppercase tracking-wide">
+                      {token.status}
+                    </span>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-2">{token.purpose}</p>
+                  <p className="text-xs text-muted-foreground">{token.claimBoundary.tokenValue}</p>
+                </div>
+              ))}
             </div>
           </div>
           
@@ -111,7 +142,7 @@ const BiozoecurrencyPage = () => {
               </TabsTrigger>
               <TabsTrigger value="iul" className="flex items-center">
                 <Wallet className="h-4 w-4 mr-2 md:mr-2" />
-                <span className="hidden md:inline-block">IUL Integration</span>
+                <span className="hidden md:inline-block">IUL Research</span>
                 <span className="md:hidden">IUL</span>
               </TabsTrigger>
             </TabsList>
@@ -142,10 +173,10 @@ const BiozoecurrencyPage = () => {
               </div>
               
               <div className="flex-1 text-center md:text-left">
-                <h3 className="text-xl font-medium mb-2">Complete Whitepaper Available</h3>
+                <h3 className="text-xl font-medium mb-2">Federation Research Materials</h3>
                 <p className="text-muted-foreground mb-4">
-                  Download the full Aetherion whitepaper to learn more about our biozoecurrency model, 
-                  mathematical foundations, governance structure, and strategic roadmap.
+                  Review the Aetherion materials to understand the Biozoecurrency model, mathematical inspirations,
+                  governance concepts, and roadmap. Treat these materials as research unless status-labeled otherwise.
                 </p>
                 <div className="flex flex-col xs:flex-row gap-2 justify-center md:justify-start">
                   <Button>
