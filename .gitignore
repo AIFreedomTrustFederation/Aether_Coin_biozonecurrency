@@ -117,3 +117,6 @@ evaluation-results/
 **/*secret*
 **/*credential*
 **/*token*
+
+# Local dependency audit reports
+reports/
