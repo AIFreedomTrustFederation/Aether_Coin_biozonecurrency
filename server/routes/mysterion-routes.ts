@@ -126,7 +126,7 @@ mysterionRouter.post('/analyze-code', requireAuth, async (req: any, res) => {
 });
 
 // Create a new BioZone Coding project with Matrix integration
-mysterionRouter.post('/biozone-coding/projects', requireAuth, async (req: any, res) => {
+mysterionRouter.post('/biozoe-coding/projects', requireAuth, async (req: any, res) => {
   try {
     const userId = req.session.userId;
     

@@ -14,7 +14,7 @@ fi
 
 # Configuration
 SOURCE_REPO="/path/to/Aether_Coin_biozonecurrency"
-TARGET_REPO="/path/to/biozone-harmony-boost"
+TARGET_REPO="/path/to/biozoe-harmony-boost"
 SERVICE_USER="your_username"
 SERVICE_GROUP="your_group"
 SLACK_WEBHOOK_URL="your_slack_webhook_url" # Optional
@@ -58,7 +58,7 @@ install_service() {
   
   # Update paths in the sync script
   sed -i "s|SOURCE_REPO=\"/path/to/Aether_Coin_biozonecurrency\"|SOURCE_REPO=\"${SOURCE_REPO}\"|" "${SOURCE_REPO}/scripts/sync-frontend-repos.sh"
-  sed -i "s|TARGET_REPO=\"/path/to/biozone-harmony-boost\"|TARGET_REPO=\"${TARGET_REPO}\"|" "${SOURCE_REPO}/scripts/sync-frontend-repos.sh"
+  sed -i "s|TARGET_REPO=\"/path/to/biozoe-harmony-boost\"|TARGET_REPO=\"${TARGET_REPO}\"|" "${SOURCE_REPO}/scripts/sync-frontend-repos.sh"
   
   # Make script executable
   chmod +x "${SOURCE_REPO}/scripts/sync-frontend-repos.sh"

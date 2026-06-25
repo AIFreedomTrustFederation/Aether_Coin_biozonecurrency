@@ -8,10 +8,10 @@
 
 # Configuration
 SOURCE_REPO_URL="https://github.com/AIFreedomTrustFederation/Aether_Coin_biozonecurrency.git"
-TARGET_REPO_URL="https://github.com/AIFreedomTrustFederation/biozone-harmony-boost.git"
+TARGET_REPO_URL="https://github.com/AIFreedomTrustFederation/biozoe-harmony-boost.git"
 WORK_DIR="/tmp/frontend-sync-workspace"
 SOURCE_DIR="${WORK_DIR}/Aether_Coin_biozonecurrency"
-TARGET_DIR="${WORK_DIR}/biozone-harmony-boost"
+TARGET_DIR="${WORK_DIR}/biozoe-harmony-boost"
 
 # Colors for output
 GREEN='\033[0;32m'
@@ -50,7 +50,7 @@ chmod +x "${WORK_DIR}/sync-frontend-repos.sh"
 
 # Update paths in the sync script
 sed -i "s|SOURCE_REPO=\"/path/to/Aether_Coin_biozonecurrency\"|SOURCE_REPO=\"${SOURCE_DIR}\"|" "${WORK_DIR}/sync-frontend-repos.sh"
-sed -i "s|TARGET_REPO=\"/path/to/biozone-harmony-boost\"|TARGET_REPO=\"${TARGET_DIR}\"|" "${WORK_DIR}/sync-frontend-repos.sh"
+sed -i "s|TARGET_REPO=\"/path/to/biozoe-harmony-boost\"|TARGET_REPO=\"${TARGET_DIR}\"|" "${WORK_DIR}/sync-frontend-repos.sh"
 
 # Run the sync script
 echo -e "${YELLOW}Running synchronization script...${NC}"

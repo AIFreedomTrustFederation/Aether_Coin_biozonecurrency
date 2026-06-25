@@ -241,7 +241,7 @@ class MysterionLlmService {
       }
       
       // Generate a unique project ID
-      const projectId = `biozone-${randomBytes(8).toString('hex')}`;
+      const projectId = `biozoe-${randomBytes(8).toString('hex')}`;
       
       // Create a Matrix room for collaboration
       const { roomId, accessUrl } = await this.matrixService.bootstrapMysterionRoom(
@@ -251,7 +251,7 @@ class MysterionLlmService {
       );
       
       // Generate a project secret key for API access
-      const secretKey = `sk-biozone-${randomBytes(32).toString('hex').substring(0, 40)}`;
+      const secretKey = `sk-biozoe-${randomBytes(32).toString('hex').substring(0, 40)}`;
       
       // In a real implementation, we'd store the project details in a database
       

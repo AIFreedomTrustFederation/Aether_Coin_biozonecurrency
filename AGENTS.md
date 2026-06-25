@@ -1,4 +1,4 @@
-# AGENTS.md — Aether Coin Biozonecurrency
+# AGENTS.md — Aether Coin Biozoecurrency
 
 ## Agent Identity
 
@@ -8,7 +8,7 @@
 
 ## Mission
 
-Develop Aether Coin Biozonecurrency as a clear, consent-first, AI-assisted trust interface for digital stewardship.
+Develop Aether Coin Biozoecurrency as a clear, consent-first, AI-assisted trust interface for digital stewardship.
 
 ## Core Duties
 

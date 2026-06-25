@@ -78,7 +78,7 @@ node scripts/verify-biozoecurrency-terminology.mjs
 - `package.json` still needs a local script hook for `verify:federation`; an attempted connector update was blocked by the tool safety layer.
 - The root `package-lock.json` is a minimal identity repair and should be regenerated from a local checkout.
 - `docs/security-and-privacy.md`, `AGENTS.md`, and deeper UI copy still need dedicated terminology and claim-boundary passes where connector safety blocked direct rewrites.
-- Older scripts, archived pasted logs, and deployment helper files may still contain the old Biozone spelling and should be cleaned in a dedicated terminology pass.
+- Older scripts, archived pasted logs, and deployment helper files may still contain the old Biozoe spelling and should be cleaned in a dedicated terminology pass.
 - Real custody, live token, legal trust, deployment, and post-quantum production claims remain out of scope until verified and reviewed.
 
 ## Next Best Work

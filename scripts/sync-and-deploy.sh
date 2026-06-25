@@ -1,7 +1,7 @@
 #!/bin/bash
 # sync-and-deploy.sh
 #
-# This script synchronizes the frontend code from Aether_Coin_biozonecurrency to biozone-harmony-boost
+# This script synchronizes the frontend code from Aether_Coin_biozonecurrency to biozoe-harmony-boost
 # and optionally deploys to cPanel using the existing deploy-to-cpanel.sh script.
 #
 # Usage: ./sync-and-deploy.sh [--deploy]
@@ -9,7 +9,7 @@
 
 # Configuration
 SOURCE_REPO="/path/to/Aether_Coin_biozonecurrency"
-TARGET_REPO="/path/to/biozone-harmony-boost"
+TARGET_REPO="/path/to/biozoe-harmony-boost"
 LOG_FILE="/var/log/frontend-sync.log"
 SLACK_WEBHOOK_URL="${SLACK_WEBHOOK:-}" # Optional: Set in environment or .env file
 
@@ -241,11 +241,11 @@ update_package_json() {
     tmp_file=$(mktemp)
     
     # Update name field
-    sed 's/"name": "aetherion"/"name": "biozone-harmony-boost"/' "${TARGET_REPO}/package.json" > "$tmp_file"
+    sed 's/"name": "aetherion"/"name": "biozoe-harmony-boost"/' "${TARGET_REPO}/package.json" > "$tmp_file"
     
     # Update repository field if it exists
     if grep -q '"repository":' "$tmp_file"; then
-      sed -i 's|"url": ".*"|"url": "https://github.com/AIFreedomTrustFederation/biozone-harmony-boost.git"|' "$tmp_file"
+      sed -i 's|"url": ".*"|"url": "https://github.com/AIFreedomTrustFederation/biozoe-harmony-boost.git"|' "$tmp_file"
     fi
     
     # Move temporary file back

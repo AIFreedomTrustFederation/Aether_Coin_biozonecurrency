@@ -1,6 +1,6 @@
 # Frontend Repository Synchronization
 
-This directory contains scripts to synchronize the frontend code between the Aether_Coin_biozonecurrency repository (source) and the biozone-harmony-boost repository (target).
+This directory contains scripts to synchronize the frontend code between the Aether_Coin_biozonecurrency repository (source) and the biozoe-harmony-boost repository (target).
 
 ## Overview
 
@@ -18,7 +18,7 @@ The synchronization system ensures that both repositories share the same fronten
 
 1. Edit the configuration variables in `install-sync-service.sh`:
    - `SOURCE_REPO`: Path to the Aether_Coin_biozonecurrency repository
-   - `TARGET_REPO`: Path to the biozone-harmony-boost repository
+   - `TARGET_REPO`: Path to the biozoe-harmony-boost repository
    - `SERVICE_USER`: Username to run the service as
    - `SERVICE_GROUP`: Group to run the service as
    - `SLACK_WEBHOOK_URL`: (Optional) Webhook URL for Slack notifications
@@ -130,11 +130,11 @@ If something goes wrong, you can restore from the backup:
 
 ```bash
 # Find the latest backup
-ls -la /path/to/biozone-harmony-boost_backup_*
+ls -la /path/to/biozoe-harmony-boost_backup_*
 
 # Restore from backup
-rm -rf /path/to/biozone-harmony-boost
-cp -r /path/to/biozone-harmony-boost_backup_TIMESTAMP /path/to/biozone-harmony-boost
+rm -rf /path/to/biozoe-harmony-boost
+cp -r /path/to/biozoe-harmony-boost_backup_TIMESTAMP /path/to/biozoe-harmony-boost
 ```
 
 ## Customization

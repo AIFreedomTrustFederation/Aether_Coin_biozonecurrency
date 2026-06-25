@@ -1,6 +1,6 @@
 # Frontend Synchronization and cPanel Deployment
 
-This directory contains scripts to synchronize the frontend code between the Aether_Coin_biozonecurrency repository (source) and the biozone-harmony-boost repository (target), and optionally deploy to cPanel using the existing `deploy-to-cpanel.sh` script.
+This directory contains scripts to synchronize the frontend code between the Aether_Coin_biozonecurrency repository (source) and the biozoe-harmony-boost repository (target), and optionally deploy to cPanel using the existing `deploy-to-cpanel.sh` script.
 
 ## Overview
 
@@ -23,7 +23,7 @@ The synchronization and deployment system ensures that:
 
 1. Edit the configuration variables in `install-sync-deploy-service.sh`:
    - `SOURCE_REPO`: Path to the Aether_Coin_biozonecurrency repository
-   - `TARGET_REPO`: Path to the biozone-harmony-boost repository
+   - `TARGET_REPO`: Path to the biozoe-harmony-boost repository
    - `SERVICE_USER`: Username to run the service as
    - `SERVICE_GROUP`: Group to run the service as
    - `SLACK_WEBHOOK_URL`: (Optional) Webhook URL for Slack notifications
@@ -173,19 +173,19 @@ Common issues:
 Check if the `deploy-to-cpanel.sh` script exists in the target repository:
 
 ```bash
-ls -la /path/to/biozone-harmony-boost/deploy-to-cpanel.sh
+ls -la /path/to/biozoe-harmony-boost/deploy-to-cpanel.sh
 ```
 
 Make sure it's executable:
 
 ```bash
-chmod +x /path/to/biozone-harmony-boost/deploy-to-cpanel.sh
+chmod +x /path/to/biozoe-harmony-boost/deploy-to-cpanel.sh
 ```
 
 Check for any errors in the deployment script:
 
 ```bash
-bash -x /path/to/biozone-harmony-boost/deploy-to-cpanel.sh
+bash -x /path/to/biozoe-harmony-boost/deploy-to-cpanel.sh
 ```
 
 ### Restoring from Backup
@@ -194,11 +194,11 @@ If something goes wrong, you can restore from the backup:
 
 ```bash
 # Find the latest backup
-ls -la /path/to/biozone-harmony-boost_backup_*
+ls -la /path/to/biozoe-harmony-boost_backup_*
 
 # Restore from backup
-rm -rf /path/to/biozone-harmony-boost
-cp -r /path/to/biozone-harmony-boost_backup_TIMESTAMP /path/to/biozone-harmony-boost
+rm -rf /path/to/biozoe-harmony-boost
+cp -r /path/to/biozoe-harmony-boost_backup_TIMESTAMP /path/to/biozoe-harmony-boost
 ```
 
 ## Customization

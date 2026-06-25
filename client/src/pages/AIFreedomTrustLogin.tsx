@@ -180,7 +180,7 @@ const AIFreedomTrustLogin = () => {
               <div className="flex items-center justify-center gap-2 mb-2">
                 <GitBranch className="h-4 w-4" />
                 <Link href="https://github.com/AIFreedomTrustFederation/Aether_Coin_biozonecurrency" className="text-primary hover:underline">
-                  View Aether Coin Biozone Currency Project
+                  View Aether Coin Biozoe Currency Project
                 </Link>
               </div>
               <div className="flex items-center justify-center gap-2 mb-2">

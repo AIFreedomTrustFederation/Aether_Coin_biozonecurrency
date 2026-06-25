@@ -1,4 +1,4 @@
-# Aether Coin Biozonecurrency Security And Privacy
+# Aether Coin Biozoecurrency Security And Privacy
 
 This repository touches wallets, payments, AI guidance, credentials, token taxonomy, trust profiles, and local vault concepts. Treat all security and privacy claims as high-risk until verified.
 

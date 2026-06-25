@@ -57,7 +57,7 @@ Run the terminology verifier:
 node scripts/verify-biozoecurrency-terminology.mjs
 ```
 
-It checks active source and documentation for the old Biozone spelling while skipping generated, dependency, lockfile, and archived asset paths.
+It checks active source and documentation for the old Biozoe spelling while skipping generated, dependency, lockfile, and archived asset paths.
 
 ## DynastyLink Local Check
 

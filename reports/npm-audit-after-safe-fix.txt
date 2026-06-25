@@ -1,0 +1,411 @@
+# npm audit report
+
+@ai-sdk/provider-utils  <=3.0.97
+@ai-sdk/provider-utils has an Uncontrolled Resource Consumption issue - https://github.com/advisories/GHSA-866g-f22w-33x8
+fix available via `npm audit fix --force`
+Will install braintrust@3.20.0, which is a breaking change
+node_modules/@ai-sdk/provider-utils
+  @ai-sdk/react  <=2.0.208
+  Depends on vulnerable versions of @ai-sdk/provider-utils
+  Depends on vulnerable versions of @ai-sdk/ui-utils
+  node_modules/@ai-sdk/react
+    ai  <=5.0.206 || 7.0.0-beta.0 - 7.0.0-beta.1-gr2m-test
+    Depends on vulnerable versions of @ai-sdk/provider-utils
+    Depends on vulnerable versions of @ai-sdk/react
+    Depends on vulnerable versions of @ai-sdk/solid
+    Depends on vulnerable versions of @ai-sdk/svelte
+    Depends on vulnerable versions of @ai-sdk/ui-utils
+    Depends on vulnerable versions of @ai-sdk/vue
+    Depends on vulnerable versions of jsondiffpatch
+    node_modules/ai
+      braintrust  0.0.3 - 3.12.0
+      Depends on vulnerable versions of @braintrust/core
+      Depends on vulnerable versions of ai
+      Depends on vulnerable versions of uuid
+      node_modules/braintrust
+  @ai-sdk/solid  *
+  Depends on vulnerable versions of @ai-sdk/provider-utils
+  Depends on vulnerable versions of @ai-sdk/ui-utils
+  node_modules/@ai-sdk/solid
+  @ai-sdk/svelte  <=3.0.206
+  Depends on vulnerable versions of @ai-sdk/provider-utils
+  Depends on vulnerable versions of @ai-sdk/ui-utils
+  node_modules/@ai-sdk/svelte
+  @ai-sdk/ui-utils  *
+  Depends on vulnerable versions of @ai-sdk/provider-utils
+  node_modules/@ai-sdk/ui-utils
+    @ai-sdk/vue  <=2.0.206
+    Depends on vulnerable versions of @ai-sdk/provider-utils
+    Depends on vulnerable versions of @ai-sdk/ui-utils
+    node_modules/@ai-sdk/vue
+
+@libp2p/kad-dht  <16.2.6
+Severity: high
+@libp2p/kad-dht: Unvalidated PUT_VALUE records allow unbounded disk exhaustion on DHT server nodes - https://github.com/advisories/GHSA-32mq-hpph-xfvr
+fix available via `npm audit fix --force`
+Will install helia@6.1.4, which is a breaking change
+node_modules/@libp2p/kad-dht
+  helia  1.1.0 - 5.5.1
+  Depends on vulnerable versions of @libp2p/kad-dht
+  node_modules/helia
+
+
+diff  6.0.0 - 8.0.2
+jsdiff has a Denial of Service vulnerability in parsePatch and applyPatch - https://github.com/advisories/GHSA-73rr-hh4g-fpgx
+fix available via `npm audit fix --force`
+Will install diff@9.0.0, which is a breaking change
+node_modules/diff
+
+drizzle-orm  <0.45.2
+Severity: high
+Drizzle ORM has SQL injection via improperly escaped SQL identifiers - https://github.com/advisories/GHSA-gpj5-g38j-94v9
+fix available via `npm audit fix --force`
+Will install drizzle-orm@0.45.2, which is a breaking change
+node_modules/drizzle-orm
+
+elliptic  *
+Elliptic Uses a Cryptographic Primitive with a Risky Implementation - https://github.com/advisories/GHSA-848j-6mx2-7j84
+fix available via `npm audit fix --force`
+Will install vite-plugin-node-polyfills@0.2.0, which is a breaking change
+node_modules/elliptic
+  @ethersproject/signing-key  <=5.8.0
+  Depends on vulnerable versions of elliptic
+  node_modules/@ethersproject/signing-key
+    @ethersproject/transactions  <=5.8.0
+    Depends on vulnerable versions of @ethersproject/signing-key
+    node_modules/@ethersproject/transactions
+      @ethersproject/abstract-provider  *
+      Depends on vulnerable versions of @ethersproject/transactions
+      node_modules/@ethersproject/abstract-provider
+        @ethersproject/abstract-signer  *
+        Depends on vulnerable versions of @ethersproject/abstract-provider
+        node_modules/@ethersproject/abstract-signer
+          @ethersproject/hash  5.0.6 - 5.8.0
+          Depends on vulnerable versions of @ethersproject/abstract-signer
+          node_modules/@ethersproject/hash
+            @ethersproject/providers  *
+            Depends on vulnerable versions of @ethersproject/abstract-provider
+            Depends on vulnerable versions of @ethersproject/abstract-signer
+            Depends on vulnerable versions of @ethersproject/hash
+            Depends on vulnerable versions of @ethersproject/transactions
+            Depends on vulnerable versions of ws
+            node_modules/@ethersproject/providers
+  browserify-sign  >=2.4.0
+  Depends on vulnerable versions of elliptic
+  node_modules/browserify-sign
+    crypto-browserify  >=3.4.0
+    Depends on vulnerable versions of browserify-sign
+    Depends on vulnerable versions of create-ecdh
+    node_modules/crypto-browserify
+      node-stdlib-browser  *
+      Depends on vulnerable versions of crypto-browserify
+      node_modules/node-stdlib-browser
+        vite-plugin-node-polyfills  >=0.3.0
+        Depends on vulnerable versions of node-stdlib-browser
+        node_modules/vite-plugin-node-polyfills
+  create-ecdh  *
+  Depends on vulnerable versions of elliptic
+  node_modules/create-ecdh
+
+esbuild  <=0.24.2
+Severity: moderate
+esbuild enables any website to send any requests to the development server and read the response - https://github.com/advisories/GHSA-67mh-4wv8-2f99
+fix available via `npm audit fix --force`
+Will install drizzle-kit@0.31.10, which is a breaking change
+node_modules/@esbuild-kit/core-utils/node_modules/esbuild
+node_modules/drizzle-kit/node_modules/esbuild
+  @esbuild-kit/core-utils  *
+  Depends on vulnerable versions of esbuild
+  node_modules/@esbuild-kit/core-utils
+    @esbuild-kit/esm-loader  *
+    Depends on vulnerable versions of @esbuild-kit/core-utils
+    node_modules/@esbuild-kit/esm-loader
+      drizzle-kit  0.9.1 - 0.9.54 || 0.12.9 - 1.0.0-beta.1-fd8bfcc
+      Depends on vulnerable versions of @esbuild-kit/esm-loader
+      Depends on vulnerable versions of esbuild
+      node_modules/drizzle-kit
+
+jsondiffpatch  <0.7.2
+Severity: moderate
+jsondiffpatch is vulnerable to Cross-site Scripting (XSS) via HtmlFormatter::nodeBegin - https://github.com/advisories/GHSA-33vc-wfww-vjfv
+fix available via `npm audit fix --force`
+Will install braintrust@3.20.0, which is a breaking change
+node_modules/jsondiffpatch
+
+jspdf  <=4.2.0
+Severity: critical
+jsPDF has Local File Inclusion/Path Traversal vulnerability - https://github.com/advisories/GHSA-f8cm-6447-x5h2
+jsPDF has PDF Injection in AcroFormChoiceField that allows Arbitrary JavaScript Execution - https://github.com/advisories/GHSA-pqxr-3g65-p328
+jsPDF Vulnerable to Denial of Service (DoS) via Unvalidated BMP Dimensions in BMPDecoder - https://github.com/advisories/GHSA-95fx-jjr5-f39c
+jsPDF Vulnerable to Stored XMP Metadata Injection (Spoofing & Integrity Violation) - https://github.com/advisories/GHSA-vm32-vv63-w422
+jsPDF has Shared State Race Condition in addJS Plugin - https://github.com/advisories/GHSA-cjw8-79x6-5cj4
+jsPDF has a PDF Object Injection via Unsanitized Input in addJS Method - https://github.com/advisories/GHSA-9vjf-qc39-jprp
+jsPDF Affected by Client-Side/Server-Side Denial of Service via Malicious GIF Dimensions - https://github.com/advisories/GHSA-67pg-wm7f-q7fj
+jsPDF has a PDF Injection in AcroForm module allows Arbitrary JavaScript Execution (RadioButton.createOption and "AS" property) - https://github.com/advisories/GHSA-p5xg-68wr-hm3m
+jsPDF has a PDF Object Injection via FreeText color - https://github.com/advisories/GHSA-7x6v-j9x4-qf24
+jsPDF has HTML Injection in New Window paths - https://github.com/advisories/GHSA-wfv2-pwc8-crg5
+fix available via `npm audit fix --force`
+Will install jspdf@4.2.1, which is a breaking change
+node_modules/jspdf
+
+matrix-js-sdk  <38.2.0
+Severity: moderate
+matrix-js-sdk has insufficient validation when considering a room to be upgraded by another - https://github.com/advisories/GHSA-mp7c-m3rh-r56v
+fix available via `npm audit fix --force`
+Will install matrix-js-sdk@41.8.0, which is a breaking change
+node_modules/matrix-js-sdk
+
+postcss  <8.5.10
+Severity: moderate
+PostCSS has XSS via Unescaped </style> in its CSS Stringify Output - https://github.com/advisories/GHSA-qx2v-qp2m-jg93
+fix available via `npm audit fix --force`
+Will install postcss@8.5.15, which is outside the stated dependency range
+node_modules/postcss
+
+react-router  <=0.0.0-nightly-fdd3ab3a6-20250809 || 7.0.0-pre.0 - 7.14.2
+Severity: high
+React Router vulnerable to XSS via Open Redirects - https://github.com/advisories/GHSA-2w69-qvjg-hvjx
+React Router SSR XSS in ScrollRestoration - https://github.com/advisories/GHSA-8v8x-cx79-35w7
+React Router has unexpected external redirect via untrusted paths - https://github.com/advisories/GHSA-9jcx-v3wj-wh4m
+React Router has XSS Vulnerability - https://github.com/advisories/GHSA-3cgp-3xvw-98x8
+React Router's vendored turbo-stream v2 allows arbitrary constructor invocation via TYPE_ERROR deserialization leading to Unauth RCE - https://github.com/advisories/GHSA-49rj-9fvp-4h2h
+React Router's same-origin redirect with path starting // causes open redirect via protocol-relative URL reinterpretation - https://github.com/advisories/GHSA-2j2x-hqr9-3h42
+React Router has stored XSS via unescaped Location header in prerendered redirect HTML - https://github.com/advisories/GHSA-f22v-gfqf-p8f3
+React Router vulnerable to DoS via unbounded path expansion in __manifest endpoint - https://github.com/advisories/GHSA-8x6r-g9mw-2r78
+React Router vulnerable to Denial of Service via reflected user input in single-fetch - https://github.com/advisories/GHSA-rxv8-25v2-qmq8
+React Router has CSRF issue in Action/Server Action Request Processing - https://github.com/advisories/GHSA-h5cw-625j-3rxh
+Depends on vulnerable versions of turbo-stream
+fix available via `npm audit fix --force`
+Will install react-router-dom@7.18.0, which is outside the stated dependency range
+node_modules/react-router
+  react-router-dom  7.0.0-pre.0 - 7.11.0
+  Depends on vulnerable versions of react-router
+  node_modules/react-router-dom
+
+turbo-stream  <3.0.0
+Severity: high
+React Router vulnerable to Denial of Service via reflected user input in single-fetch - https://github.com/advisories/GHSA-rxv8-25v2-qmq8
+fix available via `npm audit fix --force`
+Will install react-router-dom@7.18.0, which is outside the stated dependency range
+node_modules/turbo-stream
+
+uuid  <11.1.1
+Severity: moderate
+uuid: Missing buffer bounds check in v3/v5/v6 when buf is provided - https://github.com/advisories/GHSA-w5hq-g745-h8pq
+fix available via `npm audit fix --force`
+Will install braintrust@3.20.0, which is a breaking change
+node_modules/@braintrust/core/node_modules/uuid
+node_modules/@metamask/eth-json-rpc-provider/node_modules/uuid
+node_modules/@metamask/json-rpc-engine/node_modules/uuid
+node_modules/@metamask/json-rpc-middleware-stream/node_modules/uuid
+node_modules/@metamask/providers/node_modules/uuid
+node_modules/@metamask/sdk/node_modules/uuid
+node_modules/@metamask/utils/node_modules/uuid
+node_modules/braintrust/node_modules/uuid
+  @braintrust/core  >=0.0.33
+  Depends on vulnerable versions of uuid
+  node_modules/@braintrust/core
+    autoevals  0.0.63 - 0.0.129
+    Depends on vulnerable versions of @braintrust/core
+    node_modules/autoevals
+  @metamask/sdk  *
+  Depends on vulnerable versions of @metamask/sdk-communication-layer
+  Depends on vulnerable versions of uuid
+  node_modules/@metamask/sdk
+    @wagmi/connectors  <=0.0.0-wc-links-20240926225814 || >=1.0.0-cjs
+    Depends on vulnerable versions of @base-org/account
+    Depends on vulnerable versions of @coinbase/wallet-sdk
+    Depends on vulnerable versions of @gemini-wallet/core
+    Depends on vulnerable versions of @metamask/sdk
+    Depends on vulnerable versions of @safe-global/safe-apps-provider
+    Depends on vulnerable versions of @safe-global/safe-apps-sdk
+    Depends on vulnerable versions of @wagmi/core
+    Depends on vulnerable versions of @walletconnect/ethereum-provider
+    Depends on vulnerable versions of porto
+    Depends on vulnerable versions of viem
+    node_modules/@wagmi/connectors
+      wagmi  <=0.0.0-wc-links-20240926225814 || 0.2.14 || 1.0.0-cjs - 2.0.0-rc.3 || >=2.0.1
+      Depends on vulnerable versions of @wagmi/connectors
+      Depends on vulnerable versions of @wagmi/core
+      Depends on vulnerable versions of viem
+      node_modules/wagmi
+  @metamask/sdk-communication-layer  *
+  Depends on vulnerable versions of uuid
+  node_modules/@metamask/sdk/node_modules/@metamask/sdk-communication-layer
+  @metamask/utils  >=8.4.0
+  Depends on vulnerable versions of uuid
+  node_modules/@metamask/eth-json-rpc-provider/node_modules/@metamask/json-rpc-engine/node_modules/@metamask/utils
+  node_modules/@metamask/eth-json-rpc-provider/node_modules/@metamask/rpc-errors/node_modules/@metamask/utils
+  node_modules/@metamask/json-rpc-engine/node_modules/@metamask/rpc-errors/node_modules/@metamask/utils
+  node_modules/@metamask/json-rpc-engine/node_modules/@metamask/utils
+  node_modules/@metamask/json-rpc-middleware-stream/node_modules/@metamask/utils
+  node_modules/@metamask/providers/node_modules/@metamask/rpc-errors/node_modules/@metamask/utils
+  node_modules/@metamask/providers/node_modules/@metamask/utils
+  node_modules/@metamask/utils
+    @metamask/rpc-errors  >=6.3.1
+    Depends on vulnerable versions of @metamask/utils
+    node_modules/@metamask/eth-json-rpc-provider/node_modules/@metamask/rpc-errors
+    node_modules/@metamask/json-rpc-engine/node_modules/@metamask/rpc-errors
+    node_modules/@metamask/providers/node_modules/@metamask/rpc-errors
+    node_modules/@metamask/rpc-errors
+
+vite  <=6.4.2
+Severity: high
+Vite has an `server.fs.deny` bypass with an invalid `request-target` - https://github.com/advisories/GHSA-356w-63v5-8wf4
+Vite's server.fs.deny bypassed with /. for files under project root - https://github.com/advisories/GHSA-859w-5945-r5v3
+Vite middleware may serve files starting with the same name with the public directory - https://github.com/advisories/GHSA-g4jq-h2w9-997c
+Vite's `server.fs` settings were not applied to HTML files - https://github.com/advisories/GHSA-jqfw-vq24-v9c3
+vite allows server.fs.deny bypass via backslash on Windows - https://github.com/advisories/GHSA-93m4-6634-74q7
+Vite Vulnerable to Path Traversal in Optimized Deps `.map` Handling - https://github.com/advisories/GHSA-4w7w-66w2-5vf9
+Vite Vulnerable to Arbitrary File Read via Vite Dev Server WebSocket - https://github.com/advisories/GHSA-p9ff-h696-f583
+launch-editor: NTLMv2 hash disclosure via UNC path handling on Windows - https://github.com/advisories/GHSA-v6wh-96g9-6wx3
+vite: `server.fs.deny` bypass on Windows alternate paths - https://github.com/advisories/GHSA-fx2h-pf6j-xcff
+fix available via `npm audit fix --force`
+Will install vite@6.4.3, which is outside the stated dependency range
+node_modules/vite
+
+ws  8.0.0 - 8.20.1
+Severity: high
+ws: Uninitialized memory disclosure - https://github.com/advisories/GHSA-58qx-3vcg-4xpx
+ws: Memory exhaustion DoS from tiny fragments and data chunks - https://github.com/advisories/GHSA-96hv-2xvq-fx4p
+fix available via `npm audit fix --force`
+Will install viem@0.2.1, which is a breaking change
+node_modules/@ethersproject/providers/node_modules/ws
+node_modules/@walletconnect/ethereum-provider/node_modules/ws
+node_modules/viem/node_modules/ws
+  viem  <=0.0.0-wagmiv2-20230628182101 || >=0.2.2
+  Depends on vulnerable versions of ws
+  Depends on vulnerable versions of ws
+  node_modules/@walletconnect/ethereum-provider/node_modules/@reown/appkit-controllers/node_modules/@walletconnect/utils/node_modules/viem
+  node_modules/@walletconnect/ethereum-provider/node_modules/@reown/appkit-utils/node_modules/@walletconnect/utils/node_modules/viem
+  node_modules/@walletconnect/ethereum-provider/node_modules/@reown/appkit/node_modules/@walletconnect/utils/node_modules/viem
+  node_modules/@walletconnect/ethereum-provider/node_modules/@walletconnect/utils/node_modules/viem
+  node_modules/viem
+    @base-org/account  >=1.0.0
+    Depends on vulnerable versions of @coinbase/cdp-sdk
+    Depends on vulnerable versions of viem
+    node_modules/@base-org/account
+    @coinbase/cdp-sdk  >=1.0.0
+    Depends on vulnerable versions of viem
+    node_modules/@coinbase/cdp-sdk
+    @coinbase/wallet-sdk  >=4.3.4
+    Depends on vulnerable versions of viem
+    node_modules/@coinbase/wallet-sdk
+      @reown/appkit-utils  >=1.1.0
+      Depends on vulnerable versions of @base-org/account
+      Depends on vulnerable versions of @coinbase/wallet-sdk
+      Depends on vulnerable versions of @reown/appkit-common
+      Depends on vulnerable versions of @reown/appkit-controllers
+      Depends on vulnerable versions of @reown/appkit-wallet
+      Depends on vulnerable versions of @safe-global/safe-apps-provider
+      Depends on vulnerable versions of @safe-global/safe-apps-sdk
+      Depends on vulnerable versions of @walletconnect/universal-provider
+      Depends on vulnerable versions of viem
+      node_modules/@reown/appkit-utils
+      node_modules/@walletconnect/ethereum-provider/node_modules/@reown/appkit-utils
+        @reown/appkit  >=1.1.0
+        Depends on vulnerable versions of @reown/appkit-common
+        Depends on vulnerable versions of @reown/appkit-controllers
+        Depends on vulnerable versions of @reown/appkit-pay
+        Depends on vulnerable versions of @reown/appkit-scaffold-ui
+        Depends on vulnerable versions of @reown/appkit-ui
+        Depends on vulnerable versions of @reown/appkit-utils
+        Depends on vulnerable versions of @reown/appkit-wallet
+        Depends on vulnerable versions of @walletconnect/universal-provider
+        Depends on vulnerable versions of viem
+        node_modules/@reown/appkit
+        node_modules/@walletconnect/ethereum-provider/node_modules/@reown/appkit
+          @walletconnect/ethereum-provider  0.0.0-canary-rollup.0 || 2.17.1-canary-0 - 2.17.1-canary-appkit.0 || 2.17.4-canary-ak-1 - 2.17.4-canary-ak-4 || 2.18.0-canary-ak-1 - 2.18.0-rc-1 || 2.18.1-canary-exp-1 - 2.18.1-rc-1 || >=2.19.0-canary-ak-1
+          Depends on vulnerable versions of @reown/appkit
+          Depends on vulnerable versions of @walletconnect/sign-client
+          Depends on vulnerable versions of @walletconnect/universal-provider
+          Depends on vulnerable versions of @walletconnect/utils
+          node_modules/@walletconnect/ethereum-provider
+        @reown/appkit-scaffold-ui  >=1.1.0
+        Depends on vulnerable versions of @reown/appkit-common
+        Depends on vulnerable versions of @reown/appkit-controllers
+        Depends on vulnerable versions of @reown/appkit-pay
+        Depends on vulnerable versions of @reown/appkit-ui
+        Depends on vulnerable versions of @reown/appkit-utils
+        Depends on vulnerable versions of @reown/appkit-wallet
+        node_modules/@reown/appkit-scaffold-ui
+        node_modules/@walletconnect/ethereum-provider/node_modules/@reown/appkit-scaffold-ui
+    @gemini-wallet/core  *
+    Depends on vulnerable versions of @metamask/rpc-errors
+    Depends on vulnerable versions of viem
+    node_modules/@gemini-wallet/core
+    @reown/appkit-common  >=1.1.0
+    Depends on vulnerable versions of viem
+    node_modules/@reown/appkit-common
+    node_modules/@walletconnect/ethereum-provider/node_modules/@reown/appkit-common
+      @reown/appkit-pay  *
+      Depends on vulnerable versions of @reown/appkit-common
+      Depends on vulnerable versions of @reown/appkit-controllers
+      Depends on vulnerable versions of @reown/appkit-ui
+      Depends on vulnerable versions of @reown/appkit-utils
+      node_modules/@reown/appkit-pay
+      node_modules/@walletconnect/ethereum-provider/node_modules/@reown/appkit-pay
+      @reown/appkit-ui  >=1.7.1-449657bc8f95adcfd295a2e883c4bcd439045044.0
+      Depends on vulnerable versions of @reown/appkit-common
+      Depends on vulnerable versions of @reown/appkit-controllers
+      Depends on vulnerable versions of @reown/appkit-wallet
+      node_modules/@reown/appkit-ui
+      node_modules/@walletconnect/ethereum-provider/node_modules/@reown/appkit-ui
+      @reown/appkit-wallet  >=1.1.0
+      Depends on vulnerable versions of @reown/appkit-common
+      node_modules/@reown/appkit-wallet
+      node_modules/@walletconnect/ethereum-provider/node_modules/@reown/appkit-wallet
+    @reown/appkit-controllers  *
+    Depends on vulnerable versions of @reown/appkit-common
+    Depends on vulnerable versions of @reown/appkit-wallet
+    Depends on vulnerable versions of @walletconnect/universal-provider
+    Depends on vulnerable versions of viem
+    node_modules/@reown/appkit-controllers
+    node_modules/@walletconnect/ethereum-provider/node_modules/@reown/appkit-controllers
+    @safe-global/safe-apps-sdk  >=8.0.0
+    Depends on vulnerable versions of viem
+    node_modules/@safe-global/safe-apps-sdk
+      @safe-global/safe-apps-provider  >=0.17.1
+      Depends on vulnerable versions of @safe-global/safe-apps-sdk
+      node_modules/@safe-global/safe-apps-provider
+    @wagmi/core  <=0.0.0-vue-20240515004619 || 1.0.0-cjs - 2.0.0-rc.3 || >=2.0.1
+    Depends on vulnerable versions of viem
+    node_modules/@wagmi/core
+      porto  <=0.0.0-canary-20241121204234 || >=0.0.1
+      Depends on vulnerable versions of @wagmi/core
+      Depends on vulnerable versions of viem
+      node_modules/@wagmi/connectors/node_modules/porto
+    @walletconnect/utils  2.18.1-canary-exp-1 - 2.18.1-rc-1 || 2.19.0-canary-ak-1 - 2.21.9
+    Depends on vulnerable versions of viem
+    node_modules/@walletconnect/ethereum-provider/node_modules/@reown/appkit-controllers/node_modules/@walletconnect/utils
+    node_modules/@walletconnect/ethereum-provider/node_modules/@reown/appkit-utils/node_modules/@walletconnect/utils
+    node_modules/@walletconnect/ethereum-provider/node_modules/@reown/appkit/node_modules/@walletconnect/utils
+    node_modules/@walletconnect/ethereum-provider/node_modules/@walletconnect/utils
+      @walletconnect/core  2.18.1-canary-exp-1 - 2.18.1-rc-1 || 2.19.0-canary-ak-1 - 2.21.9
+      Depends on vulnerable versions of @walletconnect/utils
+      node_modules/@walletconnect/ethereum-provider/node_modules/@reown/appkit-controllers/node_modules/@walletconnect/core
+      node_modules/@walletconnect/ethereum-provider/node_modules/@reown/appkit-utils/node_modules/@walletconnect/core
+      node_modules/@walletconnect/ethereum-provider/node_modules/@reown/appkit/node_modules/@walletconnect/core
+      node_modules/@walletconnect/ethereum-provider/node_modules/@walletconnect/core
+      @walletconnect/sign-client  2.18.1-canary-exp-1 - 2.18.1-rc-1 || 2.19.0-canary-ak-1 - 2.21.9
+      Depends on vulnerable versions of @walletconnect/core
+      Depends on vulnerable versions of @walletconnect/utils
+      node_modules/@walletconnect/ethereum-provider/node_modules/@reown/appkit-controllers/node_modules/@walletconnect/sign-client
+      node_modules/@walletconnect/ethereum-provider/node_modules/@reown/appkit-utils/node_modules/@walletconnect/sign-client
+      node_modules/@walletconnect/ethereum-provider/node_modules/@reown/appkit/node_modules/@walletconnect/sign-client
+      node_modules/@walletconnect/ethereum-provider/node_modules/@walletconnect/sign-client
+      @walletconnect/universal-provider  2.18.1-canary-exp-1 - 2.18.1-rc-1 || 2.19.0-canary-ak-1 - 2.21.9
+      Depends on vulnerable versions of @walletconnect/sign-client
+      Depends on vulnerable versions of @walletconnect/utils
+      node_modules/@walletconnect/ethereum-provider/node_modules/@reown/appkit-controllers/node_modules/@walletconnect/universal-provider
+      node_modules/@walletconnect/ethereum-provider/node_modules/@reown/appkit-utils/node_modules/@walletconnect/universal-provider
+      node_modules/@walletconnect/ethereum-provider/node_modules/@reown/appkit/node_modules/@walletconnect/universal-provider
+      node_modules/@walletconnect/ethereum-provider/node_modules/@walletconnect/universal-provider
+
+68 vulnerabilities (18 low, 21 moderate, 28 high, 1 critical)
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force

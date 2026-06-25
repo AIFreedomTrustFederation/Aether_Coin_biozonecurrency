@@ -289,7 +289,7 @@ export function BioZoneCodingUI() {
   
   // Mutation to create a new BioZone Coding project
   const createProjectMutation = useMutation({
-    mutationFn: (data: ProjectCreationFormValues) => apiRequest('/api/mysterion/biozone-coding/projects', {
+    mutationFn: (data: ProjectCreationFormValues) => apiRequest('/api/mysterion/biozoe-coding/projects', {
       method: 'POST',
       body: data,
     }),
