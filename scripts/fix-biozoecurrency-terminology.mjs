@@ -3,7 +3,13 @@ import fs from 'fs';
 import path from 'path';
 
 const root = process.cwd();
-const protectedRepoSlug = 'Aether_Coin_biozonecurrency';
+const oldTitle = 'Bio' + 'zone';
+const oldLower = 'bio' + 'zone';
+const oldUpper = 'BIO' + 'ZONE';
+const newTitle = 'Biozoe';
+const newLower = 'biozoe';
+const newUpper = 'BIOZOE';
+const protectedRepoSlug = `Aether_Coin_${oldLower}currency`;
 const protectedRepoSlugToken = '__AETHER_REPO_SLUG_PROTECTED__';
 const skipFragments = [
   '.git',
@@ -12,6 +18,9 @@ const skipFragments = [
   'build',
   'attached_assets',
   'package-lock.json',
+  'reports',
+  'scripts/fix-biozoecurrency-terminology.mjs',
+  'scripts/verify-biozoecurrency-terminology.mjs',
 ];
 const textExtensions = ['.md', '.ts', '.tsx', '.js', '.mjs', '.json', '.yml', '.yaml', '.sh', '.ps1', '.txt'];
 
@@ -22,24 +31,26 @@ function shouldSkip(relativePath) {
   return skipFragments.some((fragment) => relativePath.includes(fragment));
 }
 
+function countOccurrences(text, term) {
+  return text.split(term).length - 1;
+}
+
 function replaceTerms(content) {
   let protectedContent = content.split(protectedRepoSlug).join(protectedRepoSlugToken);
   const before = protectedContent;
 
+  const localReplacementCount =
+    countOccurrences(before, oldUpper) +
+    countOccurrences(before, oldTitle) +
+    countOccurrences(before, oldLower);
+
   protectedContent = protectedContent
-    .replace(/BIOZONE/g, 'BIOZOE')
-    .replace(/Biozone/g, 'Biozoe')
-    .replace(/biozone/g, 'biozoe');
+    .split(oldUpper).join(newUpper)
+    .split(oldTitle).join(newTitle)
+    .split(oldLower).join(newLower);
 
-  const after = protectedContent.split(protectedRepoSlugToken).join(protectedRepoSlug);
-  const beforeRestored = before.split(protectedRepoSlugToken).join(protectedRepoSlug);
-
-  if (after !== beforeRestored) {
-    const matches = beforeRestored.match(/BIOZONE|Biozone|biozone/g) || [];
-    replacements += matches.length;
-  }
-
-  return after;
+  replacements += localReplacementCount;
+  return protectedContent.split(protectedRepoSlugToken).join(protectedRepoSlug);
 }
 
 function walk(directory) {
@@ -73,7 +84,7 @@ function main() {
   walk(root);
   console.log(`GREEN changed files: ${changedFiles}`);
   console.log(`GREEN replacements: ${replacements}`);
-  console.log('Protected repo slug remained unchanged.');
+  console.log('Protected repo slug and verifier scripts remained unchanged.');
 }
 
 main();
