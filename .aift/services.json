@@ -1,0 +1,21 @@
+{
+  "repo": "Aether_Coin_biozonecurrency",
+  "services": [
+    {
+      "name": "Aether_Coin_biozonecurrency.service",
+      "kind": "web-app",
+      "status": "planned",
+      "version": "0.1.0",
+      "provides": [],
+      "requires": [],
+      "events": [
+        "repo.changed",
+        "capability.changed",
+        "manual.changed"
+      ],
+      "evidence": "default service contract",
+      "description": "Default planned federation service contract for Aether_Coin_biozonecurrency"
+    }
+  ],
+  "generatedAt": "2026-06-28T00:28:09Z"
+}
