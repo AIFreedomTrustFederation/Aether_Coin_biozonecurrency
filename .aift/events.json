@@ -1,0 +1,25 @@
+{
+  "repo": "Aether_Coin_biozonecurrency",
+  "publishes": [
+    {
+      "name": "repo.changed",
+      "status": "planned",
+      "description": "Repository content changed",
+      "evidence": "default event contract"
+    },
+    {
+      "name": "capability.changed",
+      "status": "planned",
+      "description": "Capability status changed",
+      "evidence": "default event contract"
+    },
+    {
+      "name": "manual.changed",
+      "status": "planned",
+      "description": "Manual source changed",
+      "evidence": "default event contract"
+    }
+  ],
+  "subscribes": [],
+  "generatedAt": "2026-06-28T00:23:57Z"
+}
