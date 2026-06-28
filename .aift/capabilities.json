@@ -1,0 +1,88 @@
+{
+  "repo": "Aether_Coin_biozonecurrency",
+  "path": "/data/data/com.termux/files/home/AIFT/Aether_Coin_biozonecurrency",
+  "capabilities": [
+    {
+      "name": "status",
+      "status": "ready",
+      "version": 0,
+      "command": ".aift/commands/status.sh",
+      "evidence": "command exists and passes local verification",
+      "description": "Report repository state",
+      "lastChecked": "2026-06-28T00:33:16Z"
+    },
+    {
+      "name": "verify",
+      "status": "planned",
+      "version": 0,
+      "evidence": "not proven yet",
+      "description": "Validate repository health",
+      "lastChecked": "2026-06-28T00:33:16Z"
+    },
+    {
+      "name": "test",
+      "status": "detected",
+      "version": 0,
+      "evidence": "package.json detected; test capability may exist but no .aift command is proven",
+      "description": "Run test suite",
+      "lastChecked": "2026-06-28T00:33:16Z"
+    },
+    {
+      "name": "build",
+      "status": "detected",
+      "version": 0,
+      "evidence": "build-related project file detected but no .aift build command is proven",
+      "description": "Build project artifacts",
+      "lastChecked": "2026-06-28T00:33:16Z"
+    },
+    {
+      "name": "start",
+      "status": "planned",
+      "version": 0,
+      "evidence": "not proven yet",
+      "description": "Start local service",
+      "lastChecked": "2026-06-28T00:33:16Z"
+    },
+    {
+      "name": "stop",
+      "status": "planned",
+      "version": 0,
+      "evidence": "not proven yet",
+      "description": "Stop local service",
+      "lastChecked": "2026-06-28T00:33:16Z"
+    },
+    {
+      "name": "health",
+      "status": "planned",
+      "version": 0,
+      "evidence": "not proven yet",
+      "description": "Check local service health",
+      "lastChecked": "2026-06-28T00:33:16Z"
+    },
+    {
+      "name": "deploy",
+      "status": "planned",
+      "version": 0,
+      "evidence": "not proven yet",
+      "description": "Deploy project",
+      "lastChecked": "2026-06-28T00:33:16Z"
+    },
+    {
+      "name": "sync",
+      "status": "ready",
+      "version": 0,
+      "command": "git remote/status",
+      "evidence": "git repository detected; safe sync can inspect this repo",
+      "description": "Synchronize safely",
+      "lastChecked": "2026-06-28T00:33:16Z"
+    },
+    {
+      "name": "docs",
+      "status": "detected",
+      "version": 0,
+      "evidence": "README/docs detected",
+      "description": "Documentation present or generated",
+      "lastChecked": "2026-06-28T00:33:16Z"
+    }
+  ]
+}

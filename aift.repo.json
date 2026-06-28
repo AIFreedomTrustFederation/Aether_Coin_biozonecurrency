@@ -1,0 +1,23 @@
+{
+  "schema": "https://aifreedomtrust.org/schemas/aift.repo.schema.json",
+  "name": "Aether_Coin_biozonecurrency",
+  "layer": "economy",
+  "role": "economic layer, DynastyLink, AetherCoin, and biozone currency systems",
+  "workspacePath": "/data/data/com.termux/files/home/AIFT/Aether_Coin_biozonecurrency",
+  "federation": {
+    "workspace": "AIFT",
+    "controlPlane": "/data/data/com.termux/files/home/AIFT/aift-os.sh",
+    "manifest": "/data/data/com.termux/files/home/AIFT/manifests/workspace.json"
+  },
+  "commands": {
+    "status": "git status --short",
+    "pull": "git pull --ff-only",
+    "verify": "npm run lint --if-present && npm run typecheck --if-present && npm run test --if-present && npm run build --if-present"
+  },
+  "standards": {
+    "localFirst": true,
+    "inspectable": true,
+    "sovereignByDefault": true,
+    "aiBehindProviderInterfaces": true
+  }
+}
