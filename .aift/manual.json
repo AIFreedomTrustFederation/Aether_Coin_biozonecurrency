@@ -1,0 +1,31 @@
+{
+  "repo": "Aether_Coin_biozonecurrency",
+  "title": "Aether_Coin_biozonecurrency UNIX Manual",
+  "sourcePath": "docs/manual/source",
+  "assetsPath": "docs/manual/assets",
+  "builder": {
+    "repo": "booksmith-ai",
+    "capability": "manual.build.pdf",
+    "status": "planned"
+  },
+  "status": {
+    "manualSource": "ready",
+    "pdfBuild": "planned",
+    "webPublish": "planned"
+  },
+  "manualType": "unix-style-federation-manual",
+  "format": "markdown-source-booksmith-built-pdf",
+  "sections": [
+    "man0",
+    "man1",
+    "man2",
+    "man3",
+    "man4",
+    "man5",
+    "man6",
+    "man7",
+    "man8",
+    "man9"
+  ],
+  "generatedAt": "2026-06-28T00:05:43Z"
+}
