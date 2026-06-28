@@ -9,7 +9,7 @@
       "command": ".aift/commands/status.sh",
       "evidence": "command exists and passes local verification",
       "description": "Report repository state",
-      "lastChecked": "2026-06-28T00:33:16Z"
+      "lastChecked": "2026-06-28T01:18:52Z"
     },
     {
       "name": "verify",
@@ -17,7 +17,7 @@
       "version": 0,
       "evidence": "not proven yet",
       "description": "Validate repository health",
-      "lastChecked": "2026-06-28T00:33:16Z"
+      "lastChecked": "2026-06-28T01:18:52Z"
     },
     {
       "name": "test",
@@ -25,7 +25,7 @@
       "version": 0,
       "evidence": "package.json detected; test capability may exist but no .aift command is proven",
       "description": "Run test suite",
-      "lastChecked": "2026-06-28T00:33:16Z"
+      "lastChecked": "2026-06-28T01:18:52Z"
     },
     {
       "name": "build",
@@ -33,7 +33,7 @@
       "version": 0,
       "evidence": "build-related project file detected but no .aift build command is proven",
       "description": "Build project artifacts",
-      "lastChecked": "2026-06-28T00:33:16Z"
+      "lastChecked": "2026-06-28T01:18:52Z"
     },
     {
       "name": "start",
@@ -41,7 +41,7 @@
       "version": 0,
       "evidence": "not proven yet",
       "description": "Start local service",
-      "lastChecked": "2026-06-28T00:33:16Z"
+      "lastChecked": "2026-06-28T01:18:52Z"
     },
     {
       "name": "stop",
@@ -49,7 +49,7 @@
       "version": 0,
       "evidence": "not proven yet",
       "description": "Stop local service",
-      "lastChecked": "2026-06-28T00:33:16Z"
+      "lastChecked": "2026-06-28T01:18:52Z"
     },
     {
       "name": "health",
@@ -57,7 +57,7 @@
       "version": 0,
       "evidence": "not proven yet",
       "description": "Check local service health",
-      "lastChecked": "2026-06-28T00:33:16Z"
+      "lastChecked": "2026-06-28T01:18:52Z"
     },
     {
       "name": "deploy",
@@ -65,7 +65,7 @@
       "version": 0,
       "evidence": "not proven yet",
       "description": "Deploy project",
-      "lastChecked": "2026-06-28T00:33:16Z"
+      "lastChecked": "2026-06-28T01:18:52Z"
     },
     {
       "name": "sync",
@@ -74,7 +74,7 @@
       "command": "git remote/status",
       "evidence": "git repository detected; safe sync can inspect this repo",
       "description": "Synchronize safely",
-      "lastChecked": "2026-06-28T00:33:16Z"
+      "lastChecked": "2026-06-28T01:18:52Z"
     },
     {
       "name": "docs",
@@ -82,7 +82,7 @@
       "version": 0,
       "evidence": "README/docs detected",
       "description": "Documentation present or generated",
-      "lastChecked": "2026-06-28T00:33:16Z"
+      "lastChecked": "2026-06-28T01:18:52Z"
     }
   ]
 }
