@@ -1,122 +1,113 @@
-# Dependencies
-node_modules/
-/.pnp
-.pnp.js
 
-# Production build files
-/dist/
-/build/
-/out/
-
-# Testing
-/coverage/
-/.nyc_output/
-
-# Environment variables
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-# Log files
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-logs/
-*.log
-
-# Editor directories and files
-.idea/
-.vscode/
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-*.sublime-*
-.DS_Store
-Thumbs.db
-
-# TypeScript cache
-*.tsbuildinfo
-
-# Cache directories
-.cache/
-.npm/
-.eslintcache
-.stylelintcache
-
-# Replit specific
-.replit/
-.upm/
-.config/
-.git-rewrite/
-.bash_history
-
-# Backup files
-.backup/
-*.bak
-*.backup
-*~
-
-# Temporary files
-tmp/
-temp/
-.tmp/
-*.tmp
-
-# Database files
-*.sqlite
-*.sqlite3
-*.db
-
-# Compiled output
-*.min.js
-*.min.css
-*.bundle.js
-
-# Generated API documentation
-/docs/api/
-
-# Drizzle ORM
-drizzle/
-
-# Generated migration files
-migrations/
-
-# Generated type definitions
-types/generated/
-
+# AIFT generated runtime state
 # API key storage and sharded key fragments
-api-keys/
-key-fragments/
-**/api_keys*.json
-**/user_key_vault*.json
-**/*.keystore
-**/*.keyshards
-quantum-vault/
-.mysterion-keys/
-
-# Evaluation results with potential API keys
-evaluation-results/
-**/evaluation-results/
-
+# Any files that might contain API keys
+# Backup files
 # Braintrust specific
-.braintrust/
-**/braintrust.json
-**/.braintrust-cache/
-
+# Cache directories
+# Compiled output
+# Database files
+# Dependencies
+# Drizzle ORM
+# Editor directories and files
+# Environment variables
+# Evaluation results with potential API keys
+# Generated API documentation
+# Generated migration files
+# Generated type definitions
+# Local dependency audit reports
+# Log files
 # Mistral specific
+# Production build files
+# Replit specific
+# Temporary files
+# Testing
+# TypeScript cache
+**/*.keyshards
+**/*.keystore
+**/*api-key*
+**/*apikey*
+**/*credential*
+**/*secret*
+**/*token*
+**/.braintrust-cache/
+**/api_keys*.json
+**/braintrust.json
+**/evaluation-results/
 **/mistral-cache/
 **/mistral-config.json
-
-# Any files that might contain API keys
-**/*apikey*
-**/*api-key*
-**/*secret*
-**/*credential*
-**/*token*
-
-# Local dependency audit reports
+**/user_key_vault*.json
+*.backup
+*.bak
+*.bundle.js
+*.db
+*.log
+*.min.css
+*.min.js
+*.njsproj
+*.ntvs*
+*.sln
+*.sqlite
+*.sqlite3
+*.sublime-*
+*.suo
+*.sw?
+*.tmp
+*.tsbuildinfo
+*~
+.DS_Store
+.aift/capabilities.json
+.aift/federation-snapshot.json
+.aift/providers.json
+.aift/repos.json
+.aift/workflows.json
+.backup/
+.bash_history
+.braintrust/
+.cache/
+.config/
+.env
+.env.development.local
+.env.local
+.env.production.local
+.env.test.local
+.eslintcache
+.git-rewrite/
+.idea/
+.mysterion-keys/
+.npm/
+.pnp.js
+.replit/
+.stylelintcache
+.tmp/
+.upm/
+.vscode/
+/.nyc_output/
+/.pnp
+/build/
+/coverage/
+/dist/
+/docs/api/
+/out/
+Thumbs.db
+api-keys/
+drizzle/
+evaluation-results/
+key-fragments/
+logs/
+migrations/
+node_modules/
+npm-debug.log*
+quantum-vault/
+registry/*.cypher
+registry/*.dot
+registry/*.graphml
+registry/*.json
+registry/*.rdf
 reports/
+temp/
+tmp/
+types/generated/
+var/events/
+yarn-debug.log*
+yarn-error.log*
