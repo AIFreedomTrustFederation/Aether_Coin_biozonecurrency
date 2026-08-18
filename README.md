@@ -1,59 +1,78 @@
-# Aether Coin Biozoecurrency
+# Aetherion — Aether Coin Biozonecurrency
 
-**A quantum-conscious, AI-assisted blockchain wallet and regenerative value protocol for sovereign digital stewardship.**
+**The economy layer of the AI Freedom Trust Federation: DynastyLink, AetherCoin, Biozoe/Biozone currency systems, sovereign wallet intelligence, regenerative value, and consent-centered digital stewardship.**
 
-## Federation Status
-
-| Field | Value |
+| Federation metadata | Value |
 | --- | --- |
-| Status | Active / protocol research |
-| Federation layer | Stewardship |
-| Repository role | Wallet, regenerative value protocol, AI-guided digital stewardship, and cryptographic trust interface |
-| Visibility | Public |
-| Primary language | TypeScript |
+| Layer | `economy` |
+| Role | economic layer, DynastyLink, AetherCoin, and biozone currency systems |
+| Workspace | `AIFT/Aether_Coin_biozonecurrency` |
+| Control plane | AIFT workspace / AIFT-OS |
+| Primary application stack | TypeScript, React/Vite, Node/Express, PostgreSQL/Drizzle integration paths |
+| Verification | lint, typecheck, tests, build, and security checks when configured |
+| Operating standards | local-first, inspectable, sovereign by default, AI behind governed provider interfaces |
 
-## Purpose
+Aetherion is the Federation's economic and stewardship architecture. It explores how identity, contribution, memory, exchange, wallet interaction, AI guidance, and regenerative purpose can be joined without allowing the system that measures value to become the owner of the person whose value it records.
 
-This repository is the federation stewardship lane. It explores wallet UX, regenerative value primitives, consent-centered AI guidance, smart-contract context, decentralized storage references, and cryptographic trust patterns.
+The constitutional basis is carried in the [One Eternal Scroll of ALO'ha](https://aifreedomtrustfederation.github.io/AI-Freedom-Trust/docs/pdf/one-eternal-scroll-of-aloha.pdf). Its operating discipline is [SOP-ALOHA-001](https://github.com/AIFreedomTrustFederation/AI-Freedom-Trust/blob/main/SOP-ALOHA-001.md).
 
-It is high-risk by domain. Financial, wallet, custody, cryptographic, and security language must stay explicit, status-labeled, and human-consented.
+---
 
-## Current Capabilities
+## Book I — Value as Relationship
 
-- React/Vite frontend architecture.
-- Express/Node backend services.
-- Shared schema/type layer.
-- PostgreSQL and Drizzle ORM integration paths.
-- Security audit scripts and API-key checks.
-- Wallet, token, AI-guardian, Matrix notification, decentralized storage, and post-quantum research references.
+Aetherion begins from the proposition that value is more than price. A system may record exchange, contribution, stewardship, covenant memory, identity, or mutual aid, but no token or ledger can exhaust the human reality from which those relationships arise.
 
-## Operating Docs
+The economic layer therefore places **sovereign consent** before convenience. AI may explain wallet activity, identify anomalies, summarize smart-contract context, model risk, support escrow or dispute understanding, and help a person see consequences before acting. It may not silently authorize transfers, assume custody, conceal uncertainty, or treat an economic recommendation as permission.
 
-- `docs/status.md` - current verified status and public-claim boundary.
-- `docs/validation.md` - lightweight, app, security, database, and DynastyLink checks.
-- `docs/security-and-privacy.md` - wallet, AI, DynastyLink, secret, and privacy boundaries.
-- `docs/material-routing.md` - how to preserve and route loose, generated, archival, and deployment material.
-- `SECURITY.md` - project security practices and reporting path.
-- `API-SECURITY-GUIDELINES.md` - API-key and credential handling.
+### Illuminated passage — Biozoe Tree of Life
 
-## Setup
+![Biozoe Tree of Life](https://raw.githubusercontent.com/AIFreedomTrustFederation/AI-Freedom-Trust/main/docs/images/aetherion/biozoe-tree-of-life.png)
+
+The Tree of Life is the natural image of this layer because it places exchange inside an ecology of identity, stewardship, mission, memory, and contribution. The economic system is one branch of the Federation, not the root of human worth.
+
+---
+
+## Book II — Aetherion in the Federation Architecture
+
+Aetherion owns the economic relationship and its software surfaces while remaining dependent on other layers for identity, infrastructure, governance, and evidence.
+
+- **AIFT-Genesis → Aetherion:** Genesis supplies identity, trust, mission, governance, and inheritance structures. The economy may reference those identities but does not create constitutional authority by itself.
+- **AI-Freedom-Trust → Aetherion:** doctrine establishes the covenant, restorative-economy language, trust philosophy, and evidentiary boundaries through which economic claims are interpreted.
+- **AIFT-Forge → Aetherion:** shared package, agent, provider-interface, and build patterns may be inherited without giving Forge control of wallet or transaction decisions.
+- **AIFT-OS ↔ Aetherion:** the control plane may discover health, services, or governed capabilities. Financial and custody operations remain explicit high-risk boundaries and do not become ordinary orchestration merely because the OS can invoke a service.
+- **AIFT-Runtime ↔ Aetherion:** local runtimes may host wallet-adjacent services, models, or interfaces while preserving secrets and requiring explicit transaction authority.
+- **VPS ↔ Aetherion:** VPS provides deployment, nodes, routes, and service availability. Aetherion may provide value and stewardship relationships around those services; neither layer inherits the other's authority.
+- **BookSmith ↔ Aetherion:** publishing may eventually connect royalties, licenses, treasury flows, or marketplace settlement to the economy layer, while authorship and publishing approval remain in BookSmith.
+- **biozone-harmony-boost → Aetherion:** Circleunchain/Biozoe interface research can inform this repository, while economic and wallet claims remain grounded in the code and security state of this repository.
+
+### Illuminated passage — Circleunchain memory
+
+![Circleunchain Memory Network](https://raw.githubusercontent.com/AIFreedomTrustFederation/AI-Freedom-Trust/main/docs/images/aetherion/circleunchain-memory-network.png)
+
+Circleunchain is read here as an architecture of attributable relationship and memory. Any technical realization must name its actual cryptographic and storage mechanisms rather than allowing the symbolic name to substitute for implementation.
+
+The token vocabulary may include AetherCoin/ATC and other Biozoe or Federation value primitives, but symbolic purpose and financial fact must remain distinct. A conceptual token is not a guaranteed asset. A prototype wallet is not audited custody. Post-quantum research language is not a production security guarantee unless the exact implemented mechanism and audit path support that statement.
+
+---
+
+## Book III — SOP-ALOHA-001 in the Economy Layer
+
+The shared covenant loop is especially strict where money, identity, and custody are involved:
+
+```text
+Receive → Inspect → Name → Propose → Consent → Act → Verify → Record → Return
+```
+
+**Receive** accepts wallet state, transaction intent, value event, escrow condition, stewardship record, or economic query. **Inspect** reads the real account, contract, network, database, credential boundary, and risk context available to the application. **Name** identifies the asset or symbolic primitive, source, destination, authority, network, amount, status, and uncertainty. **Propose** allows AI to explain or recommend while keeping the proposal visibly separate from execution. **Consent** is mandatory for transactions, custody changes, escrow release, credential use, signing, or other consequential financial acts. **Act** invokes the real governed transaction or application operation. **Verify** checks receipts, persistence, expected state changes, and security conditions rather than assuming success from a UI event. **Record** preserves appropriate audit and provenance without exposing private keys or sensitive credentials. **Return** gives the human a readable result and the continuing authority to stop, question, dispute, or reverse where the system permits.
+
+Local development begins with:
 
 ```bash
 npm install
 npm run dev
 ```
 
-Database-backed features may require PostgreSQL and environment configuration.
-
-## Verification
-
-Lightweight repo checks:
-
-```bash
-npm run qa:local
-```
-
-Recommended checks:
+Core verification may include:
 
 ```bash
 npm run build
@@ -62,312 +81,22 @@ npm run security:audit
 npm run security:deps
 ```
 
-Database check when configured:
+Database-backed paths may additionally require PostgreSQL configuration and:
 
 ```bash
 npm run db:push
 ```
 
-## Roadmap
-
-1. Keep token taxonomy and wallet consent language status-labeled.
-2. Separate implemented features from prototypes, simulations, experiments, and plans.
-3. Harden security reporting, secret handling, and dependency review.
-4. Route useful reference material into canonical docs, QA records, or app assets before deleting raw intake files.
-
-## Public Claims Note
-
-Do not imply audited wallet safety, production custody, financial value, post-quantum guarantees, or decentralized deployment guarantees unless the implementation and audit trail support those claims.
-
-Aether Coin Biozoecurrency unites React, TypeScript, Node.js, Express, PostgreSQL, Drizzle ORM, decentralized storage references, post-quantum security research, and AI-guided wallet intelligence into one living architecture.
-
-The project’s mission is to help people manage digital assets with clarity, safety, consent, transparency, and regenerative purpose.
-
-Aetherion is not merely a wallet. It is a trust interface: a bridge between human intention, AI guidance, cryptographic security, and living-value exchange.
+Never commit private keys, seed phrases, wallet credentials, API keys, database secrets, OAuth grants, signing keys, or other production credentials. Security language remains tied to what can actually be inspected and tested.
 
 ---
 
-## Mission
+## Book IV — Restorative Exchange and the Human Center
 
-Aether Coin Biozoecurrency exists to explore a more sovereign and regenerative path for digital value systems.
+Aetherion is designed toward a future in which digital value can carry more context than extraction-first speculation. Contribution can be connected to mission. Stewardship can be visible. Identity can remain sovereign. AI can help a person understand complexity without becoming the owner of the decision. Infrastructure can be compensated without becoming a centralized gatekeeper. Publishing, community systems, and practical services can connect to value rails without collapsing every relationship into a token.
 
-Its purpose is to support:
+That future remains credible only when the present implementation speaks precisely. The application, database, cryptographic libraries, contracts, wallet adapters, and security controls are the evidence for engineering claims. The Scroll provides meaning; the code provides operational proof.
 
-- human-consented wallet management
-- AI-assisted transaction awareness
-- transparent risk review
-- escrow and dispute context
-- decentralized storage and deployment pathways
-- smart-contract experimentation
-- post-quantum cryptographic research
-- regenerative token taxonomy
-- trust-centered digital stewardship
+### The Return of the Word
 
-This project is part of the larger **AI Freedom Trust Federation** ecosystem, where agents and systems are designed to serve life, protect consent, preserve trust, and turn chaos into repair.
-
----
-
-## Core Principles
-
-### Sovereign Consent
-
-No user action, transaction, credential, escrow release, smart-contract interaction, or AI recommendation should bypass informed human consent.
-
-The user remains the final actor.
-
-### Cryptographic Humility
-
-Security claims must be testable, documented, and status-labeled.
-
-Implemented, conventional, prototype, simulated, experimental, planned, and audited features must not be confused.
-
-Post-quantum language must be beautiful but honest.
-
-### Regenerative Value
-
-Aether Coin, ATC, FTC, ICON, and SING should represent stewardship, trust, contribution, identity, covenant memory, coherence, and harmonic coordination rather than extraction-first speculation.
-
-### AI as Guardian, Not Ruler
-
-AI may assist, warn, explain, summarize, simulate, and evaluate risk, but final agency remains with the human user.
-
-AI must never silently authorize financial action.
-
-### Fractal Maintainability
-
-The codebase should be modular, typed, documented, testable, and recursively understandable from component to system level.
-
-Every major concept should be clear enough for a developer to enter the temple without confusion.
-
----
-
-## Core Features
-
-Current and planned feature areas include:
-
-- blockchain wallet management
-- transaction tracking and notifications
-- AI-assisted wallet guidance
-- transaction verification and risk assessment
-- security health scoring
-- multi-layer authentication patterns
-- escrow and dispute-resolution workflows
-- smart-contract deployment and interaction
-- in-browser development tooling references
-- Matrix notification support as an open-source communication option
-- PostgreSQL and Drizzle ORM persistence
-- decentralized storage and deployment references such as IPFS, Filecoin, ENS, and related gateway models
-- mobile-first responsive interface patterns
-- post-quantum security research paths
-
-> This README intentionally distinguishes mission, implemented architecture, prototype systems, and research direction. Always verify feature status in code, tests, and deployment configuration before using this project in production.
-
----
-
-## Biozoecurrency Tokens
-
-The Biozoecurrency layer is an emerging token taxonomy for regenerative value coordination.
-
-Initial symbolic primitives:
-
-| Symbol | Name | Purpose | Status |
-|---|---|---|---|
-| ATC | Aether Trust Coin | Primary trust and stewardship value unit for the Aetherion ecosystem. | Concept |
-| FTC | Freedom Trust Coin | Federated trust settlement across aligned people, groups, and projects. | Concept |
-| ICON | Iconic Covenant Token | Recognition token for identity, role, authorship, and sacred contribution. | Concept |
-| SING | Singularity Grace Note | Harmonic coordination token for AI-human co-creation and collective coherence. | Concept |
-
-Token doctrine:
-
-```text
-Tokens should represent contribution, stewardship, consent, trust, identity, and regenerative coordination.
-They should not be reduced to extraction-first speculation.
-AI may explain, classify, and warn, but may not authorize transfers or custody changes.
-```
-
-Future work should encode these primitives as shared TypeScript types and, later, smart-contract-ready definitions.
-
----
-
-## Security Model
-
-Aetherion is security-first, but security claims must stay honest.
-
-Current security doctrine includes:
-
-- input validation
-- server-side verification of client-provided data
-- secure session and cookie handling where configured
-- rate limiting and abuse prevention patterns
-- CSRF and API security patterns where configured
-- encryption for sensitive data where configured
-- secure random generation where required
-- no hardcoded credentials
-- no committed `.env` secrets
-- careful error handling that does not expose sensitive data
-- dependency review and security audit discipline
-
-Run security audits where configured:
-
-```bash
-npm run security:audit
-```
-
-Never commit private keys, seed phrases, wallet credentials, API keys, access tokens, database URLs, SMTP credentials, OAuth grants, or production secrets.
-
----
-
-## Post-Quantum Security Research
-
-This project explores post-quantum and hybrid security concepts, but production claims must be status-labeled.
-
-### Implementation Status
-
-| Area | Status | Notes |
-|---|---:|---|
-| SHA-512 hashing | Implemented / conventional | Hash functions are generally more quantum-resistant than RSA/ECC, but still require correct use. |
-| AES-256 encryption | Implemented / conventional | Used for sensitive data protection where configured. |
-| Kyber / ML-KEM integration | Experimental or planned | Must be verified against maintained libraries and NIST-standard naming before production claims. |
-| Dilithium / ML-DSA integration | Experimental or planned | Must be verified before production signature claims. |
-| SPHINCS+ / SLH-DSA integration | Experimental or planned | Appropriate for long-term signature research paths. |
-| Hybrid authentication | Prototype / research | Should remain opt-in until audited. |
-| Quantum-secure payments | Prototype / research | Payment safety must not depend on unaudited cryptography alone. |
-
-Symbolic product names may be visionary, but engineering descriptions should remain plain and auditable.
-
-For example:
-
-```text
-Temporal Entanglement
--> product / symbolic name
-
-Time-bound cryptographic receipt binding
--> engineering description
-```
-
----
-
-## AI Assistant Principles
-
-The AI assistant is designed as a guardian layer, not an autonomous financial actor.
-
-It may:
-
-- explain wallet activity
-- flag risky transactions
-- summarize smart contracts
-- help users understand escrow or dispute status
-- provide educational guidance
-- assist with transaction risk assessment
-- explain uncertainty and tradeoffs
-
-It must not:
-
-- authorize transactions without explicit user action
-- hide risk or uncertainty
-- store secrets outside approved encrypted storage
-- present experimental security as audited production security
-- override custody, consent, or human agency
-- silently execute irreversible financial actions
-
-The rule is simple:
-
-```text
-AI may guide.
-AI may warn.
-AI may explain.
-The human consents.
-The human acts.
-The system records clearly.
-```
-
----
-
-## Local Development
-
-### Prerequisites
-
-- Node.js 18+
-- npm
-- PostgreSQL database when using database-backed features
-- Optional accounts or configuration for decentralized deployment adapters
-- Optional notification provider configuration if notification features are enabled
-
-### Installation
-
-```bash
-git clone https://github.com/AIFreedomTrustFederation/Aether_Coin_biozonecurrency.git
-cd Aether_Coin_biozonecurrency
-npm install
-```
-
-### Environment
-
-Copy the example environment file if present:
-
-```bash
-cp .env.example .env
-```
-
-Then configure only the values needed for your local development target.
-
-Do not commit `.env` or secret-bearing files.
-
-### Database
-
-When using Drizzle/PostgreSQL-backed features:
-
-```bash
-npm run db:push
-```
-
-or use the project migration script if configured:
-
-```bash
-./db-migrate.sh
-```
-
-### Run Development Server
-
-```bash
-npm run dev
-```
-
-Open the local URL shown by the dev server.
-
----
-
-## Development Tools
-
-Depending on the current branch and environment, this project may include helper scripts such as:
-
-```bash
-./script_runner.sh run
-./script_runner.sh db push
-./script_runner.sh backup
-./script_runner.sh reset
-./env-manager.sh check
-```
-
-Use scripts carefully. Backup before destructive cleanup or reset operations.
-
----
-
-## Deployment
-
-The project may support both traditional and decentralized deployment paths.
-
-### Traditional Deployment
-
-```bash
-npm run build
-npm start
-```
-
-Deploy to a Node.js-compatible hosting platform after verifying environment variables, database access, and security settings.
-
-### Decentralized Deployment Research
-
-The project references decentralized deployment concepts such as IPFS, Filecoin, ENS, and gateway-based access.
-
-These pathways should be treated as deployment adapters or research tracks unless fully configured, tested, and documented for the current branch.
+In Aetherion, the Word returns when value completes its circuit without losing consent. Intention becomes a proposed exchange, the proposed exchange becomes an authorized act, the act becomes a verifiable record, and the record returns to the human being with custody and meaning still intact. Regenerative value begins there: not where the ledger replaces life, but where the ledger remembers whom it serves.
