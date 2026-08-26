@@ -1,0 +1,80 @@
+{
+  "schema_version": "2.0.0",
+  "network": {
+    "name": "Aetherion",
+    "chain_id": "aetherion-1",
+    "status": "design-devnet",
+    "native_asset": {
+      "name": "AetherCoin",
+      "symbol": "ATC",
+      "base_denom": "aatc",
+      "display_exponent": 18,
+      "terminal_supply_cap": null
+    }
+  },
+  "genesis": {
+    "premine": "0",
+    "founder_allocation": "0",
+    "investor_allocation": "0",
+    "team_allocation": "0",
+    "treasury_allocation": "0",
+    "initial_balances": [],
+    "principle": "Genesis establishes the rules; it does not establish an aristocracy."
+  },
+  "epochs": {
+    "seconds": 86400
+  },
+  "monetary_policy": {
+    "model": "biozoe-unbounded-authorized-issuance",
+    "terminal_supply_cap": null,
+    "universal_issuance_aatc_per_eligible_identity_per_epoch": "1000000000000000000",
+    "demurrage_ppm_per_epoch": 192,
+    "demurrage_destination": "retire",
+    "contribution_issuance_enabled": false,
+    "regenerative_issuance_enabled": false,
+    "stewardship_issuance_enabled": false,
+    "notes": "Initial parameters are devnet design defaults, not claims of a production-stable monetary policy. Contribution, regenerative, and stewardship issuance require explicit governed budgets and evidence rules before activation."
+  },
+  "identity": {
+    "source_of_eligibility": "AIFT-Genesis compatible personhood attestation",
+    "one_active_baseline_stream_per_person": true,
+    "transferable_identity": false,
+    "privacy_requirement": "Protocol integrations should support privacy-preserving uniqueness proofs; raw civil identity is not required to be public on-chain."
+  },
+  "consensus": {
+    "target_engine": "CometBFT-compatible BFT",
+    "token_weighted": false,
+    "validator_voting_power_model": "equal-unit-per-authorized-validator",
+    "validator_selection_source": "governed validator registry with independent-operator requirements",
+    "minimum_target_validators_for_public_devnet": 7,
+    "production_launch_requires_external_security_review": true
+  },
+  "governance": {
+    "token_weighted": false,
+    "balance_confers_governance_power": false,
+    "balance_confers_validator_power": false,
+    "constitutional_changes_require_timelock": true,
+    "constitutional_changes_require_multi_chamber_approval": true
+  },
+  "resource_control": {
+    "economic_asset_is_not_spam_budget": true,
+    "nontransferable_compute_credits": {
+      "name": "Pulse",
+      "purpose": "rate limiting, fair access, and anti-spam resource accounting",
+      "tradable": false,
+      "governance_power": false
+    }
+  },
+  "anchoring": {
+    "bitcoin_required_for_liveness": false,
+    "adapter_model": true,
+    "initial_mode": "disabled",
+    "supported_design_targets": ["bitcoin", "bitcoinos-or-equivalent-zk-adapter"]
+  },
+  "claims": {
+    "sacred_or_spiritual_language_is_consensus_input": false,
+    "random_or_symbolic_metrics_are_economic_or_security_evidence": false,
+    "mainnet_is_live": false,
+    "cryptography_is_audited": false
+  }
+}
