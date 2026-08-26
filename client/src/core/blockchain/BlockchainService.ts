@@ -1,36 +1,36 @@
 /**
- * Blockchain Service
- * 
- * Provides core blockchain functionality for the AetherCoin ecosystem.
- * Integrates with Web3 providers and manages blocks, transactions,
- * and blockchain events.
+ * LEGACY LOCAL BLOCKCHAIN SIMULATION
+ *
+ * This service predates the canonical Aetherion Biozoe protocol under
+ * `protocol/`. It exists only to keep historical dashboard components usable
+ * during migration. It is NOT the Aetherion Layer 1, does not provide real
+ * consensus, does not sign production transactions, and must not be used as a
+ * source of canonical ATC balances or mainnet status.
  */
 
 import { EventEmitter } from 'events';
 import SHA256 from 'crypto-js/sha256';
-import { 
-  Block, 
-  Transaction, 
+import {
+  Block,
+  Transaction,
   BlockchainConfig,
   WalletConnectionStatus,
   BlockchainNetworkType,
-  BlockchainEventListener
+  BlockchainEventListener,
 } from './types';
-import { GOLDEN_RATIO } from '../biozoe/FractalAlgorithms';
 
-// Default configuration using Golden Ratio for Chain ID
 const DEFAULT_CONFIG: BlockchainConfig = {
-  networkId: 1,
-  chainId: Math.round(GOLDEN_RATIO * 100000), // 161803
-  difficulty: 4,
-  blockTime: 10000, // 10 seconds
-  genesisTimestamp: Date.now()
+  networkId: 0,
+  chainId: 161803, // legacy simulation identifier only; canonical L1 id is aetherion-1
+  difficulty: 2,
+  blockTime: 10000,
+  genesisTimestamp: Date.now(),
 };
 
-/**
- * BlockchainService - Core blockchain functionality for AetherCoin
- */
 export class BlockchainService extends EventEmitter {
+  public readonly implementationStatus = 'legacy-local-simulation' as const;
+  public readonly canonicalLayer1 = false;
+
   private chain: Block[] = [];
   private pendingTransactions: Transaction[] = [];
   private config: BlockchainConfig;
@@ -39,295 +39,226 @@ export class BlockchainService extends EventEmitter {
   private networkType: BlockchainNetworkType = BlockchainNetworkType.MAINNET;
   private blockInterval: NodeJS.Timeout | null = null;
   private eventListeners: Map<string, Set<BlockchainEventListener>> = new Map();
-  
+
   constructor(config: BlockchainConfig = DEFAULT_CONFIG) {
     super();
     this.config = config;
     this.initializeChain();
     this.setupWeb3Listeners();
   }
-  
-  /**
-   * Initialize blockchain with genesis block
-   */
+
   private initializeChain(): void {
-    const genesisBlock = this.createGenesisBlock();
-    this.chain = [genesisBlock];
+    this.chain = [this.createGenesisBlock()];
   }
-  
-  /**
-   * Create genesis block for the chain
-   */
+
   private createGenesisBlock(): Block {
     const genesisData = {
-      message: "AetherCoin Genesis Block - BioZoeCurrency Ecosystem",
-      goldenRatio: GOLDEN_RATIO,
-      timestamp: this.config.genesisTimestamp
+      message: 'LEGACY LOCAL SIMULATION — NOT AETHERION MAINNET GENESIS',
+      canonicalChainId: 'aetherion-1',
+      timestamp: this.config.genesisTimestamp,
     };
-    
-    const hash = SHA256(JSON.stringify(genesisData)).toString();
-    
+
     return {
       index: 0,
       timestamp: this.config.genesisTimestamp,
       transactions: [],
-      previousHash: "0",
-      hash,
+      previousHash: '0',
+      hash: SHA256(JSON.stringify(genesisData)).toString(),
       nonce: 0,
-      difficulty: this.config.difficulty
+      difficulty: this.config.difficulty,
     };
   }
-  
-  /**
-   * Set up listeners for Web3 wallet events
-   */
+
   private setupWeb3Listeners(): void {
     if (typeof window !== 'undefined' && window.ethereum) {
-      // Set up Metamask/web3 event listeners safely
       window.ethereum.on?.('accountsChanged', this.handleAccountsChanged.bind(this));
       window.ethereum.on?.('chainChanged', this.handleChainChanged.bind(this));
       window.ethereum.on?.('connect', this.handleConnect.bind(this));
       window.ethereum.on?.('disconnect', this.handleDisconnect.bind(this));
     }
   }
-  
-  /**
-   * Handle wallet account changes
-   */
-  private handleAccountsChanged() {
-    // Handle accounts changed logic here
+
+  private handleAccountsChanged(accounts?: string[]): void {
+    this.walletAddress = accounts?.[0] ?? null;
+    this.walletStatus = this.walletAddress
+      ? WalletConnectionStatus.CONNECTED
+      : WalletConnectionStatus.DISCONNECTED;
   }
-  /**
-   * Handle blockchain network changes
-   */
-  private handleChainChanged(chainId: string) {
-    console.log(`Chain changed to: ${chainId}`);
-    // Handle chain changed logic here
+
+  private handleChainChanged(chainId: string): void {
+    this.emit('externalWalletChainChanged', {
+      chainId,
+      notice: 'External wallet chain change only; not canonical Aetherion state.',
+    });
   }
-  /**
-   * Handle wallet connection
-   */
-  private handleConnect() {
-    // Handle connect logic here
+
+  private handleConnect(): void {
+    this.emit('externalWalletProviderConnected');
   }
-  
-  /**
-   * Handle wallet disconnection
-   */
-  private handleDisconnect() {
-    // Handle disconnect logic here
+
+  private handleDisconnect(): void {
+    this.walletAddress = null;
+    this.walletStatus = WalletConnectionStatus.DISCONNECTED;
   }
-  /**
-   * Get the latest block in the chain
-   */
+
   public getLatestBlock(): Block {
     return this.chain[this.chain.length - 1];
   }
-  
-  /**
-   * Get the current block height (chain length)
-   */
+
   public getBlockHeight(): number {
     return this.chain.length;
   }
-  
+
   /**
-   * Generate a new block with current pending transactions
+   * Generate a local demonstration block. This has no Layer 1 finality.
    */
   public generateBlock(): Block {
     const latestBlock = this.getLatestBlock();
-    const newIndex = latestBlock.index + 1;
-    const timestamp = Date.now();
-    const transactions = [...this.pendingTransactions];
-    
     const newBlock: Block = {
-      index: newIndex,
-      timestamp,
-      transactions,
+      index: latestBlock.index + 1,
+      timestamp: Date.now(),
+      transactions: [...this.pendingTransactions],
       previousHash: latestBlock.hash,
-      hash: "",
+      hash: '',
       nonce: 0,
-      difficulty: this.config.difficulty
+      difficulty: this.config.difficulty,
     };
-    
-    // Mine the block (find valid hash)
+
     const minedBlock = this.mineBlock(newBlock);
-    
-    // Clear pending transactions
     this.pendingTransactions = [];
-    
-    // Add the new block to the chain
     this.chain.push(minedBlock);
-    
-    // Emit block added event
     this.emit('blockAdded', minedBlock);
     this.notifyListeners('blockAdded', minedBlock);
-    
     return minedBlock;
   }
-  
-  /**
-   * Mine a block to find a valid hash (proof-of-work)
-   */
+
+  /** Local educational proof-of-work only. */
   private mineBlock(block: Block): Block {
-    const target = "0".repeat(this.config.difficulty);
+    const target = '0'.repeat(this.config.difficulty);
     const blockData = this.getBlockData(block);
-    
     let nonce = 0;
-    let hash = "";
-    
+    let hash = '';
+
     while (true) {
-      nonce++;
+      nonce += 1;
       hash = SHA256(blockData + nonce).toString();
-      
-      if (hash.substring(0, this.config.difficulty) === target) {
-        break;
-      }
+      if (hash.startsWith(target)) break;
     }
-    
+
     block.nonce = nonce;
     block.hash = hash;
-    
     return block;
   }
-  
-  /**
-   * Get block data as string for hashing
-   */
+
   private getBlockData(block: Block): string {
-    return block.index + 
-           block.timestamp + 
-           JSON.stringify(block.transactions) + 
-           block.previousHash + 
-           block.difficulty;
+    return [
+      block.index,
+      block.timestamp,
+      JSON.stringify(block.transactions),
+      block.previousHash,
+      block.difficulty,
+    ].join(':');
   }
-  
+
   /**
-   * Create and add a new transaction to pending
+   * Create a LOCAL SIMULATION transaction.
+   *
+   * The signature field is intentionally prefixed `SIMULATION_ONLY:` so it
+   * cannot reasonably be mistaken for wallet cryptographic authorization.
    */
   public createTransaction(from: string, to: string, amount: number, data?: any): Transaction {
+    const timestamp = Date.now();
     const transaction: Transaction = {
-      id: this.generateTransactionId(from, to, amount),
+      id: this.generateTransactionId(from, to, amount, timestamp),
       from,
       to,
       amount,
-      timestamp: Date.now(),
-      signature: this.signTransaction(from, to, amount),
-      data
+      timestamp,
+      signature: this.simulationSignature(from, to, amount, timestamp),
+      data: {
+        ...(data ?? {}),
+        implementationStatus: this.implementationStatus,
+        canonical: false,
+      },
     };
-    
+
     this.pendingTransactions.push(transaction);
-    
     this.emit('transactionCreated', transaction);
     this.notifyListeners('transactionCreated', transaction);
-    
     return transaction;
   }
-  
-  /**
-   * Generate unique transaction ID
-   */
-  private generateTransactionId(from: string, to: string, amount: number): string {
-    return SHA256(from + to + amount + Date.now() + Math.random()).toString();
+
+  private generateTransactionId(from: string, to: string, amount: number, timestamp: number): string {
+    return `simulation:${SHA256(`${from}:${to}:${amount}:${timestamp}:${this.pendingTransactions.length}`).toString()}`;
   }
-  
-  /**
-   * Sign a transaction (placeholder for actual wallet signing)
-   */
-  private signTransaction(from: string, to: string, amount: number): string {
-    // In a real implementation, this would use the wallet's signing capability
-    return SHA256(from + to + amount + this.config.chainId + Date.now()).toString();
+
+  private simulationSignature(from: string, to: string, amount: number, timestamp: number): string {
+    const digest = SHA256(`${from}:${to}:${amount}:${this.config.chainId}:${timestamp}`).toString();
+    return `SIMULATION_ONLY:${digest}`;
   }
-  
-  /**
-   * Verify the integrity of the entire blockchain
-   */
+
   public isChainValid(): boolean {
-    for (let i = 1; i < this.chain.length; i++) {
+    for (let i = 1; i < this.chain.length; i += 1) {
       const currentBlock = this.chain[i];
       const previousBlock = this.chain[i - 1];
-      
-      // Check if hash is correct
       const blockData = this.getBlockData(currentBlock);
-      if (SHA256(blockData + currentBlock.nonce).toString() !== currentBlock.hash) {
-        return false;
-      }
-      
-      // Check if previous hash reference is correct
-      if (currentBlock.previousHash !== previousBlock.hash) {
-        return false;
-      }
+      if (SHA256(blockData + currentBlock.nonce).toString() !== currentBlock.hash) return false;
+      if (currentBlock.previousHash !== previousBlock.hash) return false;
     }
-    
     return true;
   }
-  
-  /**
-   * Start automatic block generation at specified interval
-   */
+
   public startBlockGeneration(): void {
-    if (this.blockInterval) {
-      clearInterval(this.blockInterval);
-    }
-    
+    if (this.blockInterval) clearInterval(this.blockInterval);
     this.blockInterval = setInterval(() => {
-      if (this.pendingTransactions.length > 0) {
-        this.generateBlock();
-      }
+      if (this.pendingTransactions.length > 0) this.generateBlock();
     }, this.config.blockTime);
   }
-  
-  /**
-   * Stop automatic block generation
-   */
+
   public stopBlockGeneration(): void {
     if (this.blockInterval) {
       clearInterval(this.blockInterval);
       this.blockInterval = null;
     }
   }
-  
+
   /**
-   * Connect to wallet (simulate Web3 wallet connection)
+   * Connect only to the browser's external wallet ACCOUNT. This does not add,
+   * switch, or validate an Aetherion network.
    */
   public async connectWallet(): Promise<string | null> {
     if (typeof window === 'undefined' || !window.ethereum) {
       this.walletStatus = WalletConnectionStatus.ERROR;
-      this.emit('error', { message: "Web3 provider not available" });
-      this.notifyListeners('error', { message: "Web3 provider not available" });
+      const error = { message: 'Web3 provider not available' };
+      this.emit('error', error);
+      this.notifyListeners('error', error);
       return null;
     }
-    
+
     try {
       this.walletStatus = WalletConnectionStatus.CONNECTING;
-      
       const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-      
-      if (accounts.length > 0) {
-        this.walletAddress = accounts[0];
-        this.walletStatus = WalletConnectionStatus.CONNECTED;
-        
-        // Check current chain
-        const chainId = await window.ethereum.request({ method: 'eth_chainId' });
-        this.handleChainChanged(chainId);
-        
-        this.emit('walletConnected', { 
-          address: this.walletAddress, 
-          chainId,
-          networkType: this.networkType
-        });
-        
-        this.notifyListeners('walletConnected', { 
-          address: this.walletAddress, 
-          chainId,
-          networkType: this.networkType
-        });
-        
-        return this.walletAddress;
+      if (!accounts?.length) {
+        this.walletStatus = WalletConnectionStatus.ERROR;
+        return null;
       }
-      
-      this.walletStatus = WalletConnectionStatus.ERROR;
-      return null;
+
+      this.walletAddress = accounts[0];
+      this.walletStatus = WalletConnectionStatus.CONNECTED;
+      const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+      this.emit('walletConnected', {
+        address: this.walletAddress,
+        externalChainId: chainId,
+        implementationStatus: this.implementationStatus,
+        canonicalAetherionConnection: false,
+      });
+      this.notifyListeners('walletConnected', {
+        address: this.walletAddress,
+        externalChainId: chainId,
+        implementationStatus: this.implementationStatus,
+        canonicalAetherionConnection: false,
+      });
+      return this.walletAddress;
     } catch (error) {
       this.walletStatus = WalletConnectionStatus.ERROR;
       this.emit('error', error);
@@ -335,267 +266,107 @@ export class BlockchainService extends EventEmitter {
       return null;
     }
   }
-  
-  /**
-   * Disconnect from wallet
-   */
+
   public disconnectWallet(): void {
     this.walletAddress = null;
     this.walletStatus = WalletConnectionStatus.DISCONNECTED;
-    
     this.emit('walletDisconnected');
     this.notifyListeners('walletDisconnected', {});
   }
-  
-  /**
-   * Get current wallet connection status
-   */
+
   public getWalletStatus(): WalletConnectionStatus {
     return this.walletStatus;
   }
-  
-  /**
-   * Get current wallet address
-   */
+
   public getWalletAddress(): string | null {
     return this.walletAddress;
   }
-  
-  /**
-   * Get current blockchain network type
-   */
+
   public getNetworkType(): BlockchainNetworkType {
     return this.networkType;
   }
-  
+
   /**
-   * Switch to a different blockchain network
+   * Legacy automatic network switching is intentionally disabled.
+   * Use the evidence-aware wallet adapter/configuration once a real testnet
+   * exists. Canonical Aetherion is not defined by these historical EVM enums.
    */
-  public async switchNetwork(networkType: BlockchainNetworkType): Promise<boolean> {
-    if (typeof window === 'undefined' || !window.ethereum) {
-      return false;
-    }
-    
-    let targetChainId: string;
-    
-    switch (networkType) {
-      case BlockchainNetworkType.MAINNET:
-        targetChainId = `0x${this.config.chainId.toString(16)}`;
-        break;
-      case BlockchainNetworkType.TESTNET:
-        targetChainId = "0x4ccff"; // 314159 in hex (Pi-based ID)
-        break;
-      case BlockchainNetworkType.GOLDEN:
-        targetChainId = "0x2785b"; // 161803 in hex (Golden Ratio ID)
-        break;
-      default:
-        return false;
-    }
-    
-    try {
-      await window.ethereum.request({
-        method: 'wallet_switchEthereumChain',
-        params: [{ chainId: targetChainId }]
-      });
-      
-      return true;
-    } catch (error: any) {
-      if (error.code === 4902) {
-        // Chain doesn't exist, add it
-        try {
-          const networkParams = this.getNetworkParams(networkType);
-          await window.ethereum.request({
-            method: 'wallet_addEthereumChain',
-            params: [networkParams]
-          });
-          return true;
-        } catch (addError) {
-          this.emit('error', addError);
-          this.notifyListeners('error', addError);
-          return false;
-        }
-      }
-      
-      this.emit('error', error);
-      this.notifyListeners('error', error);
-      return false;
-    }
+  public async switchNetwork(_networkType: BlockchainNetworkType): Promise<boolean> {
+    const error = {
+      message: 'Legacy EVM network switching is disabled. No live Aetherion network is configured by this service.',
+      implementationStatus: this.implementationStatus,
+    };
+    this.emit('networkSwitchBlocked', error);
+    this.notifyListeners('networkSwitchBlocked', error);
+    return false;
   }
-  
-  /**
-   * Get network parameters for adding to wallet
-   */
-  private getNetworkParams(networkType: BlockchainNetworkType): any {
-    switch (networkType) {
-      case BlockchainNetworkType.MAINNET:
-        return {
-          chainId: `0x${this.config.chainId.toString(16)}`,
-          chainName: 'AetherCoin BioZoe Network',
-          nativeCurrency: {
-            name: 'AetherCoin',
-            symbol: 'ATC',
-            decimals: 18
-          },
-          rpcUrls: ['https://rpc.aethercoin.network'],
-          blockExplorerUrls: ['https://explorer.aethercoin.network']
-        };
-        
-      case BlockchainNetworkType.TESTNET:
-        return {
-          chainId: "0x4ccff", // 314159 in hex
-          chainName: 'AetherCoin BioZoe Testnet',
-          nativeCurrency: {
-            name: 'Test AetherCoin',
-            symbol: 'tATC',
-            decimals: 18
-          },
-          rpcUrls: ['https://testnet-rpc.aethercoin.network'],
-          blockExplorerUrls: ['https://testnet-explorer.aethercoin.network']
-        };
-        
-      case BlockchainNetworkType.GOLDEN:
-        return {
-          chainId: "0x2785b", // 161803 in hex
-          chainName: 'AetherCoin Golden Network',
-          nativeCurrency: {
-            name: 'AetherCoin',
-            symbol: 'ATC',
-            decimals: 18
-          },
-          rpcUrls: ['https://golden-rpc.aethercoin.network'],
-          blockExplorerUrls: ['https://golden-explorer.aethercoin.network']
-        };
-        
-      default:
-        throw new Error("Invalid network type");
-    }
-  }
-  
-  /**
-   * Get the entire blockchain
-   */
+
   public getChain(): Block[] {
     return [...this.chain];
   }
-  
-  /**
-   * Get current pending transactions
-   */
+
   public getPendingTransactions(): Transaction[] {
     return [...this.pendingTransactions];
   }
-  
-  /**
-   * Get transaction history for an address
-   */
+
   public getAddressTransactions(address: string): Transaction[] {
     const transactions: Transaction[] = [];
-    
-    // Check all blocks for transactions involving this address
     for (const block of this.chain) {
       for (const tx of block.transactions) {
-        if (tx.from === address || tx.to === address) {
-          transactions.push(tx);
-        }
+        if (tx.from === address || tx.to === address) transactions.push(tx);
       }
     }
-    
-    // Add any pending transactions too
     for (const tx of this.pendingTransactions) {
-      if (tx.from === address || tx.to === address) {
-        transactions.push(tx);
-      }
+      if (tx.from === address || tx.to === address) transactions.push(tx);
     }
-    
     return transactions;
   }
-  
-  /**
-   * Get block by index
-   */
+
   public getBlockByIndex(index: number): Block | null {
-    return (index >= 0 && index < this.chain.length) ? this.chain[index] : null;
+    return index >= 0 && index < this.chain.length ? this.chain[index] : null;
   }
-  
-  /**
-   * Get block by hash
-   */
+
   public getBlockByHash(hash: string): Block | null {
-    return this.chain.find(block => block.hash === hash) || null;
+    return this.chain.find((block) => block.hash === hash) ?? null;
   }
-  
-  /**
-   * Get transaction by ID
-   */
+
   public getTransactionById(id: string): Transaction | null {
-    // Check pending transactions
-    let transaction = this.pendingTransactions.find(tx => tx.id === id);
-    if (transaction) return transaction;
-    
-    // Check all blocks
+    const pending = this.pendingTransactions.find((tx) => tx.id === id);
+    if (pending) return pending;
     for (const block of this.chain) {
-      transaction = block.transactions.find(tx => tx.id === id);
+      const transaction = block.transactions.find((tx) => tx.id === id);
       if (transaction) return transaction;
     }
-    
     return null;
   }
-  
-  /**
-   * Register event listener
-   */
+
   public registerListener(eventName: string, listener: BlockchainEventListener): void {
-    if (!this.eventListeners.has(eventName)) {
-      this.eventListeners.set(eventName, new Set());
-    }
-    
+    if (!this.eventListeners.has(eventName)) this.eventListeners.set(eventName, new Set());
     this.eventListeners.get(eventName)?.add(listener);
   }
-  
-  /**
-   * Unregister event listener
-   */
+
   public unregisterListener(eventName: string, listener: BlockchainEventListener): void {
-    if (this.eventListeners.has(eventName)) {
-      this.eventListeners.get(eventName)?.delete(listener);
-    }
+    this.eventListeners.get(eventName)?.delete(listener);
   }
-  
-  /**
-   * Notify all listeners for an event
-   */
+
   private notifyListeners(eventName: string, data: any): void {
-    if (this.eventListeners.has(eventName)) {
-      this.eventListeners.get(eventName)?.forEach(listener => {
-        try {
-          listener(data);
-        } catch (error) {
-          console.error(`Error in blockchain event listener for ${eventName}:`, error);
-        }
-      });
-    }
+    this.eventListeners.get(eventName)?.forEach((listener) => {
+      try {
+        listener(data);
+      } catch (error) {
+        console.error(`Error in legacy blockchain simulation listener for ${eventName}:`, error);
+      }
+    });
   }
-  
-  /**
-   * Update blockchain configuration
-   */
+
   public updateConfig(newConfig: Partial<BlockchainConfig>): void {
     this.config = { ...this.config, ...newConfig };
-    
-    // If block generation is running, restart it with new timing
     if (this.blockInterval) {
       this.stopBlockGeneration();
       this.startBlockGeneration();
     }
   }
 
-  /**
-   * Get complete blockchain state including chain and pending transactions
-   */
-  /**
-   * Get current blockchain state
-   * @returns Current blockchain state object
-   */
   public getBlockchainState() {
     return {
       chain: this.getChain(),
@@ -607,134 +378,93 @@ export class BlockchainService extends EventEmitter {
       currentDifficulty: this.config.difficulty,
       isValid: this.isChainValid(),
       difficulty: this.config.difficulty,
-      miningReward: 5.0, // Default mining reward
+      miningReward: 0,
       lastBlockTime: this.getLatestBlock().timestamp,
-      nodes: [], // No peer nodes in this implementation
+      nodes: [],
       isMining: this.blockInterval !== null,
-      syncStatus: 'synchronized',
-      consensusType: 'proof-of-work',
+      syncStatus: 'local-simulation',
+      consensusType: 'legacy-local-proof-of-work-simulation',
       networkHashrate: this.getEstimatedHashrate(),
-      version: '1.0.0',
-      genesisBlock: this.chain[0]
+      version: 'legacy-simulation-2',
+      genesisBlock: this.chain[0],
+      implementationStatus: this.implementationStatus,
+      canonicalLayer1: false,
+      canonicalChainId: 'aetherion-1',
     };
   }
-  
-  /**
-   * Estimate the network hashrate based on recent blocks
-   * @returns Estimated hashrate in hashes per second
-   */
+
   private getEstimatedHashrate(): number {
-    if (this.chain.length < 2) {
-      return 0;
-    }
-    
-    // Use the last few blocks to estimate hashrate
+    if (this.chain.length < 2) return 0;
     const numBlocks = Math.min(10, this.chain.length - 1);
     const recentBlocks = this.chain.slice(-numBlocks - 1);
-    
-    // Calculate average time between blocks
     let totalTime = 0;
-    for (let i = 1; i < recentBlocks.length; i++) {
+    for (let i = 1; i < recentBlocks.length; i += 1) {
       totalTime += recentBlocks[i].timestamp - recentBlocks[i - 1].timestamp;
     }
-    
     const avgTimeMs = totalTime / numBlocks;
     if (avgTimeMs <= 0) return 0;
-    
-    // Estimate hashrate based on difficulty
-    const difficulty = this.config.difficulty;
-    const hashesPerBlock = Math.pow(2, difficulty * 4); // Approximate hashes needed
-    
+    const hashesPerBlock = Math.pow(2, this.config.difficulty * 4);
     return Math.floor(hashesPerBlock / (avgTimeMs / 1000));
   }
-  
+
   /**
-   * Get all available wallets
+   * Do not fabricate balances. Until a canonical node API exists this legacy
+   * service can identify the connected external wallet only.
    */
   public getAllWallets() {
-    // In a full implementation, this would retrieve actual wallets
-    // For now, return a mock wallet if connected
-    const wallets = [];
-    
-    if (this.walletAddress) {
-      wallets.push({
-        address: this.walletAddress,
-        balance: 1000, // Mock balance
-        type: 'primary',
-        label: 'Main Wallet'
-      });
-      
-      // Add some mock additional wallets for demo purposes
-      wallets.push({
-        address: '0x' + SHA256('secondary-wallet').toString().substring(0, 40),
-        balance: 250,
-        type: 'secondary',
-        label: 'Savings Wallet'
-      });
-    }
-    
-    return wallets;
+    if (!this.walletAddress) return [];
+    return [{
+      address: this.walletAddress,
+      balance: 0,
+      type: 'external-account',
+      label: 'Connected wallet — canonical ATC balance unavailable',
+      canonicalBalanceKnown: false,
+    }];
   }
-  
-  /**
-   * Initialize the blockchain service
-   */
+
   public initialize() {
-    // Reset to initial state
     this.chain = [];
     this.pendingTransactions = [];
     this.walletStatus = WalletConnectionStatus.DISCONNECTED;
     this.walletAddress = null;
-    
-    // Create genesis block
     this.initializeChain();
-    
-    // Set up Web3 listeners
     this.setupWeb3Listeners();
-    
-    // Start block generation
     this.startBlockGeneration();
-    
-    // Emit initialization event
-    this.emit('initialized', {
+
+    const event = {
       blockHeight: this.getBlockHeight(),
       genesisBlock: this.chain[0],
-      timestamp: Date.now()
-    });
-    
-    this.notifyListeners('initialized', {
-      blockHeight: this.getBlockHeight(),
-      genesisBlock: this.chain[0],
-      timestamp: Date.now()
-    });
-    
+      timestamp: Date.now(),
+      implementationStatus: this.implementationStatus,
+      canonicalLayer1: false,
+    };
+    this.emit('initialized', event);
+    this.notifyListeners('initialized', event);
     return true;
   }
-  
+
   /**
-   * Enhance security layer using specified algorithm
+   * Historical compatibility hook. It does not apply a cryptographic security
+   * upgrade and deliberately refuses to claim otherwise.
    */
   public enhanceSecurityLayer(algorithm: string) {
-    // Implement additional security layers using specified algorithm
-    console.log(`Applying security with algorithm: ${algorithm}`);
-    // ... security enhancement logic
-}
+    const result = {
+      applied: false,
+      algorithm,
+      notice: 'Legacy simulation cannot apply production security layers.',
+    };
+    this.emit('securityEnhancementNotApplied', result);
+    return result;
+  }
 
-  /**
-   * Example function using SHA256
-   */
   public hashData(data: string): string {
     return SHA256(data).toString();
-}
+  }
 
-  /**
-   * Example usage of SHA256
-   */
   public exampleUsage() {
-    const hash = SHA256("yourInputString").toString();
+    const hash = SHA256('simulation-example').toString();
     console.log(hash);
   }
 }
 
-// Export singleton instance
 export const blockchainService = new BlockchainService();
