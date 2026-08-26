@@ -1,5 +1,5 @@
 {
-  "schema_version": "2.0.0",
+  "schema_version": "2.1.0",
   "network": {
     "name": "Aetherion",
     "chain_id": "aetherion-1",
@@ -35,16 +35,52 @@
     "contribution_issuance_enabled": false,
     "regenerative_issuance_enabled": false,
     "stewardship_issuance_enabled": false,
+    "circulation_issuance_enabled": false,
+    "circulation_epoch_budget_aatc": "0",
+    "circulation_reward_cap_aatc_per_identity_per_epoch": "5000000000000000000",
+    "circulation_sender_weight_bps": 4000,
+    "circulation_receiver_weight_bps": 6000,
+    "circulation_raw_transaction_count_rewarded": false,
+    "circulation_self_transfer_rewarded": false,
+    "circulation_direct_round_trips_netted": true,
+    "circulation_requires_unique_authenticated_receipt": true,
+    "circulation_reward_function": "integer-sqrt-net-pair-flow-pro-rata-with-per-identity-cap",
     "budgeted_evidence_replay_allowed": false,
+    "circulation_receipt_replay_allowed": false,
     "spent_budget_reset_allowed": false,
-    "notes": "Initial parameters are devnet design defaults, not claims of a production-stable monetary policy. Eligible universal entitlements accrue even when a person cannot transact and are settled later with historical demurrage. Contribution, regenerative, and stewardship issuance require explicit governed budgets and evidence rules before activation."
+    "notes": "Initial parameters are design-devnet scenario values, not production monetary promises. Eligible universal entitlements accrue even when a person cannot transact and are settled later with historical demurrage. Contribution, regenerative, stewardship, and circulation issuance remain disabled until explicit governed budgets, evidence rules, simulation, and implementation review are complete."
+  },
+  "canonical_conversion": {
+    "status": "disabled-design",
+    "enabled": false,
+    "ordinary_atc_to_atc_transfer_has_exit_friction": false,
+    "reference_value_is_separate_from_net_exit_proceeds": true,
+    "inbound_external_deposit_is_automatic_atc_mint_authority": false,
+    "exit_atc_destination": "retire",
+    "immediate_exit_path_required": true,
+    "indefinite_exit_lock_allowed": false,
+    "maturity_start_epoch": 0,
+    "maturity_start_ppm": 20000,
+    "maturity_target_ppm": 80000,
+    "maturity_ramp_epochs": 1825,
+    "stress_surcharge_max_ppm": 70000,
+    "hard_exit_friction_cap_ppm": 150000,
+    "minimum_exit_friction_ppm": 10000,
+    "patient_exit_discount_ppm_per_epoch": 1000,
+    "patient_exit_discount_max_ppm": 70000,
+    "reference_price_oracle_is_not_defined_by_exit_spread": true,
+    "conversion_receipt_replay_allowed": false,
+    "atc_retirement_requires_external_settlement_acceptance": true,
+    "federation_operated_service_requires_regulatory_launch_review": true,
+    "notes": "These disabled design-devnet values model asymmetric monetary permeability without trapping holders. The ordinary maturity path rises from 2% toward 8% over five years, a separately governed stress component can add at most 7%, and the total canonical exit friction can never exceed the 15% hard cap in this seed. Patient exits can reduce friction toward the 1% floor. Production values require simulation, legal review, governance ratification, and explicit activation."
   },
   "identity": {
     "source_of_eligibility": "AIFT-Genesis compatible personhood attestation",
     "one_active_baseline_stream_per_person": true,
     "transferable_identity": false,
     "suspension_erases_previously_earned_entitlements": false,
-    "privacy_requirement": "Protocol integrations should support privacy-preserving uniqueness proofs; raw civil identity is not required to be public on-chain."
+    "privacy_requirement": "Protocol integrations should support privacy-preserving uniqueness proofs; raw civil identity is not required to be public on-chain.",
+    "circulation_qualification_may_not_require_generalized_purchase_surveillance": true
   },
   "consensus": {
     "target_engine": "CometBFT-compatible BFT",
@@ -59,7 +95,10 @@
     "balance_confers_governance_power": false,
     "balance_confers_validator_power": false,
     "constitutional_changes_require_timelock": true,
-    "constitutional_changes_require_multi_chamber_approval": true
+    "constitutional_changes_require_multi_chamber_approval": true,
+    "exit_friction_hard_cap_is_constitutionally_protected": true,
+    "ordinary_transfer_freedom_is_constitutionally_protected": true,
+    "reference_value_truthfulness_is_constitutionally_protected": true
   },
   "resource_control": {
     "economic_asset_is_not_spam_budget": true,
@@ -74,12 +113,19 @@
     "bitcoin_required_for_liveness": false,
     "adapter_model": true,
     "initial_mode": "disabled",
-    "supported_design_targets": ["bitcoin", "bitcoinos-or-equivalent-zk-adapter"]
+    "supported_design_targets": [
+      "bitcoin",
+      "bitcoinos-or-equivalent-zk-adapter"
+    ]
   },
   "claims": {
     "sacred_or_spiritual_language_is_consensus_input": false,
     "random_or_symbolic_metrics_are_economic_or_security_evidence": false,
     "mainnet_is_live": false,
-    "cryptography_is_audited": false
+    "cryptography_is_audited": false,
+    "canonical_exchange_service_is_live": false,
+    "protocol_guarantees_appreciation": false,
+    "protocol_guarantees_infinite_nominal_value": false,
+    "exit_friction_is_market_price": false
   }
 }
