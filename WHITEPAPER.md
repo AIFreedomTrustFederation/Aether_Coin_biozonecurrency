@@ -70,13 +70,17 @@ Genesis establishes rules rather than owners.
 
 ### 2.3 Universal participation issuance
 
-An eligible person may claim one baseline issuance stream per epoch. A person's token balance does not increase the baseline rate.
+Every eligible unique person receives one equal baseline **entitlement** for every epoch in which that person is eligible. A person's ATC balance, account age, social status, validator role, or historical wealth does not increase the baseline rate.
 
 For identity `i` and epoch `e`:
 
-`U(i,e) = u` when `i` is eligible and has not already claimed in `e`; otherwise `U(i,e) = 0`.
+`U(i,e) = u` when `i` is eligible in `e`; otherwise `U(i,e) = 0`.
 
-The initial design-devnet parameter is one ATC per daily epoch. That value is a test parameter, not a claim that one ATC per day is economically optimal for production.
+Submission of a transaction is the settlement mechanism, not the source of the right. A person does not lose an eligible epoch merely because they were offline, hospitalized, displaced, without a device, censored, or otherwise unable to transact at that moment.
+
+When several historical entitlements are settled later, each historical portion is aged through the same deterministic demurrage schedule that would have applied had it entered the account when earned. If a person is eligible in epochs `e0...en`, delayed settlement therefore computes the same economic aging path rather than giving either a connectivity penalty or a demurrage holiday.
+
+The initial design-devnet parameter is one ATC per daily eligible epoch. That value is a test parameter, not a claim that one ATC per day is economically optimal for production.
 
 ### 2.4 Demurrage
 
@@ -86,9 +90,11 @@ Balances may experience a small deterministic retirement rate per epoch:
 
 Demurrage is not transferred to founders, validators, or a hidden treasury. Under the initial design it is retired from supply. This makes indefinite passive accumulation less dominant without confiscating ownership through discretionary intervention.
 
+Accrued universal entitlements are settled with historical demurrage so unclaimed issuance cannot become an interest-free privileged savings class.
+
 The initial design-devnet rate is 192 parts per million per daily epoch, roughly in the vicinity of a single-digit annual carrying cost. Production calibration requires simulation, public review, and governance approval.
 
-### 2.5 Budgeted contribution issuance
+### 2.5 Budgeted contribution, regeneration, and stewardship issuance
 
 Universal issuance protects baseline participation. Additional issuance for contribution, regeneration, or stewardship must be explicitly budgeted.
 
@@ -98,7 +104,10 @@ A budgeted mint requires:
 - an epoch budget,
 - an eligible recipient,
 - evidence satisfying the program's published rules,
-- and an auditable issuance receipt.
+- an auditable unique evidence receipt,
+- and sufficient remaining budget.
+
+Evidence receipts are replay-protected: one accepted receipt cannot mint twice. A spent budget cannot be silently reconfigured to restore mint capacity under the same program and epoch. Additional authority requires a new explicit governed path.
 
 A contribution score is not a measure of human worth. Caregiving, restoration, code, teaching, infrastructure, art, food production, research, and other contribution domains cannot be collapsed into one metaphysical ranking.
 
@@ -123,6 +132,8 @@ The target architecture is:
 `AIFT-Genesis identity/trust layer -> privacy-preserving uniqueness attestation -> Aetherion eligibility credential`.
 
 Production identity must support revocation, recovery, duplicate resistance, due process, minimal disclosure, and multiple independent attestation paths. No single government, corporation, church, biometric vendor, or Federation operator should become the permanent universal identity oracle.
+
+Eligibility is modeled over time. Suspension can stop new entitlements during an ineligible interval under published due-process rules, but it does not silently erase entitlements already earned in earlier eligible epochs.
 
 ---
 
@@ -160,8 +171,10 @@ Constitutional governance covers rules such as:
 
 - no premine,
 - no terminal supply cap,
+- equal baseline entitlement independent of continuous connectivity,
 - no token-weighted human governance,
 - no balance-derived validator power,
+- no hidden or generic administrator mint,
 - consent requirements,
 - identity due process,
 - and the distinction between spiritual meaning and technical evidence.
@@ -206,17 +219,18 @@ The monetary design assumes adversaries will attempt:
 - attestation cartels,
 - validator collusion,
 - governance capture,
-- evidence forgery,
-- budget exhaustion,
+- evidence forgery or replay,
+- budget reset or exhaustion attacks,
 - transaction spam,
 - key theft,
 - coercive custody,
 - bridge compromise,
 - oracle manipulation,
 - denial of service,
+- censorship of issuance settlements,
 - and social-engineering attacks.
 
-No spiritual or ethical aspiration removes those threats. Security comes from minimized authority, deterministic code, cryptographic authentication, independent operators, auditable policy, explicit budgets, rate limits, recovery paths, testing, monitoring, and external review.
+No spiritual or ethical aspiration removes those threats. Security comes from minimized authority, deterministic code, cryptographic authentication, independent operators, auditable policy, explicit budgets, replay protection, rate limits, recovery paths, testing, monitoring, and external review.
 
 ---
 
@@ -226,7 +240,7 @@ AetherCoin is designed to be:
 
 - a transferable network currency,
 - issued without a terminal cap,
-- accessible through equal baseline issuance for eligible persons,
+- accessible through equal accrued baseline rights for eligible persons,
 - expandable through governed evidence-based programs,
 - separated from governance weight and validator power,
 - and compatible with optional external settlement anchors.
@@ -245,9 +259,11 @@ AetherCoin is not automatically:
 
 ## 11. Implementation status
 
-The repository contains a deterministic reference monetary policy, a reference state machine, tests, and a machine-readable genesis seed. The existing historical browser-oriented blockchain code predates this constitution and must be treated as legacy prototype material until migrated behind the new protocol boundary.
+The repository contains a deterministic reference monetary policy, a reference state machine, tests, a cohort simulator, and a machine-readable genesis seed. The reference implementation now covers accrued offline-safe universal entitlement settlement, suspension-aware eligibility intervals, three governed budgeted issuance families, evidence replay protection, budget reset protection, deterministic demurrage, transfers, and supply invariants.
 
-A production Layer 1 still requires consensus integration, transaction authentication, storage, networking, key management, privacy-preserving uniqueness, governance execution, wallet migration, node operations, observability, audits, economic simulation, testnets, and public launch gates.
+The existing historical browser-oriented blockchain code predates this constitution and must be treated as legacy prototype material until migrated behind the new protocol boundary.
+
+A production Layer 1 still requires consensus integration, transaction authentication, storage, networking, key management, privacy-preserving uniqueness, governance execution, wallet migration, node operations, observability, audits, deeper economic simulation, testnets, and public launch gates.
 
 ---
 
