@@ -4,7 +4,7 @@
 
 The white paper defines what Aetherion is meant to become. This flight paper defines how the system is allowed to leave the ground.
 
-Aetherion must not launch by pretending a prototype is already a sovereign Layer 1. It must pass visible gates in sequence. The rule is simple: **no claim advances faster than the evidence supporting it.**
+Aetherion must not launch by pretending a prototype is already a sovereign Layer 1, and no monetary feature may advance faster than the evidence supporting it. A mathematically elegant reward curve or exchange formula is not permission to expose people to an untested financial system.
 
 ---
 
@@ -12,18 +12,7 @@ Aetherion must not launch by pretending a prototype is already a sovereign Layer
 
 Before any token sale, exchange listing, liquidity campaign, or speculative promotion, the monetary constitution must be public, versioned, machine-readable, and testable.
 
-The founding invariants are:
-
-- no premine,
-- no founder allocation,
-- no investor allocation,
-- no terminal supply cap,
-- no token-weighted human governance,
-- no balance-derived validator power,
-- no early-adopter multiplier on universal issuance,
-- no hidden treasury mint,
-- no unilateral administrative balance rewrite,
-- no spiritual or symbolic metric treated as cryptographic evidence.
+The founding invariants include no premine, no founder or investor allocation, no terminal supply cap, no token-weighted human governance, no balance-derived validator power, no early-adopter multiplier on universal issuance, no hidden treasury mint, no unilateral administrative balance rewrite, no raw-transaction-count mint, no uncapped canonical exit friction, no ordinary-transfer exit tax, no falsification of reference exchange value, and no spiritual or symbolic metric treated as cryptographic or economic evidence.
 
 A public network that violates these invariants is not the Aetherion described by this repository.
 
@@ -33,30 +22,19 @@ A public network that violates these invariants is not the Aetherion described b
 
 The monetary state machine must be deterministic and independently testable before it is connected to a consensus engine.
 
-Minimum reference transitions:
-
-1. identity registration from an authenticated attestation,
-2. eligibility status change,
-3. universal issuance claim,
-4. transfer,
-5. governed budget configuration,
-6. evidence-bound contribution issuance,
-7. evidence-bound regenerative issuance,
-8. demurrage settlement,
-9. epoch transition,
-10. supply-invariant verification.
-
-The reference implementation in `protocol/reference/` is the beginning of this gate, not the end of it.
+Minimum reference transitions include identity registration, eligibility status change, accrued universal issuance settlement, ordinary ATC transfer, governed budget configuration, evidence-bound contribution issuance, evidence-bound regenerative issuance, evidence-bound stewardship issuance, circulation budget configuration, circulation qualification, circulation reward settlement, demurrage settlement, canonical exit quote and retirement, epoch transition, and supply-invariant verification.
 
 Exit criteria:
 
 - deterministic tests pass,
-- arithmetic uses integer units,
-- no randomness affects balances,
+- arithmetic uses integer base units for monetary values,
+- no randomness or local wall-clock input affects balances,
 - every mint has a typed cause,
 - every retirement has a typed cause,
 - ordinary transfers conserve supply,
-- issued minus retired equals circulating supply.
+- issued minus retired equals circulating supply,
+- rejected external settlement cannot burn a user's ATC,
+- circulation or conversion receipts cannot be replayed.
 
 ---
 
@@ -70,44 +48,21 @@ Reference architecture:
 
 Validator voting power must be independent of ATC balances. The initial target is equal unit voting power among authorized active validators.
 
-Exit criteria for a public devnet:
-
-- at least 7 validators,
-- no single operator controls more than one validator identity unless explicitly disclosed for a local-only test,
-- at least 3 independent operators,
-- deterministic genesis,
-- reproducible node build,
-- peer discovery and state sync tested,
-- evidence that a minority validator outage does not halt the network below the expected BFT threshold,
-- evidence that conflicting state is not finalized under the assumed fault bound.
-
-Public testnet targets should be stricter than devnet targets.
+Exit criteria for a public devnet include at least seven validators, at least three independent operators, deterministic genesis, reproducible node build, peer discovery and state sync testing, and fault testing consistent with the chosen BFT assumptions.
 
 ---
 
 ## Flight Rule 4 — Identity and Sybil resistance
 
-Universal issuance cannot be safe without a credible uniqueness system.
+Universal issuance and circulation rewards cannot be safe without credible uniqueness controls.
 
 Aetherion should not centralize global personhood in one database. The target is a plural attestation network compatible with AIFT-Genesis trust identity.
 
-Required properties:
+Required properties include one active baseline issuance stream per human, privacy-preserving uniqueness where practical, no requirement to publish raw government identifiers on-chain, revocation and recovery, duplicate challenge procedure, appeal and due process, multiple independent attesters, and documented handling of minors, guardianship, deceased identities, lost keys, and contested records.
 
-- one active baseline issuance stream per human,
-- privacy-preserving uniqueness where practical,
-- no requirement to publish raw government identifiers on-chain,
-- revocation and recovery,
-- duplicate challenge procedure,
-- appeal and due process,
-- multiple independent attesters,
-- documented handling of minors, guardianship, deceased identities, lost keys, and contested records.
+Circulation rewards additionally require defenses against multiple identities controlled by the same economic actor. A per-identity reward cap is meaningless if one actor can cheaply manufacture hundreds of eligible identities.
 
-Exit criteria:
-
-- threat model published,
-- duplicate-identity red-team tests completed,
-- recovery tested without administrator ability to seize arbitrary balances,
-- independent privacy review completed before production personhood credentials.
+Exit criteria include a published threat model, duplicate-identity red-team tests, recovery tests, and independent privacy review before production personhood credentials.
 
 ---
 
@@ -115,35 +70,51 @@ Exit criteria:
 
 A mathematically valid currency can still be economically unstable.
 
-Before production, simulate at minimum:
-
-- population growth and contraction,
-- participation rates,
-- lost accounts,
-- high saving vs high circulation behavior,
-- demurrage rates,
-- contribution budget expansion,
-- validator/service compensation,
-- shocks to real resource supply,
-- exchange-rate volatility,
-- coordinated Sybil attacks,
-- large-holder behavior,
-- program fraud,
-- migration between local trust economies.
+Before production, simulations must include population growth and contraction, participation rates, lost accounts, high saving versus high circulation behavior, demurrage rates, contribution budgets, stewardship compensation, circulation pool size, sender/receiver circulation weights, per-identity reward caps, large-holder behavior, shocks to real resource supply, exchange-rate volatility, local trust migration, coordinated Sybil attacks, and program fraud.
 
 No fixed parameter in the design seed is sacred. The invariants are constitutional; rates are empirical governance parameters.
 
-Exit criteria:
-
-- simulation code and assumptions public,
-- sensitivity analysis published,
-- no hidden founder subsidy,
-- inflation/deflation scenarios explained in plain language,
-- production parameters ratified through the governance process rather than copied from the design-devnet seed.
+Exit criteria include public simulation code and assumptions, sensitivity analysis, no hidden founder subsidy, understandable inflation/deflation scenarios, and production parameters ratified through governance rather than copied from the design-devnet seed.
 
 ---
 
-## Flight Rule 6 — Pulse resource accounting
+## Flight Rule 6 — Circulation incentives must survive adversarial economics
+
+Circulation issuance must prove that it rewards useful monetary breadth more than artificial churn.
+
+At minimum, test:
+
+- exact direct round trips,
+- partial round trips,
+- repeated same-pair transfers,
+- self-controlled wallets,
+- multi-identity wash rings,
+- merchant-customer collusion,
+- receipt replay,
+- transfer double qualification,
+- many tiny transactions,
+- whale concentration,
+- identity splitting,
+- newly created counterparty farms,
+- low-volume legitimate users,
+- intermittent connectivity,
+- privacy-preserving receipt failure modes.
+
+The production design must retain a fixed or explicitly governed epoch circulation pool, diminishing-return scoring, a per-identity ceiling, receipt uniqueness, and anti-Sybil dependence. Raw transaction count may never become an unbounded mint source.
+
+Exit criteria:
+
+- direct pair round trips produce zero net pair score,
+- issuance never exceeds the authorized epoch pool,
+- no participant exceeds the configured cap,
+- reward computation is deterministic,
+- privacy requirements are documented,
+- attack simulations show no trivial profitable wash strategy under assumed identity costs,
+- residual known attacks and tradeoffs are published rather than hidden.
+
+---
+
+## Flight Rule 7 — Pulse resource accounting
 
 Money must not be the only anti-spam mechanism.
 
@@ -161,99 +132,99 @@ Exit criteria:
 
 ---
 
-## Flight Rule 7 — Wallet and custody safety
+## Flight Rule 8 — Wallet and custody safety
 
 A wallet UI is not custody security.
 
-Production wallet support requires:
-
-- real signature verification,
-- secure key generation,
-- hardware-wallet strategy where possible,
-- explicit network and amount display before signing,
-- transaction simulation where supported,
-- recovery design,
-- no seed phrase transmission to AI providers,
-- no silent AI signing,
-- clear separation between recommendation and authorization.
+Production wallet support requires real signature verification, secure key generation, hardware-wallet strategy where possible, explicit network and amount display before signing, transaction simulation where supported, recovery design, no seed phrase transmission to AI providers, no silent AI signing, and clear separation between recommendation and authorization.
 
 The Federation covenant remains:
 
 `Receive -> Inspect -> Name -> Propose -> Consent -> Act -> Verify -> Record -> Return`.
 
-Exit criteria:
-
-- signing path externally reviewed,
-- secrets excluded from logs and model prompts,
-- malicious transaction tests completed,
-- recovery and device-loss procedures tested,
-- wallet clearly distinguishes devnet, testnet, and mainnet.
+Exit criteria include external review of the signing path, secrets excluded from logs and prompts, malicious transaction tests, recovery/device-loss testing, and clear devnet/testnet/mainnet distinction.
 
 ---
 
-## Flight Rule 8 — Governance implementation
+## Flight Rule 9 — Governance implementation
 
 Governance must exist in executable procedure rather than aspirational prose.
 
-The target constitutional model uses at least two independent forms of consent:
+The target constitutional model uses at least a verified-human chamber and a federated trust/community chamber. ATC balances are excluded from vote weight.
 
-- a verified-human chamber,
-- a federated trust/community chamber.
+Constitutional amendments require published proposal text, impact analysis, minimum deliberation period, supermajority in each required chamber, post-approval timelock, machine-readable version change, migration plan, and rollback criteria for implementation failure where technically possible.
 
-ATC balances are excluded from vote weight.
-
-Constitutional amendments require:
-
-- published proposal text,
-- impact analysis,
-- minimum deliberation period,
-- supermajority in each required chamber,
-- post-approval timelock,
-- machine-readable version change,
-- migration plan,
-- rollback criteria for implementation failure where technically possible.
-
-Emergency action cannot silently change constitutional monetary invariants.
+Operational governance may tune circulation pools and canonical conversion parameters only inside the constitutional envelope. Emergency action cannot remove the exit hard cap, create a hidden spread, authorize raw-volume minting, or silently change ordinary ATC transfer semantics.
 
 ---
 
-## Flight Rule 9 — External anchoring
+## Flight Rule 10 — Canonical conversion must remain failure-isolated
+
+Canonical ATC conversion is a separate high-risk subsystem and remains disabled by default.
+
+Before any production activation, test at minimum:
+
+- reference-price oracle failure,
+- stale reference data,
+- quote manipulation,
+- reserve depletion,
+- bank-run-style outflows,
+- large correlated exits,
+- delayed-exit queues,
+- stress-surcharge activation and expiry,
+- hard-cap enforcement,
+- conversion receipt replay,
+- external settlement rejection,
+- external settlement timeout,
+- double settlement,
+- bridge failure,
+- reserve reconciliation failure,
+- operator insolvency scenarios,
+- customer dispute and refund paths.
+
+The quote must always expose the reference value separately from applied friction and net proceeds. Ordinary ATC transfers must remain outside the canonical exit spread.
+
+Exit criteria:
+
+- hard friction cap is enforced in code and tests,
+- patient exit lowers friction according to the public schedule,
+- no delay becomes indefinite without fresh user authorization,
+- ATC is not retired before the external settlement acceptance point,
+- failed external settlement leaves supply/accounting coherent,
+- reserve and liability reconciliation design is documented,
+- emergency states cannot silently exceed constitutional authority.
+
+---
+
+## Flight Rule 11 — Exchange operation requires legal and operational readiness
+
+A correct protocol quote does not make an operator legally ready to exchange ATC for ETH, BTC, stablecoins, fiat, or other external value.
+
+The Federation-operated canonical conversion service remains disabled until the responsible entity completes the applicable jurisdiction, licensing, money-transmission, securities/commodities, sanctions, AML/KYC, tax, custody, reserve, consumer-protection, privacy, and accounting analysis for the actual service design.
+
+Exit criteria are defined in `docs/regulatory-launch-gate.md` and include qualified legal review. Governance approval does not substitute for legal authority required of the operator.
+
+Marketing review is part of the gate. No production launch may promise guaranteed appreciation, infinite nominal value, risk-free return, or a market price manufactured by restricting exit.
+
+---
+
+## Flight Rule 12 — External anchoring
 
 Bitcoin or BitcoinOS-like anchoring is optional and modular.
 
 The anchor adapter should accept a canonical Aetherion state commitment and return a verifiable external receipt. Aetherion consensus must not stop if the adapter fails.
 
-Exit criteria:
-
-- anchoring disabled by default until implemented,
-- external fees isolated from ATC monetary policy,
-- bridge and anchor code independently reviewed,
-- failures cannot corrupt Aetherion state,
-- receipts can be verified independently,
-- the public UI never describes an unconfirmed anchor as final.
+Exit criteria include anchoring disabled by default until implemented, external fees isolated from ATC monetary policy, independent review of anchor/bridge code, failure isolation, independently verifiable receipts, and truthful UI finality language.
 
 ---
 
-## Flight Rule 10 — Security review before mainnet
+## Flight Rule 13 — Security review before mainnet
 
-Mainnet requires independent review of:
+Mainnet requires independent review of consensus integration, monetary state machine, cryptographic authentication, validator operations, identity credentials, governance execution, circulation issuance, wallet signing, APIs, persistence and backups, update mechanisms, anchor adapters, supply accounting, and any conversion/reserve interfaces intended for activation.
 
-- consensus integration,
-- monetary state machine,
-- cryptographic authentication,
-- validator operations,
-- identity credentials,
-- governance execution,
-- wallet signing,
-- APIs,
-- persistence and backups,
-- update mechanism,
-- bridge/anchor adapters,
-- supply accounting.
+At least one review must be performed by people who did not author the implementation. A public bug bounty should precede or accompany mainnet readiness.
 
-At least one review must be performed by people who did not author the implementation.
-
-A public bug bounty should precede or accompany mainnet readiness.
+If canonical conversion will launch later than mainnet, its own independent review and regulatory gate remain required before activation.
 
 ---
 
@@ -263,31 +234,23 @@ A public bug bounty should precede or accompany mainnet readiness.
 
 Status: **active design**.
 
-Deliverables:
-
-- `WHITEPAPER.md`,
-- `PHILOSOPHY.md`,
-- `MONETARY-CONSTITUTION.md`,
-- `COMPUTER-DESIGN.md`,
-- `GENESIS.md`,
-- `protocol/genesis.seed.json`,
-- deterministic reference policy and tests.
+Deliverables include the white paper, philosophy, monetary constitution, human-rights safeguards, computer design, genesis specification, circulation/exchange design, regulatory launch gate, machine-readable genesis and manifest, deterministic reference policy, state machine, and tests.
 
 ## Phase 1 — Local sovereign node
 
-Build a single-node application using the future production state machine, persistent storage, real transaction signatures, and deterministic genesis. No claim of decentralization.
+Build a single-node application using the future production state machine, persistent storage, real transaction signatures, deterministic genesis, circulation event storage, and disabled canonical-conversion module. No claim of decentralization.
 
 ## Phase 2 — Multi-validator devnet
 
-Run 7+ validators under intentionally adversarial testing. Validate networking, finality, restart, state sync, governance upgrades, and supply invariants.
+Run seven or more validators under intentionally adversarial testing. Validate networking, finality, restart, state sync, governance upgrades, supply invariants, circulation settlement, and deterministic quote behavior with external settlement mocked rather than represented as real money movement.
 
 ## Phase 3 — Public testnet
 
-Open participation under testnet economics. Enable identity pilots, Pulse, wallet integration, governance rehearsals, monitoring, and economic simulation based on observed behavior.
+Open participation under testnet economics. Enable identity pilots, Pulse, wallet integration, governance rehearsals, circulation reward experiments, monitoring, and economic simulation based on observed behavior. Canonical external-value settlement remains test-only unless separately authorized.
 
 ## Phase 4 — Audit candidate
 
-Freeze protocol interfaces long enough for external security review. Resolve findings. Re-run deterministic state and economic tests from genesis.
+Freeze protocol interfaces long enough for external security and economic review. Resolve findings. Re-run deterministic state, circulation, exit, and supply tests from genesis.
 
 ## Phase 5 — Mainnet genesis vote
 
@@ -295,13 +258,15 @@ Production genesis parameters are not copied automatically from the design seed.
 
 ## Phase 6 — Mainnet
 
-Mainnet begins with zero premine and no private allocation. Eligible issuance begins under the ratified rules. External anchoring remains optional and may activate later through governance after independent review.
+Mainnet begins with zero premine and no private allocation. Eligible issuance begins under the ratified rules. Circulation issuance activates only if its production pool and anti-abuse rules have passed the flight gates. External anchoring remains optional.
+
+Canonical conversion may remain disabled at mainnet and activate later only after its independent technical, reserve, economic, governance, and regulatory launch gates are complete.
 
 ---
 
 # Abort conditions
 
-A launch must stop if any of the following remain unresolved:
+A launch or feature activation must stop if any of the following remain unresolved:
 
 - supply invariant failure,
 - nondeterministic consensus state,
@@ -310,11 +275,21 @@ A launch must stop if any of the following remain unresolved:
 - token-weighted validator power,
 - token-weighted constitutional voting,
 - identity system permitting trivial duplicate issuance,
+- raw transaction count creating uncapped circulation issuance,
+- circulation issuance exceeding its authorized epoch pool,
+- trivial profitable wash-trading path under assumed identity model,
+- replayable circulation or conversion receipts,
+- ordinary ATC transfer silently receiving canonical exit friction,
+- canonical exit spread exceeding the constitutional hard cap,
+- quote UI hiding or rewriting the reference value,
+- ATC burned before rejected external settlement is safely resolved,
 - unaudited bridge represented as trustless,
 - placeholder signatures in the production transaction path,
 - random values affecting economic state,
 - unresolved critical security findings,
-- inability to reproduce genesis from public inputs.
+- inability to reproduce genesis from public inputs,
+- Federation-operated conversion activated without the required legal/operational review,
+- public promise of guaranteed appreciation or infinite value as a financial return.
 
 A delay under these conditions is not failure. Launching through them would be failure.
 
@@ -322,6 +297,6 @@ A delay under these conditions is not failure. Launching through them would be f
 
 # The purpose of flight
 
-Aetherion does not exist merely to put another token on a chain. Its technical purpose is to test whether a digital economy can preserve equal human standing while still enforcing real constraints, whether monetary issuance can remain open-ended without becoming arbitrary, and whether consensus, governance, identity, resources, and money can be disentangled enough that wealth does not automatically become sovereignty.
+Aetherion does not exist merely to put another token on a chain. Its technical purpose is to test whether a digital economy can preserve equal human standing while enforcing real constraints, whether monetary issuance can remain open-ended without becoming arbitrary, whether useful circulation can be rewarded without rewarding wash activity, whether internal monetary gravity can grow without trapping holders, and whether consensus, governance, identity, resources, money, and exchange can be disentangled enough that wealth does not automatically become sovereignty.
 
 The network earns the right to speak about stewardship only by practicing it in its launch discipline.
