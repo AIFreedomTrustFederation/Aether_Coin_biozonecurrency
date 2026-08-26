@@ -1,102 +1,245 @@
-# Aetherion — Aether Coin Biozonecurrency
+# Aetherion — AetherCoin Biozoecurrency
 
-**The economy layer of the AI Freedom Trust Federation: DynastyLink, AetherCoin, Biozoe/Biozone currency systems, sovereign wallet intelligence, regenerative value, and consent-centered digital stewardship.**
+**The abundance-first sovereign economy layer of the AI Freedom Trust Federation.**
 
-| Federation metadata | Value |
-| --- | --- |
-| Layer | `economy` |
-| Role | economic layer, DynastyLink, AetherCoin, and biozone currency systems |
-| Workspace | `AIFT/Aether_Coin_biozonecurrency` |
-| Control plane | AIFT workspace / AIFT-OS |
-| Primary application stack | TypeScript, React/Vite, Node/Express, PostgreSQL/Drizzle integration paths |
-| Verification | lint, typecheck, tests, build, and security checks when configured |
-| Operating standards | local-first, inspectable, sovereign by default, AI behind governed provider interfaces |
+Aetherion is being rebuilt as an application-specific Layer 1 whose monetary constitution does **not** depend on a fixed terminal supply, founder premine, early-adopter scarcity reward, token-weighted governance, or wealth-weighted validator power. Its native currency is **AetherCoin (`ATC`)**. Its monetary architecture is the **Biozoe protocol**.
 
-Aetherion is the Federation's economic and stewardship architecture. It explores how identity, contribution, memory, exchange, wallet interaction, AI guidance, and regenerative purpose can be joined without allowing the system that measures value to become the owner of the person whose value it records.
+The governing principle is:
 
-The constitutional basis is carried in the [One Eternal Scroll of ALO'ha](https://aifreedomtrustfederation.github.io/AI-Freedom-Trust/docs/pdf/one-eternal-scroll-of-aloha.pdf). Its operating discipline is [SOP-ALOHA-001](https://github.com/AIFreedomTrustFederation/AI-Freedom-Trust/blob/main/SOP-ALOHA-001.md).
+> **Unbounded monetary possibility. Bounded issuance authority. Equal human standing. Real resource constraints.**
+
+Aetherion is not yet a live, audited mainnet. The repository now distinguishes constitutional target, deterministic reference implementation, legacy prototypes, and future production work so the language cannot outrun the evidence.
 
 ---
 
-## Book I — Value as Relationship
+## The constitutional core
 
-Aetherion begins from the proposition that value is more than price. A system may record exchange, contribution, stewardship, covenant memory, identity, or mutual aid, but no token or ledger can exhaust the human reality from which those relationships arise.
+Aetherion begins with zero private monetary ownership at genesis:
 
-The economic layer therefore places **sovereign consent** before convenience. AI may explain wallet activity, identify anomalies, summarize smart-contract context, model risk, support escrow or dispute understanding, and help a person see consequences before acting. It may not silently authorize transfers, assume custody, conceal uncertainty, or treat an economic recommendation as permission.
+- **0 premine**
+- **0 founder allocation**
+- **0 investor allocation**
+- **0 team allocation**
+- **0 genesis treasury allocation**
+- **no terminal ATC supply cap**
+- **no token-weighted human governance**
+- **no ATC-balance-derived validator power**
+- **no early-adopter multiplier on universal issuance**
 
-### Illuminated passage — Biozoe Tree of Life
+Genesis establishes the rules; it does not establish an aristocracy.
 
-![Biozoe Tree of Life](https://raw.githubusercontent.com/AIFreedomTrustFederation/AI-Freedom-Trust/main/docs/images/aetherion/biozoe-tree-of-life.png)
-
-The Tree of Life is the natural image of this layer because it places exchange inside an ecology of identity, stewardship, mission, memory, and contribution. The economic system is one branch of the Federation, not the root of human worth.
-
----
-
-## Book II — Aetherion in the Federation Architecture
-
-Aetherion owns the economic relationship and its software surfaces while remaining dependent on other layers for identity, infrastructure, governance, and evidence.
-
-- **AIFT-Genesis → Aetherion:** Genesis supplies identity, trust, mission, governance, and inheritance structures. The economy may reference those identities but does not create constitutional authority by itself.
-- **AI-Freedom-Trust → Aetherion:** doctrine establishes the covenant, restorative-economy language, trust philosophy, and evidentiary boundaries through which economic claims are interpreted.
-- **AIFT-Forge → Aetherion:** shared package, agent, provider-interface, and build patterns may be inherited without giving Forge control of wallet or transaction decisions.
-- **AIFT-OS ↔ Aetherion:** the control plane may discover health, services, or governed capabilities. Financial and custody operations remain explicit high-risk boundaries and do not become ordinary orchestration merely because the OS can invoke a service.
-- **AIFT-Runtime ↔ Aetherion:** local runtimes may host wallet-adjacent services, models, or interfaces while preserving secrets and requiring explicit transaction authority.
-- **VPS ↔ Aetherion:** VPS provides deployment, nodes, routes, and service availability. Aetherion may provide value and stewardship relationships around those services; neither layer inherits the other's authority.
-- **BookSmith ↔ Aetherion:** publishing may eventually connect royalties, licenses, treasury flows, or marketplace settlement to the economy layer, while authorship and publishing approval remain in BookSmith.
-- **biozone-harmony-boost → Aetherion:** Circleunchain/Biozoe interface research can inform this repository, while economic and wallet claims remain grounded in the code and security state of this repository.
-
-### Illuminated passage — Circleunchain memory
-
-![Circleunchain Memory Network](https://raw.githubusercontent.com/AIFreedomTrustFederation/AI-Freedom-Trust/main/docs/images/aetherion/circleunchain-memory-network.png)
-
-Circleunchain is read here as an architecture of attributable relationship and memory. Any technical realization must name its actual cryptographic and storage mechanisms rather than allowing the symbolic name to substitute for implementation.
-
-The token vocabulary may include AetherCoin/ATC and other Biozoe or Federation value primitives, but symbolic purpose and financial fact must remain distinct. A conceptual token is not a guaranteed asset. A prototype wallet is not audited custody. Post-quantum research language is not a production security guarantee unless the exact implemented mechanism and audit path support that statement.
+The machine-readable design seed is [`protocol/genesis.seed.json`](protocol/genesis.seed.json).
 
 ---
 
-## Book III — SOP-ALOHA-001 in the Economy Layer
+## Biozoe monetary model
 
-The shared covenant loop is especially strict where money, identity, and custody are involved:
+At every finite point in time, ATC supply is finite and auditable. The protocol simply does not impose a final maximum supply.
+
+New ATC may enter through enumerated issuance classes:
+
+1. **Universal issuance** — equal baseline issuance for an eligible unique person per epoch.
+2. **Contribution issuance** — governed, budgeted issuance backed by accepted evidence.
+3. **Regenerative issuance** — governed, budgeted issuance for accepted restoration outcomes.
+4. **Stewardship issuance** — governed, budgeted compensation for public/network infrastructure.
+
+No generic administrator `mint(amount)` path belongs in the production protocol.
+
+A small deterministic demurrage mechanism is supported so time alone does not convert early access into permanent passive dominance. The design-devnet seed currently uses one ATC of universal issuance per daily epoch and 192 ppm daily demurrage. Those are test parameters, not claims of final economic calibration.
+
+Read the binding design documents:
+
+- [`WHITEPAPER.md`](WHITEPAPER.md) — economic and protocol thesis
+- [`MONETARY-CONSTITUTION.md`](MONETARY-CONSTITUTION.md) — protected monetary rights and constraints
+- [`PHILOSOPHY.md`](PHILOSOPHY.md) — dignity, abundance, stewardship, and spiritual/epistemic boundaries
+- [`COMPUTER-DESIGN.md`](COMPUTER-DESIGN.md) — target node and state-machine architecture
+- [`GENESIS.md`](GENESIS.md) — reproducible zero-allocation genesis
+- [`FLIGHTPAPER.md`](FLIGHTPAPER.md) — implementation phases, launch gates, and abort conditions
+
+---
+
+## Consensus is not wealth
+
+Aetherion's target Layer 1 uses a mature Byzantine-fault-tolerant consensus engine, with a CometBFT-compatible architecture as the reference direction.
+
+Consensus answers **what state was finalized**.
+
+The Biozoe state machine answers **whether a monetary transition is legal**.
+
+Identity answers **who is eligible for a right**.
+
+Governance answers **who may alter a rule**.
+
+ATC balance does not answer all four.
+
+The target validator model uses an authorized validator registry with equal unit voting power per active validator rather than proof-of-stake wealth weighting. Operator independence, diversity, monitoring, and due process remain necessary because removing stake does not remove the need for Sybil resistance or validator accountability.
+
+---
+
+## Human dignity is not a productivity score
+
+Universal issuance and contribution issuance are intentionally separate.
+
+A person's baseline economic standing does not disappear because they are sick, elderly, caregiving, displaced, unemployed, studying, recovering, or otherwise producing less market-measurable output during a period of life.
+
+Contribution programs can recognize care, repair, ecological restoration, teaching, code, art, infrastructure, food production, mediation, research, and other work without constructing one universal score of human worth.
+
+---
+
+## Identity without a public surveillance ledger
+
+Equal baseline issuance requires duplicate resistance. It does **not** require publishing every participant's civil identity on-chain.
+
+The target path is:
+
+```text
+AIFT-Genesis identity/trust patterns
+        ↓
+plural independent attestation
+        ↓
+privacy-preserving uniqueness credential
+        ↓
+Aetherion eligibility
+```
+
+Production identity must support recovery, revocation, appeal, minimal disclosure, and multiple attestation paths. No single government, company, church, biometric provider, or Federation operator should become the permanent universal identity oracle.
+
+---
+
+## Money is not the spam budget
+
+Real compute, storage, bandwidth, energy, and human attention remain finite even when the currency has no terminal cap.
+
+Aetherion therefore separates ATC from **Pulse**, a planned non-transferable resource accounting primitive for fair-use quotas, congestion, and anti-spam controls.
+
+Pulse is not money, cannot be traded, cannot vote, and cannot create validator power.
+
+---
+
+## Bitcoin and BitcoinOS are witnesses, not sovereigns
+
+Aetherion is designed to remain live without Bitcoin.
+
+An optional anchor adapter may periodically commit a canonical Aetherion state root to Bitcoin or a BitcoinOS-like zero-knowledge settlement rail. That external receipt can strengthen historical auditability without importing Bitcoin's fixed-supply monetary constitution into Aetherion.
+
+External anchoring must be failure-isolated: if Bitcoin fees spike, an anchor stalls, or an external bridge fails, Aetherion consensus and internal monetary validity continue.
+
+---
+
+## Spiritual purpose, technical honesty
+
+The Federation's founding writings speak of the Most High, covenant, truth, mercy, justice, restoration, and Kingdom frequency. In Aetherion, those ideas guide ethical purpose: truth becomes verifiability, mercy becomes due process and recovery, justice becomes equal standing and anti-capture design, stewardship becomes accountable resource use, and covenant means administrators remain bound by the rules they administer.
+
+"Kingdom frequency" is not represented as a physical hertz measurement or consensus variable. Likewise, symbolic language involving toroidal flow, Fibonacci order, sacred geometry, entanglement, resonance, or quantum relationship is not treated as cryptographic, biological, or economic evidence unless a specific measurable mechanism is separately implemented and supported.
+
+The network is intended to remain usable by people of any faith or no faith. Spiritual inspiration does not become a theological gate on economic dignity.
+
+---
+
+## Reference implementation
+
+The new deterministic reference implementation lives under [`protocol/reference/`](protocol/reference/).
+
+It currently includes:
+
+- equal universal issuance,
+- deterministic integer demurrage,
+- governed budgeted issuance,
+- transfer conservation,
+- identity eligibility state,
+- epoch transitions,
+- cumulative issuance/retirement accounting,
+- supply invariant verification,
+- balance-independent human governance weight,
+- stake-independent validator voting power.
+
+Run:
+
+```bash
+npm run protocol:test
+npm run protocol:verify
+```
+
+The reference state machine deliberately contains no wallet-signing pretense. Authentication belongs at the transaction/consensus boundary and must use real cryptography in the production node.
+
+---
+
+## Legacy prototype boundary
+
+This repository predates the current constitution and contains historical browser-side blockchain experiments, placeholder signing, local proof-of-work demonstrations, hard-coded RPC/explorer URLs, and randomly generated symbolic Biozoe metrics.
+
+Those artifacts are **not** proof that an Aetherion mainnet exists and are **not** canonical consensus code.
+
+Migration rules are now explicit:
+
+- consensus-critical work moves under `protocol/` or a future dedicated node package;
+- browser/UI code must consume canonical state instead of inventing it locally;
+- random symbolic metrics remain visualization-only;
+- placeholder signatures never enter production custody;
+- old EVM-style chain IDs and RPC strings do not establish network reality.
+
+---
+
+## Federation architecture
+
+Aetherion remains one layer of a wider system:
+
+- **AIFT-Genesis** supplies constitutional identity, trust, mission, governance, and inheritance patterns.
+- **AI-Freedom-Trust** supplies doctrine, covenant, and epistemic discipline.
+- **AIFT-Forge** supplies reusable engineering patterns.
+- **AIFT-OS** coordinates governed capabilities without inheriting wallet authority.
+- **AIFT-Runtime** hosts local-first services and wallet-adjacent capabilities.
+- **DynastyLink** provides human-facing stewardship and inheritance surfaces.
+- **Aetherion** owns canonical economic state and monetary rules.
+
+The economic layer serves the person. It does not become the owner of the person whose value it records.
+
+---
+
+## Verification
+
+Dependency-light repository validation:
+
+```bash
+npm run qa:local
+```
+
+Protocol validation:
+
+```bash
+npm run protocol:test
+npm run protocol:verify
+```
+
+Application validation where dependencies are installed:
+
+```bash
+npm run check
+npm run build
+npm run security:audit
+npm run security:deps
+```
+
+No green local check should be represented as an independent security audit.
+
+---
+
+## The covenant loop
+
+Financial and identity operations continue to follow the Federation operating discipline:
 
 ```text
 Receive → Inspect → Name → Propose → Consent → Act → Verify → Record → Return
 ```
 
-**Receive** accepts wallet state, transaction intent, value event, escrow condition, stewardship record, or economic query. **Inspect** reads the real account, contract, network, database, credential boundary, and risk context available to the application. **Name** identifies the asset or symbolic primitive, source, destination, authority, network, amount, status, and uncertainty. **Propose** allows AI to explain or recommend while keeping the proposal visibly separate from execution. **Consent** is mandatory for transactions, custody changes, escrow release, credential use, signing, or other consequential financial acts. **Act** invokes the real governed transaction or application operation. **Verify** checks receipts, persistence, expected state changes, and security conditions rather than assuming success from a UI event. **Record** preserves appropriate audit and provenance without exposing private keys or sensitive credentials. **Return** gives the human a readable result and the continuing authority to stop, question, dispute, or reverse where the system permits.
-
-Local development begins with:
-
-```bash
-npm install
-npm run dev
-```
-
-Core verification may include:
-
-```bash
-npm run build
-npm run check
-npm run security:audit
-npm run security:deps
-```
-
-Database-backed paths may additionally require PostgreSQL configuration and:
-
-```bash
-npm run db:push
-```
-
-Never commit private keys, seed phrases, wallet credentials, API keys, database secrets, OAuth grants, signing keys, or other production credentials. Security language remains tied to what can actually be inspected and tested.
+AI may explain, model, compare, warn, and propose. It does not silently sign, custody, redefine personhood, manufacture evidence, or treat a recommendation as consent.
 
 ---
 
-## Book IV — Restorative Exchange and the Human Center
+## The return of the Word
 
-Aetherion is designed toward a future in which digital value can carry more context than extraction-first speculation. Contribution can be connected to mission. Stewardship can be visible. Identity can remain sovereign. AI can help a person understand complexity without becoming the owner of the decision. Infrastructure can be compensated without becoming a centralized gatekeeper. Publishing, community systems, and practical services can connect to value rails without collapsing every relationship into a token.
+Aetherion succeeds only if its deepest principles survive contact with money and power.
 
-That future remains credible only when the present implementation speaks precisely. The application, database, cryptographic libraries, contracts, wallet adapters, and security controls are the evidence for engineering claims. The Scroll provides meaning; the code provides operational proof.
+The founder must remain bound by the same monetary constitution as the newcomer. Wealth must not silently become sovereignty. A person's dignity must not collapse into a productivity score. Abundance must not become permission for arbitrary minting. Spiritual aspiration must not become an excuse for false technical claims. Interoperability must not become dependency.
 
-### The Return of the Word
-
-In Aetherion, the Word returns when value completes its circuit without losing consent. Intention becomes a proposed exchange, the proposed exchange becomes an authorized act, the act becomes a verifiable record, and the record returns to the human being with custody and meaning still intact. Regenerative value begins there: not where the ledger replaces life, but where the ledger remembers whom it serves.
+The purpose of the ledger is not to teach life how to serve the ledger. The purpose of the ledger is to remember how value can return to life without losing consent, truth, or relationship along the way.
