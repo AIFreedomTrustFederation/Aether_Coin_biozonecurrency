@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import {
   BIOZOE_INVARIANTS,
   applyDemurrage,
+  calculateAccruedUniversalIssuance,
   calculateUniversalIssuance,
   calculateBudgetedIssuance,
   humanGovernanceWeight,
@@ -19,6 +20,7 @@ test('genesis economics contain no scarcity privilege', () => {
   assert.equal(BIOZOE_INVARIANTS.investorAllocation, 0n);
   assert.equal(BIOZOE_INVARIANTS.tokenWeightedGovernance, false);
   assert.equal(BIOZOE_INVARIANTS.tokenWeightedConsensus, false);
+  assert.equal(BIOZOE_INVARIANTS.connectivityRequiredToPreserveBaselineEntitlement, false);
 });
 
 test('eligible people receive equal baseline issuance regardless of wealth', () => {
@@ -28,9 +30,47 @@ test('eligible people receive equal baseline issuance regardless of wealth', () 
   assert.equal(poor, wealthy);
 });
 
-test('baseline issuance cannot be claimed twice in the same epoch', () => {
+test('single-epoch baseline helper rejects a duplicate settlement', () => {
   const amountPerEpoch = 1_000n;
   assert.equal(calculateUniversalIssuance({ eligible: true, alreadyClaimed: true, amountPerEpoch }), 0n);
+});
+
+test('offline participants retain accrued baseline rights with historical demurrage', () => {
+  const amountPerEpoch = 1_000_000n;
+  const result = calculateAccruedUniversalIssuance({
+    fromEpoch: 0,
+    throughEpoch: 1,
+    amountPerEpoch,
+    demurragePpmPerEpoch: 192,
+    eligibleAtEpoch: () => true,
+  });
+
+  const epochZeroAgedOnce = applyDemurrage(amountPerEpoch, 192);
+  assert.equal(result.gross, amountPerEpoch * 2n);
+  assert.equal(result.net, epochZeroAgedOnce + amountPerEpoch);
+  assert.equal(result.retired, result.gross - result.net);
+  assert.equal(result.eligibleEpochs, 2);
+});
+
+test('ineligible epochs accrue no baseline while previously earned value keeps aging', () => {
+  const amountPerEpoch = 1_000_000n;
+  const result = calculateAccruedUniversalIssuance({
+    fromEpoch: 0,
+    throughEpoch: 3,
+    amountPerEpoch,
+    demurragePpmPerEpoch: 192,
+    eligibleAtEpoch: (epoch) => epoch === 0 || epoch === 3,
+  });
+
+  let expected = amountPerEpoch;
+  expected = applyDemurrage(expected, 192);
+  expected = applyDemurrage(expected, 192);
+  expected = applyDemurrage(expected, 192);
+  expected += amountPerEpoch;
+
+  assert.equal(result.gross, amountPerEpoch * 2n);
+  assert.equal(result.net, expected);
+  assert.equal(result.eligibleEpochs, 2);
 });
 
 test('governance weight is not a function of token balance', () => {
