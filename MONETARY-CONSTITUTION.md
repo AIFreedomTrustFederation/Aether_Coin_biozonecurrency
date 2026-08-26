@@ -2,7 +2,9 @@
 
 ## Article I — Equal economic standing
 
-Every eligible person has the same constitutional baseline issuance right per epoch. Wealth, account age, founder status, validator status, institutional office, ancestry, nationality, creed, profession, or previous contribution may not multiply that baseline right.
+Every eligible person has the same constitutional baseline issuance entitlement per eligible epoch. Wealth, account age, founder status, validator status, institutional office, ancestry, nationality, creed, profession, previous contribution, device ownership, or network connectivity may not multiply or erase that baseline right.
+
+An eligible epoch creates the entitlement whether or not the person can transact during that epoch. Delayed settlement must apply the same historical demurrage the entitlement would have experienced if settled when earned, so intermittent connectivity creates neither a penalty nor an arbitrage advantage.
 
 ## Article II — No terminal supply cap
 
@@ -16,12 +18,12 @@ The production genesis must contain zero founder, investor, team, adviser, priva
 
 Permitted issuance classes are:
 
-1. **Universal issuance** — equal baseline issuance for an eligible unique person.
+1. **Universal issuance** — equal baseline entitlement for each eligible unique person in each eligible epoch.
 2. **Contribution issuance** — governed, budgeted issuance for evidenced contribution.
 3. **Regenerative issuance** — governed, budgeted issuance for evidenced ecological or social restoration.
 4. **Stewardship issuance** — governed, budgeted compensation for network or public infrastructure service.
 
-No other mint class exists without constitutional amendment.
+No other mint class exists without constitutional amendment. Budgeted issuance must be replay-safe: one evidence receipt may not authorize the same mint twice, and a spent epoch budget may not be silently reset to recreate mint capacity.
 
 ## Article V — Human worth is not a score
 
@@ -30,6 +32,8 @@ Contribution programs may evaluate whether evidence satisfies a published progra
 ## Article VI — Demurrage
 
 The protocol may retire a small deterministic fraction of transferable balances per epoch according to a public parameter. Demurrage may not be secretly redirected to founders, validators, administrators, or private treasuries. Changes to the rate require ordinary governance within constitutional bounds and public simulation.
+
+Accrued but unsettled universal entitlements are settled as though their historical portions had experienced the same demurrage schedule as on-time balances. The protocol may not create a superior non-demurring savings class merely because issuance was left unclaimed.
 
 ## Article VII — No token-weighted constitutional power
 
@@ -51,13 +55,15 @@ The network may require evidence of unique eligibility for universal issuance. I
 
 Suspension of issuance eligibility, validator authorization, program accreditation, or identity attestation must have a recorded reason, review path, and appeal process. Emergency action must expire unless ratified.
 
+Suspension may stop new baseline entitlements for the affected interval according to published rules, but it must not silently erase entitlements already earned in prior eligible epochs.
+
 ## Article XII — No administrative balance seizure by default
 
 Ordinary administrators may not rewrite balances. Any exceptional recovery or legal-compliance mechanism must be explicit, narrowly scoped, publicly specified, and incapable of silently becoming a universal seizure key.
 
 ## Article XIII — Transparent budgets
 
-Contribution, regenerative, and stewardship issuance require epoch-bounded budgets. Unused budgets do not automatically create supply. Evidence approval cannot mint above the remaining authorized budget.
+Contribution, regenerative, and stewardship issuance require epoch-bounded budgets. Unused budgets do not automatically create supply. Evidence approval cannot mint above the remaining authorized budget. A configured budget may not be overwritten after spending to restore previously consumed capacity without a new governed authorization path.
 
 ## Article XIV — Supply accounting
 
@@ -65,7 +71,7 @@ For all valid states:
 
 `circulating_supply = cumulative_authorized_issuance - cumulative_retirement`.
 
-Ordinary transfers conserve supply.
+Ordinary transfers conserve supply. Historical demurrage recognized during delayed universal-entitlement settlement is recorded as retirement so the same invariant continues to hold.
 
 ## Article XV — No speculative promise
 
@@ -77,7 +83,7 @@ The project may be spiritually inspired, but religious profession is not an econ
 
 ## Article XVII — Amendment protection
 
-Changes to Articles I–III, VII–VIII, XII, XIV, and XVI are constitutional changes. They require multi-chamber supermajority approval, a public deliberation period, machine-readable diff, implementation review, and a timelock before activation.
+Changes to Articles I–III, VII–VIII, XII, XIV, and XVI are constitutional changes. So are changes that would make baseline entitlement depend on continuous connectivity, permit a generic hidden mint, or convert a budget/evidence replay into legitimate issuance. These changes require multi-chamber supermajority approval, a public deliberation period, machine-readable diff, implementation review, and a timelock before activation.
 
 ## Article XVIII — Genesis equality across time
 
