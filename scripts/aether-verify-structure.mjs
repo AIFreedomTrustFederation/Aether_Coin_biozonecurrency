@@ -43,6 +43,8 @@ function checkPackageScripts(packageJson) {
     'lint',
     'qa:local',
     'verify:structure',
+    'protocol:test',
+    'protocol:verify',
     'build',
     'check',
     'security:audit',
@@ -91,6 +93,12 @@ function main() {
   const requiredFiles = [
     'README.md',
     'AGENTS.md',
+    'WHITEPAPER.md',
+    'FLIGHTPAPER.md',
+    'PHILOSOPHY.md',
+    'MONETARY-CONSTITUTION.md',
+    'COMPUTER-DESIGN.md',
+    'GENESIS.md',
     'SECURITY.md',
     'API-SECURITY-GUIDELINES.md',
     'STRUCTURE.md',
@@ -101,8 +109,15 @@ function main() {
     'docs/status.md',
     'docs/validation.md',
     'docs/security-and-privacy.md',
+    'scripts/aether-verify-structure.mjs',
+    'scripts/verify-biozoe-protocol.mjs',
     'scripts/security-audit.js',
     'scripts/pre-commit-hook.js',
+    'protocol/genesis.seed.json',
+    'protocol/reference/biozoe-policy.mjs',
+    'protocol/reference/biozoe-policy.test.mjs',
+    'protocol/reference/aetherion-state-machine.mjs',
+    'protocol/reference/aetherion-state-machine.test.mjs',
     'apps/dynastylink-local/README.md',
     'apps/dynastylink-local/docs/security/privacy-security-checklist.md',
     'apps/dynastylink-local/docs/architecture/no-external-api-architecture.md',
@@ -113,7 +128,7 @@ function main() {
 
   for (const file of requiredFiles) checkFile(file);
 
-  const requiredDirectories = ['client', 'server', 'shared', 'scripts', 'docs', 'apps/dynastylink-local'];
+  const requiredDirectories = ['client', 'server', 'shared', 'scripts', 'docs', 'protocol', 'protocol/reference', 'apps/dynastylink-local'];
   for (const directory of requiredDirectories) checkDirectory(directory);
 
   let packageJson;
