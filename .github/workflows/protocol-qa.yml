@@ -1,0 +1,76 @@
+name: Aetherion Protocol QA
+
+on:
+  pull_request:
+    paths:
+      - 'protocol/**'
+      - 'scripts/aether-verify-structure.mjs'
+      - 'scripts/verify-biozoe-protocol.mjs'
+      - 'README.md'
+      - 'WHITEPAPER.md'
+      - 'FLIGHTPAPER.md'
+      - 'PHILOSOPHY.md'
+      - 'MONETARY-CONSTITUTION.md'
+      - 'HUMAN-RIGHTS-AND-SAFEGUARDS.md'
+      - 'COMPUTER-DESIGN.md'
+      - 'GENESIS.md'
+      - 'STRUCTURE.md'
+      - 'docs/circulation-and-exchange.md'
+      - 'docs/regulatory-launch-gate.md'
+      - 'docs/aetherion-threat-model.md'
+      - 'docs/status.md'
+      - 'docs/validation.md'
+      - 'package.json'
+  push:
+    branches:
+      - main
+      - 'feat/**'
+    paths:
+      - 'protocol/**'
+      - 'scripts/aether-verify-structure.mjs'
+      - 'scripts/verify-biozoe-protocol.mjs'
+      - 'README.md'
+      - 'WHITEPAPER.md'
+      - 'FLIGHTPAPER.md'
+      - 'PHILOSOPHY.md'
+      - 'MONETARY-CONSTITUTION.md'
+      - 'HUMAN-RIGHTS-AND-SAFEGUARDS.md'
+      - 'COMPUTER-DESIGN.md'
+      - 'GENESIS.md'
+      - 'STRUCTURE.md'
+      - 'docs/circulation-and-exchange.md'
+      - 'docs/regulatory-launch-gate.md'
+      - 'docs/aetherion-threat-model.md'
+      - 'docs/status.md'
+      - 'docs/validation.md'
+      - 'package.json'
+
+permissions:
+  contents: read
+
+jobs:
+  protocol-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Verify repository structure
+        run: node scripts/aether-verify-structure.mjs
+
+      - name: Verify Biozoe constitutional invariants
+        run: node scripts/verify-biozoe-protocol.mjs
+
+      - name: Run deterministic protocol tests
+        run: node --test protocol/reference/*.test.mjs
+
+      - name: Run dependency-light economic simulation
+        run: node protocol/simulation/biozoe-sim.mjs

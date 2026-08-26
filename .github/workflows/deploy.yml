@@ -31,7 +31,6 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: '20'
-          cache: 'npm'
 
       - name: Install dependencies
         run: npm install --omit=optional
@@ -57,13 +56,12 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: '20'
-          cache: 'npm'
 
       - name: Install dependencies
         run: npm install --omit=optional
 
       - name: TypeScript check
-        run: NODE_OPTIONS=--max_old_space_size=4096 npm run check
+        run: NODE_OPTIONS=--max_old_space_size=4096 npm run check:wallet
 
       - name: Build application
         run: NODE_OPTIONS=--max_old_space_size=4096 npm run build
