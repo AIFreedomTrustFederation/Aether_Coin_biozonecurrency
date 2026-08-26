@@ -49,6 +49,7 @@ function checkPackageScripts(packageJson) {
     'verify:structure',
     'protocol:test',
     'protocol:verify',
+    'protocol:simulate',
     'build',
     'check',
     'security:audit',
@@ -116,6 +117,8 @@ function main() {
     'docs/aetherion-threat-model.md',
     'docs/consensus-and-governance.md',
     'docs/external-anchoring.md',
+    'docs/circulation-and-exchange.md',
+    'docs/regulatory-launch-gate.md',
     'scripts/aether-verify-structure.mjs',
     'scripts/verify-biozoe-protocol.mjs',
     'scripts/security-audit.js',
@@ -127,6 +130,8 @@ function main() {
     'protocol/reference/biozoe-policy.test.mjs',
     'protocol/reference/aetherion-state-machine.mjs',
     'protocol/reference/aetherion-state-machine.test.mjs',
+    'protocol/reference/circulation-exchange.test.mjs',
+    'protocol/simulation/biozoe-sim.mjs',
     'apps/dynastylink-local/README.md',
     'apps/dynastylink-local/docs/security/privacy-security-checklist.md',
     'apps/dynastylink-local/docs/architecture/no-external-api-architecture.md',
@@ -137,7 +142,7 @@ function main() {
 
   for (const file of requiredFiles) checkFile(file);
 
-  const requiredDirectories = ['client', 'server', 'shared', 'scripts', 'docs', 'protocol', 'protocol/reference', 'apps/dynastylink-local'];
+  const requiredDirectories = ['client', 'server', 'shared', 'scripts', 'docs', 'protocol', 'protocol/reference', 'protocol/simulation', 'apps/dynastylink-local'];
   for (const directory of requiredDirectories) checkDirectory(directory);
 
   let packageJson;
