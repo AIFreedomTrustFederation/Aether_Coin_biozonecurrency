@@ -36,8 +36,9 @@ export class BlockchainService extends EventEmitter {
   private config: BlockchainConfig;
   private walletStatus: WalletConnectionStatus = WalletConnectionStatus.DISCONNECTED;
   private walletAddress: string | null = null;
-  private networkType: BlockchainNetworkType = BlockchainNetworkType.MAINNET;
+  private networkType: BlockchainNetworkType = BlockchainNetworkType.CUSTOM;
   private blockInterval: NodeJS.Timeout | null = null;
+  private web3ListenersInitialized = false;
   private eventListeners: Map<string, Set<BlockchainEventListener>> = new Map();
 
   constructor(config: BlockchainConfig = DEFAULT_CONFIG) {
@@ -70,11 +71,13 @@ export class BlockchainService extends EventEmitter {
   }
 
   private setupWeb3Listeners(): void {
+    if (this.web3ListenersInitialized) return;
     if (typeof window !== 'undefined' && window.ethereum) {
       window.ethereum.on?.('accountsChanged', this.handleAccountsChanged.bind(this));
       window.ethereum.on?.('chainChanged', this.handleChainChanged.bind(this));
       window.ethereum.on?.('connect', this.handleConnect.bind(this));
       window.ethereum.on?.('disconnect', this.handleDisconnect.bind(this));
+      this.web3ListenersInitialized = true;
     }
   }
 

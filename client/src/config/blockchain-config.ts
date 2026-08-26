@@ -26,7 +26,7 @@ const env = typeof import.meta !== 'undefined' ? (import.meta as any).env ?? {} 
 export const AETHER_COIN_CONFIG: AetherionWalletNetworkConfig = {
   networkName: 'Aetherion Production (not launched)',
   canonicalChainId: 'aetherion-1',
-  evmAdapterChainId: '0x3A42',
+  evmAdapterChainId: '0x3a42',
   symbol: 'ATC',
   decimals: 18,
   rpcUrl: env.VITE_AETHERION_MAINNET_RPC_URL ?? '',
@@ -44,7 +44,7 @@ export const AETHER_COIN_CONFIG: AetherionWalletNetworkConfig = {
 export const AETHER_TESTNET_CONFIG: AetherionWalletNetworkConfig = {
   networkName: 'Aetherion Testnet (unconfigured)',
   canonicalChainId: 'aetherion-testnet-1',
-  evmAdapterChainId: '0x3A43',
+  evmAdapterChainId: '0x3a43',
   symbol: 'tATC',
   decimals: 18,
   rpcUrl: env.VITE_AETHERION_TESTNET_RPC_URL ?? '',

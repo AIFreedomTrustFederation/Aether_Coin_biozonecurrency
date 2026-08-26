@@ -6,7 +6,9 @@
 
 ## Role
 
-economic layer, DynastyLink, AetherCoin, and biozoecurrency systems
+economic layer, DynastyLink, AetherCoin, and Biozoe monetary systems
+
+The historical GitHub repository identifier shown in the title remains a stable compatibility alias for links, federation manifests, and automation. Biozoe is the canonical project name used in human-facing monetary and protocol prose.
 
 ## Operating Principle
 

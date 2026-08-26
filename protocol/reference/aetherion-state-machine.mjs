@@ -93,6 +93,8 @@ export function createState({ epoch = 0, config }) {
     circulationBudgets: new Map(),
     circulationPairsByEpoch: new Map(),
     circulationRewardsSettledEpochs: new Set(),
+    authenticatedExternalSettlements: new Map(),
+    usedExternalSettlementIds: new Set(),
     usedConversionReceiptIds: new Set(),
     totalIssued: 0n,
     totalRetired: 0n,
@@ -249,6 +251,7 @@ export function mintBudgeted(state, { kind, programId, recipientId, amount, evid
  */
 export function transferBetween(state, { fromId, toId, amount, transferId = null }) {
   if (!state.identities.has(fromId) || !state.identities.has(toId)) throw new Error('unknown identity');
+  if (fromId === toId) throw new Error('self transfers are not permitted');
   if (transferId && state.transfersById.has(transferId)) throw new Error('transferId already used');
 
   const value = BigInt(amount);
@@ -403,75 +406,65 @@ export function settleCirculationRewards(state) {
 }
 
 /**
- * Execute a canonical outbound conversion only after the external settlement
- * path has accepted the transaction. This reference model retires the ATC and
- * records the quote; it does not pretend to custody or settle the external
- * reserve asset itself.
+ * Register evidence accepted by the separately authorized exchange adapter.
+ * Production authentication belongs at that boundary; consensus requires the
+ * resulting record to be complete, field-bound, unique, and single-use.
+ */
+export function recordAuthenticatedExternalSettlement(state, {
+  settlementId, personId, atcAmount, referenceExternalValue,
+  conversionReceiptId, netExternalProceeds, operatorId, authenticationProof,
+}) {
+  if (!settlementId || !personId || !conversionReceiptId || !operatorId || !authenticationProof) {
+    throw new TypeError('complete authenticated settlement evidence is required');
+  }
+  if (!state.identities.has(personId)) throw new Error('unknown identity');
+  if (state.authenticatedExternalSettlements.has(settlementId) || state.usedExternalSettlementIds.has(settlementId)) {
+    throw new Error('external settlement identifier already used');
+  }
+  const amount = BigInt(atcAmount);
+  const referenceValue = BigInt(referenceExternalValue);
+  const netProceeds = BigInt(netExternalProceeds);
+  if (amount <= 0n) throw new RangeError('settled atcAmount must be positive');
+  if (referenceValue < 0n || netProceeds < 0n || netProceeds > referenceValue) throw new RangeError('invalid external settlement values');
+  const record = { settlementId, personId, atcAmount: amount, referenceExternalValue: referenceValue, conversionReceiptId, netExternalProceeds: netProceeds, operatorId, authenticationProof };
+  state.authenticatedExternalSettlements.set(settlementId, record);
+  state.events.push({ type: 'EXTERNAL_SETTLEMENT_AUTHENTICATED', epoch: state.epoch, settlementId, personId, atcAmount: amount.toString(), referenceExternalValue: referenceValue.toString(), conversionReceiptId, netExternalProceeds: netProceeds.toString(), operatorId });
+  return record;
+}
+
+/**
+ * Retire ATC only after consuming an authenticated, single-use settlement
+ * record bound to this exact person, amount, quote, and conversion receipt.
  */
 export function executeCanonicalExit(state, {
-  personId,
-  atcAmount,
-  referenceExternalValue,
-  delayEpochs = 0,
-  stressFrictionPpm = 0,
-  conversionReceiptId,
-  externalSettlementAccepted,
+  personId, atcAmount, referenceExternalValue, delayEpochs = 0,
+  stressFrictionPpm = 0, conversionReceiptId, settlementId,
 }) {
   if (state.config.canonicalConversionEnabled !== true) throw new Error('canonical conversion is disabled');
   if (!state.identities.has(personId)) throw new Error('unknown identity');
-  if (!conversionReceiptId) throw new TypeError('conversionReceiptId is required');
-  if (!externalSettlementAccepted) throw new Error('external settlement must be accepted before ATC retirement');
+  if (!conversionReceiptId || !settlementId) throw new TypeError('conversionReceiptId and settlementId are required');
   if (state.usedConversionReceiptIds.has(conversionReceiptId)) throw new Error('conversion receipt already used');
-
+  if (state.usedExternalSettlementIds.has(settlementId)) throw new Error('external settlement already consumed');
   const amount = BigInt(atcAmount);
   const referenceValue = BigInt(referenceExternalValue);
   if (amount <= 0n) throw new RangeError('atcAmount must be positive');
   if (referenceValue < 0n) throw new RangeError('referenceExternalValue cannot be negative');
-
   const stressMax = state.config.canonicalExitStressSurchargeMaxPpm ?? 0;
-  if (!Number.isInteger(stressFrictionPpm) || stressFrictionPpm < 0 || stressFrictionPpm > stressMax) {
-    throw new RangeError('stressFrictionPpm exceeds governed maximum');
-  }
-
-  const maturityFrictionPpm = calculateMaturityExitFriction({
-    epoch: state.epoch,
-    startEpoch: state.config.canonicalExitStartEpoch ?? 0,
-    startPpm: state.config.canonicalExitStartPpm,
-    maturePpm: state.config.canonicalExitMaturePpm,
-    rampEpochs: state.config.canonicalExitRampEpochs,
-  });
-  const delayDiscountPpm = calculateDelayDiscountPpm({
-    delayEpochs,
-    discountPpmPerEpoch: state.config.canonicalExitDelayDiscountPpmPerEpoch,
-    maxDiscountPpm: state.config.canonicalExitDelayDiscountMaxPpm,
-  });
-  const quote = calculateCanonicalExitQuote({
-    referenceValue,
-    maturityFrictionPpm,
-    stressFrictionPpm,
-    delayDiscountPpm,
-    hardCapPpm: state.config.canonicalExitHardCapPpm,
-    minimumFrictionPpm: state.config.canonicalExitMinimumPpm,
-  });
-
+  if (!Number.isInteger(stressFrictionPpm) || stressFrictionPpm < 0 || stressFrictionPpm > stressMax) throw new RangeError('stressFrictionPpm exceeds governed maximum');
+  const maturityFrictionPpm = calculateMaturityExitFriction({ epoch: state.epoch, startEpoch: state.config.canonicalExitStartEpoch ?? 0, startPpm: state.config.canonicalExitStartPpm, maturePpm: state.config.canonicalExitMaturePpm, rampEpochs: state.config.canonicalExitRampEpochs });
+  const delayDiscountPpm = calculateDelayDiscountPpm({ delayEpochs, discountPpmPerEpoch: state.config.canonicalExitDelayDiscountPpmPerEpoch, maxDiscountPpm: state.config.canonicalExitDelayDiscountMaxPpm });
+  const quote = calculateCanonicalExitQuote({ referenceValue, maturityFrictionPpm, stressFrictionPpm, delayDiscountPpm, hardCapPpm: state.config.canonicalExitHardCapPpm, minimumFrictionPpm: state.config.canonicalExitMinimumPpm });
+  const settlement = state.authenticatedExternalSettlements.get(settlementId);
+  if (!settlement) throw new Error('authenticated external settlement record is required');
+  if (settlement.personId !== personId || settlement.atcAmount !== amount || settlement.referenceExternalValue !== referenceValue || settlement.conversionReceiptId !== conversionReceiptId || settlement.netExternalProceeds !== quote.netProceeds) throw new Error('external settlement record does not match canonical exit');
   const balance = state.balances.get(personId) ?? 0n;
   if (amount > balance) throw new RangeError('insufficient balance');
-
   state.balances.set(personId, balance - amount);
   state.totalRetired += amount;
+  state.authenticatedExternalSettlements.delete(settlementId);
+  state.usedExternalSettlementIds.add(settlementId);
   state.usedConversionReceiptIds.add(conversionReceiptId);
-  state.events.push({
-    type: 'CANONICAL_EXIT',
-    epoch: state.epoch,
-    personId,
-    atcRetired: amount.toString(),
-    conversionReceiptId,
-    delayEpochs,
-    referenceExternalValue: quote.referenceValue.toString(),
-    appliedFrictionPpm: quote.appliedFrictionPpm,
-    netExternalProceeds: quote.netProceeds.toString(),
-    reserveRetention: quote.reserveRetention.toString(),
-  });
+  state.events.push({ type: 'CANONICAL_EXIT', epoch: state.epoch, personId, atcRetired: amount.toString(), settlementId, conversionReceiptId, settlementOperatorId: settlement.operatorId, delayEpochs, referenceExternalValue: quote.referenceValue.toString(), appliedFrictionPpm: quote.appliedFrictionPpm, netExternalProceeds: quote.netProceeds.toString(), reserveRetention: quote.reserveRetention.toString() });
   return quote;
 }
 

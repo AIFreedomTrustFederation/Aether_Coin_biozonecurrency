@@ -8,6 +8,7 @@ import {
   createState,
   executeCanonicalExit,
   mintBudgeted,
+  recordAuthenticatedExternalSettlement,
   recordQualifiedCirculation,
   registerIdentity,
   settleCirculationRewards,
@@ -191,35 +192,35 @@ test('patient exit reduces friction while the constitutional floor and hard cap 
   assert.equal(stressed.netProceeds, 850_000n);
 });
 
-test('canonical exit retires surrendered ATC only after external settlement acceptance', () => {
+test('canonical exit requires and consumes authenticated field-bound settlement evidence', () => {
   const state = createState({ epoch: 50, config });
   register(state, 'alice');
   issueForTest(state, 'alice', 20n * ATC, 'exit');
-
-  assert.throws(
-    () => executeCanonicalExit(state, {
-      personId: 'alice',
-      atcAmount: 5n * ATC,
-      referenceExternalValue: 500_000n,
-      conversionReceiptId: 'x-rejected',
-      externalSettlementAccepted: false,
-    }),
-    /must be accepted/,
-  );
-
+  assert.throws(() => executeCanonicalExit(state, { personId: 'alice', atcAmount: 5n * ATC, referenceExternalValue: 500_000n, conversionReceiptId: 'x-missing', settlementId: 's-missing' }), /authenticated external settlement record is required/);
+  const maturityFrictionPpm = calculateMaturityExitFriction({ epoch: state.epoch, startEpoch: config.canonicalExitStartEpoch, startPpm: config.canonicalExitStartPpm, maturePpm: config.canonicalExitMaturePpm, rampEpochs: config.canonicalExitRampEpochs });
+  const expected = calculateCanonicalExitQuote({ referenceValue: 500_000n, maturityFrictionPpm, stressFrictionPpm: 0, delayDiscountPpm: 0, hardCapPpm: config.canonicalExitHardCapPpm, minimumFrictionPpm: config.canonicalExitMinimumPpm });
+  recordAuthenticatedExternalSettlement(state, { settlementId: 's-accepted', personId: 'alice', atcAmount: 5n * ATC, referenceExternalValue: 500_000n, conversionReceiptId: 'x-accepted', netExternalProceeds: expected.netProceeds, operatorId: 'authorized-adapter-1', authenticationProof: 'test-proof-boundary' });
+  assert.throws(() => executeCanonicalExit(state, { personId: 'alice', atcAmount: 4n * ATC, referenceExternalValue: 500_000n, conversionReceiptId: 'x-accepted', settlementId: 's-accepted' }), /does not match/);
   const retiredBefore = state.totalRetired;
-  const quote = executeCanonicalExit(state, {
-    personId: 'alice',
-    atcAmount: 5n * ATC,
-    referenceExternalValue: 500_000n,
-    delayEpochs: 0,
-    conversionReceiptId: 'x-accepted',
-    externalSettlementAccepted: true,
-  });
-
+  const quote = executeCanonicalExit(state, { personId: 'alice', atcAmount: 5n * ATC, referenceExternalValue: 500_000n, conversionReceiptId: 'x-accepted', settlementId: 's-accepted' });
   assert.equal(state.totalRetired - retiredBefore, 5n * ATC);
   assert.equal(quote.referenceValue, 500_000n);
-  assert(quote.netProceeds < quote.referenceValue);
+  assert.equal(state.authenticatedExternalSettlements.has('s-accepted'), false);
+  assert.equal(state.usedExternalSettlementIds.has('s-accepted'), true);
+  assert.throws(() => executeCanonicalExit(state, { personId: 'alice', atcAmount: 5n * ATC, referenceExternalValue: 500_000n, conversionReceiptId: 'x-accepted', settlementId: 's-accepted' }), /already used|already consumed/);
+  assertSupplyInvariant(state);
+});
+
+test('self-transfer is rejected without changing balances or supply accounting', () => {
+  const state = createState({ config });
+  register(state, 'alice');
+  issueForTest(state, 'alice', 2n * ATC, 'self-transfer');
+  const balanceBefore = state.balances.get('alice'), issuedBefore = state.totalIssued, retiredBefore = state.totalRetired;
+  assert.throws(() => transferBetween(state, { fromId: 'alice', toId: 'alice', amount: ATC, transferId: 'self-1' }), /self transfers are not permitted/);
+  assert.equal(state.balances.get('alice'), balanceBefore);
+  assert.equal(state.totalIssued, issuedBefore);
+  assert.equal(state.totalRetired, retiredBefore);
+  assert.equal(state.transfersById.has('self-1'), false);
   assertSupplyInvariant(state);
 });
 

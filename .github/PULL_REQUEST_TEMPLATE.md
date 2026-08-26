@@ -33,6 +33,11 @@ If circulation is affected:
 - [ ] reward remains epoch-bounded
 - [ ] raw transaction count is not mint authority
 - [ ] replay/wash/Sybil effects considered
+- [ ] reward is based on qualified net circulation
+- [ ] eligible transfers and circulation receipts are single-use
+- [ ] bilateral round trips are pairwise netted before scoring
+- [ ] diminishing-return scoring is deterministic
+- [ ] circulation score is not reused as citizenship, credit, moral, or governance weight
 - [ ] per-person caps and privacy effects considered
 
 If canonical conversion is affected:

@@ -92,7 +92,7 @@ The project may be spiritually inspired, but religious profession is not an econ
 
 ## Article XVII — Amendment protection
 
-Changes to Articles I–III, VII–VIII, XII, XIV–XVI, XXI–XXIV, and XXVI–XXVIII are constitutional changes. So are changes that would make baseline entitlement depend on continuous connectivity, permit a generic hidden mint, convert evidence or budget replay into legitimate issuance, make raw transaction count an unbounded minting source, remove the right to ordinary ATC transfer, permit uncapped canonical exit friction, or authorize the protocol to falsify a reference exchange value.
+Changes to Articles I–III, VII–VIII, XII, XIV–XVI, and XXI–XXVIII are constitutional changes. So are changes that would make baseline entitlement depend on continuous connectivity, permit a generic hidden mint, convert evidence or budget replay into legitimate issuance, make raw transaction count an unbounded minting source, remove the right to ordinary ATC transfer, permit uncapped canonical exit friction, or authorize the protocol to falsify a reference exchange value.
 
 Constitutional changes require multi-chamber supermajority approval, a public deliberation period, machine-readable diff, implementation and economic review, and a timelock before activation.
 
@@ -152,11 +152,13 @@ Inbound exchange from external assets does not create an automatic generic ATC m
 
 A canonical conversion service may quote less external value to an exiting user than the pre-friction reference value, but it may not redefine that reference value solely to conceal the friction.
 
-For a reference external value `R` and an applied canonical friction `f`:
+All external amounts use integer base units. For reference external value `R` and applied friction `f_ppm` in parts per million:
 
-`net_exit_proceeds = R * (1 - f)`.
+`net_exit_proceeds = floor(R * (1_000_000 - f_ppm) / 1_000_000)`
 
-The protocol records `R`, `f`, and the resulting proceeds separately. This protects accounting truth and prevents a conversion penalty from being represented as proof that ATC itself became either cheaper or infinitely more valuable.
+`reserve_retention = R - net_exit_proceeds`
+
+The floor rule is deterministic across implementations, and any fractional remainder stays in reserve retention. The protocol records `R`, `f_ppm`, net proceeds, and reserve retention separately. This protects accounting truth and prevents a conversion penalty from being represented as proof that ATC itself became either cheaper or infinitely more valuable.
 
 ## Article XXVII — Real utility over engineered price
 

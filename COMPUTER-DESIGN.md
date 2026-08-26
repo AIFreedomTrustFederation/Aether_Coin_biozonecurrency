@@ -296,6 +296,8 @@ A production implementation may add stronger graph-level anti-wash analysis, but
 
 The native chain does not attempt to detect every private sale of ATC. Canonical conversion is an explicit service boundary.
 
+ATC retirement requires a previously recorded authenticated settlement record from the separately authorized exchange adapter. The record is single-use and binds the settlement identifier, person, ATC amount, reference external value in integer base units, conversion receipt, quoted net external proceeds, accountable operator, and authentication proof. A caller-provided boolean is never settlement evidence. The state machine rejects missing, replayed, or field-mismatched records before changing balances or retirement totals.
+
 ### Quote inputs
 
 A deterministic exit quote consumes authenticated inputs including:
