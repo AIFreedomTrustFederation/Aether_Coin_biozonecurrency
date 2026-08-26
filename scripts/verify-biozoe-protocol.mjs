@@ -184,7 +184,7 @@ expect(stateMachine.includes('usedCirculationReceiptIds'), 'reference state mach
 expect(stateMachine.includes('circulationBudgets'), 'reference state machine implements circulation epoch pools');
 expect(stateMachine.includes('settleCirculationRewards'), 'reference state machine implements circulation settlement');
 expect(stateMachine.includes('executeCanonicalExit'), 'reference state machine implements canonical exit retirement flow');
-expect(stateMachine.includes('external settlement must be accepted before ATC retirement'), 'canonical exit protects against pre-settlement burn');
+expect(stateMachine.includes('authenticatedExternalSettlements') && stateMachine.includes('usedExternalSettlementIds') && !stateMachine.includes('externalSettlementAccepted'), 'canonical exit requires bound single-use settlement evidence before retirement');
 
 const constitution = fs.existsSync(path.join(root, 'MONETARY-CONSTITUTION.md')) ? read('MONETARY-CONSTITUTION.md') : '';
 expect(constitution.includes('No premine'), 'monetary constitution protects no-premine rule');
