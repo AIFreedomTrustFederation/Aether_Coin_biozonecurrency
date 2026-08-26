@@ -1,12 +1,45 @@
 import {
   applyDemurrage,
+  calculateAccruedUniversalIssuance,
   calculateBudgetedIssuance,
-  calculateUniversalIssuance,
   transfer,
 } from './biozoe-policy.mjs';
 
 function cloneMap(map) {
   return new Map(map.entries());
+}
+
+function isIdentityEligibleAtEpoch(identity, epoch) {
+  if (!identity) return false;
+  return identity.eligibilityIntervals.some(({ start, end }) => (
+    epoch >= start && (end === null || epoch <= end)
+  ));
+}
+
+function currentIdentityEligible(identity, epoch) {
+  return Boolean(
+    identity &&
+    identity.active &&
+    !identity.suspended &&
+    isIdentityEligibleAtEpoch(identity, epoch)
+  );
+}
+
+function closeOpenEligibilityInterval(identity, endEpoch) {
+  const openIndex = identity.eligibilityIntervals.findIndex((interval) => interval.end === null);
+  if (openIndex < 0) return;
+
+  const interval = identity.eligibilityIntervals[openIndex];
+  if (endEpoch < interval.start) {
+    identity.eligibilityIntervals.splice(openIndex, 1);
+    return;
+  }
+  interval.end = endEpoch;
+}
+
+function openEligibilityInterval(identity, startEpoch) {
+  if (identity.eligibilityIntervals.some((interval) => interval.end === null)) return;
+  identity.eligibilityIntervals.push({ start: startEpoch, end: null });
 }
 
 export function createState({ epoch = 0, config }) {
@@ -16,7 +49,7 @@ export function createState({ epoch = 0, config }) {
     config,
     identities: new Map(),
     balances: new Map(),
-    claimedUniversalEpoch: new Map(),
+    claimedUniversalThroughEpoch: new Map(),
     contributionBudgets: new Map(),
     regenerativeBudgets: new Map(),
     totalIssued: 0n,
@@ -27,45 +60,106 @@ export function createState({ epoch = 0, config }) {
 
 export function registerIdentity(state, { personId, attestationId, eligibleFromEpoch = state.epoch }) {
   if (!personId || !attestationId) throw new TypeError('personId and attestationId are required');
+  if (!Number.isSafeInteger(eligibleFromEpoch) || eligibleFromEpoch < 0) throw new RangeError('eligibleFromEpoch must be a non-negative safe integer');
   if (state.identities.has(personId)) throw new Error('identity already registered');
+
   state.identities.set(personId, {
     personId,
     attestationId,
     eligibleFromEpoch,
     active: true,
     suspended: false,
+    eligibilityIntervals: [{ start: eligibleFromEpoch, end: null }],
   });
   if (!state.balances.has(personId)) state.balances.set(personId, 0n);
-  state.events.push({ type: 'IDENTITY_REGISTERED', epoch: state.epoch, personId, attestationId });
+  state.events.push({ type: 'IDENTITY_REGISTERED', epoch: state.epoch, personId, attestationId, eligibleFromEpoch });
 }
 
+/**
+ * Status changes are effective at the beginning of the current epoch.
+ * Suspending/inactivating closes eligibility at the previous epoch. Restoring
+ * opens a new eligibility interval at the current epoch. Previously accrued
+ * entitlements remain claimable after eligibility is restored.
+ */
 export function setIdentityStatus(state, { personId, active, suspended }) {
   const identity = state.identities.get(personId);
   if (!identity) throw new Error('unknown identity');
-  identity.active = active ?? identity.active;
-  identity.suspended = suspended ?? identity.suspended;
-  state.events.push({ type: 'IDENTITY_STATUS_CHANGED', epoch: state.epoch, personId, active: identity.active, suspended: identity.suspended });
+
+  const wasEligibleNow = currentIdentityEligible(identity, state.epoch);
+  const nextActive = active ?? identity.active;
+  const nextSuspended = suspended ?? identity.suspended;
+  const willBeEligibleNow = Boolean(nextActive && !nextSuspended);
+
+  if (wasEligibleNow && !willBeEligibleNow) {
+    closeOpenEligibilityInterval(identity, state.epoch - 1);
+  } else if (!wasEligibleNow && willBeEligibleNow) {
+    openEligibilityInterval(identity, state.epoch);
+  }
+
+  identity.active = nextActive;
+  identity.suspended = nextSuspended;
+  state.events.push({
+    type: 'IDENTITY_STATUS_CHANGED',
+    epoch: state.epoch,
+    personId,
+    active: identity.active,
+    suspended: identity.suspended,
+  });
 }
 
 export function isEligible(state, personId) {
-  const identity = state.identities.get(personId);
-  return Boolean(identity && identity.active && !identity.suspended && state.epoch >= identity.eligibleFromEpoch);
+  return currentIdentityEligible(state.identities.get(personId), state.epoch);
 }
 
+export function isEligibleAtEpoch(state, personId, epoch) {
+  const identity = state.identities.get(personId);
+  return isIdentityEligibleAtEpoch(identity, epoch);
+}
+
+/**
+ * Settle every unclaimed eligible baseline epoch through the current epoch.
+ * Offline access never destroys an earned entitlement. Historical entitlements
+ * are demurred exactly as if claimed when earned, preventing late-claim
+ * arbitrage while preserving equal treatment for people with intermittent
+ * connectivity.
+ */
 export function claimUniversal(state, personId) {
-  const lastClaimed = state.claimedUniversalEpoch.get(personId);
-  const amount = calculateUniversalIssuance({
-    eligible: isEligible(state, personId),
-    alreadyClaimed: lastClaimed === state.epoch,
+  const identity = state.identities.get(personId);
+  if (!identity) throw new Error('unknown identity');
+  if (!isEligible(state, personId)) return 0n;
+
+  const lastSettledThrough = state.claimedUniversalThroughEpoch.get(personId) ?? (identity.eligibleFromEpoch - 1);
+  const fromEpoch = Math.max(identity.eligibleFromEpoch, lastSettledThrough + 1);
+  const throughEpoch = state.epoch;
+
+  if (fromEpoch > throughEpoch) return 0n;
+
+  const accrual = calculateAccruedUniversalIssuance({
+    fromEpoch,
+    throughEpoch,
     amountPerEpoch: BigInt(state.config.universalIssuancePerEpoch),
+    demurragePpmPerEpoch: state.config.demurragePpmPerEpoch,
+    eligibleAtEpoch: (epoch) => isIdentityEligibleAtEpoch(identity, epoch),
   });
-  if (amount === 0n) return 0n;
-  const current = state.balances.get(personId) ?? 0n;
-  state.balances.set(personId, current + amount);
-  state.claimedUniversalEpoch.set(personId, state.epoch);
-  state.totalIssued += amount;
-  state.events.push({ type: 'UNIVERSAL_ISSUANCE', epoch: state.epoch, personId, amount: amount.toString() });
-  return amount;
+
+  state.claimedUniversalThroughEpoch.set(personId, throughEpoch);
+  if (accrual.gross === 0n) return 0n;
+
+  state.balances.set(personId, (state.balances.get(personId) ?? 0n) + accrual.net);
+  state.totalIssued += accrual.gross;
+  state.totalRetired += accrual.retired;
+  state.events.push({
+    type: 'UNIVERSAL_ISSUANCE_SETTLED',
+    epoch: state.epoch,
+    personId,
+    fromEpoch,
+    throughEpoch,
+    eligibleEpochs: accrual.eligibleEpochs,
+    gross: accrual.gross.toString(),
+    net: accrual.net.toString(),
+    retired: accrual.retired.toString(),
+  });
+  return accrual.net;
 }
 
 export function configureBudget(state, { kind, programId, epoch, amount }) {
