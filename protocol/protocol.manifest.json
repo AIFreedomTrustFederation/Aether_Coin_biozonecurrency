@@ -1,6 +1,6 @@
 {
   "protocol": "aetherion-biozoe",
-  "version": "2.0.0-design",
+  "version": "2.1.0-design",
   "status": "prototype",
   "canonical_documents": [
     "WHITEPAPER.md",
@@ -9,7 +9,9 @@
     "PHILOSOPHY.md",
     "COMPUTER-DESIGN.md",
     "GENESIS.md",
-    "FLIGHTPAPER.md"
+    "FLIGHTPAPER.md",
+    "docs/circulation-and-exchange.md",
+    "docs/regulatory-launch-gate.md"
   ],
   "native_asset": {
     "name": "AetherCoin",
@@ -31,7 +33,18 @@
     "NO_BALANCE_DERIVED_VALIDATOR_POWER",
     "NO_GENERIC_ADMIN_MINT",
     "NO_EVIDENCE_REPLAY_MINT",
+    "NO_CIRCULATION_RECEIPT_REPLAY_MINT",
     "NO_SPENT_BUDGET_RESET_MINT",
+    "CIRCULATION_ISSUANCE_IS_EPOCH_BOUNDED",
+    "RAW_TRANSACTION_COUNT_IS_NOT_CIRCULATION_REWARD",
+    "DIRECT_ROUND_TRIP_FLOW_IS_NETTED",
+    "ORDINARY_ATC_TRANSFER_HAS_NO_EXIT_FRICTION",
+    "CANONICAL_EXIT_HAS_HARD_FRICTION_CAP",
+    "CANONICAL_EXIT_PRESERVES_REFERENCE_VALUE_TRUTH",
+    "CANONICAL_EXIT_REQUIRES_SETTLEMENT_ACCEPTANCE_BEFORE_RETIREMENT",
+    "INBOUND_EXTERNAL_DEPOSIT_IS_NOT_GENERIC_MINT_AUTHORITY",
+    "RIGHT_TO_EXIT_IS_PROTECTED",
+    "NO_GUARANTEED_APPRECIATION_CLAIM",
     "MONEY_SEPARATE_FROM_RESOURCE_QUOTA",
     "SPIRITUAL_LANGUAGE_NOT_CONSENSUS_INPUT"
   ],
@@ -39,8 +52,32 @@
     "universal",
     "contribution",
     "regenerative",
-    "stewardship"
+    "stewardship",
+    "circulation"
   ],
+  "circulation": {
+    "status": "prototype-disabled-by-genesis",
+    "epoch_budget_required": true,
+    "raw_transaction_count_rewarded": false,
+    "self_transfer_rewarded": false,
+    "direct_round_trip_netting": true,
+    "receipt_replay_allowed": false,
+    "diminishing_return_score": "integer-sqrt-net-pair-flow",
+    "per_identity_cap_required": true,
+    "privacy_principle": "prove qualification without generalized purchase surveillance"
+  },
+  "canonical_conversion": {
+    "status": "design-disabled",
+    "ordinary_transfer_taxed": false,
+    "reference_value_rewritten_by_exit_spread": false,
+    "hard_friction_cap_required": true,
+    "patient_exit_discount_supported": true,
+    "indefinite_lock_allowed": false,
+    "exit_atc_retirement": true,
+    "retirement_requires_external_settlement_acceptance": true,
+    "inbound_external_deposit_mints_atc_automatically": false,
+    "federation_operated_service_requires_regulatory_launch_review": true
+  },
   "consensus_target": {
     "family": "CometBFT-compatible BFT",
     "wealth_weighted": false,
@@ -55,7 +92,10 @@
   "external_anchor": {
     "required_for_liveness": false,
     "adapter": true,
-    "targets": ["Bitcoin", "BitcoinOS-like ZK settlement"]
+    "targets": [
+      "Bitcoin",
+      "BitcoinOS-like ZK settlement"
+    ]
   },
   "reference_implementation": {
     "path": "protocol/reference",
