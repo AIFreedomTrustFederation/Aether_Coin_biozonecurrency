@@ -2,6 +2,11 @@ import {
   applyDemurrage,
   calculateAccruedUniversalIssuance,
   calculateBudgetedIssuance,
+  calculateCanonicalExitQuote,
+  calculateCappedProRataReward,
+  calculateCirculationPairScore,
+  calculateDelayDiscountPpm,
+  calculateMaturityExitFriction,
   transfer,
 } from './biozoe-policy.mjs';
 
@@ -49,6 +54,27 @@ function openEligibilityInterval(identity, startEpoch) {
   identity.eligibilityIntervals.push({ start: Math.max(startEpoch, identity.eligibleFromEpoch), end: null });
 }
 
+function circulationPairKey(a, b) {
+  return a < b ? JSON.stringify([a, b]) : JSON.stringify([b, a]);
+}
+
+function circulationPairsForEpoch(state, epoch) {
+  if (!state.circulationPairsByEpoch.has(epoch)) {
+    state.circulationPairsByEpoch.set(epoch, new Map());
+  }
+  return state.circulationPairsByEpoch.get(epoch);
+}
+
+function addWeight(weights, personId, amount) {
+  weights.set(personId, (weights.get(personId) ?? 0n) + amount);
+}
+
+function configBigInt(config, key, fallback) {
+  const value = config[key];
+  if (value === undefined || value === null) return BigInt(fallback);
+  return BigInt(value);
+}
+
 export function createState({ epoch = 0, config }) {
   if (!config) throw new TypeError('config is required');
   return {
@@ -61,6 +87,13 @@ export function createState({ epoch = 0, config }) {
     regenerativeBudgets: new Map(),
     stewardshipBudgets: new Map(),
     usedEvidenceIds: new Set(),
+    transfersById: new Map(),
+    qualifiedTransferIds: new Set(),
+    usedCirculationReceiptIds: new Set(),
+    circulationBudgets: new Map(),
+    circulationPairsByEpoch: new Map(),
+    circulationRewardsSettledEpochs: new Set(),
+    usedConversionReceiptIds: new Set(),
     totalIssued: 0n,
     totalRetired: 0n,
     events: [],
@@ -86,10 +119,7 @@ export function registerIdentity(state, { personId, attestationId, eligibleFromE
 
 /**
  * Status changes are effective at the beginning of the current epoch.
- * Suspending/inactivating closes eligibility at the previous epoch. Restoring
- * opens a new eligibility interval no earlier than both the current epoch and
- * the identity's original eligibility epoch. Previously accrued entitlements
- * remain claimable after eligibility is restored.
+ * Previously accrued entitlements remain claimable after eligibility returns.
  */
 export function setIdentityStatus(state, { personId, active, suspended }) {
   const identity = state.identities.get(personId);
@@ -128,9 +158,8 @@ export function isEligibleAtEpoch(state, personId, epoch) {
 
 /**
  * Settle every unclaimed eligible baseline epoch through the current epoch.
- * Offline access never destroys an earned entitlement. Historical entitlements
- * are demurred exactly as if claimed when earned, preventing late-claim
- * arbitrage while preserving equal treatment for intermittent connectivity.
+ * Offline access never destroys an earned entitlement. Historical portions are
+ * demurred as though settled on time.
  */
 export function claimUniversal(state, personId) {
   const identity = state.identities.get(personId);
@@ -213,16 +242,237 @@ export function mintBudgeted(state, { kind, programId, recipientId, amount, evid
   return minted;
 }
 
-export function transferBetween(state, { fromId, toId, amount }) {
+/**
+ * Ordinary ATC transfers remain ordinary transfers. No exit friction is applied
+ * here. A transfer only becomes eligible for circulation issuance if a separate
+ * authenticated circulation receipt qualifies it.
+ */
+export function transferBetween(state, { fromId, toId, amount, transferId = null }) {
   if (!state.identities.has(fromId) || !state.identities.has(toId)) throw new Error('unknown identity');
+  if (transferId && state.transfersById.has(transferId)) throw new Error('transferId already used');
+
+  const value = BigInt(amount);
   const result = transfer({
     fromBalance: state.balances.get(fromId) ?? 0n,
     toBalance: state.balances.get(toId) ?? 0n,
-    amount: BigInt(amount),
+    amount: value,
   });
   state.balances.set(fromId, result.fromBalance);
   state.balances.set(toId, result.toBalance);
-  state.events.push({ type: 'TRANSFER', epoch: state.epoch, fromId, toId, amount: BigInt(amount).toString() });
+
+  const event = { type: 'TRANSFER', epoch: state.epoch, fromId, toId, amount: value.toString(), transferId };
+  state.events.push(event);
+  if (transferId) {
+    state.transfersById.set(transferId, { epoch: state.epoch, fromId, toId, amount: value });
+  }
+  return event;
+}
+
+/**
+ * Record a qualified circulation event using a transfer that already occurred.
+ * The receipt contains only the minimum authorization needed by this reference
+ * model. Production receipt verification belongs at the authenticated evidence
+ * boundary and should avoid exposing unnecessary purchase details on-chain.
+ */
+export function recordQualifiedCirculation(state, {
+  transferId,
+  circulationReceiptId,
+  receiptAccepted,
+}) {
+  if (!transferId || !circulationReceiptId) throw new TypeError('transferId and circulationReceiptId are required');
+  if (!receiptAccepted) return false;
+  if (state.usedCirculationReceiptIds.has(circulationReceiptId)) throw new Error('circulation receipt already used');
+  if (state.qualifiedTransferIds.has(transferId)) throw new Error('transfer already qualified for circulation');
+
+  const tx = state.transfersById.get(transferId);
+  if (!tx) throw new Error('unknown transferId');
+  if (tx.epoch !== state.epoch) throw new Error('circulation qualification must occur in the transfer epoch');
+  if (tx.fromId === tx.toId) throw new Error('self transfers do not qualify for circulation issuance');
+  if (tx.amount <= 0n) throw new Error('zero-value transfers do not qualify for circulation issuance');
+  if (!isEligible(state, tx.fromId) || !isEligible(state, tx.toId)) {
+    throw new Error('both circulation participants must be eligible identities');
+  }
+
+  const lowId = tx.fromId < tx.toId ? tx.fromId : tx.toId;
+  const highId = tx.fromId < tx.toId ? tx.toId : tx.fromId;
+  const pairs = circulationPairsForEpoch(state, state.epoch);
+  const key = circulationPairKey(tx.fromId, tx.toId);
+  const pair = pairs.get(key) ?? { lowId, highId, lowToHigh: 0n, highToLow: 0n };
+
+  if (tx.fromId === lowId) pair.lowToHigh += tx.amount;
+  else pair.highToLow += tx.amount;
+
+  pairs.set(key, pair);
+  state.qualifiedTransferIds.add(transferId);
+  state.usedCirculationReceiptIds.add(circulationReceiptId);
+  state.events.push({
+    type: 'QUALIFIED_CIRCULATION_RECORDED',
+    epoch: state.epoch,
+    transferId,
+    circulationReceiptId,
+    fromId: tx.fromId,
+    toId: tx.toId,
+    amount: tx.amount.toString(),
+  });
+  return true;
+}
+
+export function configureCirculationBudget(state, { epoch, amount }) {
+  if (!Number.isSafeInteger(epoch) || epoch < 0) throw new RangeError('epoch must be a non-negative safe integer');
+  const value = BigInt(amount);
+  if (value < 0n) throw new RangeError('circulation budget cannot be negative');
+  if (state.circulationBudgets.has(epoch)) throw new Error('circulation budget already configured for this epoch');
+  state.circulationBudgets.set(epoch, value);
+  state.events.push({ type: 'CIRCULATION_BUDGET_CONFIGURED', epoch, amount: value.toString() });
+}
+
+/**
+ * Distribute a fixed circulation pool. Direct round trips are netted by pair.
+ * Diminishing returns arise from integer square-root scoring. Distinct pair
+ * relationships each contribute separately, rewarding breadth of circulation.
+ * Per-identity caps prevent a large spender from consuming the whole pool.
+ * Unallocated budget remains unissued.
+ */
+export function settleCirculationRewards(state) {
+  const epoch = state.epoch;
+  if (state.circulationRewardsSettledEpochs.has(epoch)) {
+    return { epoch, issued: 0n, unissued: 0n, recipients: 0 };
+  }
+
+  state.circulationRewardsSettledEpochs.add(epoch);
+  const budget = state.circulationBudgets.get(epoch) ?? 0n;
+  if (budget === 0n) {
+    state.events.push({ type: 'CIRCULATION_REWARDS_SETTLED', epoch, budget: '0', issued: '0', unissued: '0', recipients: 0 });
+    return { epoch, issued: 0n, unissued: 0n, recipients: 0 };
+  }
+
+  const senderWeightBps = state.config.circulationSenderWeightBps ?? 4_000;
+  const receiverWeightBps = state.config.circulationReceiverWeightBps ?? 6_000;
+  const cap = configBigInt(state.config, 'circulationRewardCapPerIdentityPerEpoch', budget.toString());
+  const pairs = state.circulationPairsByEpoch.get(epoch) ?? new Map();
+  const weights = new Map();
+
+  for (const pair of pairs.values()) {
+    if (pair.lowToHigh === pair.highToLow) continue;
+
+    const lowIsNetSender = pair.lowToHigh > pair.highToLow;
+    const netAmount = lowIsNetSender
+      ? pair.lowToHigh - pair.highToLow
+      : pair.highToLow - pair.lowToHigh;
+    const senderId = lowIsNetSender ? pair.lowId : pair.highId;
+    const receiverId = lowIsNetSender ? pair.highId : pair.lowId;
+
+    addWeight(weights, senderId, calculateCirculationPairScore({ netAmount, roleWeightBps: senderWeightBps }));
+    addWeight(weights, receiverId, calculateCirculationPairScore({ netAmount, roleWeightBps: receiverWeightBps }));
+  }
+
+  const totalWeight = [...weights.values()].reduce((sum, value) => sum + value, 0n);
+  if (totalWeight === 0n) {
+    state.events.push({ type: 'CIRCULATION_REWARDS_SETTLED', epoch, budget: budget.toString(), issued: '0', unissued: budget.toString(), recipients: 0 });
+    return { epoch, issued: 0n, unissued: budget, recipients: 0 };
+  }
+
+  let issued = 0n;
+  let recipients = 0;
+  for (const [personId, weight] of weights.entries()) {
+    const reward = calculateCappedProRataReward({ budget, weight, totalWeight, cap });
+    if (reward === 0n) continue;
+    state.balances.set(personId, (state.balances.get(personId) ?? 0n) + reward);
+    state.totalIssued += reward;
+    issued += reward;
+    recipients += 1;
+    state.events.push({
+      type: 'CIRCULATION_ISSUANCE',
+      epoch,
+      personId,
+      weight: weight.toString(),
+      amount: reward.toString(),
+    });
+  }
+
+  const unissued = budget - issued;
+  state.events.push({
+    type: 'CIRCULATION_REWARDS_SETTLED',
+    epoch,
+    budget: budget.toString(),
+    issued: issued.toString(),
+    unissued: unissued.toString(),
+    recipients,
+  });
+  return { epoch, issued, unissued, recipients };
+}
+
+/**
+ * Execute a canonical outbound conversion only after the external settlement
+ * path has accepted the transaction. This reference model retires the ATC and
+ * records the quote; it does not pretend to custody or settle the external
+ * reserve asset itself.
+ */
+export function executeCanonicalExit(state, {
+  personId,
+  atcAmount,
+  referenceExternalValue,
+  delayEpochs = 0,
+  stressFrictionPpm = 0,
+  conversionReceiptId,
+  externalSettlementAccepted,
+}) {
+  if (state.config.canonicalConversionEnabled !== true) throw new Error('canonical conversion is disabled');
+  if (!state.identities.has(personId)) throw new Error('unknown identity');
+  if (!conversionReceiptId) throw new TypeError('conversionReceiptId is required');
+  if (!externalSettlementAccepted) throw new Error('external settlement must be accepted before ATC retirement');
+  if (state.usedConversionReceiptIds.has(conversionReceiptId)) throw new Error('conversion receipt already used');
+
+  const amount = BigInt(atcAmount);
+  const referenceValue = BigInt(referenceExternalValue);
+  if (amount <= 0n) throw new RangeError('atcAmount must be positive');
+  if (referenceValue < 0n) throw new RangeError('referenceExternalValue cannot be negative');
+
+  const stressMax = state.config.canonicalExitStressSurchargeMaxPpm ?? 0;
+  if (!Number.isInteger(stressFrictionPpm) || stressFrictionPpm < 0 || stressFrictionPpm > stressMax) {
+    throw new RangeError('stressFrictionPpm exceeds governed maximum');
+  }
+
+  const maturityFrictionPpm = calculateMaturityExitFriction({
+    epoch: state.epoch,
+    startEpoch: state.config.canonicalExitStartEpoch ?? 0,
+    startPpm: state.config.canonicalExitStartPpm,
+    maturePpm: state.config.canonicalExitMaturePpm,
+    rampEpochs: state.config.canonicalExitRampEpochs,
+  });
+  const delayDiscountPpm = calculateDelayDiscountPpm({
+    delayEpochs,
+    discountPpmPerEpoch: state.config.canonicalExitDelayDiscountPpmPerEpoch,
+    maxDiscountPpm: state.config.canonicalExitDelayDiscountMaxPpm,
+  });
+  const quote = calculateCanonicalExitQuote({
+    referenceValue,
+    maturityFrictionPpm,
+    stressFrictionPpm,
+    delayDiscountPpm,
+    hardCapPpm: state.config.canonicalExitHardCapPpm,
+    minimumFrictionPpm: state.config.canonicalExitMinimumPpm,
+  });
+
+  const balance = state.balances.get(personId) ?? 0n;
+  if (amount > balance) throw new RangeError('insufficient balance');
+
+  state.balances.set(personId, balance - amount);
+  state.totalRetired += amount;
+  state.usedConversionReceiptIds.add(conversionReceiptId);
+  state.events.push({
+    type: 'CANONICAL_EXIT',
+    epoch: state.epoch,
+    personId,
+    atcRetired: amount.toString(),
+    conversionReceiptId,
+    delayEpochs,
+    referenceExternalValue: quote.referenceValue.toString(),
+    appliedFrictionPpm: quote.appliedFrictionPpm,
+    netExternalProceeds: quote.netProceeds.toString(),
+    reserveRetention: quote.reserveRetention.toString(),
+  });
+  return quote;
 }
 
 export function settleDemurrage(state) {
@@ -241,7 +491,10 @@ export function settleDemurrage(state) {
 }
 
 export function advanceEpoch(state) {
+  // Existing liquid balances age first. Circulation rewards are then settled as
+  // new end-of-epoch issuance and begin aging during the following epoch.
   settleDemurrage(state);
+  settleCirculationRewards(state);
   state.epoch += 1;
   state.events.push({ type: 'EPOCH_ADVANCED', epoch: state.epoch });
 }
