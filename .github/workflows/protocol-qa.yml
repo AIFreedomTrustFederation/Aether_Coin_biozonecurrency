@@ -14,6 +14,12 @@ on:
       - 'HUMAN-RIGHTS-AND-SAFEGUARDS.md'
       - 'COMPUTER-DESIGN.md'
       - 'GENESIS.md'
+      - 'STRUCTURE.md'
+      - 'docs/circulation-and-exchange.md'
+      - 'docs/regulatory-launch-gate.md'
+      - 'docs/aetherion-threat-model.md'
+      - 'docs/status.md'
+      - 'docs/validation.md'
       - 'package.json'
   push:
     branches:
@@ -23,6 +29,20 @@ on:
       - 'protocol/**'
       - 'scripts/aether-verify-structure.mjs'
       - 'scripts/verify-biozoe-protocol.mjs'
+      - 'README.md'
+      - 'WHITEPAPER.md'
+      - 'FLIGHTPAPER.md'
+      - 'PHILOSOPHY.md'
+      - 'MONETARY-CONSTITUTION.md'
+      - 'HUMAN-RIGHTS-AND-SAFEGUARDS.md'
+      - 'COMPUTER-DESIGN.md'
+      - 'GENESIS.md'
+      - 'STRUCTURE.md'
+      - 'docs/circulation-and-exchange.md'
+      - 'docs/regulatory-launch-gate.md'
+      - 'docs/aetherion-threat-model.md'
+      - 'docs/status.md'
+      - 'docs/validation.md'
       - 'package.json'
 
 permissions:
@@ -49,3 +69,6 @@ jobs:
 
       - name: Run deterministic protocol tests
         run: node --test protocol/reference/*.test.mjs
+
+      - name: Run dependency-light economic simulation
+        run: node protocol/simulation/biozoe-sim.mjs
