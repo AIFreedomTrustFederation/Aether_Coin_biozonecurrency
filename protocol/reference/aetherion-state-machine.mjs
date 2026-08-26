@@ -9,6 +9,13 @@ function cloneMap(map) {
   return new Map(map.entries());
 }
 
+function getBudgetStore(state, kind) {
+  if (kind === 'contribution') return state.contributionBudgets;
+  if (kind === 'regenerative') return state.regenerativeBudgets;
+  if (kind === 'stewardship') return state.stewardshipBudgets;
+  throw new Error('unsupported budget kind');
+}
+
 function isIdentityEligibleAtEpoch(identity, epoch) {
   if (!identity) return false;
   return identity.eligibilityIntervals.some(({ start, end }) => (
@@ -39,7 +46,7 @@ function closeOpenEligibilityInterval(identity, endEpoch) {
 
 function openEligibilityInterval(identity, startEpoch) {
   if (identity.eligibilityIntervals.some((interval) => interval.end === null)) return;
-  identity.eligibilityIntervals.push({ start: startEpoch, end: null });
+  identity.eligibilityIntervals.push({ start: Math.max(startEpoch, identity.eligibleFromEpoch), end: null });
 }
 
 export function createState({ epoch = 0, config }) {
@@ -52,6 +59,8 @@ export function createState({ epoch = 0, config }) {
     claimedUniversalThroughEpoch: new Map(),
     contributionBudgets: new Map(),
     regenerativeBudgets: new Map(),
+    stewardshipBudgets: new Map(),
+    usedEvidenceIds: new Set(),
     totalIssued: 0n,
     totalRetired: 0n,
     events: [],
@@ -78,21 +87,22 @@ export function registerIdentity(state, { personId, attestationId, eligibleFromE
 /**
  * Status changes are effective at the beginning of the current epoch.
  * Suspending/inactivating closes eligibility at the previous epoch. Restoring
- * opens a new eligibility interval at the current epoch. Previously accrued
- * entitlements remain claimable after eligibility is restored.
+ * opens a new eligibility interval no earlier than both the current epoch and
+ * the identity's original eligibility epoch. Previously accrued entitlements
+ * remain claimable after eligibility is restored.
  */
 export function setIdentityStatus(state, { personId, active, suspended }) {
   const identity = state.identities.get(personId);
   if (!identity) throw new Error('unknown identity');
 
-  const wasEligibleNow = currentIdentityEligible(identity, state.epoch);
+  const wasAuthorized = Boolean(identity.active && !identity.suspended);
   const nextActive = active ?? identity.active;
   const nextSuspended = suspended ?? identity.suspended;
-  const willBeEligibleNow = Boolean(nextActive && !nextSuspended);
+  const willBeAuthorized = Boolean(nextActive && !nextSuspended);
 
-  if (wasEligibleNow && !willBeEligibleNow) {
+  if (wasAuthorized && !willBeAuthorized) {
     closeOpenEligibilityInterval(identity, state.epoch - 1);
-  } else if (!wasEligibleNow && willBeEligibleNow) {
+  } else if (!wasAuthorized && willBeAuthorized) {
     openEligibilityInterval(identity, state.epoch);
   }
 
@@ -120,8 +130,7 @@ export function isEligibleAtEpoch(state, personId, epoch) {
  * Settle every unclaimed eligible baseline epoch through the current epoch.
  * Offline access never destroys an earned entitlement. Historical entitlements
  * are demurred exactly as if claimed when earned, preventing late-claim
- * arbitrage while preserving equal treatment for people with intermittent
- * connectivity.
+ * arbitrage while preserving equal treatment for intermittent connectivity.
  */
 export function claimUniversal(state, personId) {
   const identity = state.identities.get(personId);
@@ -163,28 +172,44 @@ export function claimUniversal(state, personId) {
 }
 
 export function configureBudget(state, { kind, programId, epoch, amount }) {
+  if (!programId) throw new TypeError('programId is required');
+  if (!Number.isSafeInteger(epoch) || epoch < 0) throw new RangeError('epoch must be a non-negative safe integer');
   const value = BigInt(amount);
   if (value < 0n) throw new RangeError('budget cannot be negative');
-  const target = kind === 'contribution' ? state.contributionBudgets : kind === 'regenerative' ? state.regenerativeBudgets : null;
-  if (!target) throw new Error('unsupported budget kind');
-  target.set(`${epoch}:${programId}`, value);
+
+  const target = getBudgetStore(state, kind);
+  const key = `${epoch}:${programId}`;
+  if (target.has(key)) throw new Error('budget already configured for this program and epoch');
+
+  target.set(key, value);
   state.events.push({ type: 'BUDGET_CONFIGURED', kind, epoch, programId, amount: value.toString() });
 }
 
 export function mintBudgeted(state, { kind, programId, recipientId, amount, evidenceAccepted, evidenceId }) {
   if (!isEligible(state, recipientId)) throw new Error('recipient is not an eligible identity');
   if (!evidenceId) throw new TypeError('evidenceId is required');
-  const target = kind === 'contribution' ? state.contributionBudgets : kind === 'regenerative' ? state.regenerativeBudgets : null;
-  if (!target) throw new Error('unsupported budget kind');
+  if (state.usedEvidenceIds.has(evidenceId)) throw new Error('evidence receipt already used');
+
+  const target = getBudgetStore(state, kind);
   const key = `${state.epoch}:${programId}`;
   const remainingBudget = target.get(key) ?? 0n;
   const requested = BigInt(amount);
   const minted = calculateBudgetedIssuance({ requested, remainingBudget, evidenceAccepted });
   if (minted === 0n) return 0n;
+
   target.set(key, remainingBudget - minted);
+  state.usedEvidenceIds.add(evidenceId);
   state.balances.set(recipientId, (state.balances.get(recipientId) ?? 0n) + minted);
   state.totalIssued += minted;
-  state.events.push({ type: 'BUDGETED_ISSUANCE', kind, epoch: state.epoch, programId, recipientId, amount: minted.toString(), evidenceId });
+  state.events.push({
+    type: 'BUDGETED_ISSUANCE',
+    kind,
+    epoch: state.epoch,
+    programId,
+    recipientId,
+    amount: minted.toString(),
+    evidenceId,
+  });
   return minted;
 }
 
