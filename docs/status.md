@@ -1,91 +1,133 @@
-# Aether Coin Biozoecurrency Status
+# Aetherion Biozoecurrency Status
 
-Last reviewed: 2026-06-24
+Last reviewed: 2026-08-25
 
-## Current Role
+## Current role
 
-This repository is the federation stewardship and wallet research lane. It contains Aetherion wallet UI work, regenerative token taxonomy concepts, AI-guided risk and consent research, post-quantum security experiments, QDNS/decentralized deployment references, and the local-first DynastyLink application foundation.
+This repository is the AI Freedom Trust Federation's economic and stewardship layer. The active architecture refactor moves Aetherion from a collection of wallet/token/blockchain prototypes toward a clearly specified sovereign Layer 1 with an abundance-first Biozoe monetary constitution.
 
-## Current Verified Foundation
+The active implementation branch is `feat/biozoe-abundance-l1`.
 
-- The root repository is public and active.
-- The main application stack is React/Vite, TypeScript, Node/Express, shared schemas, and Drizzle/PostgreSQL integration paths.
-- Security docs exist in `SECURITY.md`, `API-SECURITY-GUIDELINES.md`, and `QUANTUM-SECURITY.md`.
-- Dependency and static security review scripts exist under `scripts`.
-- The local-first DynastyLink lane lives under `apps/dynastylink-local`.
-- The quantum-validator and API-gateway packages are present as separate package surfaces.
-- Lightweight local repo verification is available through `npm run qa:local`.
-- `federation.manifest.json` now defines the machine-readable Federation handshake.
-- Biozoecurrency token taxonomy docs and TypeScript primitives now exist.
-- Consent Ledger docs and TypeScript primitives now exist.
-- Federation event docs and TypeScript primitives now exist.
-- Operational status docs and TypeScript primitives now exist.
-- The DynastyLink to Aetherion bridge guide now defines the local-first integration boundary.
-- `scripts/verify-federation-contracts.mjs` now provides a standalone Federation contract check.
-- `scripts/verify-biozoecurrency-terminology.mjs` now provides a standalone terminology check.
-- `shared/types/federation.ts` now provides a Federation type barrel export.
-- `client/src/features/biozoecurrency/pages/BiozoecurrencyPage.tsx` now reads canonical token definitions from shared Federation types.
+## Current verified repository facts
 
-## Not Yet Claimed
+- The repository is public and active.
+- The application stack includes React/Vite, TypeScript, Node/Express, shared schemas, and PostgreSQL/Drizzle integration paths.
+- Historical browser-side blockchain and Biozoe demonstrations remain in the repository.
+- Security guidance exists in `SECURITY.md`, `API-SECURITY-GUIDELINES.md`, `QUANTUM-SECURITY.md`, and `docs/security-and-privacy.md`.
+- DynastyLink local-first work remains under `apps/dynastylink-local`.
+- A machine-readable Federation handshake exists in `federation.manifest.json`.
 
-Do not claim these as production-ready without matching implementation, review, and verification evidence:
+## New canonical protocol surfaces on the refactor branch
 
-- audited wallet custody safety
-- production token value or investment utility
-- post-quantum security guarantees
-- autonomous AI financial authorization
-- decentralized deployment reliability
-- legal, tax, investment, insurance, or financial advice
-- production DynastyLink legal document validity
+The following now define the intended Aetherion monetary architecture:
 
-## Current Validation Boundary
+- `WHITEPAPER.md`
+- `FLIGHTPAPER.md`
+- `PHILOSOPHY.md`
+- `MONETARY-CONSTITUTION.md`
+- `COMPUTER-DESIGN.md`
+- `GENESIS.md`
+- `protocol/genesis.seed.json`
+- `protocol/reference/biozoe-policy.mjs`
+- `protocol/reference/aetherion-state-machine.mjs`
+- protocol unit tests
+- `scripts/verify-biozoe-protocol.mjs`
 
-`npm run qa:local` is the current dependency-light repo gate. It validates required docs, package scripts, package-lock alignment, major source directories, DynastyLink local-first docs, package surfaces, and the API-key guard script.
+## Implemented on the refactor branch
 
-Last local `npm run qa:local` pass: 2026-06-24 on the Windows local builder.
+The dependency-light reference implementation now contains deterministic logic for:
 
-Full build, TypeScript, database, dependency, and security audit checks require the full local dependency stack and environment. See `docs/validation.md`.
+- universal issuance eligibility,
+- one baseline claim per person per epoch,
+- integer demurrage,
+- budget-constrained evidence-gated issuance,
+- ordinary transfers,
+- epoch advancement,
+- cumulative issuance accounting,
+- cumulative retirement accounting,
+- supply invariant verification,
+- balance-independent human governance weight,
+- stake-independent equal validator voting power.
 
-Standalone local checks:
+The design genesis seed specifies:
+
+- zero premine,
+- zero founder allocation,
+- zero investor allocation,
+- zero team allocation,
+- zero genesis treasury allocation,
+- zero initial balances,
+- no terminal ATC supply cap,
+- no token-weighted governance,
+- no token-weighted consensus,
+- no balance-derived validator power,
+- an optional rather than mandatory Bitcoin/BitcoinOS-like anchor path.
+
+## Prototype/legacy boundary
+
+Historical blockchain code predates the new constitution and must not be represented as canonical Layer 1 consensus.
+
+Known prototype characteristics include browser-side state, simple local proof-of-work demonstrations, placeholder signatures, hard-coded network/RPC configuration, and randomly generated symbolic Biozoe/quantum-style metrics.
+
+Those artifacts are retained for provenance and UI research until deliberately migrated or retired. They are not evidence that an Aetherion mainnet is live, decentralized, secure, or audited.
+
+## Planned but not yet implemented
+
+- CometBFT-compatible node integration
+- authenticated production transaction envelope
+- persistent consensus state
+- privacy-preserving unique-person eligibility
+- multi-attester identity and recovery
+- executable multi-chamber governance
+- validator registry and independent-operator enforcement
+- Pulse non-transferable resource accounting
+- lazy production demurrage settlement
+- evidence replay protection suitable for consensus
+- wallet migration to canonical node state
+- reproducible public devnet genesis
+- optional Bitcoin/BitcoinOS-like state-root anchor adapter
+- economic simulation suite
+- independent security review
+- public testnet and mainnet
+
+## Validation boundary
+
+The branch wires protocol checks into repository QA:
 
 ```bash
-node scripts/verify-federation-contracts.mjs
-node scripts/verify-biozoecurrency-terminology.mjs
+npm run protocol:test
+npm run protocol:verify
+npm run qa:local
 ```
 
-## Federation Alignment Added On 2026-06-24
+`npm run qa:local` is intended to run the structure check, Biozoe constitutional verifier, protocol unit tests, and API-key guard.
 
-- `federation.manifest.json`
-- `docs/federation-integration.md`
-- `docs/biozoecurrency-token-taxonomy.md`
-- `docs/consent-ledger.md`
-- `docs/dynastylink-aetherion-bridge.md`
-- `docs/federation-events.md`
-- `docs/operations-dashboard.md`
-- `docs/optional-integrations.md`
-- `docs/local-first-runbook.md`
-- `scripts/verify-federation-contracts.mjs`
-- `scripts/verify-biozoecurrency-terminology.mjs`
-- `shared/types/biozoecurrency-token.ts`
-- `shared/types/consent-ledger.ts`
-- `shared/types/federation-events.ts`
-- `shared/types/operational-status.ts`
-- `shared/types/federation.ts`
+These connector-authored changes have not yet been executed in a local checkout in this session. Passing source inspection is not the same as a green runtime test. CI or local execution must provide that evidence before the branch is described as validated.
 
-## Current Known Gaps
+Application-level checks remain:
 
-- Full local build and TypeScript checks have not been run in this connector session.
-- `package.json` still needs a local script hook for `verify:federation`; an attempted connector update was blocked by the tool safety layer.
-- The root `package-lock.json` is a minimal identity repair and should be regenerated from a local checkout.
-- `docs/security-and-privacy.md`, `AGENTS.md`, and deeper UI copy still need dedicated terminology and claim-boundary passes where connector safety blocked direct rewrites.
-- Older scripts, archived pasted logs, and deployment helper files may still contain the old Biozoe spelling and should be cleaned in a dedicated terminology pass.
-- Real custody, live token, legal trust, deployment, and post-quantum production claims remain out of scope until verified and reviewed.
+```bash
+npm run check
+npm run build
+npm run security:audit
+npm run security:deps
+```
 
-## Next Best Work
+## Claims that remain prohibited without evidence
 
-1. Run `node scripts/verify-federation-contracts.mjs` in a local checkout.
-2. Run `node scripts/verify-biozoecurrency-terminology.mjs` in a local checkout.
-3. Run `npm run qa:local` in a local checkout.
-4. Regenerate a full `package-lock.json` from `package.json` in a local checkout.
-5. Add `verify:federation` and terminology scripts to `package.json` locally if the connector continues blocking that rewrite.
-6. Continue wiring typed contracts into UI and server code after TypeScript and build checks are green.
+Do not claim:
+
+- a live Aetherion mainnet,
+- audited custody safety,
+- audited Layer 1 cryptography,
+- proven economic stability,
+- legal-tender status,
+- guaranteed ATC value or appreciation,
+- production post-quantum security,
+- autonomous AI financial authority,
+- trustless Bitcoin bridging before a reviewed bridge exists,
+- measured physical or biological effects from symbolic Biozoe/quantum language.
+
+## Next engineering gate
+
+The next major engineering step after the reference branch passes local/CI validation is a dedicated node implementation that binds the state machine to authenticated transactions, persistent storage, and a mature BFT consensus engine. The launch sequence and abort conditions are defined in `FLIGHTPAPER.md`.
