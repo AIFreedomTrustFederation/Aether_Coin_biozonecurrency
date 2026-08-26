@@ -44,7 +44,7 @@ Eligibility suspension, program disqualification, validator removal, or governan
 - proportionality,
 - expiration or reconsideration where appropriate.
 
-Permanent punishment should not be the default response to recoverable failure.
+Permanent punishment should not be the default response to recoverable failure. Suspension of future eligibility must not silently confiscate baseline entitlements already earned during earlier eligible epochs.
 
 ## 7. No balance-derived citizenship
 
@@ -105,13 +105,21 @@ ATC and Pulse are separated so a person does not need accumulated wealth merely 
 
 Congestion and finite infrastructure still require resource controls. Those controls should include fair-use allowances and transparent limits rather than converting every fundamental action into an auction among the richest users.
 
-## 14. Freedom of conscience
+## 14. Right to intermittent connectivity
+
+Economic standing must not depend on perfect internet access, continuous smartphone ownership, stable housing, uninterrupted electricity, or the ability to submit a transaction every epoch.
+
+For every epoch in which a person is validly eligible, the baseline entitlement accrues independently of whether that person can immediately settle it. When a delayed entitlement is eventually settled, its historical portions receive the same deterministic demurrage they would have experienced if settled on time. This preserves the right without creating a privileged non-demurring account for people who wait.
+
+Temporary validator censorship or service-provider outage should therefore delay settlement rather than permanently destroy an otherwise earned baseline entitlement.
+
+## 15. Freedom of conscience
 
 Aetherion's founders may openly locate the project's moral purpose in service to the Most High and the Kingdom virtues of truth, mercy, justice, humility, stewardship, restoration, and love of neighbor.
 
 Participation in the general economic protocol does not require assent to that theology. The system must not assign economic rank based on creed, worship, conversion, doctrine, or spiritual conformity.
 
-## 15. Epistemic honesty
+## 16. Epistemic honesty
 
 Users have a right to know whether a claim is:
 
@@ -127,27 +135,27 @@ Users have a right to know whether a claim is:
 
 Symbolic language cannot be used to manufacture technical authority.
 
-## 16. No secret monetary administration
+## 17. No secret monetary administration
 
-All canonical issuance classes, retirement rules, budgets, and parameter changes must be publicly inspectable at the protocol level. There is no legitimate hidden founder mint, silent balance rewrite, or undisclosed inflation path.
+All canonical issuance classes, retirement rules, budgets, and parameter changes must be publicly inspectable at the protocol level. There is no legitimate hidden founder mint, silent balance rewrite, undisclosed inflation path, replayed evidence mint, or silent restoration of a spent program budget.
 
-## 17. Security without surveillance maximalism
+## 18. Security without surveillance maximalism
 
 Fraud prevention does not automatically justify collecting every possible datum.
 
 Security design should prefer cryptographic proof, scoped authorization, rate limits, threshold controls, local processing, selective disclosure, and audit trails over generalized behavioral surveillance.
 
-## 18. Right to challenge automation
+## 19. Right to challenge automation
 
 If automated systems materially influence identity, program eligibility, fraud flags, or governance workflows, affected people must have a path to human review appropriate to the risk.
 
 An AI confidence score is evidence for review, not a final moral verdict.
 
-## 19. Open protocol accountability
+## 20. Open protocol accountability
 
 Consensus rules, monetary policy code, genesis inputs, governance procedures, and security assumptions should remain publicly inspectable. Operational secrets such as private keys stay secret; rules that exercise public power do not.
 
-## 20. The test
+## 21. The test
 
 Aetherion should repeatedly ask a simple question:
 
