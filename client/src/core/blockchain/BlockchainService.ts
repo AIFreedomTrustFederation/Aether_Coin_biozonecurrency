@@ -86,22 +86,43 @@ export class BlockchainService extends EventEmitter {
     this.walletStatus = this.walletAddress
       ? WalletConnectionStatus.CONNECTED
       : WalletConnectionStatus.DISCONNECTED;
+    const event = {
+      accounts: accounts ?? [],
+      address: this.walletAddress,
+      walletStatus: this.walletStatus,
+    };
+    this.emit('externalWalletAccountsChanged', event);
+    this.notifyListeners('externalWalletAccountsChanged', event);
   }
 
   private handleChainChanged(chainId: string): void {
-    this.emit('externalWalletChainChanged', {
+    const event = {
       chainId,
       notice: 'External wallet chain change only; not canonical Aetherion state.',
-    });
+    };
+    this.emit('externalWalletChainChanged', event);
+    this.notifyListeners('externalWalletChainChanged', event);
   }
 
   private handleConnect(): void {
-    this.emit('externalWalletProviderConnected');
+    const event = {
+      implementationStatus: this.implementationStatus,
+      canonicalAetherionConnection: false,
+    };
+    this.emit('externalWalletProviderConnected', event);
+    this.notifyListeners('externalWalletProviderConnected', event);
   }
 
   private handleDisconnect(): void {
     this.walletAddress = null;
     this.walletStatus = WalletConnectionStatus.DISCONNECTED;
+    const event = {
+      address: null,
+      walletStatus: this.walletStatus,
+      providerDisconnected: true,
+    };
+    this.emit('walletDisconnected', event);
+    this.notifyListeners('walletDisconnected', event);
   }
 
   public getLatestBlock(): Block {
