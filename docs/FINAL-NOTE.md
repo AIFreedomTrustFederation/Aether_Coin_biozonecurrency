@@ -1,1 +1,0 @@
-This branch is ready for pull-request review. No additional protocol design is introduced by this note.
