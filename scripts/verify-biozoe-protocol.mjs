@@ -32,13 +32,19 @@ const requiredDocs = [
   'FLIGHTPAPER.md',
   'PHILOSOPHY.md',
   'MONETARY-CONSTITUTION.md',
+  'HUMAN-RIGHTS-AND-SAFEGUARDS.md',
   'COMPUTER-DESIGN.md',
   'GENESIS.md',
+  'protocol/README.md',
   'protocol/genesis.seed.json',
+  'protocol/protocol.manifest.json',
   'protocol/reference/biozoe-policy.mjs',
   'protocol/reference/biozoe-policy.test.mjs',
   'protocol/reference/aetherion-state-machine.mjs',
   'protocol/reference/aetherion-state-machine.test.mjs',
+  'docs/aetherion-threat-model.md',
+  'docs/consensus-and-governance.md',
+  'docs/external-anchoring.md',
 ];
 
 console.log('AETHERION BIOZOE CONSTITUTION CHECK');
@@ -48,6 +54,7 @@ for (const file of requiredDocs) {
 }
 
 let seed;
+let manifest;
 try {
   seed = json('protocol/genesis.seed.json');
   ok('genesis seed parses as JSON');
@@ -55,7 +62,15 @@ try {
   fail(`genesis seed invalid: ${error.message}`);
 }
 
+try {
+  manifest = json('protocol/protocol.manifest.json');
+  ok('protocol manifest parses as JSON');
+} catch (error) {
+  fail(`protocol manifest invalid: ${error.message}`);
+}
+
 if (seed) {
+  expect(seed.network?.chain_id === 'aetherion-1', 'canonical design chain id is aetherion-1');
   expect(seed.genesis?.premine === '0', 'genesis premine is zero');
   expect(seed.genesis?.founder_allocation === '0', 'founder allocation is zero');
   expect(seed.genesis?.investor_allocation === '0', 'investor allocation is zero');
@@ -71,9 +86,22 @@ if (seed) {
   expect(seed.consensus?.validator_voting_power_model === 'equal-unit-per-authorized-validator', 'validator voting power is equal-unit authorization based');
   expect(seed.resource_control?.economic_asset_is_not_spam_budget === true, 'ATC is separated from anti-spam resource accounting');
   expect(seed.resource_control?.nontransferable_compute_credits?.tradable === false, 'Pulse is non-transferable');
+  expect(seed.resource_control?.nontransferable_compute_credits?.governance_power === false, 'Pulse confers no governance power');
+  expect(seed.anchoring?.bitcoin_required_for_liveness === false, 'Bitcoin is not required for Aetherion liveness');
   expect(seed.claims?.sacred_or_spiritual_language_is_consensus_input === false, 'spiritual language is not consensus input');
   expect(seed.claims?.random_or_symbolic_metrics_are_economic_or_security_evidence === false, 'symbolic/random metrics are not economic or security evidence');
   expect(seed.claims?.mainnet_is_live === false, 'seed does not falsely claim mainnet is live');
+  expect(seed.claims?.cryptography_is_audited === false, 'seed does not falsely claim audited cryptography');
+}
+
+if (seed && manifest) {
+  expect(manifest.native_asset?.symbol === seed.network?.native_asset?.symbol, 'manifest and seed agree on ATC symbol');
+  expect(manifest.native_asset?.base_denom === seed.network?.native_asset?.base_denom, 'manifest and seed agree on base denomination');
+  expect(manifest.native_asset?.display_exponent === seed.network?.native_asset?.display_exponent, 'manifest and seed agree on display exponent');
+  expect(manifest.native_asset?.terminal_supply_cap === null, 'manifest preserves no-terminal-cap invariant');
+  expect(manifest.consensus_target?.wealth_weighted === false, 'manifest rejects wealth-weighted consensus');
+  expect(manifest.resource_accounting?.transferable === false, 'manifest keeps Pulse non-transferable');
+  expect(manifest.external_anchor?.required_for_liveness === false, 'manifest keeps external anchor optional');
 }
 
 for (const relativePath of [
@@ -84,12 +112,20 @@ for (const relativePath of [
   const content = read(relativePath);
   expect(!content.includes('Math.random'), `${relativePath} contains no Math.random consensus input`);
   expect(!content.includes('Number('), `${relativePath} does not coerce monetary balances through Number()`);
+  expect(!content.includes('Date.now'), `${relativePath} contains no local wall-clock consensus input`);
 }
 
 const constitution = fs.existsSync(path.join(root, 'MONETARY-CONSTITUTION.md')) ? read('MONETARY-CONSTITUTION.md') : '';
 expect(constitution.includes('No premine'), 'monetary constitution protects no-premine rule');
 expect(constitution.includes('No terminal supply cap'), 'monetary constitution protects unbounded issuance possibility');
 expect(constitution.includes('No token-weighted constitutional power'), 'monetary constitution rejects wealth-purchased constitutional power');
+expect(constitution.includes('Human worth is not a score'), 'monetary constitution separates dignity from contribution scoring');
+
+const rights = fs.existsSync(path.join(root, 'HUMAN-RIGHTS-AND-SAFEGUARDS.md')) ? read('HUMAN-RIGHTS-AND-SAFEGUARDS.md') : '';
+expect(rights.includes('No universal social-credit score'), 'rights layer rejects universal social-credit scoring');
+expect(rights.includes('No forced biometrics'), 'rights layer rejects forced biometrics');
+expect(rights.includes('Freedom of conscience'), 'rights layer protects freedom of conscience');
+expect(rights.includes('AI cannot own consent'), 'rights layer prevents AI from owning human consent');
 
 if (failures > 0) {
   console.error(`RED Biozoe protocol verification failed with ${failures} issue(s).`);
