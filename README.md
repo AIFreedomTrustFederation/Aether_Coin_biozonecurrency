@@ -8,7 +8,7 @@ The governing principle is:
 
 > **Unbounded monetary possibility. Bounded issuance authority. Equal human standing. Real resource constraints.**
 
-Aetherion is not yet a live, audited mainnet. The repository now distinguishes constitutional target, deterministic reference implementation, legacy prototypes, and future production work so the language cannot outrun the evidence.
+Aetherion is not yet a live, audited mainnet. The repository distinguishes constitutional target, deterministic reference implementation, legacy prototypes, and future production work so the language cannot outrun the evidence.
 
 ---
 
@@ -25,6 +25,7 @@ Aetherion begins with zero private monetary ownership at genesis:
 - **no token-weighted human governance**
 - **no ATC-balance-derived validator power**
 - **no early-adopter multiplier on universal issuance**
+- **no connectivity requirement to preserve an earned baseline entitlement**
 
 Genesis establishes the rules; it does not establish an aristocracy.
 
@@ -38,12 +39,14 @@ At every finite point in time, ATC supply is finite and auditable. The protocol 
 
 New ATC may enter through enumerated issuance classes:
 
-1. **Universal issuance** — equal baseline issuance for an eligible unique person per epoch.
+1. **Universal issuance** — one equal baseline entitlement for each eligible unique person in each eligible epoch.
 2. **Contribution issuance** — governed, budgeted issuance backed by accepted evidence.
 3. **Regenerative issuance** — governed, budgeted issuance for accepted restoration outcomes.
 4. **Stewardship issuance** — governed, budgeted compensation for public/network infrastructure.
 
 No generic administrator `mint(amount)` path belongs in the production protocol.
+
+Universal issuance is an **accrued right, not a daily attendance test**. A person who is eligible but temporarily offline, displaced, hospitalized, without a device, or otherwise unable to transact does not lose the eligible epochs. When the entitlement is later settled, older portions are passed through the same deterministic historical demurrage they would have experienced if claimed on time. Delayed settlement therefore creates neither a connectivity penalty nor an interest-free demurrage escape.
 
 A small deterministic demurrage mechanism is supported so time alone does not convert early access into permanent passive dominance. The design-devnet seed currently uses one ATC of universal issuance per daily epoch and 192 ppm daily demurrage. Those are test parameters, not claims of final economic calibration.
 
@@ -51,6 +54,7 @@ Read the binding design documents:
 
 - [`WHITEPAPER.md`](WHITEPAPER.md) — economic and protocol thesis
 - [`MONETARY-CONSTITUTION.md`](MONETARY-CONSTITUTION.md) — protected monetary rights and constraints
+- [`HUMAN-RIGHTS-AND-SAFEGUARDS.md`](HUMAN-RIGHTS-AND-SAFEGUARDS.md) — anti-coercion, privacy, accessibility, due-process, and freedom-of-conscience protections
 - [`PHILOSOPHY.md`](PHILOSOPHY.md) — dignity, abundance, stewardship, and spiritual/epistemic boundaries
 - [`COMPUTER-DESIGN.md`](COMPUTER-DESIGN.md) — target node and state-machine architecture
 - [`GENESIS.md`](GENESIS.md) — reproducible zero-allocation genesis
@@ -80,7 +84,7 @@ The target validator model uses an authorized validator registry with equal unit
 
 Universal issuance and contribution issuance are intentionally separate.
 
-A person's baseline economic standing does not disappear because they are sick, elderly, caregiving, displaced, unemployed, studying, recovering, or otherwise producing less market-measurable output during a period of life.
+A person's baseline economic standing does not disappear because they are sick, elderly, caregiving, displaced, unemployed, studying, recovering, temporarily offline, or otherwise producing less market-measurable output during a period of life.
 
 Contribution programs can recognize care, repair, ecological restoration, teaching, code, art, infrastructure, food production, mediation, research, and other work without constructing one universal score of human worth.
 
@@ -138,15 +142,18 @@ The network is intended to remain usable by people of any faith or no faith. Spi
 
 ## Reference implementation
 
-The new deterministic reference implementation lives under [`protocol/reference/`](protocol/reference/).
+The deterministic executable specification lives under [`protocol/reference/`](protocol/reference/).
 
 It currently includes:
 
-- equal universal issuance,
+- equal universal issuance rights,
+- offline-safe accrued entitlement settlement,
+- suspension-aware eligibility intervals,
 - deterministic integer demurrage,
-- governed budgeted issuance,
+- governed contribution, regenerative, and stewardship budgets,
+- evidence-replay protection,
+- budget-reset protection,
 - transfer conservation,
-- identity eligibility state,
 - epoch transitions,
 - cumulative issuance/retirement accounting,
 - supply invariant verification,
@@ -156,9 +163,12 @@ It currently includes:
 Run:
 
 ```bash
-npm run protocol:test
 npm run protocol:verify
+npm run protocol:test
+npm run protocol:simulate
 ```
+
+The simulator explores baseline cohort behavior under design parameters; it makes no price or purchasing-power guarantee.
 
 The reference state machine deliberately contains no wallet-signing pretense. Authentication belongs at the transaction/consensus boundary and must use real cryptography in the production node.
 
@@ -166,17 +176,19 @@ The reference state machine deliberately contains no wallet-signing pretense. Au
 
 ## Legacy prototype boundary
 
-This repository predates the current constitution and contains historical browser-side blockchain experiments, placeholder signing, local proof-of-work demonstrations, hard-coded RPC/explorer URLs, and randomly generated symbolic Biozoe metrics.
+This repository predates the current constitution and contains historical browser-side blockchain experiments, placeholder signing, local proof-of-work demonstrations, hard-coded RPC/explorer assumptions, and randomly generated symbolic Biozoe metrics.
 
 Those artifacts are **not** proof that an Aetherion mainnet exists and are **not** canonical consensus code.
 
-Migration rules are now explicit:
+Migration rules are explicit:
 
 - consensus-critical work moves under `protocol/` or a future dedicated node package;
 - browser/UI code must consume canonical state instead of inventing it locally;
 - random symbolic metrics remain visualization-only;
 - placeholder signatures never enter production custody;
 - old EVM-style chain IDs and RPC strings do not establish network reality.
+
+The wallet network configuration has already been changed so production endpoints are not hard-coded or represented as live. A future EVM adapter must be explicitly configured and remains distinct from the canonical sovereign chain ID.
 
 ---
 
@@ -207,8 +219,8 @@ npm run qa:local
 Protocol validation:
 
 ```bash
-npm run protocol:test
 npm run protocol:verify
+npm run protocol:test
 ```
 
 Application validation where dependencies are installed:
@@ -220,7 +232,7 @@ npm run security:audit
 npm run security:deps
 ```
 
-No green local check should be represented as an independent security audit.
+The repository currently has no root `package-lock.json`; protocol QA is dependency-free, while application dependency reproduction requires a deliberately regenerated and reviewed lockfile. No green local or CI check should be represented as an independent security audit.
 
 ---
 
@@ -240,6 +252,6 @@ AI may explain, model, compare, warn, and propose. It does not silently sign, cu
 
 Aetherion succeeds only if its deepest principles survive contact with money and power.
 
-The founder must remain bound by the same monetary constitution as the newcomer. Wealth must not silently become sovereignty. A person's dignity must not collapse into a productivity score. Abundance must not become permission for arbitrary minting. Spiritual aspiration must not become an excuse for false technical claims. Interoperability must not become dependency.
+The founder must remain bound by the same monetary constitution as the newcomer. Wealth must not silently become sovereignty. A person's dignity must not collapse into a productivity score. Poverty or intermittent connectivity must not erase an earned economic right. Abundance must not become permission for arbitrary minting. Spiritual aspiration must not become an excuse for false technical claims. Interoperability must not become dependency.
 
 The purpose of the ledger is not to teach life how to serve the ledger. The purpose of the ledger is to remember how value can return to life without losing consent, truth, or relationship along the way.
