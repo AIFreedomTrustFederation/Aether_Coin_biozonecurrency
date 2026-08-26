@@ -1,0 +1,59 @@
+{
+  "protocol": "aetherion-biozoe",
+  "version": "2.0.0-design",
+  "status": "prototype",
+  "canonical_documents": [
+    "WHITEPAPER.md",
+    "MONETARY-CONSTITUTION.md",
+    "PHILOSOPHY.md",
+    "COMPUTER-DESIGN.md",
+    "GENESIS.md",
+    "FLIGHTPAPER.md"
+  ],
+  "native_asset": {
+    "name": "AetherCoin",
+    "symbol": "ATC",
+    "base_denom": "aatc",
+    "display_exponent": 18,
+    "terminal_supply_cap": null
+  },
+  "protected_invariants": [
+    "ZERO_PREMINE",
+    "ZERO_PRIVATE_GENESIS_ALLOCATION",
+    "NO_TERMINAL_SUPPLY_CAP",
+    "EQUAL_BASELINE_ISSUANCE_RIGHT",
+    "NO_EARLY_ADOPTER_BASELINE_MULTIPLIER",
+    "NO_TOKEN_WEIGHTED_HUMAN_GOVERNANCE",
+    "NO_BALANCE_DERIVED_VALIDATOR_POWER",
+    "NO_GENERIC_ADMIN_MINT",
+    "MONEY_SEPARATE_FROM_RESOURCE_QUOTA",
+    "SPIRITUAL_LANGUAGE_NOT_CONSENSUS_INPUT"
+  ],
+  "issuance_classes": [
+    "universal",
+    "contribution",
+    "regenerative",
+    "stewardship"
+  ],
+  "consensus_target": {
+    "family": "CometBFT-compatible BFT",
+    "wealth_weighted": false,
+    "validator_power": "equal-unit-authorized-validator"
+  },
+  "resource_accounting": {
+    "name": "Pulse",
+    "transferable": false,
+    "governance_weight": false,
+    "validator_weight": false
+  },
+  "external_anchor": {
+    "required_for_liveness": false,
+    "adapter": true,
+    "targets": ["Bitcoin", "BitcoinOS-like ZK settlement"]
+  },
+  "reference_implementation": {
+    "path": "protocol/reference",
+    "consensus_critical": false,
+    "purpose": "deterministic executable specification pending production node integration"
+  }
+}
