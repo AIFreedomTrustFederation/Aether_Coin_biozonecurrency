@@ -28,17 +28,22 @@
     "model": "biozoe-unbounded-authorized-issuance",
     "terminal_supply_cap": null,
     "universal_issuance_aatc_per_eligible_identity_per_epoch": "1000000000000000000",
+    "universal_entitlement_accrues_without_connectivity": true,
+    "delayed_entitlement_uses_historical_demurrage": true,
     "demurrage_ppm_per_epoch": 192,
     "demurrage_destination": "retire",
     "contribution_issuance_enabled": false,
     "regenerative_issuance_enabled": false,
     "stewardship_issuance_enabled": false,
-    "notes": "Initial parameters are devnet design defaults, not claims of a production-stable monetary policy. Contribution, regenerative, and stewardship issuance require explicit governed budgets and evidence rules before activation."
+    "budgeted_evidence_replay_allowed": false,
+    "spent_budget_reset_allowed": false,
+    "notes": "Initial parameters are devnet design defaults, not claims of a production-stable monetary policy. Eligible universal entitlements accrue even when a person cannot transact and are settled later with historical demurrage. Contribution, regenerative, and stewardship issuance require explicit governed budgets and evidence rules before activation."
   },
   "identity": {
     "source_of_eligibility": "AIFT-Genesis compatible personhood attestation",
     "one_active_baseline_stream_per_person": true,
     "transferable_identity": false,
+    "suspension_erases_previously_earned_entitlements": false,
     "privacy_requirement": "Protocol integrations should support privacy-preserving uniqueness proofs; raw civil identity is not required to be public on-chain."
   },
   "consensus": {
