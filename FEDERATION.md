@@ -6,7 +6,7 @@
 
 ## Role
 
-economic layer, DynastyLink, AetherCoin, and biozone currency systems
+economic layer, DynastyLink, AetherCoin, and biozoecurrency systems
 
 ## Operating Principle
 
