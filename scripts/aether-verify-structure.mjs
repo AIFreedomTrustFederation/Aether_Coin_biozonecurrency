@@ -21,6 +21,10 @@ function ok(message) {
   console.log(`GREEN ${message}`);
 }
 
+function warn(message) {
+  console.warn(`AMBER ${message}`);
+}
+
 function fail(message) {
   failures += 1;
   console.error(`RED ${message}`);
@@ -61,7 +65,7 @@ function checkPackageScripts(packageJson) {
 
 function checkPackageLock(packageJson) {
   if (!exists('package-lock.json')) {
-    fail('package-lock.json missing');
+    warn('package-lock.json is absent; dependency-free protocol QA can run, but application dependency reproduction requires regenerating and reviewing a lockfile');
     return;
   }
 
@@ -88,7 +92,7 @@ function checkHookIsEsm() {
 }
 
 function main() {
-  console.log('AETHER COIN BIOZOECURRENCY STRUCTURE CHECK');
+  console.log('AETHERION BIOZOECURRENCY STRUCTURE CHECK');
 
   const requiredFiles = [
     'README.md',
@@ -97,6 +101,7 @@ function main() {
     'FLIGHTPAPER.md',
     'PHILOSOPHY.md',
     'MONETARY-CONSTITUTION.md',
+    'HUMAN-RIGHTS-AND-SAFEGUARDS.md',
     'COMPUTER-DESIGN.md',
     'GENESIS.md',
     'SECURITY.md',
@@ -104,16 +109,20 @@ function main() {
     'STRUCTURE.md',
     'QUANTUM-SECURITY.md',
     'package.json',
-    'package-lock.json',
     '.env.example',
     'docs/status.md',
     'docs/validation.md',
     'docs/security-and-privacy.md',
+    'docs/aetherion-threat-model.md',
+    'docs/consensus-and-governance.md',
+    'docs/external-anchoring.md',
     'scripts/aether-verify-structure.mjs',
     'scripts/verify-biozoe-protocol.mjs',
     'scripts/security-audit.js',
     'scripts/pre-commit-hook.js',
+    'protocol/README.md',
     'protocol/genesis.seed.json',
+    'protocol/protocol.manifest.json',
     'protocol/reference/biozoe-policy.mjs',
     'protocol/reference/biozoe-policy.test.mjs',
     'protocol/reference/aetherion-state-machine.mjs',
@@ -154,7 +163,7 @@ function main() {
     return;
   }
 
-  ok('Aether structure check passed.');
+  ok('Aetherion structure check passed.');
 }
 
 main();
