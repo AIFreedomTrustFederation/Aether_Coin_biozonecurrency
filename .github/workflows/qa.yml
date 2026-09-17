@@ -21,11 +21,11 @@
       "timeout-minutes": 10,
       "steps": [
         {
-          "name": "Check out repository",
-          "uses": "actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683",
-          "with": {
-            "persist-credentials": false
-          }
+          "name": "Clone triggering commit",
+          "env": {
+            "TARGET_SHA": "${{ github.sha }}"
+          },
+          "run": "set -Eeuo pipefail\ngit init\ngit remote add origin \"https://github.com/${GITHUB_REPOSITORY}.git\"\ngit fetch --depth=1 origin \"$TARGET_SHA\"\ngit checkout --detach FETCH_HEAD\n"
         },
         {
           "name": "Use Node.js 22",
