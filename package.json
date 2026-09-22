@@ -4,14 +4,17 @@
   "type": "module",
   "license": "MIT",
   "scripts": {
-    "test": "npm run qa:local",
+    "test": "npm run protocol:test",
     "lint": "npm run verify:structure",
-    "qa:local": "npm run verify:structure && npm run security:api-keys",
+    "qa:local": "npm run verify:structure && npm run protocol:verify && npm run protocol:test && npm run security:api-keys",
     "verify:structure": "node scripts/aether-verify-structure.mjs",
+    "protocol:test": "node --test protocol/reference/*.test.mjs",
+    "protocol:verify": "node scripts/verify-biozoe-protocol.mjs",
+    "protocol:simulate": "node protocol/simulation/biozoe-sim.mjs",
     "dev": "node combined-server.js",
     "build": "vite build",
     "start": "NODE_ENV=production node dist/index.js",
-    "check": "tsc",
+    "check": "npm run check:legacy",
     "db:push": "drizzle-kit push",
     "security:audit": "node scripts/security-audit.js",
     "security:deps": "npm audit",
@@ -20,7 +23,9 @@
     "security:install-hooks": "powershell -ExecutionPolicy Bypass -File scripts/install-pre-commit-hook.ps1",
     "eval": "node scripts/braintrust-integration.js",
     "eval:custom": "node -e \"import('./scripts/braintrust-integration.js').then(m => m.runEvaluation(...process.argv.slice(1)))\" --",
-    "eval:ai": "node scripts/run-ai-evaluation.js"
+    "eval:ai": "node scripts/run-ai-evaluation.js",
+    "check:wallet": "tsc -p tsconfig.wallet.json",
+    "check:legacy": "tsc -p tsconfig.json"
   },
   "dependencies": {
     "@ethersproject/units": "^5.8.0",

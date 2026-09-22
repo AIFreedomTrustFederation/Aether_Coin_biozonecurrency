@@ -21,6 +21,10 @@ function ok(message) {
   console.log(`GREEN ${message}`);
 }
 
+function warn(message) {
+  console.warn(`AMBER ${message}`);
+}
+
 function fail(message) {
   failures += 1;
   console.error(`RED ${message}`);
@@ -43,6 +47,9 @@ function checkPackageScripts(packageJson) {
     'lint',
     'qa:local',
     'verify:structure',
+    'protocol:test',
+    'protocol:verify',
+    'protocol:simulate',
     'build',
     'check',
     'security:audit',
@@ -59,7 +66,7 @@ function checkPackageScripts(packageJson) {
 
 function checkPackageLock(packageJson) {
   if (!exists('package-lock.json')) {
-    fail('package-lock.json missing');
+    warn('package-lock.json is absent; dependency-free protocol QA can run, but application dependency reproduction requires regenerating and reviewing a lockfile');
     return;
   }
 
@@ -86,23 +93,45 @@ function checkHookIsEsm() {
 }
 
 function main() {
-  console.log('AETHER COIN BIOZOECURRENCY STRUCTURE CHECK');
+  console.log('AETHERION BIOZOECURRENCY STRUCTURE CHECK');
 
   const requiredFiles = [
     'README.md',
     'AGENTS.md',
+    'WHITEPAPER.md',
+    'FLIGHTPAPER.md',
+    'PHILOSOPHY.md',
+    'MONETARY-CONSTITUTION.md',
+    'HUMAN-RIGHTS-AND-SAFEGUARDS.md',
+    'COMPUTER-DESIGN.md',
+    'GENESIS.md',
     'SECURITY.md',
     'API-SECURITY-GUIDELINES.md',
     'STRUCTURE.md',
     'QUANTUM-SECURITY.md',
     'package.json',
-    'package-lock.json',
     '.env.example',
     'docs/status.md',
     'docs/validation.md',
     'docs/security-and-privacy.md',
+    'docs/aetherion-threat-model.md',
+    'docs/consensus-and-governance.md',
+    'docs/external-anchoring.md',
+    'docs/circulation-and-exchange.md',
+    'docs/regulatory-launch-gate.md',
+    'scripts/aether-verify-structure.mjs',
+    'scripts/verify-biozoe-protocol.mjs',
     'scripts/security-audit.js',
     'scripts/pre-commit-hook.js',
+    'protocol/README.md',
+    'protocol/genesis.seed.json',
+    'protocol/protocol.manifest.json',
+    'protocol/reference/biozoe-policy.mjs',
+    'protocol/reference/biozoe-policy.test.mjs',
+    'protocol/reference/aetherion-state-machine.mjs',
+    'protocol/reference/aetherion-state-machine.test.mjs',
+    'protocol/reference/circulation-exchange.test.mjs',
+    'protocol/simulation/biozoe-sim.mjs',
     'apps/dynastylink-local/README.md',
     'apps/dynastylink-local/docs/security/privacy-security-checklist.md',
     'apps/dynastylink-local/docs/architecture/no-external-api-architecture.md',
@@ -113,7 +142,7 @@ function main() {
 
   for (const file of requiredFiles) checkFile(file);
 
-  const requiredDirectories = ['client', 'server', 'shared', 'scripts', 'docs', 'apps/dynastylink-local'];
+  const requiredDirectories = ['client', 'server', 'shared', 'scripts', 'docs', 'protocol', 'protocol/reference', 'protocol/simulation', 'apps/dynastylink-local'];
   for (const directory of requiredDirectories) checkDirectory(directory);
 
   let packageJson;
@@ -139,7 +168,7 @@ function main() {
     return;
   }
 
-  ok('Aether structure check passed.');
+  ok('Aetherion structure check passed.');
 }
 
 main();

@@ -2,7 +2,7 @@
   "schema": "https://aifreedomtrust.org/schemas/aift.repo.schema.json",
   "name": "Aether_Coin_biozonecurrency",
   "layer": "economy",
-  "role": "economic layer, DynastyLink, AetherCoin, and biozone currency systems",
+  "role": "economic layer, DynastyLink, AetherCoin, and biozoecurrency systems",
   "workspacePath": "/data/data/com.termux/files/home/AIFT/Aether_Coin_biozonecurrency",
   "federation": {
     "workspace": "AIFT",

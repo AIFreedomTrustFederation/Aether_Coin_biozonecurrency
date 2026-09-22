@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "client/src/core/blockchain/BlockchainService.ts",
+    "client/src/core/blockchain/types.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "build",
+    "dist",
+    "**/*.test.ts"
+  ],
+  "compilerOptions": {
+    "incremental": false,
+    "tsBuildInfoFile": null
+  }
+}

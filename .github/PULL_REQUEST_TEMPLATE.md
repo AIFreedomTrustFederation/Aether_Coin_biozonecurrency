@@ -1,20 +1,55 @@
 ## Summary
 
-## Changes
-- 
+Describe the change and the user/economic problem it addresses.
 
-## Risk area
-- [ ] Wallet, custody, payment, token, or transaction behavior
-- [ ] Authentication, authorization, privacy, or secret handling
-- [ ] Database schema or migration
-- [ ] Deployment or GitHub Actions
-- [ ] Documentation only
+## Protocol impact
 
-## Verification
-- [ ] `npm run qa:local`
-- [ ] `npm run build`
-- [ ] `npm run check`
-- [ ] `npm run security:audit`
-- [ ] `npm run security:deps`
+- [ ] No protocol impact
+- [ ] Ordinary parameter change
+- [ ] Monetary/economic behavior change
+- [ ] Constitutional invariant change
+- [ ] Genesis change
+- [ ] Identity/Sybil change
+- [ ] Circulation/reward change
+- [ ] Canonical exchange/custody change
+- [ ] Validator/consensus change
 
-## Notes
+## Required evidence
+
+- [ ] `npm run protocol:verify`
+- [ ] `npm run protocol:test`
+- [ ] `npm run protocol:simulate` where economics are affected
+- [ ] `npm run qa:local` where applicable
+- [ ] No new false mainnet, audit, price, reserve, or legal claims
+- [ ] Supply/issuance/retirement impact explained
+- [ ] Security and abuse impact explained
+- [ ] Privacy impact explained
+- [ ] Migration impact explained
+
+## High-risk boundaries
+
+If circulation is affected:
+
+- [ ] reward remains epoch-bounded
+- [ ] raw transaction count is not mint authority
+- [ ] replay/wash/Sybil effects considered
+- [ ] reward is based on qualified net circulation
+- [ ] eligible transfers and circulation receipts are single-use
+- [ ] bilateral round trips are pairwise netted before scoring
+- [ ] diminishing-return scoring is deterministic
+- [ ] circulation score is not reused as citizenship, credit, moral, or governance weight
+- [ ] per-person caps and privacy effects considered
+
+If canonical conversion is affected:
+
+- [ ] ordinary ATC transfer remains outside exit friction
+- [ ] reference value is separate from net proceeds
+- [ ] hard friction cap remains enforceable
+- [ ] no indefinite lock introduced
+- [ ] retirement cannot precede external settlement acceptance
+- [ ] no external-deposit generic mint introduced
+- [ ] operator/regulatory launch impact identified
+
+## Status claim
+
+State whether this change is `implemented`, `prototype`, `experimental`, `planned`, `blocked`, `needs review`, or `audited` and name evidence for any status stronger than prototype.
