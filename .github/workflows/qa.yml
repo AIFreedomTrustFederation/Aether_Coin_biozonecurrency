@@ -37,6 +37,10 @@
         {
           "name": "Run dependency-light repository gate",
           "run": "npm run qa:local"
+        },
+        {
+          "name": "Verify clean checkout",
+          "run": "test -z \"$(git status --porcelain)\""
         }
       ]
     }
