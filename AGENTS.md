@@ -41,7 +41,15 @@ The system records clearly.
 
 Use available project checks such as build, tests, audits, and documentation review. Do not claim production security without proof.
 
-Use `npm run qa:local` as the dependency-light gate for docs, manifests, package scripts, package-lock alignment, DynastyLink local-first docs, package surfaces, and the API-key guard script.
+Use Node.js 22 and run the canonical dependency-light gate without installing packages:
+
+```bash
+npm run qa:local
+git diff --check
+test -z "$(git status --porcelain)"
+```
+
+This verifies docs, manifests, package scripts, package-lock alignment, DynastyLink local-first docs, package surfaces, and the API-key guard script. It must leave the checkout unchanged.
 
 Use area-specific checks from `docs/validation.md` for app code, database, security, wallet, AI, deployment, or DynastyLink changes. Do not claim production wallet safety, audited cryptography, legal validity, or deployment readiness without matching evidence.
 
