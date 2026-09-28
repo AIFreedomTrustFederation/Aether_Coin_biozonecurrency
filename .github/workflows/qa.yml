@@ -36,7 +36,7 @@
         },
         {
           "name": "Run dependency-light repository gate",
-          "run": "npm run qa:local"
+          "run": "test \"$(npm config get ignore-scripts)\" = true\nnpm run qa:local\n"
         },
         {
           "name": "Verify clean checkout",
