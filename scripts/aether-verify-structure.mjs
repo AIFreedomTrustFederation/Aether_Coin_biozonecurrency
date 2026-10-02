@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import fs from 'fs';
 import path from 'path';
+import { spawnSync } from 'child_process';
 
 const root = process.cwd();
 let failures = 0;
@@ -85,6 +86,34 @@ function checkHookIsEsm() {
   else ok(`${hookPath} is ESM-compatible`);
 }
 
+function checkShellSyntax() {
+  const tracked = spawnSync('git', ['ls-files', '-z', '--', '*.sh'], {
+    cwd: root,
+    encoding: 'utf8',
+  });
+
+  if (tracked.status !== 0) {
+    fail(`unable to discover tracked shell sources: ${tracked.stderr.trim() || 'git failed'}`);
+    return;
+  }
+
+  const shellFiles = tracked.stdout.split('\0').filter(Boolean);
+  const failuresBefore = failures;
+
+  for (const shellFile of shellFiles) {
+    const result = spawnSync('bash', ['-n', shellFile], {
+      cwd: root,
+      encoding: 'utf8',
+    });
+
+    if (result.status !== 0) {
+      fail(`${shellFile} has invalid Bash syntax: ${result.stderr.trim() || 'bash failed'}`);
+    }
+  }
+
+  if (failures === failuresBefore) ok(`${shellFiles.length} tracked shell sources parse as Bash`);
+}
+
 function main() {
   console.log('AETHER COIN BIOZOECURRENCY STRUCTURE CHECK');
 
@@ -132,6 +161,7 @@ function main() {
   checkPackageScripts(packageJson);
   checkPackageLock(packageJson);
   checkHookIsEsm();
+  checkShellSyntax();
 
   if (failures > 0) {
     console.error(`RED Structure check failed with ${failures} issue(s).`);
