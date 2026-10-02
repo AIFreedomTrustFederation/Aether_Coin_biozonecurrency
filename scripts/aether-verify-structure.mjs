@@ -99,19 +99,31 @@ function checkShellSyntax() {
 
   const shellFiles = tracked.stdout.split('\0').filter(Boolean);
   const failuresBefore = failures;
+  const counts = { bash: 0, sh: 0 };
 
   for (const shellFile of shellFiles) {
-    const result = spawnSync('bash', ['-n', shellFile], {
+    const firstLine = readText(shellFile).split(/\r?\n/, 1)[0];
+    const interpreter = firstLine.match(/^#!\s*(?:\/usr\/bin\/env\s+)?(?:\/bin\/)?(bash|sh)(?:\s|$)/)?.[1];
+
+    if (!interpreter) {
+      fail(`${shellFile} must declare a supported bash or sh shebang`);
+      continue;
+    }
+
+    counts[interpreter] += 1;
+    const result = spawnSync(interpreter, ['-n', shellFile], {
       cwd: root,
       encoding: 'utf8',
     });
 
     if (result.status !== 0) {
-      fail(`${shellFile} has invalid Bash syntax: ${result.stderr.trim() || 'bash failed'}`);
+      fail(`${shellFile} has invalid ${interpreter} syntax: ${result.stderr.trim() || `${interpreter} failed`}`);
     }
   }
 
-  if (failures === failuresBefore) ok(`${shellFiles.length} tracked shell sources parse as Bash`);
+  if (failures === failuresBefore) {
+    ok(`${counts.bash} Bash and ${counts.sh} POSIX shell sources match their declared interpreters`);
+  }
 }
 
 function main() {
