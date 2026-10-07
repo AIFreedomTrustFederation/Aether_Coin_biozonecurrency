@@ -6,8 +6,9 @@
   "scripts": {
     "test": "npm run qa:local",
     "lint": "npm run verify:structure",
-    "qa:local": "npm run verify:structure && npm run security:api-keys",
+    "qa:local": "npm run verify:structure && npm run verify:federation && npm run security:api-keys",
     "verify:structure": "node scripts/aether-verify-structure.mjs",
+    "verify:federation": "node scripts/verify-federation-contracts.mjs",
     "dev": "node combined-server.js",
     "build": "vite build",
     "start": "NODE_ENV=production node dist/index.js",

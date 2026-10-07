@@ -40,7 +40,7 @@ Do not claim these as production-ready without matching implementation, review, 
 
 ## Current Validation Boundary
 
-`npm run qa:local` is the current dependency-light repo gate. It validates required docs, package scripts, package-lock alignment, major source directories, DynastyLink local-first docs, package surfaces, and the API-key guard script.
+`npm run qa:local` is the current dependency-light repo gate. It validates required docs, package scripts, package-lock alignment, major source directories, DynastyLink local-first docs, package surfaces, Federation contracts, and the API-key guard script.
 
 Last local `npm run qa:local` pass: 2026-06-24 on the Windows local builder.
 
@@ -75,7 +75,6 @@ node scripts/verify-biozoecurrency-terminology.mjs
 ## Current Known Gaps
 
 - Full local build and TypeScript checks have not been run in this connector session.
-- `package.json` still needs a local script hook for `verify:federation`; an attempted connector update was blocked by the tool safety layer.
 - The root `package-lock.json` is a minimal identity repair and should be regenerated from a local checkout.
 - `docs/security-and-privacy.md`, `AGENTS.md`, and deeper UI copy still need dedicated terminology and claim-boundary passes where connector safety blocked direct rewrites.
 - Older scripts, archived pasted logs, and deployment helper files may still contain the old Biozoe spelling and should be cleaned in a dedicated terminology pass.
@@ -87,5 +86,5 @@ node scripts/verify-biozoecurrency-terminology.mjs
 2. Run `node scripts/verify-biozoecurrency-terminology.mjs` in a local checkout.
 3. Run `npm run qa:local` in a local checkout.
 4. Regenerate a full `package-lock.json` from `package.json` in a local checkout.
-5. Add `verify:federation` and terminology scripts to `package.json` locally if the connector continues blocking that rewrite.
+5. Add the terminology verifier to `package.json` locally.
 6. Continue wiring typed contracts into UI and server code after TypeScript and build checks are green.
