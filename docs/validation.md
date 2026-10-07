@@ -25,6 +25,7 @@ This runs:
 
 ```bash
 npm run verify:structure
+npm run verify:federation
 npm run security:api-keys
 ```
 
