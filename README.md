@@ -87,6 +87,23 @@ Database-backed paths may additionally require PostgreSQL configuration and:
 npm run db:push
 ```
 
+### What the current verification commands actually prove
+
+The root [`package.json`](package.json) maps `npm test` to `npm run qa:local`, which currently runs **structure checks, federation-contract checks, and API-key pattern checks**. It is not, by itself, a smart-contract test suite, a custody audit, or a demonstration of reserve backing. The root `lint` command also invokes the structure checker rather than ESLint. Run the distinct TypeScript and application build checks separately:
+
+```bash
+npm ci
+npm test
+npm run check
+npm run build
+npm run security:deps
+npm run security:audit
+```
+
+The [`scripts/security-audit.js`](scripts/security-audit.js) uses heuristic source-pattern scanning and catches dependency-audit errors for reporting; it should not be treated as proof that dependencies are vulnerability-free or that an external security audit occurred. The [`scripts/pre-commit-hook.js`](scripts/pre-commit-hook.js) scans selected staged filenames against key-like patterns, but excludes certain paths, reads working-tree content, and can be bypassed. Do not treat a passing secret scan as evidence that committed history, deployment configuration, or logs contain no credentials.
+
+**Financial verification boundary:** token names, reserve targets, wallet adapters, and escrow concepts do not establish token issuance, reserve assets, redemption rights, audited balances, or production custody. Before making such claims, identify the specific deployed network and contract address, independently verified contract source, controlling keys, reserve custodian and dated attestation, redemption terms, and transaction evidence. No such claim follows from the README or the root QA commands alone. Treat database migrations such as `npm run db:push` as state-changing operations requiring explicit environment review and authorization, not as routine verification.
+
 Never commit private keys, seed phrases, wallet credentials, API keys, database secrets, OAuth grants, signing keys, or other production credentials. Security language remains tied to what can actually be inspected and tested.
 
 ---
