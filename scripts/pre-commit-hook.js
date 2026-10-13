@@ -13,8 +13,7 @@
  *    if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
  */
 
-import { execSync } from 'child_process';
-import fs from 'fs';
+import { execFileSync } from 'child_process';
 
 // Patterns that might indicate API keys
 const API_KEY_PATTERNS = [
@@ -26,23 +25,11 @@ const API_KEY_PATTERNS = [
   /MISTRAL_API_KEY\s*=\s*(['"`])[^'"`\s]{8,}(['"`])/i,
 ];
 
-// Files to ignore (already committed or not sensitive)
-const IGNORED_FILES = [
-  '.git',
-  'node_modules',
-  'package-lock.json',
-  'yarn.lock',
-  'dist',
-  'build',
-  '.env.example',
-  'pre-commit-hook.js',
-];
-
 // Get staged files
 function getStagedFiles() {
   try {
-    const output = execSync('git diff --cached --name-only --diff-filter=ACM').toString();
-    return output.split('\n').filter(Boolean);
+    const output = execFileSync('git', ['diff', '--cached', '--name-only', '-z', '--diff-filter=ACMR'], { encoding: 'utf8' });
+    return output.split('\0').filter(Boolean);
   } catch (error) {
     console.error('Error getting staged files:', error.message);
     process.exit(1);
@@ -51,17 +38,17 @@ function getStagedFiles() {
 
 // Check if a file should be ignored
 function shouldIgnoreFile(filePath) {
-  return IGNORED_FILES.some(ignored => filePath.includes(ignored));
+  const parts = filePath.split('/');
+  return parts.some(part => ['.git', 'node_modules', 'dist', 'build'].includes(part)) ||
+    ['package-lock.json', 'yarn.lock', '.env.example'].includes(parts.at(-1)) ||
+    filePath === 'scripts/pre-commit-hook.js';
 }
 
 // Check a file for API keys
 function checkFileForApiKeys(filePath) {
   try {
-    if (!fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
-      return false;
-    }
-    
-    const content = fs.readFileSync(filePath, 'utf8');
+    // Read the exact bytes in the Git index, not potentially different working-tree bytes.
+    const content = execFileSync('git', ['show', `:${filePath}`], { encoding: 'utf8', maxBuffer: 20 * 1024 * 1024 });
     const lines = content.split('\n');
     let foundApiKey = false;
     
@@ -69,7 +56,8 @@ function checkFileForApiKeys(filePath) {
       API_KEY_PATTERNS.forEach(pattern => {
         if (pattern.test(line)) {
           console.error(`\x1b[31mPossible API key found in ${filePath}:${index + 1}\x1b[0m`);
-          console.error(`\x1b[33m${line}\x1b[0m`);
+          // Never print the matching line: it may contain a live credential.
+          console.error(`\x1b[33mPattern ${API_KEY_PATTERNS.indexOf(pattern) + 1} matched.\x1b[0m`);
           foundApiKey = true;
         }
       });
@@ -77,8 +65,8 @@ function checkFileForApiKeys(filePath) {
     
     return foundApiKey;
   } catch (error) {
-    console.error(`Error checking file ${filePath}:`, error.message);
-    return false;
+    console.error(`Error checking staged file ${JSON.stringify(filePath)}:`, error.message);
+    throw error;
   }
 }
 
@@ -87,11 +75,20 @@ function main() {
   const stagedFiles = getStagedFiles();
   let foundApiKeys = false;
   
-  stagedFiles.forEach(file => {
-    if (!shouldIgnoreFile(file) && checkFileForApiKeys(file)) {
-      foundApiKeys = true;
+  let scanFailed = false;
+  for (const file of stagedFiles) {
+    if (shouldIgnoreFile(file)) continue;
+    try {
+      if (checkFileForApiKeys(file)) foundApiKeys = true;
+    } catch {
+      scanFailed = true;
     }
-  });
+  }
+
+  if (scanFailed) {
+    console.error('COMMIT BLOCKED: One or more staged files could not be inspected.');
+    process.exit(1);
+  }
   
   if (foundApiKeys) {
     console.error('\x1b[31m');
