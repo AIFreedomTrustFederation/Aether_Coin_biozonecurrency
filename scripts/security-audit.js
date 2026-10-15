@@ -385,7 +385,7 @@ async function main() {
           const relativePath = path.relative(rootDir, issue.file);
           console.log(`\n  ${colors.cyan}${relativePath}:${issue.line}${colors.reset}`);
           console.log(`  ${colors.yellow}${issue.pattern}${colors.reset}: ${issue.description}`);
-          console.log(`  ${colors.white}${issue.match}${colors.reset}`);
+          // Never echo matched source text: findings may contain credentials.
         }
       }
     }
