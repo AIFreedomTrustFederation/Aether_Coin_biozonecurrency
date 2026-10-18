@@ -6,7 +6,7 @@
   "scripts": {
     "test": "npm run qa:local",
     "lint": "npm run verify:structure",
-    "qa:local": "npm run verify:structure && npm run verify:federation && npm run security:api-keys",
+    "qa:local": "npm run verify:structure && npm run verify:federation && npm run security:api-keys && node --test tests/test-security-audit-dependencies.mjs",
     "verify:structure": "node scripts/aether-verify-structure.mjs",
     "verify:federation": "node scripts/verify-federation-contracts.mjs",
     "dev": "node combined-server.js",

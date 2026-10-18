@@ -195,32 +195,50 @@ function scanFile(filePath) {
 
 // Function to check for outdated dependencies
 function checkDependencies() {
-  console.log(`${colors.blue}Checking for outdated dependencies...${colors.reset}`);
-  
+  console.log(`${colors.blue}Checking for dependency vulnerabilities...${colors.reset}`);
+  let output;
   try {
-    const output = execSync('npm audit --json', { encoding: 'utf8' });
-    const auditData = JSON.parse(output);
-    
-    if (auditData.vulnerabilities) {
-      const vulnCount = Object.values(auditData.vulnerabilities).reduce((acc, curr) => acc + curr.length, 0);
-      
-      if (vulnCount > 0) {
-        console.log(`${colors.red}Found ${vulnCount} vulnerabilities in dependencies!${colors.reset}`);
-        
-        for (const [severity, vulns] of Object.entries(auditData.vulnerabilities)) {
-          console.log(`${colors.yellow}${severity.toUpperCase()} severity issues: ${vulns.length}${colors.reset}`);
-          
-          for (const vuln of vulns) {
-            console.log(`  - ${colors.cyan}${vuln.name}${colors.reset}: ${vuln.title}`);
-            console.log(`    ${vuln.url}`);
-          }
-        }
-      } else {
-        console.log(`${colors.green}No vulnerabilities found in dependencies.${colors.reset}`);
+    output = execSync('npm audit --json', { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+  } catch (error) {
+    // npm audit exits 1 when it finds vulnerabilities. Its JSON is still valid evidence.
+    if (error.status !== 1 || !error.stdout) {
+      console.error(`${colors.red}Dependency audit could not complete:${colors.reset}`, error.message);
+      return;
+    }
+    output = error.stdout;
+  }
+
+  let auditData;
+  try {
+    auditData = JSON.parse(output);
+  } catch (error) {
+    console.error(`${colors.red}Dependency audit returned invalid JSON:${colors.reset}`, error.message);
+    return;
+  }
+
+  if (auditData.error) {
+    console.error(`${colors.red}Dependency audit reported an error:${colors.reset}`, auditData.error.summary || auditData.error.code || 'unknown error');
+    return;
+  }
+  const vulnerabilities = auditData.vulnerabilities;
+  if (!vulnerabilities || typeof vulnerabilities !== 'object') {
+    console.error(`${colors.red}Dependency audit returned no vulnerability data.${colors.reset}`);
+    return;
+  }
+  const count = auditData.metadata?.vulnerabilities?.total ?? Object.keys(vulnerabilities).length;
+  if (count === 0) {
+    console.log(`${colors.green}No vulnerabilities found in dependencies.${colors.reset}`);
+    return;
+  }
+  console.log(`${colors.red}Found ${count} vulnerable dependency package(s).${colors.reset}`);
+  for (const [name, detail] of Object.entries(vulnerabilities)) {
+    console.log(`  - ${colors.cyan}${name}${colors.reset}: ${detail.severity || 'unknown'} severity`);
+    for (const advisory of detail.via || []) {
+      if (typeof advisory === 'object' && advisory.title) {
+        console.log(`    ${advisory.title}`);
+        if (advisory.url) console.log(`    ${advisory.url}`);
       }
     }
-  } catch (error) {
-    console.error(`${colors.red}Error checking dependencies:${colors.reset}`, error.message);
   }
 }
 
