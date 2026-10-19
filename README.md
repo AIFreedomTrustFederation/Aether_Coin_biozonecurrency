@@ -65,12 +65,14 @@ Receive → Inspect → Name → Propose → Consent → Act → Verify → Reco
 
 **Receive** accepts wallet state, transaction intent, value event, escrow condition, stewardship record, or economic query. **Inspect** reads the real account, contract, network, database, credential boundary, and risk context available to the application. **Name** identifies the asset or symbolic primitive, source, destination, authority, network, amount, status, and uncertainty. **Propose** allows AI to explain or recommend while keeping the proposal visibly separate from execution. **Consent** is mandatory for transactions, custody changes, escrow release, credential use, signing, or other consequential financial acts. **Act** invokes the real governed transaction or application operation. **Verify** checks receipts, persistence, expected state changes, and security conditions rather than assuming success from a UI event. **Record** preserves appropriate audit and provenance without exposing private keys or sensitive credentials. **Return** gives the human a readable result and the continuing authority to stop, question, dispute, or reverse where the system permits.
 
-Local development begins with:
+Local frontend-only development begins with:
 
 ```bash
 npm install
 npm run dev
 ```
+
+This command serves the Vite client on loopback; it does not start the Express API or database-backed services. Backend-dependent features require a separately configured service.
 
 Core verification may include:
 
