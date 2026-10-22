@@ -322,40 +322,7 @@ class StorageWrapper implements IStorage {
   }
   
   async getAiMonitoringLogs(userId: number, limit?: number): Promise<any[]> {
-    console.log(`Getting AI monitoring logs for user ${userId} with limit ${limit} - Not yet implemented in DatabaseStorage`);
-    // Return sample data for demo purposes
-    return [
-      {
-        id: 1,
-        userId: userId,
-        action: 'threat_detected',
-        description: 'Suspicious smart contract interaction with your wallet',
-        severity: 'critical',
-        timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 mins ago
-        relatedEntityId: 3,
-        relatedEntityType: 'transaction'
-      },
-      {
-        id: 2,
-        userId: userId,
-        action: 'transaction_verified',
-        description: 'Routine swap on Uniswap verified as legitimate',
-        severity: 'info',
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 3), // 3 hours ago
-        relatedEntityId: 2,
-        relatedEntityType: 'transaction'
-      },
-      {
-        id: 3,
-        userId: userId,
-        action: 'gas_optimization',
-        description: 'You could save approximately $24.50 on gas fees with better timing',
-        severity: 'warning',
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 5), // 5 hours ago
-        relatedEntityId: null,
-        relatedEntityType: null
-      }
-    ];
+    throw new Error('AI monitoring log storage is not implemented; refusing to return fabricated alerts');
   }
   
   async getAiActivitySummary(userId: number): Promise<{ totalInteractions: number, lastInteractionDate: Date | null }> {
@@ -367,27 +334,11 @@ class StorageWrapper implements IStorage {
   }
   
   async createAiMonitoringLog(logData: any): Promise<any> {
-    console.log(`Creating AI monitoring log - Not yet implemented in DatabaseStorage`);
-    return { 
-      id: Math.floor(Math.random() * 1000) + 1,
-      ...logData,
-      timestamp: new Date()
-    };
+    throw new Error('AI monitoring log storage is not implemented; no log was persisted');
   }
   
   async getAiMonitoringLogById(logId: number): Promise<any | undefined> {
-    console.log(`Getting AI monitoring log by ID ${logId} - Not yet implemented in DatabaseStorage`);
-    // Return sample data for demo purposes
-    return {
-      id: logId,
-      userId: 1,
-      action: 'threat_detected',
-      description: 'Suspicious smart contract interaction with your wallet',
-      severity: 'critical',
-      timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 mins ago
-      relatedEntityId: 3,
-      relatedEntityType: 'transaction'
-    };
+    throw new Error('AI monitoring log storage is not implemented; refusing to return fabricated alerts');
   }
   
   /**

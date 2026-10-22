@@ -104,6 +104,8 @@ The [`scripts/security-audit.js`](scripts/security-audit.js) uses heuristic sour
 
 **Financial verification boundary:** token names, reserve targets, wallet adapters, and escrow concepts do not establish token issuance, reserve assets, redemption rights, audited balances, or production custody. Before making such claims, identify the specific deployed network and contract address, independently verified contract source, controlling keys, reserve custodian and dated attestation, redemption terms, and transaction evidence. No such claim follows from the README or the root QA commands alone. Treat database migrations such as `npm run db:push` as state-changing operations requiring explicit environment review and authorization, not as routine verification.
 
+**AI monitoring limitation:** The `/api/ai/logs` routes use `server/fixed-storage.ts`, whose monitoring-log persistence is not implemented. Reads and writes now fail rather than fabricate security events or acknowledge unpersisted logs. These routes do not establish operational security monitoring. Run `node --test tests/ai-monitoring-storage.test.cjs` on Node.js 22 to verify this fail-closed behavior.
+
 Never commit private keys, seed phrases, wallet credentials, API keys, database secrets, OAuth grants, signing keys, or other production credentials. Security language remains tied to what can actually be inspected and tested.
 
 ---
