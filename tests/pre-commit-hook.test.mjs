@@ -61,3 +61,17 @@ test('unknown scanner options fail closed', () => fixture(dir => {
   assert.equal(result.status, 2);
   assert.match(result.stderr, /Usage:/);
 }));
+
+test('tracked QA mode skips Git submodule pointers, which have no file blob', () => fixture(dir => {
+  const head = git(dir, 'rev-parse', 'HEAD').trim();
+  git(dir, 'update-index', '--add', '--cacheinfo', `160000,${head},nested-submodule`);
+  const result = scan(dir, '--tracked');
+  assert.equal(result.status, 0, result.stderr);
+}));
+
+test('tracked QA mode avoids generic long-identifier false positives', () => fixture(dir => {
+  fs.writeFileSync(path.join(dir, 'sample.js'), 'const identifier = "' + 'a'.repeat(40) + '";\\n');
+  git(dir, 'add', 'sample.js');
+  assert.equal(scan(dir).status, 1, 'staged scanner retains broader patterns');
+  assert.equal(scan(dir, '--tracked').status, 0, 'tracked scanner uses high-confidence patterns');
+}));
