@@ -89,6 +89,12 @@ Database-backed paths may additionally require PostgreSQL configuration and:
 npm run db:push
 ```
 
+### CI results versus actual deployment (checked 2026-10-23)
+
+The [dependency-light QA workflow](.github/workflows/qa.yml) runs `npm run qa:local` on Node.js 22 without installing dependencies. Its success does not establish that the separate [wallet deployment workflow](.github/workflows/deploy.yml) passed its terminology gate, TypeScript check, build, or deployment. In the [October 23 wallet workflow run](https://github.com/AIFreedomTrustFederation/Aether_Coin_biozonecurrency/actions/runs/39932066528), the terminology gate reported six matches across `README.md`, `FEDERATION.md`, and `aift.repo.json`; build and deployment were skipped.
+
+The [traditional-server workflow](.github/workflows/deploy-traditional.yml) and [frontend sync/deploy workflow](.github/workflows/sync-and-deploy.yml) can report success even when missing credentials cause all actual deployment or synchronization steps to be skipped. That occurred in the October 23 [traditional-server run](https://github.com/AIFreedomTrustFederation/Aether_Coin_biozonecurrency/actions/runs/39932066570) and [frontend sync/deploy run](https://github.com/AIFreedomTrustFederation/Aether_Coin_biozonecurrency/actions/runs/39932066541). Inspect individual job steps, produced artifacts, and live service health before claiming deployment success. When configured, frontend synchronization can also commit and push to another federation repository.
+
 ### What the current verification commands actually prove
 
 The root [`package.json`](package.json) maps `npm test` to `npm run qa:local`, which runs **structure checks, federation-contract checks, secret-scanner regressions, and an API-key pattern scan of tracked Git index files**. The pre-commit hook's default mode checks only staged changes; QA uses `--tracked` because clean CI checkouts have no staged changes. It is not, by itself, a smart-contract test suite, a custody audit, or a demonstration of reserve backing. The root `lint` command also invokes the structure checker rather than ESLint. Run the distinct TypeScript and application build checks separately:
