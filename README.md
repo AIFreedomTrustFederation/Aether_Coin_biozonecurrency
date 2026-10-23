@@ -65,12 +65,14 @@ Receive → Inspect → Name → Propose → Consent → Act → Verify → Reco
 
 **Receive** accepts wallet state, transaction intent, value event, escrow condition, stewardship record, or economic query. **Inspect** reads the real account, contract, network, database, credential boundary, and risk context available to the application. **Name** identifies the asset or symbolic primitive, source, destination, authority, network, amount, status, and uncertainty. **Propose** allows AI to explain or recommend while keeping the proposal visibly separate from execution. **Consent** is mandatory for transactions, custody changes, escrow release, credential use, signing, or other consequential financial acts. **Act** invokes the real governed transaction or application operation. **Verify** checks receipts, persistence, expected state changes, and security conditions rather than assuming success from a UI event. **Record** preserves appropriate audit and provenance without exposing private keys or sensitive credentials. **Return** gives the human a readable result and the continuing authority to stop, question, dispute, or reverse where the system permits.
 
-Local development begins with:
+The root declares these local development commands, but the startup limitation below applies to fresh checkouts:
 
 ```bash
 npm install
 npm run dev
 ```
+
+**Current startup limitation (verified 2026-10-23):** The root [`package.json`](package.json) defines `npm run dev` as `node combined-server.js`, but `combined-server.js` is absent from the default branch. The [`.replit`](.replit) configuration invokes the same script, so neither is a verified fresh-checkout startup path. Although [`server/index.ts`](server/index.ts) contains an Express application entry point, it has not been validated as a drop-in replacement for the missing script. Until the entry point is repaired and exercised, the QA, TypeScript, and build commands below verify only their respective scopes; they do not establish that the development server starts successfully.
 
 Core verification may include:
 
