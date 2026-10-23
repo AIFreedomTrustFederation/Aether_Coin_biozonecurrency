@@ -25,10 +25,13 @@ const API_KEY_PATTERNS = [
   /MISTRAL_API_KEY\s*=\s*(['"`])[^'"`\s]{8,}(['"`])/i,
 ];
 
-// Get staged files
-function getStagedFiles() {
+// The pre-commit hook checks staged changes; QA checks every tracked index entry.
+function getStagedFiles(scanTracked = false) {
   try {
-    const output = execFileSync('git', ['diff', '--cached', '--name-only', '-z', '--diff-filter=ACMR'], { encoding: 'utf8' });
+    const gitArgs = scanTracked
+      ? ['ls-files', '--cached', '-z']
+      : ['diff', '--cached', '--name-only', '-z', '--diff-filter=ACMR'];
+    const output = execFileSync('git', gitArgs, { encoding: 'utf8' });
     return output.split('\0').filter(Boolean);
   } catch (error) {
     console.error('Error getting staged files:', error.message);
@@ -72,7 +75,13 @@ function checkFileForApiKeys(filePath) {
 
 // Main function
 function main() {
-  const stagedFiles = getStagedFiles();
+  const args = process.argv.slice(2);
+  if (args.length > 1 || (args.length === 1 && args[0] !== '--tracked')) {
+    console.error('Usage: node scripts/pre-commit-hook.js [--tracked]');
+    process.exit(2);
+  }
+  const scanTracked = args[0] === '--tracked';
+  const stagedFiles = getStagedFiles(scanTracked);
   let foundApiKeys = false;
   
   let scanFailed = false;
@@ -103,7 +112,7 @@ function main() {
     process.exit(1);
   }
   
-  console.log('\x1b[32mNo API keys detected in staged files. Proceeding with commit.\x1b[0m');
+  console.log(`\x1b[32mNo API keys detected in ${scanTracked ? 'tracked' : 'staged'} index files.\x1b[0m`);
   process.exit(0);
 }
 
