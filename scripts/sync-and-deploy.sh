@@ -181,6 +181,8 @@ sync_repos() {
       
       if [ $? -ne 0 ]; then
         log "Failed to synchronize directory: ${dir}" "ERROR"
+        send_slack_notification "error" "Failed to synchronize directory: ${dir}. Deployment cancelled."
+        return 1
       else
         log "Successfully synchronized directory: ${dir}" "INFO"
       fi
@@ -202,6 +204,8 @@ sync_repos() {
       
       if [ $? -ne 0 ]; then
         log "Failed to synchronize file: ${file}" "ERROR"
+        send_slack_notification "error" "Failed to synchronize file: ${file}. Deployment cancelled."
+        return 1
       else
         log "Successfully synchronized file: ${file}" "INFO"
       fi
@@ -297,8 +301,11 @@ main() {
   # Check for changes
   check_for_changes
   
-  # Synchronize repositories
-  sync_repos
+  # Do not deploy or report success after a partial synchronization.
+  if ! sync_repos; then
+    log "Synchronization failed; refusing deployment" "ERROR"
+    return 1
+  fi
   
   # Update package.json
   update_package_json
@@ -308,7 +315,10 @@ main() {
   # Deploy to cPanel if requested
   if [ "$DEPLOY_AFTER_SYNC" = true ]; then
     log "=== cPanel Deployment Started ===" "INFO"
-    deploy_to_cpanel
+    if ! deploy_to_cpanel; then
+      log "=== cPanel Deployment Failed ===" "ERROR"
+      return 1
+    fi
     log "=== cPanel Deployment Completed ===" "INFO"
   fi
 }
