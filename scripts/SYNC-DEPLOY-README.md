@@ -139,6 +139,20 @@ The synchronization script integrates with your existing `deploy-to-cpanel.sh` s
 
 This ensures that the latest frontend code is deployed to your cPanel hosting environment.
 
+## Failure handling and verification
+
+The manual `scripts/sync-and-deploy.sh` helper now returns a nonzero exit status when a selected directory's `rsync`, a selected file's `cp`, or the requested cPanel deployment fails. In these cases it stops rather than reporting successful synchronization or proceeding to deployment after a known copy failure. A successful exit confirms that those commands returned success, **not** that the public site was independently checked.
+
+For isolated testing, set `SOURCE_REPO`, `TARGET_REPO`, and `LOG_FILE` in the environment; their existing defaults are unchanged. Verify the shell syntax and failure-path regressions with:
+
+```bash
+bash -n scripts/sync-and-deploy.sh
+node --test tests/sync-and-deploy.test.mjs
+npm run qa:local
+```
+
+The regression fixtures use temporary directories and simulated cPanel deployment; they never contact production services. A failed sync can leave **partial changes in the target directory** even though a pre-sync backup was created. There is no automatic rollback or atomic cutover. Inspect the backup and target before retrying. The separate GitHub Actions workflow uses its own synchronization implementation and is not covered by this shell-script regression.
+
 ## Troubleshooting
 
 ### Service Won't Start
