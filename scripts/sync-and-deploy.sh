@@ -8,9 +8,9 @@
 #   --deploy: Automatically run the deploy-to-cpanel.sh script after synchronization
 
 # Configuration
-SOURCE_REPO="/path/to/Aether_Coin_biozonecurrency"
-TARGET_REPO="/path/to/biozoe-harmony-boost"
-LOG_FILE="/var/log/frontend-sync.log"
+SOURCE_REPO="${SOURCE_REPO:-/path/to/Aether_Coin_biozonecurrency}"
+TARGET_REPO="${TARGET_REPO:-/path/to/biozoe-harmony-boost}"
+LOG_FILE="${LOG_FILE:-/var/log/frontend-sync.log}"
 SLACK_WEBHOOK_URL="${SLACK_WEBHOOK:-}" # Optional: Set in environment or .env file
 
 # Parse command line arguments
