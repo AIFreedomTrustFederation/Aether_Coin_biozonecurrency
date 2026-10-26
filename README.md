@@ -45,6 +45,8 @@ Aetherion owns the economic relationship and its software surfaces while remaini
 - **BookSmith ↔ Aetherion:** publishing may eventually connect royalties, licenses, treasury flows, or marketplace settlement to the economy layer, while authorship and publishing approval remain in BookSmith.
 - **biozone-harmony-boost → Aetherion:** Circleunchain/Biozoe interface research can inform this repository, while economic and wallet claims remain grounded in the code and security state of this repository.
 
+**Federation layer metadata boundary:** [`aift.repo.json`](aift.repo.json) declares `layer: economy`, while the separate [`federation.manifest.json`](federation.manifest.json) declares `federationLayer: stewardship` and `status: active-protocol-research`. The [`scripts/verify-federation-contracts.mjs`](scripts/verify-federation-contracts.mjs) gate checks required file presence and JSON parsing, not equivalence between these layer labels. Treat them as distinct declarations until a reviewed cross-repository mapping establishes their relationship; neither label alone establishes operational wallet, token, or custody services.
+
 ### Illuminated passage — Circleunchain memory
 
 ![Circleunchain Memory Network](https://raw.githubusercontent.com/AIFreedomTrustFederation/AI-Freedom-Trust/main/docs/images/aetherion/circleunchain-memory-network.png)
