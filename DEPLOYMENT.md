@@ -113,8 +113,8 @@ The Aetherion platform includes a custom sharded storage network called FractalC
 
 The repository includes GitHub Actions workflows for automated deployments:
 
-1. Staging Deployment - Triggered on push to the main branch
-2. Production Deployment - Manually triggered from the Actions tab
+1. Wallet deployment workflow (`.github/workflows/deploy.yml`) — triggered by pushes to `main`, pull requests targeting `main`, and manual dispatch. The deploy job runs only for pushes and manual dispatches; it targets `production` by default unless a manual dispatch explicitly selects `staging`. Required secrets and any configured environment protections still govern whether deployment steps can run.
+2. Traditional-server workflow (`.github/workflows/deploy-traditional.yml`) — triggered by pushes to `main` and manual dispatch, and configured for the `production` environment. It skips build and deployment steps when required secrets are missing. A successful workflow status alone does not verify a live deployment; inspect the job steps and application health separately.
 
 ### Secret Management
 
