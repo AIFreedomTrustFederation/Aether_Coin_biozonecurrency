@@ -144,6 +144,16 @@ npm run protocol:simulate
 npm run qa:local
 ```
 
+Use Node.js 22 for the canonical dependency-light gate. It also checks Federation contracts, regression tests, package-lock alignment, and tracked API-key patterns:
+
+```bash
+npm run qa:local
+git diff --check
+test -z "$(git status --porcelain)"
+```
+
+The gate verifies docs, manifests, package scripts, package-lock alignment, DynastyLink local-first docs, package surfaces, and API-key patterns. It must leave the checkout unchanged.
+
 Use area-specific checks from `docs/validation.md` for application code, database, security, wallet, AI, deployment, DynastyLink, future node, circulation, or exchange changes.
 
 Do not claim production wallet safety, audited cryptography, legal validity, economic stability, canonical exchange authorization, reserve solvency, decentralized operation, guaranteed appreciation, or mainnet readiness without matching evidence.

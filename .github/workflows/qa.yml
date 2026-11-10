@@ -1,0 +1,48 @@
+{
+  "name": "Aetherion Local QA",
+  "on": {
+    "push": {
+      "branches": [
+        "main"
+      ]
+    },
+    "pull_request": {}
+  },
+  "permissions": {
+    "contents": "read"
+  },
+  "concurrency": {
+    "group": "aetherion-qa-${{ github.workflow }}-${{ github.ref }}",
+    "cancel-in-progress": true
+  },
+  "jobs": {
+    "local-qa": {
+      "runs-on": "ubuntu-24.04",
+      "timeout-minutes": 10,
+      "steps": [
+        {
+          "name": "Clone triggering commit",
+          "env": {
+            "TARGET_SHA": "${{ github.sha }}"
+          },
+          "run": "set -Eeuo pipefail\ngit init\ngit remote add origin \"https://github.com/${GITHUB_REPOSITORY}.git\"\ngit fetch --depth=1 origin \"$TARGET_SHA\"\ngit checkout --detach FETCH_HEAD\n"
+        },
+        {
+          "name": "Use Node.js 22",
+          "uses": "actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38",
+          "with": {
+            "node-version": 22
+          }
+        },
+        {
+          "name": "Run dependency-light repository gate",
+          "run": "test \"$(npm config get ignore-scripts)\" = true\nnpm run qa:local\n"
+        },
+        {
+          "name": "Verify clean checkout",
+          "run": "test -z \"$(git status --porcelain)\""
+        }
+      ]
+    }
+  }
+}

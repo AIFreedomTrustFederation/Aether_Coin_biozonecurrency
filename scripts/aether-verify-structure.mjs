@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import fs from 'fs';
 import path from 'path';
+import { spawnSync } from 'child_process';
 
 const root = process.cwd();
 let failures = 0;
@@ -92,6 +93,46 @@ function checkHookIsEsm() {
   else ok(`${hookPath} is ESM-compatible`);
 }
 
+function checkShellSyntax() {
+  const tracked = spawnSync('git', ['ls-files', '-z', '--', '*.sh'], {
+    cwd: root,
+    encoding: 'utf8',
+  });
+
+  if (tracked.status !== 0) {
+    fail(`unable to discover tracked shell sources: ${tracked.stderr.trim() || 'git failed'}`);
+    return;
+  }
+
+  const shellFiles = tracked.stdout.split('\0').filter(Boolean);
+  const failuresBefore = failures;
+  const counts = { bash: 0, sh: 0 };
+
+  for (const shellFile of shellFiles) {
+    const firstLine = readText(shellFile).split(/\r?\n/, 1)[0];
+    const interpreter = firstLine.match(/^#!\s*(?:\/usr\/bin\/env\s+)?(?:\/bin\/)?(bash|sh)(?:\s|$)/)?.[1];
+
+    if (!interpreter) {
+      fail(`${shellFile} must declare a supported bash or sh shebang`);
+      continue;
+    }
+
+    counts[interpreter] += 1;
+    const result = spawnSync(interpreter, ['-n', shellFile], {
+      cwd: root,
+      encoding: 'utf8',
+    });
+
+    if (result.status !== 0) {
+      fail(`${shellFile} has invalid ${interpreter} syntax: ${result.stderr.trim() || `${interpreter} failed`}`);
+    }
+  }
+
+  if (failures === failuresBefore) {
+    ok(`${counts.bash} Bash and ${counts.sh} POSIX shell sources match their declared interpreters`);
+  }
+}
+
 function main() {
   console.log('AETHERION BIOZOECURRENCY STRUCTURE CHECK');
 
@@ -161,6 +202,7 @@ function main() {
   checkPackageScripts(packageJson);
   checkPackageLock(packageJson);
   checkHookIsEsm();
+  checkShellSyntax();
 
   if (failures > 0) {
     console.error(`RED Structure check failed with ${failures} issue(s).`);

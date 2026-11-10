@@ -41,6 +41,8 @@ The following now define the intended Aetherion monetary architecture:
 
 ## Implemented in the deterministic reference specification
 
+`npm run qa:local` is the current dependency-light repo gate. It validates required docs, package scripts, package-lock alignment, major source directories, DynastyLink local-first docs, package surfaces, Federation contracts, protocol invariants and tests, focused regression tests, and tracked API-key patterns.
+
 The dependency-light reference implementation contains deterministic logic for:
 
 - offline-safe accrued universal entitlement settlement,
@@ -153,7 +155,7 @@ npm run security:audit
 npm run security:deps
 ```
 
-The root repository still lacks a `package-lock.json`, so dependency-free protocol checks can run independently while reproducible application dependency installation requires a deliberately regenerated and reviewed lockfile.
+The root `package-lock.json` is included and checked for alignment by the dependency-light QA gate. Keep it synchronized with `package.json` when dependencies change.
 
 ## Claims that remain prohibited without evidence
 

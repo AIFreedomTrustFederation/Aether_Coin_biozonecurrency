@@ -43,9 +43,11 @@ The intended sequence is:
 
 ```bash
 npm run verify:structure
+npm run verify:federation
 npm run protocol:verify
 npm run protocol:test
-npm run security:api-keys
+node --test tests/pre-commit-hook.test.mjs tests/sync-and-deploy.test.mjs
+npm run security:api-keys -- --tracked
 ```
 
 The GitHub protocol workflow additionally runs the dependency-light simulation. This gate does not substitute for the full application build or future node/consensus testing.

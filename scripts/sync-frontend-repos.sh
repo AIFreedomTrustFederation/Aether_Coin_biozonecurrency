@@ -93,7 +93,7 @@ check_repos() {
     log "Target repository not found: $TARGET_REPO" "ERROR"
     send_slack_notification "error" "Target repository not found: $TARGET_REPO"
     exit 1
-  }
+  fi
   
   log "Repositories found" "INFO"
 }
