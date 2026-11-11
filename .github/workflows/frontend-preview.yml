@@ -18,6 +18,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
+      - run: npm install --global npm@11.9.0 --ignore-scripts
       - run: npm ci --ignore-scripts
       - run: npm run test:frontend
       - run: npm run check:wallet

@@ -6,7 +6,7 @@ It has no database, payments, signing, custody, or exchange service.
 
 ## Build and review
 
-Use Node 22 and `npm ci --ignore-scripts`. Run `npm run qa:local`,
+Use Node 22 and npm 11.9.0, then run `npm ci --ignore-scripts`. Run `npm run qa:local`,
 `npm run check:wallet`, `npm run build`, and `WALLET_BUILD_SMOKE=1 npm run test:frontend`.
 Install Chromium with `npx playwright install chromium --only-shell` and run
 `npm run test:browser`. Use `npm run test:deployment` for the local release-gate
@@ -15,7 +15,8 @@ runtime before packaging. The package is smoke-tested after a clean runtime inst
 
 Pull requests and pushes to `main` build and test only. The traditional-server
 and legacy sync-and-deploy workflows are retired. The separate frontend sync
-workflow remains a cross-repository sync and does not authorize a release.
+workflow requires separate manual confirmation, because the destination repository
+can have its own release triggers.
 
 ## Configure environments before dispatch
 

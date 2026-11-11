@@ -33,6 +33,7 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: 22
+      - run: npm install --global npm@11.9.0 --ignore-scripts
       - run: npm ci --ignore-scripts
       - run: node scripts/verify-biozoecurrency-terminology.mjs
       - run: npm run qa:local
@@ -50,6 +51,7 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: 22
+      - run: npm install --global npm@11.9.0 --ignore-scripts
       - run: npm ci --ignore-scripts
       - run: npm run check:wallet
       - run: npm run build
@@ -93,6 +95,7 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: 22
+      - run: npm install --global npm@11.9.0 --ignore-scripts
       - name: Block production on unresolved high severity findings
         if: inputs.environment == 'production'
         run: npm audit --audit-level=high
