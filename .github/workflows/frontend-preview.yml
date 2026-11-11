@@ -1,0 +1,26 @@
+name: Wallet Frontend Preview
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  frontend:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm run test:frontend
+      - run: npm run check:wallet
+      - run: npm run build
+      - run: WALLET_BUILD_SMOKE=1 npm run test:frontend
+      - run: git diff --exit-code

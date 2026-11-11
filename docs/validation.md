@@ -199,3 +199,13 @@ Use these labels precisely:
 Only use `audited` when a named independent review artifact exists within a defined scope. Only use `production-ready` when build, security, deployment, governance, identity, economic, operational, and—where relevant—exchange/operator evidence support the claim.
 
 Spiritual or philosophical conviction is not a substitute for engineering validation, and an incentive design is not a guarantee of market price or return.
+
+## Frontend startup and routes
+
+Install with `npm ci` (Vite/Rollup require platform optional dependencies). Run
+`npm run test:frontend`, `npm run check:wallet`, and `npm run build`.
+`npm run dev` starts a loopback frontend preview on port 5000; `npm start`
+serves the built UI on port 3000. Override either port with `PORT`.
+Verify `/wallet`, `/dapp`, and the emitted `/assets/*` files, including missing
+assets returning 404. All API prefixes return 503 in these frontend-only hosts.
+The legacy `server/index.ts` backend remains a separate, unvalidated runtime.
