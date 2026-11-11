@@ -38,6 +38,7 @@ jobs:
       - run: node scripts/verify-biozoecurrency-terminology.mjs
       - run: npm run qa:local
       - run: npm run test:deployment
+      - run: npm run test:dependencies
       - run: npm audit --prefix deploy/runtime --omit=dev --audit-level=low
       - run: npm audit --audit-level=critical
   build:

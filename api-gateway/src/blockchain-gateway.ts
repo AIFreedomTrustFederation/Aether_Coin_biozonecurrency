@@ -26,7 +26,7 @@ const ServiceRegistrySchema = z.object({
 const HealthCheckResponseSchema = z.object({
   status: z.enum(['healthy', 'degraded', 'unhealthy']),
   uptime: z.number().optional(),
-  details: z.record(z.any()).optional(),
+  details: z.record(z.string(), z.any()).optional(),
 });
 
 type ServiceInfo = {
@@ -216,7 +216,7 @@ export async function createBlockchainGateway() {
       });
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ error: 'Invalid service data', details: error.errors });
+        return res.status(400).json({ error: 'Invalid service data', details: error.issues });
       }
       
       console.error('Failed to register service:', error);
@@ -281,7 +281,7 @@ export async function createBlockchainGateway() {
       });
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ error: 'Invalid service data', details: error.errors });
+        return res.status(400).json({ error: 'Invalid service data', details: error.issues });
       }
       
       console.error('Failed to update service:', error);

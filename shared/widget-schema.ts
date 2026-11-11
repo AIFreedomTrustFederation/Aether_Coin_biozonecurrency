@@ -58,7 +58,7 @@ export const widgetTemplateSchema = z.object({
   name: z.string(),
   description: z.string(),
   category: z.string(),
-  defaultConfig: z.record(z.any()),
+  defaultConfig: z.record(z.string(), z.any()),
   defaultWidth: z.number(),
   defaultHeight: z.number(),
   createdAt: z.date(),
@@ -77,7 +77,7 @@ export const widgetSchema = z.object({
   positionY: z.number(),
   width: z.number(),
   height: z.number(),
-  config: z.record(z.any()),
+  config: z.record(z.string(), z.any()),
   isActive: z.boolean(),
   createdAt: z.date(),
   updatedAt: z.date()
@@ -128,7 +128,7 @@ export const updateWidgetSchema = z.object({
   positionY: z.number().optional(),
   width: z.number().optional(),
   height: z.number().optional(),
-  config: z.record(z.any()).optional(),
+  config: z.record(z.string(), z.any()).optional(),
   isActive: z.boolean().optional()
 });
 

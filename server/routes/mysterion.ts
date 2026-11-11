@@ -33,7 +33,7 @@ router.post('/api-keys', requireAuth, async (req, res) => {
     if (!validationResult.success) {
       return res.status(400).json({ 
         success: false, 
-        error: validationResult.error.errors 
+        error: validationResult.error.issues
       });
     }
     

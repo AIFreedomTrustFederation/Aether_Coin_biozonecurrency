@@ -1003,7 +1003,7 @@ export class PgStorage implements IStorage {
 
   async getBridgeConfigurations(status?: BridgeStatus): Promise<BridgeConfiguration[]> {
     try {
-      let query = db.select().from(bridgeConfigurations);
+      let query = db.select().from(bridgeConfigurations).$dynamic();
       
       if (status) {
         query = query.where(eq(bridgeConfigurations.status, status));

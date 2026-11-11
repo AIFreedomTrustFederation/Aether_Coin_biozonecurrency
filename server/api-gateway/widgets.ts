@@ -361,7 +361,7 @@ router.post("/widgets", async (req, res) => {
         width: z.number(),
         height: z.number()
       }),
-      config: z.record(z.any()),
+      config: z.record(z.string(), z.any()),
       dashboardId: z.number().optional()
     });
     
@@ -410,7 +410,7 @@ router.patch("/widgets/:widgetId", async (req, res) => {
         width: z.number(),
         height: z.number()
       }).optional(),
-      config: z.record(z.any()).optional(),
+      config: z.record(z.string(), z.any()).optional(),
       isActive: z.boolean().optional()
     });
     

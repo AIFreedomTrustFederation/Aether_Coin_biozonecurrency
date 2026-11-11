@@ -218,7 +218,7 @@ llmApiRouter.post('/keys', directAdminAuth, requireAuth, async (req: any, res) =
     if (error instanceof z.ZodError) {
       return res.status(400).json({ 
         message: 'Invalid request data', 
-        errors: error.errors 
+        errors: error.issues
       });
     }
     

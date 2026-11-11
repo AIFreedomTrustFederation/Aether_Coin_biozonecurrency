@@ -93,21 +93,16 @@ router.post('/', async (req, res) => {
     const userIdHeader = req.header('User-Id');
     const userId = userIdHeader ? parseInt(userIdHeader) : 1;
     
-    // Convert expiry date if present
-    if (data.expiresAt) {
-      data.expiresAt = new Date(data.expiresAt);
-    }
-    
-    // Create escrow transaction
     const escrow = await escrowService.createEscrowTransaction({
       ...data,
+      expiresAt: data.expiresAt ? new Date(data.expiresAt) : undefined,
     });
     
     res.status(201).json(escrow);
   } catch (error) {
     console.error('Error creating escrow:', error);
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ error: 'Invalid request data', details: error.errors });
+      return res.status(400).json({ error: 'Invalid request data', details: error.issues });
     }
     res.status(500).json({ error: 'Failed to create escrow transaction' });
   }
@@ -196,7 +191,7 @@ router.put('/:id/status', async (req, res) => {
   } catch (error) {
     console.error('Error updating escrow status:', error);
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ error: 'Invalid request data', details: error.errors });
+      return res.status(400).json({ error: 'Invalid request data', details: error.issues });
     }
     
     if (error instanceof Error) {
@@ -307,7 +302,7 @@ router.post('/:id/dispute', async (req, res) => {
   } catch (error) {
     console.error('Error creating dispute:', error);
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ error: 'Invalid request data', details: error.errors });
+      return res.status(400).json({ error: 'Invalid request data', details: error.issues });
     }
     
     if (error instanceof Error) {
@@ -359,7 +354,7 @@ router.post('/:id/rate', async (req, res) => {
   } catch (error) {
     console.error('Error rating user:', error);
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ error: 'Invalid request data', details: error.errors });
+      return res.status(400).json({ error: 'Invalid request data', details: error.issues });
     }
     
     if (error instanceof Error) {

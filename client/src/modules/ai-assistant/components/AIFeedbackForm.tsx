@@ -38,7 +38,7 @@ const feedbackTypes = [
 // Zod schema for form validation
 const feedbackFormSchema = z.object({
   feedbackType: z.enum(["helpful", "not_helpful", "incorrect", "offensive", "other"], {
-    required_error: "Please select a feedback type",
+    error: (issue) => issue.input === undefined ? "Please select a feedback type" : undefined,
   }),
   qualityRating: z.number().min(1).max(5),
   feedbackText: z.string().min(10, "Feedback must be at least 10 characters").max(2000, "Feedback must not exceed 2000 characters"),

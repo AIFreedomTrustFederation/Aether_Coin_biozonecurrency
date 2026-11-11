@@ -29,7 +29,7 @@ const createBridgeSchema = z.object({
 // Schema for creating a brain shard
 const createBrainShardSchema = z.object({
   modelType: z.string(),
-  modelParameters: z.record(z.any()),
+  modelParameters: z.record(z.string(), z.any()),
   shardsCount: z.number().optional().default(12)
 });
 
@@ -69,7 +69,7 @@ router.post('/bridge/transactions', requireAuth, async (req, res) => {
     res.status(201).json(transaction);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ error: 'Invalid transaction data', details: error.errors });
+      return res.status(400).json({ error: 'Invalid transaction data', details: error.issues });
     }
     
     console.error('Failed to create bridge transaction:', error);
@@ -233,7 +233,7 @@ router.post('/brain/shard', requireAuth, async (req, res) => {
     res.status(201).json(brainRecord);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ error: 'Invalid brain data', details: error.errors });
+      return res.status(400).json({ error: 'Invalid brain data', details: error.issues });
     }
     
     console.error('Failed to shard neural network:', error);

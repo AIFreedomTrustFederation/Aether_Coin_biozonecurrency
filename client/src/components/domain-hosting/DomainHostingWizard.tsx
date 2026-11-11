@@ -51,7 +51,7 @@ interface ResourceMetrics {
   cost: number;
 }
 
-const calculateResourceMetrics = (formValues: FormValues): ResourceMetrics => {
+const calculateResourceMetrics = (formValues: z.input<typeof formSchema>): ResourceMetrics => {
   const { storageSize, domainType, enableCDN, redundancyLevel, computeUnits } = formValues;
   
   const baseCost = 0.005; // FCL per MB
@@ -100,7 +100,7 @@ export function DomainHostingWizard() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
-  const form = useForm<FormValues>({
+  const form = useForm<z.input<typeof formSchema>, unknown, FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       domainRegistrationType: 'fractalcoin',

@@ -86,7 +86,7 @@ const naturalLanguageFormSchema = z.object({
     message: "Prompt must be at least 10 characters.",
   }),
   language: z.string({
-    required_error: "Please select a programming language",
+    error: (issue) => issue.input === undefined ? "Please select a programming language" : undefined,
   }),
   apiKey: z.string().optional(),
 });
@@ -99,7 +99,7 @@ const codeAnalysisFormSchema = z.object({
     message: "Code cannot be empty.",
   }),
   language: z.string({
-    required_error: "Please select a programming language",
+    error: (issue) => issue.input === undefined ? "Please select a programming language" : undefined,
   }),
   apiKey: z.string().optional(),
 });

@@ -28,16 +28,16 @@ import { useUsers } from "@/hooks/use-users";
 // Escrow creation schema for validation
 const escrowSchema = z.object({
   sellerId: z.number({
-    required_error: "Seller is required",
+    error: (issue) => issue.input === undefined ? "Seller is required" : undefined,
   }),
   buyerId: z.number({
-    required_error: "Buyer is required",
+    error: (issue) => issue.input === undefined ? "Buyer is required" : undefined,
   }),
   sellerWalletId: z.number({
-    required_error: "Seller wallet is required",
+    error: (issue) => issue.input === undefined ? "Seller wallet is required" : undefined,
   }),
   buyerWalletId: z.number({
-    required_error: "Buyer wallet is required",
+    error: (issue) => issue.input === undefined ? "Buyer wallet is required" : undefined,
   }),
   amount: z.string().min(1, "Amount is required"),
   tokenSymbol: z.string().min(1, "Token symbol is required"),
@@ -62,7 +62,7 @@ export default function EscrowCreationForm() {
   const [buyerWallets, setBuyerWallets] = useState<Set<any>>(new Set());
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const form = useForm<EscrowFormValues>({
+  const form = useForm<z.input<typeof escrowSchema>, unknown, EscrowFormValues>({
     resolver: zodResolver(escrowSchema),
     defaultValues: {
       sellerId: 0,

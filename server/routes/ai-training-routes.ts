@@ -19,7 +19,7 @@ const feedbackSubmissionSchema = z.object({
   responseId: z.string(),
   promptText: z.string(),
   responseText: z.string(),
-  context: z.record(z.any()).optional()
+  context: z.record(z.string(), z.any()).optional()
 });
 
 /**

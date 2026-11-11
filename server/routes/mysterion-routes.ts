@@ -68,7 +68,7 @@ mysterionRouter.post('/generate-code', requireAuth, async (req: any, res) => {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ 
         message: 'Invalid request data', 
-        errors: error.errors 
+        errors: error.issues
       });
     }
     
@@ -114,7 +114,7 @@ mysterionRouter.post('/analyze-code', requireAuth, async (req: any, res) => {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ 
         message: 'Invalid request data', 
-        errors: error.errors 
+        errors: error.issues
       });
     }
     
@@ -154,7 +154,7 @@ mysterionRouter.post('/biozoe-coding/projects', requireAuth, async (req: any, re
     if (error instanceof z.ZodError) {
       return res.status(400).json({ 
         message: 'Invalid request data', 
-        errors: error.errors 
+        errors: error.issues
       });
     }
     
@@ -208,7 +208,7 @@ mysterionRouter.post('/matrix/rooms', requireAuth, async (req: any, res) => {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ 
         message: 'Invalid request data', 
-        errors: error.errors 
+        errors: error.issues
       });
     }
     
@@ -252,7 +252,7 @@ mysterionRouter.post('/matrix/mysterion-rooms', requireAuth, async (req: any, re
     if (error instanceof z.ZodError) {
       return res.status(400).json({ 
         message: 'Invalid request data', 
-        errors: error.errors 
+        errors: error.issues
       });
     }
     

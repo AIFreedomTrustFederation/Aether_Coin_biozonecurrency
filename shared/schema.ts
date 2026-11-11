@@ -758,7 +758,7 @@ export const insertPaymentSchema = createInsertSchema(payments).omit({
   temporalEntanglementId: z.string().optional(),
   securityLevel: z.enum(['standard', 'enhanced', 'quantum']).default('standard').optional(),
   // Allow metadata to be a record with any values
-  metadata: z.record(z.any()).optional(),
+  metadata: z.record(z.string(), z.any()).optional(),
 });
 
 export type CidEntry = typeof cidEntries.$inferSelect;

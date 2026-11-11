@@ -29,7 +29,7 @@ export const quantumSecurityGuidanceSchema = z.object({
       QuantumSecurityLevel.QUANTUM
     ]).optional(),
     recentEvents: z.array(z.any()).optional(),
-    userPreferences: z.record(z.any()).optional()
+    userPreferences: z.record(z.string(), z.any()).optional()
   }).optional()
 });
 
@@ -46,7 +46,7 @@ export const securityActionSchema = z.object({
     'enable_feature',
     'disable_feature'
   ]),
-  actionParams: z.record(z.any()).optional(),
+  actionParams: z.record(z.string(), z.any()).optional(),
   description: z.string(),
   automated: z.boolean().default(false)
 });

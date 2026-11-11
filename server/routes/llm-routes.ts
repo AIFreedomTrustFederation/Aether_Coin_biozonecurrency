@@ -45,7 +45,7 @@ const fineTuningSchema = z.object({
   epochs: z.number().optional(),
   batchSize: z.number().optional(),
   learningRate: z.string().optional(),
-  parameters: z.record(z.any()).optional()
+  parameters: z.record(z.string(), z.any()).optional()
 });
 
 // Schema for sacred pattern analysis
@@ -79,7 +79,7 @@ router.post("/generate", authenticateUser, async (req, res) => {
     return res.json(result);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ error: error.errors });
+      return res.status(400).json({ error: error.issues });
     }
     console.error("Error generating text:", error);
     return res.status(500).json({ error: "Failed to generate text" });
@@ -111,7 +111,7 @@ router.post("/conversations", authenticateUser, async (req, res) => {
     return res.json(conversation);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ error: error.errors });
+      return res.status(400).json({ error: error.issues });
     }
     console.error("Error creating conversation:", error);
     return res.status(500).json({ error: "Failed to create conversation" });
@@ -241,7 +241,7 @@ router.post("/messages", authenticateUser, async (req, res) => {
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ error: error.errors });
+      return res.status(400).json({ error: error.issues });
     }
     console.error("Error sending message:", error);
     return res.status(500).json({ error: "Failed to send message" });
@@ -282,7 +282,7 @@ router.post("/fine-tuning", authenticateUser, async (req, res) => {
     return res.json(job);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ error: error.errors });
+      return res.status(400).json({ error: error.issues });
     }
     console.error("Error starting fine-tuning job:", error);
     return res.status(500).json({ error: "Failed to start fine-tuning job" });
@@ -328,7 +328,7 @@ router.post("/sacred-pattern", authenticateUser, async (req, res) => {
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ error: error.errors });
+      return res.status(400).json({ error: error.issues });
     }
     console.error("Error analyzing sacred pattern:", error);
     return res.status(500).json({ error: "Failed to analyze sacred pattern" });

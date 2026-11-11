@@ -30,7 +30,7 @@ const router = Router();
 // Schema validators
 const versionCreateSchema = z.object({
   userDappId: z.number(),
-  version: z.string().optional(),
+  version: z.string(),
   changes: z.string().optional(),
   createdBy: z.number(),
   branch: z.string().optional(),
@@ -73,7 +73,7 @@ const securityAnalysisSchema = z.object({
 const collaborationSessionSchema = z.object({
   userDappId: z.number(),
   createdBy: z.number(),
-  settings: z.record(z.any()).optional()
+  settings: z.record(z.string(), z.any()).optional()
 });
 
 const commentThreadSchema = z.object({

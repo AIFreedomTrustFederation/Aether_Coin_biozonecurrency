@@ -45,7 +45,7 @@ export default function DomainHostingForm() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   
-  const form = useForm<DomainFormValues>({
+  const form = useForm<z.input<typeof domainFormSchema>, unknown, DomainFormValues>({
     resolver: zodResolver(domainFormSchema),
     defaultValues: {
       domainRegistrationType: 'fractalcoin',
