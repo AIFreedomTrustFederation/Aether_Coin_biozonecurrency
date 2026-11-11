@@ -1,184 +1,77 @@
-/**
- * Express server to host the Aetherion UI Wallet application
- * Can be deployed to a traditional web hosting environment
- * Configured to serve the application at atc.aifreedomtrust.com/wallet or atc.aifreedomtrust.com/dapp
- */
+/** Frontend-only wallet host. Does not activate legacy financial/API services. */
 import express from 'express';
-import path from 'path';
-import fs from 'fs';
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
+import path from 'node:path';
+import fs from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import helmet from 'helmet';
 
-// Get __dirname equivalent in ES modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const root = path.dirname(fileURLToPath(import.meta.url));
 
-const app = express();
-const PORT = process.env.PORT || 3000;
+export async function createWalletApp({ development = false, publicDir = path.join(root, 'dist/public') } = {}) {
+  const app = express();
+  app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false }));
 
-// Add basic security headers
-app.use(helmet({
-  contentSecurityPolicy: false, // We'll configure this manually if needed
-  crossOriginEmbedderPolicy: false, // Allow loading resources from different origins
-}));
-
-// Add custom security headers
-app.use((req, res, next) => {
-  // Set strict HTTPS transport security with long duration
-  if (process.env.NODE_ENV === 'production') {
-    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+  // Register before static/SPA middleware for every method, including unknown APIs.
+  for (const prefix of ['/api', '/wallet/api', '/dapp/api']) {
+    app.use(prefix, (_req, res) => {
+      res.status(503).json({ error: 'API unavailable', scope: 'frontend-only' });
+    });
   }
-  // Prevent clickjacking
-  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
-  // Prevent MIME type sniffing
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-  // Enable XSS protection
-  res.setHeader('X-XSS-Protection', '1; mode=block');
-  next();
-});
-
-// Parse JSON requests
-app.use(express.json({ limit: '1mb' }));
-
-// Parse URL-encoded requests
-app.use(express.urlencoded({ extended: false, limit: '1mb' }));
-
-// Serve static files from the 'dist' directory (production build) for both paths
-app.use('/wallet', express.static(path.join(__dirname, 'dist'), {
-  maxAge: '1d', // Cache static assets for 1 day
-  etag: true,
-}));
-
-app.use('/dapp', express.static(path.join(__dirname, 'dist'), {
-  maxAge: '1d', // Cache static assets for 1 day
-  etag: true,
-}));
-
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'online', server: 'aetherion-redirect' });
-});
-
-// For API requests, pass to the appropriate handler
-app.use('/wallet/api', async (req, res, next) => {
-  // Import the API router from the server
-  try {
-    // Check if the API router file exists
-    const apiPath = path.join(__dirname, 'dist', 'index.js');
-    if (!fs.existsSync(apiPath)) {
-      console.error(`API file not found at ${apiPath}`);
-      return res.status(500).json({ error: 'API not available' });
-    }
-    
-    const { router } = await import('./dist/index.js');
-    if (typeof router !== 'function') {
-      console.error('API router is not a function');
-      return res.status(500).json({ error: 'API configuration error' });
-    }
-    
-    router(req, res, next);
-  } catch (error) {
-    console.error('API router error:', error);
-    res.status(500).json({ error: 'Internal Server Error', message: error.message });
-  }
-});
-
-// Also handle API requests for the /dapp path
-app.use('/dapp/api', async (req, res, next) => {
-  try {
-    // Check if the API router file exists
-    const apiPath = path.join(__dirname, 'dist', 'index.js');
-    if (!fs.existsSync(apiPath)) {
-      console.error(`API file not found at ${apiPath}`);
-      return res.status(500).json({ error: 'API not available' });
-    }
-    
-    const { router } = await import('./dist/index.js');
-    if (typeof router !== 'function') {
-      console.error('API router is not a function');
-      return res.status(500).json({ error: 'API configuration error' });
-    }
-    
-    router(req, res, next);
-  } catch (error) {
-    console.error('API router error:', error);
-    res.status(500).json({ error: 'Internal Server Error', message: error.message });
-  }
-});
-
-// For all other routes under /wallet, serve the index.html to support client-side routing
-app.get('/wallet', (req, res) => {
-  const indexPath = path.join(__dirname, 'dist', 'index.html');
-  
-  // Check if index.html exists
-  if (fs.existsSync(indexPath)) {
-    res.sendFile(indexPath);
-  } else {
-    res.status(404).send('Application not built. Please run npm run build first.');
-  }
-});
-
-app.get('/wallet/*', (req, res) => {
-  const indexPath = path.join(__dirname, 'dist', 'index.html');
-  
-  // Check if index.html exists
-  if (fs.existsSync(indexPath)) {
-    res.sendFile(indexPath);
-  } else {
-    res.status(404).send('Application not built. Please run npm run build first.');
-  }
-});
-
-// For all other routes under /dapp, serve the index.html to support client-side routing
-app.get('/dapp', (req, res) => {
-  const indexPath = path.join(__dirname, 'dist', 'index.html');
-  
-  // Check if index.html exists
-  if (fs.existsSync(indexPath)) {
-    res.sendFile(indexPath);
-  } else {
-    res.status(404).send('Application not built. Please run npm run build first.');
-  }
-});
-
-app.get('/dapp/*', (req, res) => {
-  const indexPath = path.join(__dirname, 'dist', 'index.html');
-  
-  // Check if index.html exists
-  if (fs.existsSync(indexPath)) {
-    res.sendFile(indexPath);
-  } else {
-    res.status(404).send('Application not built. Please run npm run build first.');
-  }
-});
-
-// Root redirect to /dapp for convenience
-app.get('/', (req, res) => {
-  res.redirect('/dapp');
-});
-
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error('Server error:', err);
-  res.status(500).json({ 
-    error: 'Internal Server Error',
-    message: process.env.NODE_ENV === 'production' ? 'An unexpected error occurred' : err.message
+  const indexPath = path.join(publicDir, 'index.html');
+  app.get('/health', (_req, res) => {
+    const available = development || fs.existsSync(indexPath);
+    res.status(available ? 200 : 503).json({
+      status: available ? 'available' : 'not-built',
+      scope: 'frontend-only',
+      api: 'unavailable',
+    });
   });
-});
+  app.get('/', (_req, res) => res.redirect('/dapp'));
 
-// Start the server
-const server = app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Aetherion UI Wallet running at http://0.0.0.0:${PORT}/dapp`);
-  console.log(`Alternative path available at http://0.0.0.0:${PORT}/wallet`);
-  console.log(`For custom domain deployment at https://atc.aifreedomtrust.com/dapp`);
-});
+  let vite;
+  if (development) {
+    const { createServer } = await import('vite');
+    vite = await createServer({
+      configFile: path.join(root, 'vite.config.js'),
+      server: { middlewareMode: true },
+    });
+    app.use(vite.middlewares);
+  } else {
+    // Vite emits absolute /assets URLs. Serve the build at the origin as well
+    // as the historical wallet/dapp aliases; never fall back to HTML for assets.
+    const options = { index: false, redirect: false };
+    app.use(express.static(publicDir, options));
+    app.use('/wallet', express.static(publicDir, options));
+    app.use('/dapp', express.static(publicDir, options));
+    app.get('*', (req, res, next) => {
+      if (req.path.startsWith('/assets/') || path.extname(req.path) || !req.accepts('html')) return next();
+      if (!fs.existsSync(indexPath)) return res.status(503).send('Frontend not built. Run npm run build first.');
+      res.setHeader('Cache-Control', 'no-cache');
+      res.sendFile(indexPath);
+    });
+  }
+  app.use((_req, res) => res.status(404).send('Not found'));
+  return { app, close: async () => { await vite?.close(); } };
+}
 
-// Handle graceful shutdown
-process.on('SIGTERM', () => {
-  console.log('SIGTERM received, shutting down gracefully');
-  server.close(() => {
-    console.log('Server closed');
-    process.exit(0);
+export async function startWalletServer({ development = false, port = process.env.PORT ?? 3000, host = '0.0.0.0' } = {}) {
+  const parsedPort = Number(port);
+  if (!Number.isInteger(parsedPort) || parsedPort < 0 || parsedPort > 65535) throw new Error('Invalid PORT');
+  const { app, close } = await createWalletApp({ development });
+  const server = app.listen(parsedPort, host, () => {
+    console.log(`Aetherion frontend-only wallet listening on port ${server.address().port}; API unavailable`);
   });
-});
+  const shutdown = () => server.close(() => { void close(); });
+  process.once('SIGTERM', shutdown);
+  process.once('SIGINT', shutdown);
+  server.once('error', async (error) => {
+    console.error(error.message);
+    await close();
+    process.exitCode = 1;
+  });
+  return server;
+}
+
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  await startWalletServer();
+}

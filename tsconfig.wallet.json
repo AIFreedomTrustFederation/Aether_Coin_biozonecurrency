@@ -2,7 +2,8 @@
   "extends": "./tsconfig.json",
   "include": [
     "client/src/core/blockchain/BlockchainService.ts",
-    "client/src/core/blockchain/types.ts"
+    "client/src/core/blockchain/types.ts",
+    "client/src/types/global.d.ts"
   ],
   "exclude": [
     "node_modules",
