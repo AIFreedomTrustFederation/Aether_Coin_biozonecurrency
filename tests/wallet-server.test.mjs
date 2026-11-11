@@ -4,6 +4,7 @@ import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { once } from 'node:events';
+import { spawn } from 'node:child_process';
 import { createWalletApp } from '../server-redirect.js';
 
 test('production frontend serves Vite assets, SPA aliases and honest API failures', async (t) => {
@@ -46,17 +47,40 @@ test('production frontend serves Vite assets, SPA aliases and honest API failure
   assert.equal((await fetch(base + '/health')).status, 503);
 });
 
-test('development entry serves the Vite wallet shell without starting legacy APIs', async (t) => {
-  const { app, close } = await createWalletApp({ development: true });
-  const server = app.listen(0, '127.0.0.1');
-  await once(server, 'listening');
-  t.after(async () => { await new Promise(resolve => server.close(resolve)); await close(); });
-  const base = `http://127.0.0.1:${server.address().port}`;
+test('development entry serves the Vite wallet shell without starting legacy APIs', { timeout: 30000 }, async (t) => {
+  // Exercise the CLI in its own process, including signal shutdown. Vite's
+  // cold dependency scanner may finish after HTTP closes; keep it isolated
+  // from the Node test runner's pending-promise detection.
+  const child = spawn(process.execPath, ['combined-server.js'], {
+    env: { ...process.env, PORT: '0' }, stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  const exited = once(child, 'exit');
+  t.after(() => { if (child.exitCode === null) child.kill('SIGKILL'); });
+  let output = '';
+  const port = await new Promise((resolve, reject) => {
+    child.on('error', reject);
+    child.on('exit', () => reject(new Error(`Dev server exited before readiness: ${output}`)));
+    child.stderr.on('data', chunk => { output += chunk; });
+    child.stdout.on('data', chunk => {
+      output += chunk;
+      const match = output.match(/listening on port (\d+)/);
+      if (match) resolve(Number(match[1]));
+    });
+  });
+  const base = `http://127.0.0.1:${port}`;
   const response = await fetch(base + '/wallet');
   assert.equal(response.status, 200);
   assert.match(await response.text(), /@vite\/client/);
-  assert.equal((await fetch(base + '/src/main.tsx')).status, 200);
-  assert.equal((await fetch(base + '/api/payments', { method: 'POST' })).status, 503);
+  const source = await fetch(base + '/src/main.tsx');
+  assert.equal(source.status, 200);
+  assert.match(await source.text(), /React/);
+  const api = await fetch(base + '/api/payments', { method: 'POST' });
+  assert.equal(api.status, 503);
+  await api.text();
+  child.kill('SIGTERM');
+  const [code, signal] = await exited;
+  assert.equal(code, 0, output);
+  assert.equal(signal, null);
 });
 
 test('built wallet HTML references fetchable JavaScript and CSS', { skip: !process.env.WALLET_BUILD_SMOKE }, async (t) => {
