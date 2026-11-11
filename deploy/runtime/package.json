@@ -1,0 +1,16 @@
+{
+  "name": "aetherion-frontend-runtime",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "22.x"
+  },
+  "scripts": {
+    "start": "node server-redirect.js"
+  },
+  "dependencies": {
+    "express": "4.22.3",
+    "helmet": "8.1.0"
+  }
+}

@@ -46,7 +46,7 @@ npm run verify:structure
 npm run verify:federation
 npm run protocol:verify
 npm run protocol:test
-node --test tests/pre-commit-hook.test.mjs tests/sync-and-deploy.test.mjs
+node --test tests/pre-commit-hook.test.mjs tests/sync-and-deploy.test.mjs tests/terminology.test.mjs
 npm run security:api-keys -- --tracked
 ```
 
@@ -209,3 +209,10 @@ serves the built UI on port 3000. Override either port with `PORT`.
 Verify `/wallet`, `/dapp`, and the emitted `/assets/*` files, including missing
 assets returning 404. All API prefixes return 503 in these frontend-only hosts.
 The legacy `server/index.ts` backend remains a separate, unvalidated runtime.
+
+For browser validation, run `npx playwright install chromium --only-shell`, then
+`npm run build` and `npm run test:browser`. The tests use desktop Chromium and
+a Pixel 7 viewport, check actual rendering and navigation, require financial
+controls to remain disabled, and check that no legacy wallet provider loads.
+Run `npm run test:deployment` to exercise release verification and SSH command
+construction using local fixtures. These tests do not connect to a real host.

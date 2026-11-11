@@ -30,9 +30,10 @@ export async function runEvaluation(name, dataset, taskFn, scorers = [Levenshtei
     });
     
     console.log(`Evaluation "${name}" completed successfully`);
-    console.log(`View results at: ${result.url}`);
+    const url = result.summary.experimentUrl ?? '';
+    if (url) console.log(`View results at: ${url}`);
     
-    return result;
+    return { ...result, url, scores: result.summary.scores ?? {} };
   } catch (error) {
     console.error('Error running Braintrust evaluation:', error);
     throw error;

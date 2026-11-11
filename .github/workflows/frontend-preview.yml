@@ -1,7 +1,7 @@
 name: Wallet Frontend Preview
 on:
   pull_request:
-    branches: [main]
+    branches: [main, fix/wallet-frontend-startup]
   push:
     branches: [main]
 permissions:
@@ -23,4 +23,13 @@ jobs:
       - run: npm run check:wallet
       - run: npm run build
       - run: WALLET_BUILD_SMOKE=1 npm run test:frontend
+      - run: npx playwright install --with-deps chromium --only-shell
+      - run: npm run test:browser
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: wallet-browser-failure
+          path: |
+            playwright-report/
+            test-results/
       - run: git diff --exit-code

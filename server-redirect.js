@@ -9,7 +9,7 @@ const root = path.dirname(fileURLToPath(import.meta.url));
 
 export async function createWalletApp({ development = false, publicDir = path.join(root, 'dist/public') } = {}) {
   const app = express();
-  app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false }));
+  app.use(helmet({ contentSecurityPolicy: development ? false : undefined, crossOriginEmbedderPolicy: false }));
 
   // Register before static/SPA middleware for every method, including unknown APIs.
   for (const prefix of ['/api', '/wallet/api', '/dapp/api']) {

@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'node:url';
 
 const root = process.cwd();
 const forbiddenTerms = ['Biozone', 'biozone', 'BIOZONE'];
@@ -26,8 +27,10 @@ function shouldSkip(relativePath) {
   return allowedPathFragments.some((fragment) => relativePath.includes(fragment));
 }
 
-function scrubAllowedPhrases(line) {
-  return allowedInlinePhrases.reduce((current, phrase) => current.split(phrase).join(''), line);
+export function scrubAllowedPhrases(line) {
+  // Exact repository identifier, not a blanket exemption for a whole line.
+  const repositoriesScrubbed = line.replace(/(?<![A-Za-z0-9_-])biozone-harmony-boost(?![A-Za-z0-9_-])/g, '');
+  return allowedInlinePhrases.reduce((current, phrase) => current.split(phrase).join(''), repositoriesScrubbed);
 }
 
 function checkFile(relativePath, absolutePath) {
@@ -77,4 +80,4 @@ function main() {
   console.log('GREEN Biozoecurrency terminology check passed.');
 }
 
-main();
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main();
