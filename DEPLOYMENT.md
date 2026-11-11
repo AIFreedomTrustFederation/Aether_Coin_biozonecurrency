@@ -1,136 +1,57 @@
-# Aetherion Deployment Guide
+# Aetherion frontend deployment
 
-This document provides comprehensive deployment instructions for the Aetherion blockchain wallet platform, covering both traditional centralized hosting and decentralized deployment options.
+The release artifact serves the read-only Aetherion preview. It includes the
+Vite build, `server-redirect.js`, and a separate locked Express/Helmet runtime.
+It has no database, payments, signing, custody, or exchange service.
 
-## Table of Contents
+## Build and review
 
-1. [Traditional Deployment](#traditional-deployment)
-   - [Prerequisites](#traditional-prerequisites)
-   - [Deployment Steps](#traditional-deployment-steps)
-   - [Environment Variables](#traditional-environment-variables)
-   
-2. [Decentralized Deployment](#decentralized-deployment)
-   - [Prerequisites](#decentralized-prerequisites)
-   - [IPFS/Filecoin Setup](#ipfs-filecoin-setup)
-   - [ENS Domain Integration](#ens-domain-integration)
-   - [FractalCoin Storage Integration](#fractalcoin-storage-integration)
-   - [Deployment Steps](#decentralized-deployment-steps)
-   - [Environment Variables](#decentralized-environment-variables)
-   
-3. [GitHub Actions CI/CD](#github-actions-cicd)
-   - [Workflow Configuration](#workflow-configuration)
-   - [Secret Management](#secret-management)
-   
-4. [Post-Deployment Verification](#post-deployment-verification)
-   - [Health Checks](#health-checks)
-   - [Security Verification](#security-verification)
+Use Node 22 and npm 11.9.0, then run `npm ci --ignore-scripts`. Run `npm run qa:local`,
+`npm run check:wallet`, `npm run build`, and `WALLET_BUILD_SMOKE=1 npm run test:frontend`.
+Install Chromium with `npx playwright install chromium --only-shell` and run
+`npm run test:browser`. Use `npm run test:deployment` for the local release-gate
+regressions. The wallet workflow runs these checks and audits the isolated
+runtime before packaging. The package is smoke-tested after a clean runtime install.
 
-5. [Troubleshooting](#troubleshooting)
+Pull requests and pushes to `main` build and test only. The traditional-server
+and legacy sync-and-deploy workflows are retired. The separate frontend sync
+workflow requires separate manual confirmation, because the destination repository
+can have its own release triggers.
 
+## Configure environments before dispatch
 
----
+Create `staging` and `production` GitHub environments with distinct hosts and
+credentials. Restrict deployments to `main` and configure required reviewers for
+production. Set the following as environment secrets and variable:
 
-## Traditional Deployment
+| Name | Value |
+| --- | --- |
+| `SSH_PRIVATE_KEY` | Dedicated deployment key with access only to the intended host |
+| `DEPLOY_SSH_HOST`, `DEPLOY_SSH_USER` | Host and dedicated deployment account |
+| `DEPLOY_SSH_PORT` | SSH port, defaults to 22 |
+| `DEPLOY_KNOWN_HOSTS` | Host's public known_hosts entry independently verified against the host fingerprint, with `[host]:port` for non-default ports |
+| `DEPLOY_HTTPS_ORIGIN` (variable) | HTTPS origin serving the Aetherion preview, without a path |
 
-### Prerequisites
+The host needs Node 22, npm, a configured TLS reverse proxy, and a pre-existing
+`aetherion` systemd unit running the deployment account's
+`aetherion_current/server-redirect.js` with `NODE_ENV=production`. Scope the
+account's noninteractive sudo permissions to restarting, checking, and stopping
+this unit. Provision the service and verify TLS and the SSH fingerprint through
+an independent trusted channel. The workflow does not provision the host.
 
-- Node.js (v18.x or higher) and npm (v9.x or higher)
-- PostgreSQL database
-- SMTP server for email notifications (optional)
-- Twilio account for SMS notifications (optional)
-- Stripe account for payment processing (optional)
+## Release and verify
 
-### Deployment Steps
+After review, run **Aetherion Wallet Deployment** manually on `main`, select
+`staging`, and set `confirm_deploy` to true. The job installs the locked runtime
+into a new release directory, switches the `aetherion_current` symlink, and
+verifies the exact commit, frontend health, `/wallet`, `/dapp`, and linked assets
+over HTTPS. Missing assets must return 404; financial API prefixes must return
+503. The verifier fails on redirects, wrong content types, or a different release
+SHA. A failed restart or probe attempts to restore the previous release and fails
+the job. Inspect the prior link and service state if rollback fails.
 
-1. Clone the repository
-2. Install dependencies
-3. Set up environment variables by creating a `.env` file based on `.env.example`
-4. Build the application
-5. Run database migrations
-6. Run the deploy-to-domain.js script to generate deployment configurations
-7. Follow the instructions in the generated deployment guides
-
-The application can be accessed via two endpoints:
-- Primary endpoint: `https://atc.aifreedomtrust.com/dapp` (recommended)
-- Secondary endpoint: `https://atc.aifreedomtrust.com/wallet` (legacy support)
-
-### Environment Variables
-
-- Database configuration
-- Server settings
-- Authentication secrets
-- Optional integrations (email, SMS, payment processing)
-
-## Decentralized Deployment
-
-### Prerequisites
-
-- Node.js (v18.x or higher) and npm (v9.x or higher)
-- Web3.Storage account and API token
-- Ethereum wallet with private key (for ENS domain integration)
-- ENS domain (optional)
-- FractalCoin API access (optional)
-
-### IPFS/Filecoin Setup
-
-1. Create an account on Web3.Storage
-2. Generate an API token from the Web3.Storage dashboard
-3. Add the token to your environment variables
-
-### ENS Domain Integration
-
-1. Register an ENS domain
-2. Set up a wallet with ETH for gas fees
-3. Prepare your Ethereum private key for automated deployments
-4. Configure CONTENTHASH record to point to your IPFS CID
-
-### FractalCoin Storage Integration
-
-The Aetherion platform includes a custom sharded storage network called FractalCoin that integrates with Filecoin. This allows:
-
-1. Filecoin miners to become storage nodes for the FractalCoin network
-2. Bidirectional data storage between networks
-3. Cost offset and revenue generation opportunities
-
-### Deployment Steps
-
-1. Clone the repository
-2. Install dependencies
-3. Set up environment variables for decentralized deployment
-4. Build the application
-5. Run the deploy-decentralized.sh script
-6. Access your application via IPFS gateways or ENS domain
-
-### Environment Variables
-
-- Web3.Storage token
-- ENS configuration (optional)
-- FractalCoin integration settings (optional)
-
-## GitHub Actions CI/CD
-
-### Workflow Configuration
-
-The repository includes GitHub Actions workflows for automated deployments:
-
-1. Wallet deployment workflow (`.github/workflows/deploy.yml`) — triggered by pushes to `main`, pull requests targeting `main`, and manual dispatch. The deploy job runs only for pushes and manual dispatches; it targets `production` by default unless a manual dispatch explicitly selects `staging`. Required secrets and any configured environment protections still govern whether deployment steps can run.
-2. Traditional-server workflow (`.github/workflows/deploy-traditional.yml`) — triggered by pushes to `main` and manual dispatch, and configured for the `production` environment. It skips build and deployment steps when required secrets are missing. A successful workflow status alone does not verify a live deployment; inspect the job steps and application health separately.
-
-### Secret Management
-
-Store deployment secrets securely in GitHub repository settings
-
-## Post-Deployment Verification
-
-### Health Checks
-
-Verify all components are functioning correctly after deployment
-
-### Security Verification
-
-Ensure security best practices are applied to the deployed application
-
-## Troubleshooting
-
-Common issues and their solutions for both traditional and decentralized deployment scenarios
-
+Repeat with `production` only after staging passes and an authorized reviewer
+approves the production environment. Production also requires the root
+dependency audit to pass at the high severity threshold; the isolated runtime
+passing its own audit does not waive that gate. Neither passing CI nor this guide certifies
+live deployment, cryptographic safety, or financial functionality.

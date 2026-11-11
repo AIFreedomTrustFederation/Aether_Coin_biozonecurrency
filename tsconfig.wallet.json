@@ -3,7 +3,8 @@
   "include": [
     "client/src/core/blockchain/BlockchainService.ts",
     "client/src/core/blockchain/types.ts",
-    "client/src/types/global.d.ts"
+    "client/src/types/global.d.ts",
+    "client/src/main.tsx"
   ],
   "exclude": [
     "node_modules",

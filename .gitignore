@@ -111,3 +111,9 @@ types/generated/
 var/events/
 yarn-debug.log*
 yarn-error.log*
+
+# Browser validation artifacts
+playwright-report/
+test-results/
+release/
+aetherion-deploy.tar.gz

@@ -1,22 +1,17 @@
 name: Frontend Sync
 
 on:
-  push:
-    branches: [ main ]
-    paths:
-      - 'client/**'
-      - 'public/**'
-      - 'package.json'
-      - 'tsconfig.json'
-      - 'server-redirect.js'
-      - '.env.example'
-      - 'vite.config.ts'
-      - 'tailwind.config.js'
-      - 'postcss.config.js'
-  workflow_dispatch:  # Allow manual triggering
+  workflow_dispatch:
+    inputs:
+      confirm_sync:
+        description: 'Copy the preview into the separate federation repository after checking its release triggers'
+        type: boolean
+        required: true
+        default: false
 
 jobs:
   sync-frontend:
+    if: inputs.confirm_sync == true && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     env:
       FRONTEND_SYNC_TOKEN: ${{ secrets.FRONTEND_SYNC_TOKEN }}
@@ -50,7 +45,7 @@ jobs:
         if: steps.token-check.outputs.configured == 'true'
         uses: actions/setup-node@v6
         with:
-          node-version: '18'
+          node-version: 22
           
       - name: Copy frontend files
         if: steps.token-check.outputs.configured == 'true'
