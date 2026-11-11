@@ -47,7 +47,7 @@ export class CollaborationService {
    * @param data Session data
    * @returns Created session
    */
-  async createSession(data: InsertCollaborativeSession) {
+  async createSession(data: Omit<InsertCollaborativeSession, 'sessionToken'>) {
     // Generate a unique session token
     const sessionToken = this.generateSessionToken();
     

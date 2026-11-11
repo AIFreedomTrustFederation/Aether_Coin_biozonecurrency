@@ -23,7 +23,7 @@ export const registrationSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
   lastName: z.string().min(1, 'Last name is required'),
   agreeToTerms: z.literal(true, {
-    errorMap: () => ({ message: 'You must agree to the terms and conditions' }),
+    error: 'You must agree to the terms and conditions',
   }),
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'Passwords do not match',
@@ -66,7 +66,7 @@ export const paymentSchema = z.object({
   amount: z.number().positive('Amount must be positive'),
   currency: z.enum(['USD', 'EUR', 'GBP', 'SING', 'ETH', 'BTC']),
   description: z.string().optional(),
-  metadata: z.record(z.string()).optional(),
+  metadata: z.record(z.string(), z.string()).optional(),
 });
 
 // Smart contract schemas
@@ -120,7 +120,7 @@ export const searchParamsSchema = z.object({
   limit: z.number().int().min(1).max(100).optional().default(20),
   sortBy: z.string().optional(),
   sortOrder: z.enum(['asc', 'desc']).optional().default('asc'),
-  filters: z.record(z.string()).optional(),
+  filters: z.record(z.string(), z.string()).optional(),
 });
 
 // Pagination schema

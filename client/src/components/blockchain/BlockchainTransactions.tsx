@@ -25,8 +25,8 @@ import { useToast } from '@/hooks/use-toast';
 // Define the form schema with validation
 const transactionFormSchema = z.object({
   toAddress: z.string().min(1, "Recipient address is required"),
-  amount: z.coerce.number().positive("Amount must be positive").min(0.000001, "Minimum amount is 0.000001 AE"),
-  fee: z.coerce.number().positive("Fee must be positive").min(0.000001, "Minimum fee is 0.000001 AE"),
+  amount: z.coerce.number<string | number>().positive("Amount must be positive").min(0.000001, "Minimum amount is 0.000001 AE"),
+  fee: z.coerce.number<string | number>().positive("Fee must be positive").min(0.000001, "Minimum fee is 0.000001 AE"),
   data: z.string().optional(),
 });
 
@@ -42,7 +42,7 @@ export default function BlockchainTransactions() {
   const { toast } = useToast();
   
   // Define form
-  const form = useForm<TransactionFormValues>({
+  const form = useForm<z.input<typeof transactionFormSchema>, unknown, TransactionFormValues>({
     resolver: zodResolver(transactionFormSchema),
     defaultValues: {
       toAddress: '',

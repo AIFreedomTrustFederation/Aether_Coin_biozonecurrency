@@ -115,7 +115,7 @@ const LlmApiKeyManager: React.FC = () => {
   });
 
   // Form for creating new API keys
-  const form = useForm<LlmApiKeyFormValues>({
+  const form = useForm<z.input<typeof llmApiKeyFormSchema>, unknown, LlmApiKeyFormValues>({
     resolver: zodResolver(llmApiKeyFormSchema),
     defaultValues: {
       name: '',

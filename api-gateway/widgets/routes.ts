@@ -93,7 +93,7 @@ router.post('/dashboards', (req: Request, res: Response) => {
   
   const validation = schema.safeParse(req.body);
   if (!validation.success) {
-    return res.status(400).json({ errors: validation.error.errors });
+    return res.status(400).json({ errors: validation.error.issues });
   }
   
   const { userId, name, isDefault = false } = validation.data;
@@ -160,12 +160,12 @@ router.post('/widgets', (req: Request, res: Response) => {
       width: z.number(),
       height: z.number(),
     }),
-    config: z.record(z.any()),
+    config: z.record(z.string(), z.any()),
   });
   
   const validation = schema.safeParse(req.body);
   if (!validation.success) {
-    return res.status(400).json({ errors: validation.error.errors });
+    return res.status(400).json({ errors: validation.error.issues });
   }
   
   const { userId, dashboardId, type, name, position, config } = validation.data;
@@ -207,13 +207,13 @@ router.patch('/widgets/:id', (req: Request, res: Response) => {
       width: z.number(),
       height: z.number(),
     }).optional(),
-    config: z.record(z.any()).optional(),
+    config: z.record(z.string(), z.any()).optional(),
     isActive: z.boolean().optional(),
   });
   
   const validation = schema.safeParse(req.body);
   if (!validation.success) {
-    return res.status(400).json({ errors: validation.error.errors });
+    return res.status(400).json({ errors: validation.error.issues });
   }
   
   // Create a clone of the widget and apply updates

@@ -431,7 +431,7 @@ FractalCoin represents not just a technological innovation but a fundamental rei
       res.status(201).json(transaction);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid transaction data", errors: error.errors });
+        return res.status(400).json({ message: "Invalid transaction data", errors: error.issues });
       }
       res.status(500).json({ message: "Failed to create transaction" });
     }
@@ -517,7 +517,7 @@ FractalCoin represents not just a technological innovation but a fundamental rei
       res.status(201).json(contract);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid contract data", errors: error.errors });
+        return res.status(400).json({ message: "Invalid contract data", errors: error.issues });
       }
       res.status(500).json({ message: "Failed to create smart contract" });
     }
@@ -569,7 +569,7 @@ FractalCoin represents not just a technological innovation but a fundamental rei
       res.status(201).json(log);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid log data", errors: error.errors });
+        return res.status(400).json({ message: "Invalid log data", errors: error.issues });
       }
       res.status(500).json({ message: "Failed to create AI monitoring log" });
     }
@@ -594,7 +594,7 @@ FractalCoin represents not just a technological innovation but a fundamental rei
       res.status(201).json(entry);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid CID entry data", errors: error.errors });
+        return res.status(400).json({ message: "Invalid CID entry data", errors: error.issues });
       }
       res.status(500).json({ message: "Failed to create CID entry" });
     }
@@ -1018,7 +1018,7 @@ FractalCoin represents not just a technological innovation but a fundamental rei
       res.status(201).json(score);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid score data", errors: error.errors });
+        return res.status(400).json({ message: "Invalid score data", errors: error.issues });
       }
       res.status(500).json({ message: "Failed to create wallet health score" });
     }
@@ -1032,7 +1032,7 @@ FractalCoin represents not just a technological innovation but a fundamental rei
       res.status(201).json(issue);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid issue data", errors: error.errors });
+        return res.status(400).json({ message: "Invalid issue data", errors: error.issues });
       }
       res.status(500).json({ message: "Failed to create wallet health issue" });
     }
@@ -1722,7 +1722,7 @@ FractalCoin represents not just a technological innovation but a fundamental rei
       res.status(201).json(log);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid log data", errors: error.errors });
+        return res.status(400).json({ message: "Invalid log data", errors: error.issues });
       }
       res.status(500).json({ message: "Failed to create AI monitoring log" });
     }

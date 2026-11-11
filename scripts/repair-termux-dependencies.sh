@@ -146,7 +146,7 @@ npm audit > reports/npm-audit-after-safe-fix.txt || true
 if [[ "$UPGRADE_DEPRECATED" == "1" ]]; then
   section "Direct dependency upgrades for common deprecated packages"
   run npm install multer@latest glob@latest recharts@latest uuid@latest --ignore-scripts
-  run npm install @reown/appkit@latest wagmi@latest viem@latest ethers@latest --ignore-scripts
+  run npm install viem@latest ethers@latest --ignore-scripts
   npm outdated > reports/npm-outdated-after-upgrades.txt || true
 fi
 

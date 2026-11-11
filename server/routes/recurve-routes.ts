@@ -62,7 +62,7 @@ router.post('/policies', requireAuth, async (req, res) => {
     res.status(201).json(policy);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      res.status(400).json({ error: error.errors });
+      res.status(400).json({ error: error.issues });
     } else {
       console.error('Error registering policy:', error);
       res.status(500).json({ error: 'Failed to register policy' });
@@ -103,7 +103,7 @@ router.post('/tokens', requireAuth, async (req, res) => {
     res.status(201).json(token);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      res.status(400).json({ error: error.errors });
+      res.status(400).json({ error: error.issues });
     } else {
       console.error('Error minting tokens:', error);
       res.status(500).json({ error: 'Failed to mint tokens' });
@@ -152,7 +152,7 @@ router.post('/loans', requireAuth, async (req, res) => {
     res.status(201).json(loan);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      res.status(400).json({ error: error.errors });
+      res.status(400).json({ error: error.issues });
     } else {
       console.error('Error creating loan:', error);
       res.status(500).json({ error: 'Failed to create loan' });

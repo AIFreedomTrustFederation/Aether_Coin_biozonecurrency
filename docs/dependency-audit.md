@@ -35,3 +35,22 @@ The release artifact installs only Express and Helmet from the separate runtime 
 Treat audit suggestions as candidates. Several are major migrations or downgrades; verify API compatibility, usage, and the full advisory chain before adopting them. Prioritize wallet connectors, database tooling, storage, Firebase and AI integrations in separate changes. No risk exception is granted here.
 
 Reproduce with `npm audit --json` and `npm audit --prefix deploy/runtime --omit=dev --json`. CI fails for any finding in the isolated runtime and for critical findings in the root graph. Production additionally fails for unresolved root high or critical findings.
+
+## Follow-up remediation after PR #8
+
+The root audit after the WebSocket repair reported 33 high severity package
+entries. The subsequent repairs were applied in this order:
+
+1. Firestore's gRPC dependency resolves to the patched 1.13.6 backport.
+2. Removing unused Wagmi and Reown AppKit dependencies removes the affected URI
+   decoder chain. The Termux repair command no longer reinstalls those packages.
+3. Drizzle ORM 0.45.2 escapes delimiters inside SQL identifiers.
+4. Removing unused Helia removes the affected Peer Store and Kademlia DHT
+   dependencies.
+5. Zod 4.6.7 replaces affected Zod versions. Form resolvers, generated schemas,
+   and the OpenAI SDK use compatible versions.
+
+The root audit for this candidate reports 0 critical, 0 high, 10 moderate, and
+14 low package entries. The isolated frontend runtime reports 0 findings.
+These are audit results for the two lockfiles. Re-run the audit at release time
+because the advisory database can change.

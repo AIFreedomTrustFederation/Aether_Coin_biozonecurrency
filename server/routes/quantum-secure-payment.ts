@@ -14,8 +14,8 @@ const quantumPaymentSchema = z.object({
   description: z.string().optional(),
   securityLevel: z.enum(['standard', 'enhanced', 'quantum']).default('quantum'),
   walletId: z.number().optional(),
-  metadata: z.record(z.any()).optional(),
-  paymentDetails: z.record(z.any()).optional(),
+  metadata: z.record(z.string(), z.any()).optional(),
+  paymentDetails: z.record(z.string(), z.any()).optional(),
 });
 
 export function registerQuantumSecurePaymentRoutes(app: Express) {
@@ -65,7 +65,7 @@ export function registerQuantumSecurePaymentRoutes(app: Express) {
       });
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: 'Invalid payment data', errors: error.errors });
+        return res.status(400).json({ message: 'Invalid payment data', errors: error.issues });
       }
       console.error('Error processing quantum secure Stripe payment:', error);
       res.status(500).json({ 
@@ -120,7 +120,7 @@ export function registerQuantumSecurePaymentRoutes(app: Express) {
       });
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: 'Invalid payment data', errors: error.errors });
+        return res.status(400).json({ message: 'Invalid payment data', errors: error.issues });
       }
       console.error('Error processing quantum secure open source payment:', error);
       res.status(500).json({ 

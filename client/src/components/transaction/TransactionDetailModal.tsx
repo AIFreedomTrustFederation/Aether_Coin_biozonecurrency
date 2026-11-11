@@ -48,7 +48,7 @@ const formSchema = z.object({
   plainDescription: z.string().min(3, "Description must be at least 3 characters"),
   isLayer2: z.boolean().default(false),
   layer2Type: z.string().optional(),
-  layer2Data: z.record(z.string()).optional(),
+  layer2Data: z.record(z.string(), z.string()).optional(),
 });
 
 export default function TransactionDetailModal({ 
@@ -75,7 +75,7 @@ export default function TransactionDetailModal({
   });
   
   // Form setup
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<z.input<typeof formSchema>, unknown, z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       plainDescription: transaction?.plainDescription || "",

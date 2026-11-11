@@ -27,7 +27,7 @@ const keyGenSchema = z.object({
     PostQuantumAlgorithm.HYBRID_ECDSA_DILITHIUM
   ]),
   keyId: z.string().optional(),
-  metadata: z.record(z.any()).optional()
+  metadata: z.record(z.string(), z.any()).optional()
 });
 
 // Schema for encryption request

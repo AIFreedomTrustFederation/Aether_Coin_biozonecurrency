@@ -153,7 +153,7 @@ export const quantumSecurityEventSchema = z.object({
   userId: z.number().optional(),
   walletId: z.number().optional(),
   success: z.boolean(),
-  metadata: z.record(z.any()).optional(),
+  metadata: z.record(z.string(), z.any()).optional(),
   timestamp: z.number().default(() => Date.now())
 });
 
@@ -191,7 +191,7 @@ export const securityLearningSchema = z.object({
   description: z.string(),
   confidence: z.number().min(0).max(1),
   dataPoints: z.number(),
-  metadata: z.record(z.any()).optional(),
+  metadata: z.record(z.string(), z.any()).optional(),
   createdAt: z.number().default(() => Date.now())
 });
 

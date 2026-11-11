@@ -129,14 +129,14 @@ export const brainShardsRelations = relations(brainNetworkShards, ({ one }) => (
 
 // Create Zod schemas for validation & type generation
 export const insertAetherBridgeTransactionSchema = createInsertSchema(aetherBridgeTransactions, {
-  metadata: z.record(z.any()).optional(),
-  validations: z.record(z.any()).optional(),
+  metadata: z.record(z.string(), z.any()).optional(),
+  validations: z.record(z.string(), z.any()).optional(),
 });
 
 export const insertLlmBrainRecordSchema = createInsertSchema(llmBrainRecords, {
   brainId: z.string().uuid(),
-  shardingStrategy: z.record(z.any()),
-  distributionPlan: z.record(z.any()),
+  shardingStrategy: z.record(z.string(), z.any()),
+  distributionPlan: z.record(z.string(), z.any()),
 });
 
 export const insertBrainNetworkShardSchema = createInsertSchema(brainNetworkShards, {
@@ -145,18 +145,18 @@ export const insertBrainNetworkShardSchema = createInsertSchema(brainNetworkShar
     start: z.number(),
     end: z.number(),
   }),
-  healthStatus: z.record(z.any()).optional(),
+  healthStatus: z.record(z.string(), z.any()).optional(),
   replicas: z.array(z.any()).optional(),
 });
 
 export const insertQuantumIdentitySchema = createInsertSchema(quantumIdentities, {
-  metadata: z.record(z.any()).optional(),
+  metadata: z.record(z.string(), z.any()).optional(),
 });
 
 export const insertFractalGovernanceVoteSchema = createInsertSchema(fractalGovernanceVotes, {
   proposalId: z.string().uuid(),
-  votingStrategy: z.record(z.any()),
-  metadata: z.record(z.any()).optional(),
+  votingStrategy: z.record(z.string(), z.any()),
+  metadata: z.record(z.string(), z.any()).optional(),
 });
 
 // Export types

@@ -21,7 +21,7 @@ const router = Router();
 
 // Schema for event query parameters
 const eventQuerySchema = z.object({
-  limit: z.string().transform(val => parseInt(val)).default('100'),
+  limit: z.string().transform(val => parseInt(val)).prefault('100'),
   userId: z.string().transform(val => parseInt(val)).optional(),
   eventType: z.string().optional(),
   securityLevel: z.string().optional(),
@@ -31,15 +31,15 @@ const eventQuerySchema = z.object({
 
 // Schema for recommendation query parameters
 const recommendationQuerySchema = z.object({
-  limit: z.string().transform(val => parseInt(val)).default('100'),
-  includeApplied: z.string().transform(val => val === 'true').default('false'),
+  limit: z.string().transform(val => parseInt(val)).prefault('100'),
+  includeApplied: z.string().transform(val => val === 'true').prefault('false'),
   recommendationType: z.string().optional(),
   impact: z.string().optional()
 });
 
 // Schema for learning query parameters
 const learningQuerySchema = z.object({
-  limit: z.string().transform(val => parseInt(val)).default('100'),
+  limit: z.string().transform(val => parseInt(val)).prefault('100'),
   learningType: z.string().optional(),
   minConfidence: z.string().transform(val => parseFloat(val)).optional()
 });

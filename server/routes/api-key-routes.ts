@@ -126,10 +126,10 @@ router.post("/", requireAuth, checkAdminPrivilege, async (req: Request, res: Res
       res.status(201).json(apiKey);
     } catch (validationError) {
       if (validationError instanceof z.ZodError) {
-        console.error("API key validation error:", validationError.errors);
+        console.error("API key validation error:", validationError.issues);
         return res.status(400).json({ 
           message: "Invalid API key data", 
-          errors: validationError.errors 
+          errors: validationError.issues
         });
       }
       throw validationError; // Re-throw if it's not a ZodError

@@ -6,6 +6,7 @@
  */
 
 import { pgTable, text, serial, integer, boolean, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import type { z } from "zod";
 import { createInsertSchema } from "drizzle-zod";
 import { relations } from "drizzle-orm";
 
@@ -65,7 +66,7 @@ export const insertUserApiKeySchema = createInsertSchema(userApiKeys).omit({
 
 // Define and export types
 export type User = typeof users.$inferSelect;
-export type InsertUser = typeof insertUserSchema._type;
+export type InsertUser = z.infer<typeof insertUserSchema>;
 
 export type UserApiKey = typeof userApiKeys.$inferSelect;
-export type InsertUserApiKey = typeof insertUserApiKeySchema._type;
+export type InsertUserApiKey = z.infer<typeof insertUserApiKeySchema>;
