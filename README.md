@@ -426,3 +426,10 @@ Aetherion succeeds only if its deepest principles survive contact with money and
 The founder must remain bound by the same monetary constitution as the newcomer. Wealth must not silently become sovereignty. A person's dignity must not collapse into a productivity or circulation score. Poverty or intermittent connectivity must not erase an earned economic right. Abundance must not become permission for arbitrary minting. Circulation must not become transaction surveillance. Monetary gravity must not become captivity. Spiritual aspiration must not become an excuse for false technical or financial claims.
 
 The purpose of the ledger is not to teach life how to serve the ledger. The purpose of the ledger is to remember how value can return to life without losing consent, truth, freedom, or relationship along the way.
+
+
+---
+
+## Proposed AIFT Universal OS Integration
+
+The [repository-specific integration guide](docs/aift-universal-os-alignment.md) describes how this project might relate to native, hosted and future embodied AIFT systems: independent economic and wallet authority; OS docs grant no custody, minting or signing rights. It is a **proposal**, anchored to the [central OS architecture and infographics under review](https://github.com/AIFreedomTrustFederation/AIFT-OS/pull/92), not a current hardware or production capability.
