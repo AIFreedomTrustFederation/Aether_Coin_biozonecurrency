@@ -433,3 +433,9 @@ The purpose of the ledger is not to teach life how to serve the ledger. The purp
 ## Proposed AIFT Universal OS Integration
 
 The [repository-specific integration guide](docs/aift-universal-os-alignment.md) describes how this project might relate to native, hosted and future embodied AIFT systems: independent economic and wallet authority; OS docs grant no custody, minting or signing rights. It is a **proposal**, anchored to the [central OS architecture and infographics under review](https://github.com/AIFreedomTrustFederation/AIFT-OS/pull/92), not a current hardware or production capability.
+
+## Federation-wide continuity and development policy
+
+The [Federation Prime Directive](FEDERATION-PRIME-DIRECTIVE.md) prioritizes perpetual continuity, integrity, sovereignty, and recoverability. Current architecture, workflows, capabilities, and deployment descriptions are provisional development-stage decisions, not permanent limitations. Do not claim unverified capabilities are operational.
+
+Prefer direct commits to the configured default branch for reversible, low-risk work when protections permit. Where PRs are required, merge only after exact-head checks, required reviews, mergeability, and recovery gates pass. Eligible low-risk PRs may auto-merge. A default-branch commit is not authorization for production deployment or destructive changes. Use the existing AIFT Federation Automation GitHub App as the preferred shared automation identity.
