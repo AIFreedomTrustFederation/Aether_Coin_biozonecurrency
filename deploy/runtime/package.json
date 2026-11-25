@@ -10,7 +10,7 @@
     "start": "node server-redirect.js"
   },
   "dependencies": {
-    "express": "4.22.3",
+    "express": "5.3.0",
     "helmet": "8.1.0"
   }
 }
