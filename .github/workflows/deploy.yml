@@ -100,7 +100,7 @@ jobs:
       - name: Block production on unresolved high severity findings
         if: inputs.environment == 'production'
         run: npm audit --audit-level=high
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: aetherion-artifacts
       - uses: webfactory/ssh-agent@v0.9.1
