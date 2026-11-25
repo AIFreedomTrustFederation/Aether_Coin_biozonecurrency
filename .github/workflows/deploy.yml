@@ -79,7 +79,7 @@ jobs:
           done
           GITHUB_SHA="$SOURCE_SHA" node scripts/verify-wallet-http.mjs http://127.0.0.1:4179
           tar --exclude='./node_modules' -czf aetherion-deploy.tar.gz -C release .
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: aetherion-artifacts
           path: aetherion-deploy.tar.gz
