@@ -29,13 +29,13 @@ jobs:
 
       - name: Checkout source repository
         if: steps.token-check.outputs.configured == 'true'
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           path: source-repo
           
       - name: Checkout target repository
         if: steps.token-check.outputs.configured == 'true'
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: AIFreedomTrustFederation/biozone-harmony-boost
           path: target-repo
