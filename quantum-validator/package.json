@@ -18,7 +18,7 @@
   "author": "Aetherion Development Team",
   "license": "MIT",
   "devDependencies": {
-    "@types/node": "^20.10.0",
+    "@types/node": "^26.6.6",
     "typescript": "^5.2.2"
   },
   "dependencies": {}
