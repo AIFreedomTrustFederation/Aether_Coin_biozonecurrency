@@ -11,6 +11,6 @@
   },
   "dependencies": {
     "express": "4.22.3",
-    "helmet": "8.1.0"
+    "helmet": "8.3.0"
   }
 }
