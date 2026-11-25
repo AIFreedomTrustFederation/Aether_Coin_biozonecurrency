@@ -124,7 +124,7 @@
     "monaco-editor": "^0.52.2",
     "multer": "^1.4.5-lts.2",
     "node-fetch": "^3.3.2",
-    "openai": "6.49.0",
+    "openai": "7.62.0",
     "passport": "^0.7.0",
     "passport-local": "^1.0.0",
     "pg": "^8.14.1",
